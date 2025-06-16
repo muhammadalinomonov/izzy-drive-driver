@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:taxi_app/src/core/theme/app_theme.dart';
 
 void main(List<String> args) {
   runApp(TaxiApp());
@@ -7,10 +8,9 @@ void main(List<String> args) {
 class TaxiApp extends StatelessWidget {
   const TaxiApp({super.key});
 
-
   // ! themes style will be added here
   @override
   Widget build(BuildContext context) {
-    return MaterialApp();
+    return MaterialApp(title: 'Taxi app', theme: AppTheme.light);
   }
 }
