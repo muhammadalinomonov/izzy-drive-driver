@@ -8,7 +8,6 @@ void main(List<String> args) {
 class TaxiApp extends StatelessWidget {
   const TaxiApp({super.key});
 
-  // ! themes style will be added here
   @override
   Widget build(BuildContext context) {
     return MaterialApp(title: 'Taxi app', theme: AppTheme.light);
