@@ -24,9 +24,12 @@ class _SignInPageState extends State<SignInPage> {
         children: [
           Column(children: [Image.asset(AppImages.loginbg)]),
           Positioned(
-            child: Container(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
               width: double.infinity,
-              margin: EdgeInsets.only(top: context.h * 0.35),
+              margin: MediaQuery.of(context).viewInsets.bottom == 0
+                  ? EdgeInsets.only(top: context.h * 0.4)
+                  : EdgeInsets.only(top: context.h * 0.2),
               height: double.infinity,
               padding: EdgeInsets.symmetric(horizontal: 12, vertical: 24),
               decoration: BoxDecoration(
@@ -46,6 +49,7 @@ class _SignInPageState extends State<SignInPage> {
               ),
               child: SingleChildScrollView(
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
