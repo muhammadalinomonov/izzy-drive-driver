@@ -5,16 +5,18 @@ import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
 
 class SocialLoginWidget extends StatelessWidget {
-  const SocialLoginWidget({super.key, required this.title, required this.icon});
+  const SocialLoginWidget({this.size,super.key, required this.title, required this.icon});
 
   final String title;
   final String icon;
+  final Size? size;
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
       onPressed: () {},
       style: ElevatedButton.styleFrom(
+        fixedSize: size,
         backgroundColor: AppColor.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         padding: EdgeInsets.symmetric(vertical: 12),

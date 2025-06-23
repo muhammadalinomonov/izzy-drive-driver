@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/constants/color/app_images.dart';
@@ -8,6 +9,7 @@ import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/auth/presentation/widgets/auth_input_widget.dart';
 import 'package:taxi_app/src/features/auth/presentation/widgets/social_login_widget.dart';
+import 'package:taxi_app/src/routes/pages.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -24,14 +26,17 @@ class _SignInPageState extends State<SignInPage> {
         children: [
           Column(children: [Image.asset(AppImages.loginbg)]),
           Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            top: MediaQuery.of(context).viewInsets.bottom == 0
+                ? context.h * 0.3
+                : context.h * 0.2,
             child: AnimatedContainer(
+              height: double.infinity,
               duration: const Duration(milliseconds: 300),
               width: double.infinity,
-              margin: MediaQuery.of(context).viewInsets.bottom == 0
-                  ? EdgeInsets.only(top: context.h * 0.4)
-                  : EdgeInsets.only(top: context.h * 0.2),
-              height: double.infinity,
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 24),
+              padding: EdgeInsets.only(left: 12, right: 23, top: 24),
               decoration: BoxDecoration(
                 color: AppColor.white,
                 boxShadow: [
@@ -65,7 +70,7 @@ class _SignInPageState extends State<SignInPage> {
                     ),
                     SizedBox(height: 18),
                     SocialLoginWidget(
-                      title: 'Sign up with Apple',
+                      title: 'Apple orqali davom ettirish',
                       icon: AppIcons.apple,
                     ),
                     SizedBox(height: 18),
@@ -91,6 +96,30 @@ class _SignInPageState extends State<SignInPage> {
                     AuthInputWidget(hint: 'Parol kiriting', label: 'Parol'),
                     SizedBox(height: 18),
                     AppButton(title: 'Tizimga kirish', onTap: () {}),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Ro’yxatdan o’tmaganmisiz?',
+                            style: context.textS.titleSmall!.copyWith(
+                              fontWeight: FontWeight.w400,
+                              color: AppColor.grey
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => context.push(Pages.signUp),
+                            child: Text(
+                              'Ro’xatdan o’tish',
+                              style: context.textS.titleSmall!.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
