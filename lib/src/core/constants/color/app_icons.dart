@@ -13,4 +13,6 @@ class AppIcons {
   static const String pending = 'assets/icons/pending.svg';
   static const String profile = 'assets/icons/profile.svg';
   static const String services = 'assets/icons/services.svg';
+  static const String back = 'assets/icons/back.svg';
+
 }
