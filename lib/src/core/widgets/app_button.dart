@@ -3,9 +3,17 @@ import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
 
 class AppButton extends StatelessWidget {
-  const AppButton({super.key, required this.title, required this.onTap});
+  const AppButton({
+    this.backGroundColor,
+    this.textColor,
+    super.key,
+    required this.title,
+    required this.onTap,
+  });
 
   final String title;
+  final Color? backGroundColor;
+  final Color? textColor;
 
   final VoidCallback onTap;
 
@@ -15,7 +23,7 @@ class AppButton extends StatelessWidget {
       onPressed: onTap,
       style: ElevatedButton.styleFrom(
         backgroundColor:
-            AppColor.kPrimaryColor, // Or use AppColor.primary if defined
+            backGroundColor ?? AppColor.kPrimaryColor, // Or use AppColor.primary if defined
         minimumSize: Size(double.infinity, 48), // Full width, height 64
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(50), // Fully rounded
@@ -25,7 +33,7 @@ class AppButton extends StatelessWidget {
       child: Text(
         title,
         style: context.textS.titleMedium!.copyWith(
-          color: AppColor.white,
+          color: textColor ??  AppColor.white,
           fontWeight: FontWeight.w600,
         ),
       ),
