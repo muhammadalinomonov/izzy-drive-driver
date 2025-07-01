@@ -9,7 +9,14 @@ sealed class AuthEvent extends Equatable {
 
 class RegisterEvent extends AuthEvent {
   final AuthModel authModel;
-  const RegisterEvent({required this.authModel});
+  final VoidCallback onSuccess;
+  final VoidCallback onError;
+
+  const RegisterEvent({
+    required this.authModel,
+    required this.onError,
+    required this.onSuccess,
+  });
 }
 
 class LoginEvent extends AuthEvent {

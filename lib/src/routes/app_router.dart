@@ -44,11 +44,14 @@ class Routes {
         builder: (context, state) {
           return ChatPage();
         },
-      ), GoRoute(
+      ),
+      GoRoute(
         path: Pages.map,
         builder: (context, state) {
           return MapScreen();
         },
+      ),
+      GoRoute(
         path: Pages.tackScreen,
         builder: (context, state) => TrackInfoScreen(),
       ),

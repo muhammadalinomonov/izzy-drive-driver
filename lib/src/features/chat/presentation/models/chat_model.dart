@@ -1,5 +1,5 @@
 
-import 'package:hl_image_picker/hl_image_picker.dart';
+// import 'package:hl_image_picker/hl_image_picker.dart';
 
 enum MessageType { text, voice, images }
 
@@ -8,7 +8,7 @@ class ChatMessage {
   final String? text;
   final Duration? voiceDuration;
   final String? audioPath;
-  final List<HLPickerItem>? images;
+  final List? images;
   final bool isMe;
   ChatMessage({
     required this.type,

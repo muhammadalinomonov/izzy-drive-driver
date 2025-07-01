@@ -8,8 +8,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:voice_message_player/voice_message_player.dart';
-import 'package:photo_viewer/photo_viewer.dart';
-import 'package:hl_image_picker/hl_image_picker.dart';
+// import 'package:photo_viewer/photo_viewer.dart';
+// import 'package:hl_image_picker/hl_image_picker.dart';
 
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
@@ -26,7 +26,7 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> with SingleTickerProviderStateMixin {
   final _controller = TextEditingController();
   final _recorder = Record();
-  final _picker = HLImagePicker();
+  // final _picker = HLImagePicker();
 
   bool isRecording = false;
   int _recordDuration = 0;
@@ -141,17 +141,17 @@ class _ChatPageState extends State<ChatPage> with SingleTickerProviderStateMixin
   }
 
   Future<void> _pickImages() async {
-    final picked = await _picker.openPicker(
-      pickerOptions:
-      HLPickerOptions(mediaType: MediaType.image, maxSelectedAssets: 6),
-    );
-    if (picked.isNotEmpty) {
-      setState(() {
-        _messages.add(
-          ChatMessage(type: MessageType.images, images: picked, isMe: true),
-        );
-      });
-    }
+    // final picked = await _picker.openPicker(
+    //   pickerOptions:
+    //   // HLPickerOptions(mediaType: MediaType.image, maxSelectedAssets: 6),
+    // );
+    // if (picked.isNotEmpty) {
+    //   setState(() {
+    //     _messages.add(
+    //       ChatMessage(type: MessageType.images, images: picked, isMe: true),
+    //     );
+    //   });
+    // }
   }
 
   void _onLongPress(BuildContext itemCtx, int idx) {
@@ -281,14 +281,14 @@ class _ChatPageState extends State<ChatPage> with SingleTickerProviderStateMixin
                       _actionTile(
                           Icons.remove_red_eye, 'View Images', () => _dismissAnd(() {
                         final paths = msg.images!.map((i) => i.path).toList();
-                        showPhotoViewer(
-                          context: context,
-                          builders: paths
-                              .map<WidgetBuilder>(
-                                  (p) => (_) => Image.file(File(p), fit: BoxFit.contain))
-                              .toList(),
-                          initialPage: 0,
-                        );
+                        // showPhotoViewer(
+                        //   context: context,
+                        //   builders: paths
+                        //       .map<WidgetBuilder>(
+                        //           (p) => (_) => Image.file(File(p), fit: BoxFit.contain))
+                        //       .toList(),
+                        //   initialPage: 0,
+                        // );
                       }), textColor: Platform.isIOS ? Colors.white : Theme.of(context).colorScheme.onSurface),
                       _actionTile(Icons.download, 'Save Images',
                               () => _dismissAnd(() {/* save */}), textColor: Platform.isIOS ? Colors.white : Theme.of(context).colorScheme.onSurface),
@@ -469,7 +469,7 @@ class _ChatPageState extends State<ChatPage> with SingleTickerProviderStateMixin
     );
   }
 
-  Widget _buildImageGrid(List<HLPickerItem> items) {
+  Widget _buildImageGrid(List items) {
     final half = (items.length / 2).ceil();
     final top = items.take(half).toList(), bottom = items.skip(half).toList();
     return Column(
@@ -482,7 +482,7 @@ class _ChatPageState extends State<ChatPage> with SingleTickerProviderStateMixin
     );
   }
 
-  Widget _rowOfImages(List<HLPickerItem> items) {
+  Widget _rowOfImages(List items) {
     final builders = items
         .map<WidgetBuilder>((i) => (_) => Image.file(File(i.path), fit: BoxFit.contain))
         .toList();
@@ -492,11 +492,11 @@ class _ChatPageState extends State<ChatPage> with SingleTickerProviderStateMixin
         return Padding(
           padding: const EdgeInsets.only(right: 8),
           child: GestureDetector(
-            onTap: () => showPhotoViewer(
-              context: context,
-              builders: builders,
-              initialPage: e.key,
-            ),
+            // onTap: () => showPhotoViewer(
+            //   context: context,
+            //   builders: builders,
+            //   initialPage: e.key,
+            // ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.file(File(e.value.path),

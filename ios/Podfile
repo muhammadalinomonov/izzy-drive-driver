@@ -4,12 +4,6 @@ platform :ios, '13.0'
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
 # Project settings
-# Uncomment this line to define a global platform for your project
-# platform :ios, '12.0'
-
-# CocoaPods analytics sends network stats synchronously affecting flutter build latency.
-ENV['COCOAPODS_DISABLE_STATS'] = 'true'
-
 project 'Runner', {
   'Debug' => :debug,
   'Profile' => :release,
@@ -41,12 +35,11 @@ target 'Runner' do
   # Install all Flutter pods
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
-  # Mapbox dependency (use MapboxMaps for modern SDK)
-  pod 'MapboxMaps', '~> 10.18.0' # Ensure compatibility with mapbox_gl
-  # If mapbox_gl requires Mapbox-iOS-SDK, uncomment the following instead:
+  # Mapbox dependency
+  pod 'MapboxMaps', '~> 10.18.0'
+  # If mapbox_gl requires Mapbox-iOS-SDK, use this instead:
   # pod 'Mapbox-iOS-SDK', '~> 6.4.0'
 
-  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do
     inherit! :search_paths
   end
@@ -57,15 +50,23 @@ post_install do |installer|
     flutter_additional_ios_build_settings(target)
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
-      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64' # Exclude arm64 for simulator
-      config.build_settings['ENABLE_BITCODE'] = 'NO' # Disable bitcode for Mapbox
-      # Add Swift version for compatibility
+      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
+      config.build_settings['ENABLE_BITCODE'] = 'NO'
       config.build_settings['SWIFT_VERSION'] = '5.0'
       if target.name == "geolocator_apple"
         config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)', 'BYPASS_PERMISSION_LOCATION_ALWAYS=1']
       end
     end
   end
-end
+
+  # 🔧 Patch TLPhotoPicker to fix TARGET_OS_SIMULATOR macro in Swift
+  tl_file = 'Pods/TLPhotoPicker/TLPhotoPicker/Classes/TLPhotosPickerViewController.swift'
+  if File.exist?(tl_file)
+    content = File.read(tl_file)
+    unless content.include?('import Darwin')
+      puts "🔧 Patching TLPhotosPickerViewController.swift to add 'import Darwin'"
+      content = "import Darwin\n" + content
+      File.write(tl_file, content)
+    end
   end
 end

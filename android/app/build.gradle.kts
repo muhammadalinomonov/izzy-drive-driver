@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.taxi_app"
+    namespace = "com.ajmal.taxi_app"
     compileSdk = flutter.compileSdkVersion
 
     ndkVersion = "25.2.9519653" // Use the installed NDK version
@@ -19,7 +19,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.taxi_app"
+        applicationId = "com.ajmal.taxi_app"
         minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
