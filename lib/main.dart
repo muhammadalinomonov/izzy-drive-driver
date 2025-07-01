@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:taxi_app/src/core/theme/app_theme.dart';
 import 'package:taxi_app/src/routes/app_router.dart';
 
-void main(List<String> args) {
+void main(List<String> args)async {
   runApp(TaxiApp());
 }
+
 
 class TaxiApp extends StatelessWidget {
   const TaxiApp({super.key});
