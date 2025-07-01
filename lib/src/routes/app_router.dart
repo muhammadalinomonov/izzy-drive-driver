@@ -6,7 +6,7 @@ import 'package:taxi_app/src/routes/pages.dart';
 
 class Routes {
   static final GoRouter router = GoRouter(
-    initialLocation: Pages.tackScreen,
+    initialLocation: Pages.signIn,
     routes: [
       GoRoute(
         path: Pages.signIn,
