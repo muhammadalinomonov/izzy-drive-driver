@@ -1,23 +1,93 @@
 PODS:
+  - audio_session (0.0.1):
+    - Flutter
+  - CropViewController (2.7.4)
   - Flutter (1.0.0)
-  - shared_preferences_foundation (0.0.1):
+  - hl_image_picker_ios (1.2.3):
+    - CropViewController
+    - Flutter
+    - TLPhotoPicker
+  - just_audio (0.0.1):
     - Flutter
     - FlutterMacOS
+  - MapboxCommon (23.10.1)
+  - MapboxCoreMaps (10.18.0):
+    - MapboxCommon (~> 23.10)
+  - MapboxMaps (10.18.2):
+    - MapboxCommon (= 23.10.1)
+    - MapboxCoreMaps (= 10.18.0)
+    - MapboxMobileEvents (= 1.0.10)
+    - Turf (= 2.8.0)
+  - MapboxMobileEvents (1.0.10)
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - permission_handler_apple (9.3.0):
+    - Flutter
+  - record (0.0.1):
+    - Flutter
+  - sqflite_darwin (0.0.4):
+    - Flutter
+    - FlutterMacOS
+  - TLPhotoPicker (2.1.10)
+  - Turf (2.8.0)
 
 DEPENDENCIES:
+  - audio_session (from `.symlinks/plugins/audio_session/ios`)
   - Flutter (from `Flutter`)
-  - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
+  - hl_image_picker_ios (from `.symlinks/plugins/hl_image_picker_ios/ios`)
+  - just_audio (from `.symlinks/plugins/just_audio/darwin`)
+  - MapboxMaps (~> 10.18.0)
+  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
+  - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
+  - record (from `.symlinks/plugins/record/ios`)
+  - sqflite_darwin (from `.symlinks/plugins/sqflite_darwin/darwin`)
+
+SPEC REPOS:
+  trunk:
+    - CropViewController
+    - MapboxCommon
+    - MapboxCoreMaps
+    - MapboxMaps
+    - MapboxMobileEvents
+    - TLPhotoPicker
+    - Turf
 
 EXTERNAL SOURCES:
+  audio_session:
+    :path: ".symlinks/plugins/audio_session/ios"
   Flutter:
     :path: Flutter
-  shared_preferences_foundation:
-    :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
+  hl_image_picker_ios:
+    :path: ".symlinks/plugins/hl_image_picker_ios/ios"
+  just_audio:
+    :path: ".symlinks/plugins/just_audio/darwin"
+  path_provider_foundation:
+    :path: ".symlinks/plugins/path_provider_foundation/darwin"
+  permission_handler_apple:
+    :path: ".symlinks/plugins/permission_handler_apple/ios"
+  record:
+    :path: ".symlinks/plugins/record/ios"
+  sqflite_darwin:
+    :path: ".symlinks/plugins/sqflite_darwin/darwin"
 
 SPEC CHECKSUMS:
+  audio_session: 9bb7f6c970f21241b19f5a3658097ae459681ba0
+  CropViewController: 3489bbf95a3e11c654382b0bae08ac645cdf1b93
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  shared_preferences_foundation: fcdcbc04712aee1108ac7fda236f363274528f78
+  hl_image_picker_ios: a7283b7b39418d4b31bd1570a04a30513fd53810
+  just_audio: 4e391f57b79cad2b0674030a00453ca5ce817eed
+  MapboxCommon: 0ff437e44988da6856e280d00ffb266564ed0487
+  MapboxCoreMaps: f1bd9405f5b9d3e343f2fe4138775299699a22fb
+  MapboxMaps: e76b14f52c54c40b76ddecd04f40448e6f35a864
+  MapboxMobileEvents: de50b3a4de180dd129c326e09cd12c8adaaa46d6
+  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
+  permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
+  record: 426d0643542aaca81f738c5d214ad99626b2f134
+  sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
+  TLPhotoPicker: 3cc143dfe64d5fcb9956dc4bba55a4082e1d8e75
+  Turf: aa2ede4298009639d10db36aba1a7ebaad072a5e
 
-PODFILE CHECKSUM: 4305caec6b40dde0ae97be1573c53de1882a07e5
+PODFILE CHECKSUM: 71d0b4a8761e2ae8ce9970b4b32c79ac1f7d6883
 
-COCOAPODS: 1.15.2
+COCOAPODS: 1.16.2

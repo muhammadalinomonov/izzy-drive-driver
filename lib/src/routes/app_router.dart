@@ -6,13 +6,15 @@ import 'package:taxi_app/src/features/auth/data/source/auth_data_source.dart';
 import 'package:taxi_app/src/features/auth/presentation/bloc/bloc/auth_bloc.dart';
 import 'package:taxi_app/src/features/auth/presentation/pages/sign_in_page.dart';
 import 'package:taxi_app/src/features/auth/presentation/pages/sign_up_page.dart';
+import 'package:taxi_app/src/features/chat/presentation/pages/chat_page.dart';
+import 'package:taxi_app/src/features/map/presenation/pages/map_screen.dart';
 import 'package:taxi_app/src/features/truck_info/presentation/screens/track_info.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 
 class Routes {
   static final GoRouter router = GoRouter(
     initialLocation: StorageRepository.getString('token').isNotEmpty
-        ? Pages.tackScreen
+        ? Pages.chat
         : Pages.signIn,
     routes: [
       GoRoute(
@@ -38,6 +40,15 @@ class Routes {
         },
       ),
       GoRoute(
+        path: Pages.chat,
+        builder: (context, state) {
+          return ChatPage();
+        },
+      ), GoRoute(
+        path: Pages.map,
+        builder: (context, state) {
+          return MapScreen();
+        },
         path: Pages.tackScreen,
         builder: (context, state) => TrackInfoScreen(),
       ),
