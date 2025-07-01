@@ -2,9 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/auth/presentation/widgets/auth_input_widget.dart';
+import 'package:taxi_app/src/features/truck_info/data/source/driver_info_source.dart';
 
-class TrackInfoScreen extends StatelessWidget {
+class TrackInfoScreen extends StatefulWidget {
   const TrackInfoScreen({super.key});
+
+  @override
+  State<TrackInfoScreen> createState() => _TrackInfoScreenState();
+}
+
+class _TrackInfoScreenState extends State<TrackInfoScreen> {
+  @override
+  void initState() {
+    super.initState();
+    DriverInfoSource().getTrackMars();
+    DriverInfoSource().getTrackModel('2');
+  }
 
   @override
   Widget build(BuildContext context) {

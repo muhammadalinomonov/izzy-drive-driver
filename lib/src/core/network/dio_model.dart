@@ -4,7 +4,7 @@ class DioSettings {
   Dio dioData = Dio();
 
   BaseOptions _dioBaseOptions = BaseOptions(
-    baseUrl: "https://master-api.ataxi.uz/",
+    baseUrl: "https://master-api.ataxi.uz/api/v1/",
     connectTimeout: const Duration(minutes: 1),
     receiveTimeout: const Duration(minutes: 1),
     followRedirects: false,
@@ -14,7 +14,7 @@ class DioSettings {
 
   void setBaseOptions({String? lang}) {
     _dioBaseOptions = BaseOptions(
-      baseUrl: "https://master-api.ataxi.uz/",
+      baseUrl: "https://master-api.ataxi.uz/api/v1/",
       connectTimeout: const Duration(minutes: 1),
       receiveTimeout: const Duration(minutes: 1),
       headers: <String, dynamic>{'Accept-Language': lang},

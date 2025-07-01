@@ -401,7 +401,7 @@ packages:
     source: hosted
     version: "2.4.0"
   injectable:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: injectable
       sha256: "5e1556ea1d374fe44cbe846414d9bab346285d3d8a1da5877c01ad0774006068"
@@ -657,7 +657,7 @@ packages:
     source: hosted
     version: "4.1.0"
   retrofit:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: retrofit
       sha256: f56124c1bda4eec3a68548957aa1a0d3f6cd728511e81d4215a4167de7197fdd
