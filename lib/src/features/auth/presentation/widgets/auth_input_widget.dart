@@ -3,9 +3,19 @@ import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
 
 class AuthInputWidget extends StatelessWidget {
-  const AuthInputWidget({super.key, required this.hint, required this.label});
+  const AuthInputWidget({
+    super.key,
+    required this.hint,
+    required this.label,
+    this.controller,
+    this.validator,
+    this.obscureText = false,
+  });
 
   final String hint, label;
+  final TextEditingController? controller;
+  final String? Function(String?)? validator;
+  final bool obscureText;
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +30,9 @@ class AuthInputWidget extends StatelessWidget {
         ),
         SizedBox(height: 10),
         TextFormField(
-          obscureText: true,
+          controller: controller,
+          validator: validator,
+          obscureText: obscureText,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: context.textS.titleMedium!.copyWith(
