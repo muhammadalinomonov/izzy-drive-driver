@@ -4,6 +4,12 @@ platform :ios, '13.0'
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
 # Project settings
+# Uncomment this line to define a global platform for your project
+# platform :ios, '12.0'
+
+# CocoaPods analytics sends network stats synchronously affecting flutter build latency.
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
 project 'Runner', {
   'Debug' => :debug,
   'Profile' => :release,
@@ -40,6 +46,7 @@ target 'Runner' do
   # If mapbox_gl requires Mapbox-iOS-SDK, uncomment the following instead:
   # pod 'Mapbox-iOS-SDK', '~> 6.4.0'
 
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do
     inherit! :search_paths
   end
@@ -58,5 +65,7 @@ post_install do |installer|
         config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)', 'BYPASS_PERMISSION_LOCATION_ALWAYS=1']
       end
     end
+  end
+end
   end
 end
