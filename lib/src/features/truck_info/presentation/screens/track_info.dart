@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/auth/presentation/widgets/auth_input_widget.dart';
 import 'package:taxi_app/src/features/truck_info/data/source/driver_info_source.dart';
+import 'package:taxi_app/src/routes/pages.dart';
 
 class TrackInfoScreen extends StatefulWidget {
   const TrackInfoScreen({super.key});
@@ -224,7 +226,9 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                           backGroundColor: AppColor.lightBlue,
                           textColor: AppColor.black,
                           title: "O'tkazib yuborish",
-                          onTap: () {},
+                          onTap: () {
+                            context.go(Pages.chat);
+                          },
                         ),
                         const SizedBox(height: 24),
                       ],

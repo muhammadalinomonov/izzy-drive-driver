@@ -28,6 +28,12 @@
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Rasm yoki video olish uchun kamera ruxsati kerak</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Ilova orqali ovoz yozish uchun mikrofon ruxsati kerak</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Rasmlarni tanlash uchun ruxsat kerak</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

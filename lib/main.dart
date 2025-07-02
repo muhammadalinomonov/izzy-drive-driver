@@ -4,7 +4,7 @@ import 'package:taxi_app/src/core/theme/app_theme.dart';
 import 'package:taxi_app/src/routes/app_router.dart';
 
 void main(List<String> args) async {
-  await WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
   await setupLocator();
   runApp(TaxiApp());
 }
