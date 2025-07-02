@@ -5,6 +5,7 @@ import 'package:taxi_app/src/core/network/dio_model.dart';
 import 'package:taxi_app/src/core/network/network_response.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
+import 'package:taxi_app/src/features/truck_info/domain/model/track_model.dart';
 
 class DriverInfoSource {
   Future<NetworkResponse> getTrackMars() async {
@@ -23,9 +24,13 @@ class DriverInfoSource {
       if (response.isSuccess) {
         print('Success on get Marks');
         print(response.data);
-        return NetworkResponse(data: response.data);
+        return NetworkResponse(
+          data: response.data['data'] != null
+              ? TruckMarkResponse.fromJson(response.data)
+              : [],
+        );
       } else {
-        print('error on register ${response.statusCode}');
+        print('error on track get ${response.statusCode}');
         print(response.data);
         return NetworkResponse(errorText: response.statusMessage ?? "");
       }
@@ -54,7 +59,11 @@ class DriverInfoSource {
       if (response.isSuccess) {
         print('Success on get Models');
         print(response.data);
-        return NetworkResponse(data: response.data);
+        return NetworkResponse(
+          data: response.data['data'] != null
+              ? TruckModelResponse.fromJson(response.data)
+              : [],
+        );
       } else {
         print('error on register ${response.statusCode}');
         print(response.data);

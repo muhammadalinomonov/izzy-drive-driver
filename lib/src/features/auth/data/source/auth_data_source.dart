@@ -56,6 +56,12 @@ class AuthDataSource {
       if (response.isSuccess) {
         print('Success on login');
         print(response.data);
+        final responseData = response.data['data']['access'];
+        StorageRepository.putString('token', responseData);
+        StorageRepository.putString(
+          'refresh',
+          response.data['data']['refresh'],
+        );
         return NetworkResponse(data: response.data);
       } else {
         print('Log in error ${response.data}');

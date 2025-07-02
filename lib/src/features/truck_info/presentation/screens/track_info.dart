@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:taxi_app/src/core/components/app_snack_bar.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/auth/presentation/widgets/auth_input_widget.dart';
 import 'package:taxi_app/src/features/truck_info/data/source/driver_info_source.dart';
+import 'package:taxi_app/src/features/truck_info/domain/model/track_model.dart';
+import 'package:taxi_app/src/features/truck_info/presentation/bloc/bloc/track_info_bloc.dart';
 import 'package:taxi_app/src/routes/pages.dart';
+import 'package:shimmer/shimmer.dart';
 
 class TrackInfoScreen extends StatefulWidget {
   const TrackInfoScreen({super.key});
@@ -17,9 +22,19 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
   @override
   void initState() {
     super.initState();
-    DriverInfoSource().getTrackMars();
-    DriverInfoSource().getTrackModel('2');
+    BlocProvider.of<TrackInfoBloc>(context).add(
+      GetTrackMarskEvent(
+        onError: () {
+          AppSnackBar.showError(
+            context,
+            'Error occured while getting track marks',
+          );
+        },
+      ),
+    );
   }
+
+  TruckMark? pickeDtruckMark;
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +92,6 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-
                   Container(
                     decoration: BoxDecoration(
                       color: AppColor.white,
@@ -145,35 +159,28 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: null,
-                              hint: const Text("Tanlang"),
-                              items: const [
-                                DropdownMenuItem(
-                                  value: "man",
-                                  child: Text("MAN"),
-                                ),
-                                DropdownMenuItem(
-                                  value: "volvo",
-                                  child: Text("Volvo"),
-                                ),
-                                DropdownMenuItem(
-                                  value: "daf",
-                                  child: Text("DAF"),
-                                ),
-                              ],
-                              onChanged: (value) {},
-                              isExpanded: true,
-                              icon: const Icon(Icons.keyboard_arrow_down),
-                            ),
-                          ),
+                        BlocBuilder<TrackInfoBloc, TrackInfoState>(
+                          builder: (context, state) {
+                            return TruckDropDownWidget(
+                              isLoading:
+                                  state.status == TrackInfoStatus.loading,
+                              value: state.truckMarkResponse?.data.first.name,
+                              items:
+                                  state.truckMarkResponse?.data.map((mark) {
+                                    return DropdownMenuItem(
+                                      value: mark.name,
+                                      child: Text(mark.name),
+                                    );
+                                  }).toList() ??
+                                  [],
+                              onChanged: (value) {
+                                pickeDtruckMark = TruckMark(
+                                  id: 0,
+                                  name: value.toString(),
+                                );
+                              },
+                            );
+                          },
                         ),
                         const SizedBox(height: 20),
                         const Text(
@@ -184,35 +191,17 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: null,
-                              hint: const Text("Tanlang"),
-                              items: const [
-                                DropdownMenuItem(
-                                  value: "model1",
-                                  child: Text("Model 1"),
-                                ),
-                                DropdownMenuItem(
-                                  value: "model2",
-                                  child: Text("Model 2"),
-                                ),
-                                DropdownMenuItem(
-                                  value: "model3",
-                                  child: Text("Model 3"),
-                                ),
-                              ],
-                              onChanged: (value) {},
-                              isExpanded: true,
-                              icon: const Icon(Icons.keyboard_arrow_down),
+                        TruckDropDownWidget(
+                          value: null,
+                          items: const [
+                            DropdownMenuItem(value: "man", child: Text("MAN")),
+                            DropdownMenuItem(
+                              value: "volvo",
+                              child: Text("Volvo"),
                             ),
-                          ),
+                            DropdownMenuItem(value: "daf", child: Text("DAF")),
+                          ],
+                          onChanged: (value) {},
                         ),
                         const SizedBox(height: 20),
                         AuthInputWidget(
@@ -239,6 +228,62 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class TruckDropDownWidget extends StatelessWidget {
+  final String? value;
+  final List<DropdownMenuItem<String>> items;
+  final ValueChanged<String?> onChanged;
+  final Widget? hint;
+  final Widget? icon;
+  final bool isExpanded;
+  final bool isLoading;
+
+  const TruckDropDownWidget({
+    super.key,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+    this.hint,
+    this.icon,
+    this.isExpanded = true,
+    this.isLoading = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return Shimmer.fromColors(
+        baseColor: Colors.grey.shade300,
+        highlightColor: Colors.grey.shade100,
+        child: Container(
+          height: 48,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          margin: const EdgeInsets.symmetric(vertical: 8),
+        ),
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          hint: hint ?? const Text("Tanlang"),
+          items: items,
+          onChanged: onChanged,
+          isExpanded: isExpanded,
+          icon: icon ?? const Icon(Icons.keyboard_arrow_down),
+        ),
       ),
     );
   }

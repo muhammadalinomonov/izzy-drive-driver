@@ -7,7 +7,7 @@ import 'package:taxi_app/src/routes/app_router.dart';
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   await setupLocator();
-  StorageRepository.deleteString('token');
+
   runApp(TaxiApp());
 }
 
