@@ -29,11 +29,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       }
     });
     on<LoginEvent>((event, emit) async {
+      print('Tizimga kirish worked');
       emit(AuthState(status: AuthStatus.loading));
       final response = await authRepo.logIn(event.authModel);
       if (response.errorText.isEmpty) {
+        event.onSuccess();
         emit(AuthState(status: AuthStatus.success));
       } else {
+        event.onError();
         emit(
           AuthState(
             status: AuthStatus.failure,
