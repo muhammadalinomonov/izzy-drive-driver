@@ -6,10 +6,12 @@ class TrackInfoState extends Equatable {
   final TrackInfoStatus status;
   final TruckMarkResponse? truckMarkResponse;
   final TruckModelResponse? truckModelResponse;
+  final String? errorMessage;
   const TrackInfoState({
     required this.status,
     this.truckMarkResponse,
     this.truckModelResponse,
+    this.errorMessage,
   });
 
   @override
@@ -18,5 +20,6 @@ class TrackInfoState extends Equatable {
     TrackInfoStatus.error,
     TrackInfoStatus.initial,
     TrackInfoStatus.success,
+    errorMessage ?? ''
   ];
 }

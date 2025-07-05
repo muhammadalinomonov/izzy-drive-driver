@@ -25,7 +25,9 @@ class TrackInfoBloc extends Bloc<TrackInfoEvent, TrackInfoState> {
             truckMarkResponse: result.data as TruckMarkResponse,
           ),
         );
-      } else {}
+      } else {
+        emit(TrackInfoState(status: TrackInfoStatus.error, errorMessage: result.errorText));
+      }
     });
   }
 }

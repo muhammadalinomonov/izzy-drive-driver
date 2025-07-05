@@ -161,6 +161,13 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                         const SizedBox(height: 8),
                         BlocBuilder<TrackInfoBloc, TrackInfoState>(
                           builder: (context, state) {
+                            if (state.status == TrackInfoStatus.error) {
+                              AppSnackBar.showError(
+                                context,
+                                state.errorMessage ??
+                                    'Error occured please try again',
+                              );
+                            }
                             return TruckDropDownWidget(
                               isLoading:
                                   state.status == TrackInfoStatus.loading,
