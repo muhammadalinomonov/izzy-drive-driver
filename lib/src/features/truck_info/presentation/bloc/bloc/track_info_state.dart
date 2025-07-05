@@ -20,6 +20,20 @@ class TrackInfoState extends Equatable {
     TrackInfoStatus.error,
     TrackInfoStatus.initial,
     TrackInfoStatus.success,
-    errorMessage ?? ''
+    errorMessage ?? '',
   ];
+
+  TrackInfoState copyWith({
+    TrackInfoStatus? status,
+    TruckMarkResponse? truckMarkResponse,
+    TruckModelResponse? truckModelResponse,
+    String? errorMessage,
+  }) {
+    return TrackInfoState(
+      status: status ?? this.status,
+      truckMarkResponse: truckMarkResponse ?? this.truckMarkResponse,
+      truckModelResponse: truckModelResponse ?? this.truckModelResponse,
+      errorMessage: errorMessage ?? this.errorMessage,
+    );
+  }
 }

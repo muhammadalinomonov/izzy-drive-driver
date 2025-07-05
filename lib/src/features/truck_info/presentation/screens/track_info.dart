@@ -171,7 +171,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                             return TruckDropDownWidget(
                               isLoading:
                                   state.status == TrackInfoStatus.loading,
-                              value: state.truckMarkResponse?.data.first.name,
+                              value: pickeDtruckMark?.name,
                               items:
                                   state.truckMarkResponse?.data.map((mark) {
                                     return DropdownMenuItem(
@@ -181,10 +181,20 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                                   }).toList() ??
                                   [],
                               onChanged: (value) {
-                                pickeDtruckMark = TruckMark(
-                                  id: 0,
-                                  name: value.toString(),
-                                );
+                                final selectedMark = state
+                                    .truckMarkResponse
+                                    ?.data
+                                    .firstWhere((mark) => mark.name == value);
+                                if (selectedMark != null) {
+                                  setState(() {
+                                    pickeDtruckMark = selectedMark;
+                                  });
+                                  BlocProvider.of<TrackInfoBloc>(context).add(
+                                    GetTrackModelsEvent(
+                                      id: selectedMark.id.toString(),
+                                    ),
+                                  );
+                                }
                               },
                             );
                           },
@@ -198,17 +208,33 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        TruckDropDownWidget(
-                          value: null,
-                          items: const [
-                            DropdownMenuItem(value: "man", child: Text("MAN")),
-                            DropdownMenuItem(
-                              value: "volvo",
-                              child: Text("Volvo"),
-                            ),
-                            DropdownMenuItem(value: "daf", child: Text("DAF")),
-                          ],
-                          onChanged: (value) {},
+                        BlocBuilder<TrackInfoBloc, TrackInfoState>(
+                          builder: (context, state) {
+                            if (state.status == TrackInfoStatus.loading) {
+                              return TruckDropDownWidget(
+                                isLoading: true,
+                                value: null,
+                                items: const [],
+                                onChanged: (value) {},
+                              );
+                            }
+                            final models =
+                                state.truckModelResponse?.data.models ?? [];
+                            return TruckDropDownWidget(
+                              value: null,
+                              items: models
+                                  .map(
+                                    (model) => DropdownMenuItem(
+                                      value: model.name,
+                                      child: Text(model.name),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (value) {
+                                // handle model selection if needed
+                              },
+                            );
+                          },
                         ),
                         const SizedBox(height: 20),
                         AuthInputWidget(

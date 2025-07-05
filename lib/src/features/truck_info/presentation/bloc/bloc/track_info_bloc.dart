@@ -26,7 +26,32 @@ class TrackInfoBloc extends Bloc<TrackInfoEvent, TrackInfoState> {
           ),
         );
       } else {
-        emit(TrackInfoState(status: TrackInfoStatus.error, errorMessage: result.errorText));
+        emit(
+          TrackInfoState(
+            status: TrackInfoStatus.error,
+            errorMessage: result.errorText,
+          ),
+        );
+      }
+    });
+
+    on<GetTrackModelsEvent>((event, emit) async {
+      emit(state.copyWith(status: TrackInfoStatus.loading));
+      final result = await driverInfoRepo.getTrackModels(event.id);
+      if (result.errorText.isEmpty) {
+        emit(
+          state.copyWith(
+            status: TrackInfoStatus.success,
+            truckModelResponse: result.data as TruckModelResponse,
+          ),
+        );
+      } else {
+        emit(
+          state.copyWith(
+            status: TrackInfoStatus.error,
+            errorMessage: result.errorText,
+          ),
+        );
       }
     });
   }
