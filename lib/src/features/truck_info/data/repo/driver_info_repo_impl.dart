@@ -1,4 +1,5 @@
 import 'package:taxi_app/src/core/network/network_response.dart';
+import 'package:taxi_app/src/features/truck_info/data/model/driver_info_put_model.dart';
 import 'package:taxi_app/src/features/truck_info/data/source/driver_info_source.dart';
 import 'package:taxi_app/src/features/truck_info/domain/repo/driver_info_repo.dart';
 
@@ -16,5 +17,10 @@ class DriverInfoRepoImpl extends DriverInfoRepo {
   @override
   Future<NetworkResponse> getTrackModels(String id) {
     return _driverInfoSource.getTrackModel(id);
+  }
+
+  @override
+  Future<NetworkResponse> putDriverInfo(DriverInfoPutModel data) {
+    return _driverInfoSource.putDriverInfo(data);
   }
 }

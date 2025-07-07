@@ -21,3 +21,15 @@ class GetTrackModelsEvent extends TrackInfoEvent {
   @override
   List<Object> get props => [id];
 }
+
+class PutDriverInfoEvent extends TrackInfoEvent {
+  final VoidCallback onError;
+  final VoidCallback onSuccess;
+  final DriverInfoPutModel data;
+
+  const PutDriverInfoEvent({
+    required this.data,
+    required this.onError,
+    required this.onSuccess,
+  });
+}

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/animation.dart';
+import 'package:taxi_app/src/features/truck_info/data/model/driver_info_put_model.dart';
 import 'package:taxi_app/src/features/truck_info/domain/model/track_model.dart';
 import 'package:taxi_app/src/features/truck_info/domain/repo/driver_info_repo.dart';
 
@@ -34,7 +35,6 @@ class TrackInfoBloc extends Bloc<TrackInfoEvent, TrackInfoState> {
         );
       }
     });
-
     on<GetTrackModelsEvent>((event, emit) async {
       emit(state.copyWith(status: TrackInfoStatus.loading));
       final result = await driverInfoRepo.getTrackModels(event.id);
@@ -52,6 +52,14 @@ class TrackInfoBloc extends Bloc<TrackInfoEvent, TrackInfoState> {
             errorMessage: result.errorText,
           ),
         );
+      }
+    });
+    on<PutDriverInfoEvent>((event, emit) async {
+      final result = await driverInfoRepo.putDriverInfo(event.data);
+      if (result.errorText.isEmpty) {
+        event.onSuccess();
+      } else {
+        event.onError();
       }
     });
   }

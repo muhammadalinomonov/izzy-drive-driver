@@ -5,6 +5,7 @@ import 'package:taxi_app/src/core/components/app_snack_bar.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/auth/presentation/widgets/auth_input_widget.dart';
+import 'package:taxi_app/src/features/truck_info/data/model/driver_info_put_model.dart';
 import 'package:taxi_app/src/features/truck_info/data/source/driver_info_source.dart';
 import 'package:taxi_app/src/features/truck_info/domain/model/track_model.dart';
 import 'package:taxi_app/src/features/truck_info/presentation/bloc/bloc/track_info_bloc.dart';
@@ -32,9 +33,49 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
         },
       ),
     );
+    _yearController.addListener(() {
+      setState(() {
+        productionYear = _yearController.text;
+      });
+    });
+    _addressController.addListener(() {
+      setState(() {
+        address = _addressController.text;
+      });
+    });
+    _phoneController.addListener(() {
+      setState(() {
+        phoneNumber = _phoneController.text;
+      });
+    });
+    _licenseController.addListener(() {
+      setState(() {
+        licenseNumber = _licenseController.text;
+      });
+    });
   }
 
   TruckMark? pickeDtruckMark;
+  TruckModel? pickedTruckModel;
+  String? productionYear;
+  String? address;
+  String? phoneNumber;
+  String? licenseNumber;
+  final TextEditingController _yearController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _licenseController = TextEditingController();
+
+  bool isCreatingProccess = false;
+
+  @override
+  void dispose() {
+    _yearController.dispose();
+    _addressController.dispose();
+    _phoneController.dispose();
+    _licenseController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -188,6 +229,8 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                                 if (selectedMark != null) {
                                   setState(() {
                                     pickeDtruckMark = selectedMark;
+                                    pickedTruckModel =
+                                        null; // reset model when mark changes
                                   });
                                   BlocProvider.of<TrackInfoBloc>(context).add(
                                     GetTrackModelsEvent(
@@ -221,7 +264,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                             final models =
                                 state.truckModelResponse?.data.models ?? [];
                             return TruckDropDownWidget(
-                              value: null,
+                              value: pickedTruckModel?.name,
                               items: models
                                   .map(
                                     (model) => DropdownMenuItem(
@@ -231,7 +274,12 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                                   )
                                   .toList(),
                               onChanged: (value) {
-                                // handle model selection if needed
+                                final selectedModel = models.firstWhere(
+                                  (model) => model.name == value,
+                                );
+                                setState(() {
+                                  pickedTruckModel = selectedModel;
+                                });
                               },
                             );
                           },
@@ -240,9 +288,64 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                         AuthInputWidget(
                           hint: 'Kiriting',
                           label: 'Ishlab chiqarilgan sana',
+                          controller: _yearController,
+                        ),
+                        const SizedBox(height: 20),
+                        AuthInputWidget(
+                          hint: 'Phone number',
+                          label: 'Enter your phone number',
+                          controller: _phoneController,
+                        ),
+                        const SizedBox(height: 20),
+                        AuthInputWidget(
+                          hint: 'Address',
+                          label: 'Address',
+                          controller: _addressController,
+                        ),
+                        const SizedBox(height: 20),
+                        AuthInputWidget(
+                          hint: 'License number',
+                          label: 'License number',
+                          controller: _licenseController,
                         ),
                         const SizedBox(height: 32),
-                        AppButton(title: "Ro'yxatdan o'tish", onTap: () {}),
+                        AppButton(
+                          isLoading: isCreatingProccess,
+                          title: "Ro'yxatdan o'tish",
+                          onTap: () {
+                            isCreatingProccess = true;
+                            context.read<TrackInfoBloc>().add(
+                              PutDriverInfoEvent(
+                                data: DriverInfoPutModel(
+                                  avatar: '',
+                                  truckImage: '',
+                                  truckMark:
+                                      pickeDtruckMark?.id.toString() ?? '',
+                                  truckModel:
+                                      pickedTruckModel?.id.toString() ?? '',
+                                  truckYear: productionYear ?? '',
+                                  phoneNumber: phoneNumber ?? '',
+                                  licenseNumber: licenseNumber ?? '',
+                                  address: address ?? '',
+                                ),
+                                onError: () {
+                                  isCreatingProccess = false;
+                                  AppSnackBar.showError(
+                                    context,
+                                    'Error occured',
+                                  );
+                                },
+                                onSuccess: () {
+                                  isCreatingProccess = false;
+                                  AppSnackBar.showSuccess(
+                                    context,
+                                    'Your driver profile has been updated',
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                        ),
                         const SizedBox(height: 16),
                         AppButton(
                           backGroundColor: AppColor.lightBlue,
