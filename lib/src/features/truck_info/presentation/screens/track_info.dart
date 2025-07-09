@@ -26,10 +26,12 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
     BlocProvider.of<TrackInfoBloc>(context).add(
       GetTrackMarskEvent(
         onError: () {
-          AppSnackBar.showError(
-            context,
-            'Error occured while getting track marks',
-          );
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            AppSnackBar.showError(
+              context,
+              'Error occured while getting track marks',
+            );
+          });
         },
       ),
     );
@@ -203,11 +205,13 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                         BlocBuilder<TrackInfoBloc, TrackInfoState>(
                           builder: (context, state) {
                             if (state.status == TrackInfoStatus.error) {
-                              AppSnackBar.showError(
-                                context,
-                                state.errorMessage ??
-                                    'Error occured please try again',
-                              );
+                              WidgetsBinding.instance.addPostFrameCallback((v) {
+                                AppSnackBar.showError(
+                                  context,
+                                  state.errorMessage ??
+                                      'Error occured please try again',
+                                );
+                              });
                             }
                             return TruckDropDownWidget(
                               isLoading:
@@ -330,17 +334,26 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                                 ),
                                 onError: () {
                                   isCreatingProccess = false;
-                                  AppSnackBar.showError(
-                                    context,
-                                    'Error occured',
-                                  );
+                                  WidgetsBinding.instance.addPostFrameCallback((
+                                    v,
+                                  ) {
+                                    AppSnackBar.showError(
+                                      context,
+                                      'Error occured',
+                                    );
+                                  });
                                 },
                                 onSuccess: () {
                                   isCreatingProccess = false;
-                                  AppSnackBar.showSuccess(
-                                    context,
-                                    'Your driver profile has been updated',
-                                  );
+                                  WidgetsBinding.instance.addPostFrameCallback((
+                                    v,
+                                  ) {
+                                    AppSnackBar.showSuccess(
+                                      context,
+                                      'Your driver profile has been updated',
+                                    );
+                                    context.go(Pages.chat);
+                                  });
                                 },
                               ),
                             );

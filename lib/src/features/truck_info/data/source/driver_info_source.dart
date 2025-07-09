@@ -21,7 +21,6 @@ class DriverInfoSource {
           },
         ),
       );
-
       if (response.isSuccess) {
         print('Success on get Marks');
         print(response.data);
@@ -36,8 +35,9 @@ class DriverInfoSource {
         return NetworkResponse(errorText: response.statusMessage ?? "");
       }
     } on DioException catch (e) {
+      print('Dio exception ${e.response?.statusCode}');
       return NetworkResponse(
-        errorText: e.response?.data ?? 'Dio exception error',
+        errorText: e.response?.data['detail'] ?? 'Dio exception error',
       );
     } catch (e) {
       return NetworkResponse(errorText: e.toString());

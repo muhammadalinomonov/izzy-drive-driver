@@ -17,7 +17,7 @@ import 'package:taxi_app/src/routes/pages.dart';
 class Routes {
   static final GoRouter router = GoRouter(
     initialLocation: StorageRepository.getString('token').isNotEmpty
-        ? Pages.tackScreen
+        ? Pages.chat
         : Pages.signIn,
     routes: [
       GoRoute(
