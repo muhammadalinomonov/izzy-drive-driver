@@ -51,6 +51,7 @@ dependencies:
   # photo_viewer: ^0.0.3
   shared_preferences: ^2.5.3
   shimmer: ^3.0.0
+  card_swiper: ^3.0.1
 
 dev_dependencies:
   flutter_test:

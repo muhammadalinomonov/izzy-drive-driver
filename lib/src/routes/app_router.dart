@@ -7,6 +7,7 @@ import 'package:taxi_app/src/features/auth/presentation/bloc/bloc/auth_bloc.dart
 import 'package:taxi_app/src/features/auth/presentation/pages/sign_in_page.dart';
 import 'package:taxi_app/src/features/auth/presentation/pages/sign_up_page.dart';
 import 'package:taxi_app/src/features/chat/presentation/pages/chat_page.dart';
+import 'package:taxi_app/src/features/home/presentation/screens/home_screen.dart';
 import 'package:taxi_app/src/features/map/presenation/pages/map_screen.dart';
 import 'package:taxi_app/src/features/truck_info/data/repo/driver_info_repo_impl.dart';
 import 'package:taxi_app/src/features/truck_info/data/source/driver_info_source.dart';
@@ -17,7 +18,7 @@ import 'package:taxi_app/src/routes/pages.dart';
 class Routes {
   static final GoRouter router = GoRouter(
     initialLocation: StorageRepository.getString('token').isNotEmpty
-        ? Pages.chat
+        ? Pages.home
         : Pages.signIn,
     routes: [
       GoRoute(
@@ -52,6 +53,12 @@ class Routes {
         path: Pages.map,
         builder: (context, state) {
           return MapScreen();
+        },
+      ),
+      GoRoute(
+        path: Pages.home,
+        builder: (context, state) {
+          return HomeScreen();
         },
       ),
       GoRoute(
