@@ -36,7 +36,6 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-
             child: Column(
               children: [
                 SearchInputWidget(hint: 'Usta qayerga borsin ?'),
