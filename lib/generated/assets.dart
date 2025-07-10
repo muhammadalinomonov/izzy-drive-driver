@@ -9,12 +9,14 @@ class Assets {
   static const String iconsGoogleIcon = 'assets/icons/google_icon.svg';
   static const String iconsHome = 'assets/icons/home.svg';
   static const String iconsLocation = 'assets/icons/location.svg';
+  static const String iconsMastericon = 'assets/icons/mastericon.png';
   static const String iconsMasters = 'assets/icons/masters.svg';
   static const String iconsMic = 'assets/icons/mic.svg';
   static const String iconsPaperclip = 'assets/icons/paperclip.svg';
   static const String iconsPending = 'assets/icons/pending.svg';
   static const String iconsProfile = 'assets/icons/profile.svg';
   static const String iconsServices = 'assets/icons/services.svg';
+  static const String iconsTruck = 'assets/icons/truck.svg';
   static const String imagesActivities = 'assets/images/activities.png';
   static const String imagesDeliver = 'assets/images/deliver.png';
   static const String imagesFood = 'assets/images/food.png';
