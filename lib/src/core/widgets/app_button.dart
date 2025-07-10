@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
@@ -6,6 +7,7 @@ class AppButton extends StatelessWidget {
   const AppButton({
     this.backGroundColor,
     this.textColor,
+    this.isLoading = false,
     super.key,
     required this.title,
     required this.onTap,
@@ -14,6 +16,7 @@ class AppButton extends StatelessWidget {
   final String title;
   final Color? backGroundColor;
   final Color? textColor;
+  final bool isLoading;
 
   final VoidCallback onTap;
 
@@ -23,20 +26,23 @@ class AppButton extends StatelessWidget {
       onPressed: onTap,
       style: ElevatedButton.styleFrom(
         backgroundColor:
-            backGroundColor ?? AppColor.kPrimaryColor, // Or use AppColor.primary if defined
+            backGroundColor ??
+            AppColor.kPrimaryColor, // Or use AppColor.primary if defined
         minimumSize: Size(double.infinity, 48), // Full width, height 64
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(50), // Fully rounded
         ),
         elevation: 0, // Flat look, remove if you want shadow
       ),
-      child: Text(
-        title,
-        style: context.textS.titleMedium!.copyWith(
-          color: textColor ??  AppColor.white,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+      child: isLoading
+          ? Center(child: CupertinoActivityIndicator(color: AppColor.white))
+          : Text(
+              title,
+              style: context.textS.titleMedium!.copyWith(
+                color: textColor ?? AppColor.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
     );
   }
 }

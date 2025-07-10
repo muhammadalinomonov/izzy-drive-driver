@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-
 class AppIcons {
   AppIcons._();
 
@@ -19,5 +18,7 @@ class AppIcons {
   static const String location = 'assets/icons/location.svg';
   static const String microphone = 'assets/icons/mic.svg';
   static const String paperclip = 'assets/icons/paperclip.svg';
+  static const String bell = 'assets/icons/bell.svg';
+  static const String search = 'assets/icons/search.svg';
 
 }

@@ -21,5 +21,11 @@ class RegisterEvent extends AuthEvent {
 
 class LoginEvent extends AuthEvent {
   final AuthModel authModel;
-  const LoginEvent({required this.authModel});
+  final VoidCallback onSuccess;
+  final VoidCallback onError;
+  const LoginEvent({
+    required this.authModel,
+    required this.onError,
+    required this.onSuccess,
+  });
 }
