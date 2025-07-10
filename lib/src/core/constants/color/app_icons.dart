@@ -13,6 +13,8 @@ class AppIcons {
   static const String pending = 'assets/icons/pending.svg';
   static const String profile = 'assets/icons/profile.svg';
   static const String services = 'assets/icons/services.svg';
+  static const String truck = 'assets/icons/truck.svg';
+  static const String master = 'assets/icons/mastericon.png';
   static const String back = 'assets/icons/back.svg';
   static const String location = 'assets/icons/location.svg';
   static const String microphone = 'assets/icons/mic.svg';

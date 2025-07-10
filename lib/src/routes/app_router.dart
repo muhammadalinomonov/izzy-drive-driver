@@ -7,14 +7,18 @@ import 'package:taxi_app/src/features/auth/presentation/bloc/bloc/auth_bloc.dart
 import 'package:taxi_app/src/features/auth/presentation/pages/sign_in_page.dart';
 import 'package:taxi_app/src/features/auth/presentation/pages/sign_up_page.dart';
 import 'package:taxi_app/src/features/chat/presentation/pages/chat_page.dart';
+import 'package:taxi_app/src/features/map/presenation/bloc/map_bloc.dart';
 import 'package:taxi_app/src/features/map/presenation/pages/map_screen.dart';
 import 'package:taxi_app/src/features/truck_info/presentation/screens/track_info.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 
+import '../features/map/data/repo/map_repo_imp.dart';
+import '../features/map/data/source/map_data_source.dart';
+
 class Routes {
   static final GoRouter router = GoRouter(
     initialLocation: StorageRepository.getString('token').isNotEmpty
-        ? Pages.chat
+        ? Pages.map
         : Pages.signIn,
     routes: [
       GoRoute(
@@ -48,7 +52,11 @@ class Routes {
       GoRoute(
         path: Pages.map,
         builder: (context, state) {
-          return MapScreen();
+          return BlocProvider(
+            create: (context) =>
+                MapBloc(mapRepo: MapRepoImpl(dataSource: MapDataSource())),
+            child: MapScreen(),
+          );
         },
       ),
       GoRoute(

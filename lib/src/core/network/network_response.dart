@@ -1,6 +1,6 @@
-class NetworkResponse {
-  String errorText;
-  dynamic data;
+class NetworkResponse<T> {
+  final String errorText;
+  final T? data;
 
   NetworkResponse({
     this.errorText = "",
