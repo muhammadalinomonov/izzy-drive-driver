@@ -201,8 +201,9 @@ class _SectionTitle extends StatelessWidget {
       child: Text(
         title,
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          color: Colors.grey[700],
-          fontWeight: FontWeight.bold,
+          color: AppColor.darkGrey,
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -214,7 +215,7 @@ class _OrderInfoSection extends StatelessWidget {
   Widget build(BuildContext context) {
     TextStyle? labelStyle = Theme.of(
       context,
-    ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]);
+    ).textTheme.bodySmall?.copyWith(color: AppColor.grey);
     TextStyle? valueStyle = Theme.of(
       context,
     ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500);
@@ -314,10 +315,10 @@ class _OffersRow extends StatelessWidget {
   Widget build(BuildContext context) {
     TextStyle? labelStyle = Theme.of(
       context,
-    ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]);
+    ).textTheme.bodySmall?.copyWith(color: AppColor.grey);
     TextStyle? valueStyle = Theme.of(
       context,
-    ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold);
+    ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 18);
     return Container(
       padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
@@ -345,7 +346,7 @@ class _OffersRow extends StatelessWidget {
                 SizedBox(height: 4),
                 Text(
                   '1500 \$',
-                  style: valueStyle?.copyWith(color: Colors.blue),
+                  style: valueStyle?.copyWith(color: AppColor.kPrimaryColor),
                 ),
               ],
             ),
