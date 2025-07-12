@@ -6,6 +6,7 @@ import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
 import 'package:taxi_app/src/features/home/presentation/bloc/bloc/home_bloc.dart';
+import 'package:taxi_app/src/features/home/presentation/widgets/profile_order_model_sheet.dart';
 import 'package:taxi_app/src/features/home/presentation/widgets/search_input.dart';
 import 'package:card_swiper/card_swiper.dart';
 
@@ -54,6 +55,14 @@ class _HomeScreenState extends State<HomeScreen> {
           OtherOpportunitiesWidget(),
           SizedBox(height: 25),
           BannerWidget(),
+          // DEMO: Button to show the responsive bottom sheet
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
+              onPressed: () => showOrderDetailBottomSheet(context),
+              child: Text('Show Order Detail Bottom Sheet'),
+            ),
+          ),
         ],
       ),
     );
@@ -278,6 +287,7 @@ class OtherOpportunitiesWidget extends StatelessWidget {
     );
   }
 }
+
 class _OpportunityCard extends StatelessWidget {
   final String icon;
   final String label;
