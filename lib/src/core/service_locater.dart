@@ -10,7 +10,7 @@ Future<void> setupLocator() async {
   await StorageRepository.getInstance();
   serviceLocator.registerLazySingleton(DioSettings.new);
   await dotenv.load(
-    fileName: '/Users/saikou/taxi_app/.env'
+    fileName: '/Users/ibrohimraufjonov/Document/taxi_app/.env'
   );
   MapboxOptions.setAccessToken(dotenv.env['MAPBOX_ACCESS_TOKEN']!);
 }

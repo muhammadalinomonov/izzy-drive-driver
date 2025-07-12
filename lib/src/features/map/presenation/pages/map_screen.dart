@@ -7,11 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart' as geolocator;
+import 'package:go_router/go_router.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/features/map/data/model/nearby_masters_response.dart';
 import 'package:flutter/services.dart';
+import 'package:taxi_app/src/routes/pages.dart';
 import '../../data/repo/map_repo_imp.dart';
 import '../../data/source/map_data_source.dart';
 import '../bloc/map_bloc.dart';
@@ -97,7 +99,6 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-
   Future<Uint8List> _loadPngMarker() async {
     try {
       final String assetPath = AppIcons.master;
@@ -111,10 +112,11 @@ class _MapScreenState extends State<MapScreen> {
       return Uint8List.fromList([]);
     }
   }
+
   Future<Uint8List> _drawMarkerWithPill(
-      Uint8List iconBytes,
-      String text,
-      ) async {
+    Uint8List iconBytes,
+    String text,
+  ) async {
     // 1. Master ikonkasini Image ob’ektiga aylantiramiz
     final codec = await ui.instantiateImageCodec(iconBytes);
     final frame = await codec.getNextFrame();
@@ -136,17 +138,14 @@ class _MapScreenState extends State<MapScreen> {
 
     // 4. Canvas o‘lchamini aniqlaymiz:
     //    butun marker – ikonka balandligi + pastda pill bo‘lishi uchun joy
-    final totalW = max(iconImage.width.toDouble(), pillW/2);
+    final totalW = max(iconImage.width.toDouble(), pillW / 2);
     final totalH = iconImage.height.toDouble() + pillH / 2;
 
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
 
     // 5. Ikonkani chizamiz, tepada markazlashgan holda
-    final iconOffset = Offset(
-      (totalW - iconImage.width) / 2,
-      0,
-    );
+    final iconOffset = Offset((totalW - iconImage.width) / 2, 0);
     canvas.drawImage(iconImage, iconOffset, Paint());
 
     // 6. Pastki yostiqcha (“pill”) uchun dumaloq to‘rtburchak
@@ -170,10 +169,10 @@ class _MapScreenState extends State<MapScreen> {
     return bd!.buffer.asUint8List();
   }
 
-
-// 1. _addMarkers metodini yangilang:
+  // 1. _addMarkers metodini yangilang:
   void _addMarkers(List<Mechanic> mechanics) async {
-    final annotationManager = await _mapboxMap.annotations.createPointAnnotationManager();
+    final annotationManager = await _mapboxMap.annotations
+        .createPointAnnotationManager();
     await annotationManager.deleteAll();
     for (var mech in mechanics) {
       final iconBytes = await _loadPngMarker();
@@ -184,16 +183,19 @@ class _MapScreenState extends State<MapScreen> {
 
       annotationManager.create(
         mapbox.PointAnnotationOptions(
-          geometry: mapbox.Point(coordinates: mapbox.Position(
-            mech.longitude.toDouble(),
-            mech.latitude.toDouble(),
-          )),
+          geometry: mapbox.Point(
+            coordinates: mapbox.Position(
+              mech.longitude.toDouble(),
+              mech.latitude.toDouble(),
+            ),
+          ),
           image: combined,
           iconSize: 0.6,
         ),
       );
     }
   }
+
   @override
   void dispose() {
     _debounceTimer?.cancel();
@@ -214,9 +216,10 @@ class _MapScreenState extends State<MapScreen> {
                   listener: (context, state) async {
                     if (state is MapSuccess) {
                       // Fetch nearby mechanics and add markers
-                       _annotationManager = await _mapboxMap.annotations
+                      _annotationManager = await _mapboxMap.annotations
                           .createPointAnnotationManager();
-                      await _annotationManager?.deleteAll(); // Clear existing markers
+                      await _annotationManager
+                          ?.deleteAll(); // Clear existing markers
 
                       _addMarkers(state.nearbyMechanics.data.mechanics);
                     } else if (state is MapFailure) {}
@@ -492,6 +495,7 @@ class _MapScreenState extends State<MapScreen> {
                         print(
                           'Davom etish: ${selectedLocation!.coordinates.lat}, ${selectedLocation!.coordinates.lng}',
                         );
+                        context.go(Pages.home);
                       } else {
                         print('Joy tanlanmadi');
                       }

@@ -11,7 +11,6 @@ class AuthDataSource {
   final client = serviceLocator.get<DioSettings>().dio;
 
   Future<NetworkResponse> register(AuthModel authModel) async {
-    print('Sent data ${authModel.toMap()}');
     try {
       final response = await client.post(
         ApiConstants.register,
@@ -19,27 +18,19 @@ class AuthDataSource {
       );
 
       if (response.isSuccess) {
-        print('Success on register');
-        print(response.data);
         final responseData = response.data['data']['access'];
         StorageRepository.putString('token', responseData);
         StorageRepository.putString(
           'refresh',
           response.data['data']['refresh'],
         );
-        print('Token on Local');
-        print(StorageRepository.getString('token'));
-        print('Token on Refresh');
-        print(StorageRepository.getString('refresh'));
         return NetworkResponse(data: response.data);
       } else {
-        print('error on register ${response.statusCode}');
-        print(response.data);
         return NetworkResponse(errorText: response.statusMessage ?? "");
       }
     } on DioException catch (e) {
       return NetworkResponse(
-        errorText: e.response?.data ?? 'Dio exception error',
+        errorText: e.response?.data['message'] ?? 'Dio exception error',
       );
     } catch (e) {
       return NetworkResponse(errorText: e.toString());
@@ -70,8 +61,10 @@ class AuthDataSource {
         );
       }
     } on DioException catch (e) {
+      print('error on auth ${e.response?.data['message']}');
       return NetworkResponse(
-        errorText: e.response?.data ?? 'Dio exception error',
+        errorText:
+            e.response?.data['message'] ?? 'Dio exception error',
       );
     } catch (e) {
       return NetworkResponse(errorText: e.toString());

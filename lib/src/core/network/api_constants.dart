@@ -6,4 +6,5 @@ class ApiConstants {
   static final String driverInfo = "drivers/driverprofile/";
   static final String nearMechanicsKm = "drivers/near-mechanics-km/";
   static final String searchLocation = "drivers/typing/";
+  static final String getBanners = "others/banners/";
 }

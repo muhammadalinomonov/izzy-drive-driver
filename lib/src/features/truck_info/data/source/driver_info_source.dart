@@ -37,7 +37,8 @@ class DriverInfoSource {
     } on DioException catch (e) {
       print('Dio exception ${e.response?.statusCode}');
       return NetworkResponse(
-        errorText: e.response?.data['detail'] ?? 'Dio exception error',
+        errorText:
+            e.response?.data['message']['detail'] ?? 'Dio exception error',
       );
     } catch (e) {
       return NetworkResponse(errorText: e.toString());
@@ -72,7 +73,7 @@ class DriverInfoSource {
       }
     } on DioException catch (e) {
       return NetworkResponse(
-        errorText: e.response?.data ?? 'Dio exception error',
+        errorText: e.response?.data['message'] ?? 'Dio exception error',
       );
     } catch (e) {
       return NetworkResponse(errorText: e.toString());
@@ -102,7 +103,7 @@ class DriverInfoSource {
       }
     } on DioException catch (e) {
       return NetworkResponse(
-        errorText: e.response?.data ?? 'Dio exception error',
+        errorText: e.response?.data['message'] ?? 'Dio exception error',
       );
     } catch (e) {
       return NetworkResponse(errorText: e.toString());
