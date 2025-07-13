@@ -61,7 +61,7 @@ void showOrderDetailBottomSheet(BuildContext context) {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        _ProfileSection(),
+                        ProfileSection(),
                         SizedBox(height: 18),
                         _StatsRow(),
                       ],
@@ -121,7 +121,7 @@ void showOrderDetailBottomSheet(BuildContext context) {
   );
 }
 
-class _ProfileSection extends StatelessWidget {
+class ProfileSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);

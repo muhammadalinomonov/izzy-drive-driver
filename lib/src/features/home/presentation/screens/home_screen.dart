@@ -6,6 +6,7 @@ import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
 import 'package:taxi_app/src/features/home/presentation/bloc/bloc/home_bloc.dart';
+import 'package:taxi_app/src/features/home/presentation/widgets/comment_section_modal_sheet.dart';
 import 'package:taxi_app/src/features/home/presentation/widgets/profile_order_model_sheet.dart';
 import 'package:taxi_app/src/features/home/presentation/widgets/search_input.dart';
 import 'package:card_swiper/card_swiper.dart';
@@ -62,6 +63,10 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () => showOrderDetailBottomSheet(context),
               child: Text('Show Order Detail Bottom Sheet'),
             ),
+          ),
+          ElevatedButton(
+            onPressed: () => showCommentSectionModalSheet(context),
+            child: Text('Show Comment Bottom Sheet'),
           ),
         ],
       ),
