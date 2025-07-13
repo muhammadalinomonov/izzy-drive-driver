@@ -4,144 +4,163 @@ import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/home/presentation/widgets/profile_order_model_sheet.dart';
 
 void showCommentSectionModalSheet(BuildContext context) {
+  bool showAllComments = false;
+
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (context) {
-      final mq = MediaQuery.of(context);
       return DraggableScrollableSheet(
         initialChildSize: 0.8,
         minChildSize: 0.4,
         maxChildSize: 0.95,
         expand: false,
         builder: (context, scrollController) {
-          return Container(
-            decoration: BoxDecoration(
-              color: AppColor.lightBlue, // White background
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 16,
-                  offset: Offset(0, 4),
+          return StatefulBuilder(
+            builder: (context, setState) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: AppColor.lightBlue, // White background
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 16,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Column(
-              children: [
-                // Profile Section
-                Container(
-                  padding: EdgeInsets.only(
-                    top: 12,
-                    bottom: 18,
-                    left: 48,
-                    right: 48,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColor.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 5,
-                        margin: EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                child: Column(
+                  children: [
+                    // Profile Section
+                    Container(
+                      padding: EdgeInsets.only(
+                        top: 12,
+                        bottom: 18,
+                        left: 48,
+                        right: 48,
                       ),
-                      ProfileSection(),
-                      SizedBox(height: 18),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      decoration: BoxDecoration(
+                        color: AppColor.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
                         children: [
-                          _ProfileStat(title: 'All orders', value: '658'),
-                          _ProfileStat(title: 'Success', value: '600'),
-                          _ProfileStat(title: 'Performance', value: '99%'),
+                          Container(
+                            width: 40,
+                            height: 5,
+                            margin: EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          ProfileSection(),
+                          SizedBox(height: 18),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _ProfileStat(title: 'All orders', value: '658'),
+                              _ProfileStat(title: 'Success', value: '600'),
+                              _ProfileStat(title: 'Performance', value: '99%'),
+                            ],
+                          ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-                // Comments Section
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    margin: EdgeInsets.only(top: 8),
-                    padding: EdgeInsets.only(
-                      left: 20,
-                      right: 20,
-                      bottom: 0,
-                      top: 18,
                     ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: Colors.white,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'IZOH VA BAHOLAR',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                color: AppColor.darkGrey,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                              ),
+                    // Comments Section
+                    Expanded(
+                      child: Container(
+                        width: double.infinity,
+                        margin: EdgeInsets.only(top: 8),
+                        padding: EdgeInsets.only(
+                          left: 20,
+                          right: 20,
+                          bottom: 0,
+                          top: 18,
                         ),
-                        SizedBox(height: 12),
-                        Expanded(
-                          child: ListView.separated(
-                            shrinkWrap: true,
-                            physics: BouncingScrollPhysics(),
-                            controller: scrollController,
-                            itemCount: _mockComments.length,
-                            separatorBuilder: (_, __) => Divider(
-                              height: 32,
-                              thickness: 1,
-                              color: Colors.grey[200],
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          color: Colors.white,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'IZOH VA BAHOLAR',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    color: AppColor.darkGrey,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                             ),
-                            itemBuilder: (context, index) {
-                              final comment = _mockComments[index];
-                              return _CommentCard(comment: comment);
-                            },
-                          ),
-                        ),
-                        SizedBox(height: 12),
-                        Center(
-                          child: TextButton(
-                            onPressed: () {},
-                            child: Text(
-                              'ALL COMMENTS',
-                              style: TextStyle(
-                                color: AppColor.kPrimaryColor,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16,
-                                letterSpacing: 0.2,
+                            SizedBox(height: 12),
+                            Expanded(
+                              child: ListView.separated(
+                                shrinkWrap: true,
+                                physics: BouncingScrollPhysics(),
+                                controller: scrollController,
+                                itemCount: showAllComments
+                                    ? _mockComments.length
+                                    : (_mockComments.length > 2
+                                          ? 2
+                                          : _mockComments.length),
+                                separatorBuilder: (_, __) => Divider(
+                                  height: 32,
+                                  thickness: 1,
+                                  color: Colors.grey[200],
+                                ),
+                                itemBuilder: (context, index) {
+                                  final comment = _mockComments[index];
+                                  return _CommentCard(comment: comment);
+                                },
                               ),
                             ),
-                          ),
+                            SizedBox(height: 12),
+                            if (!showAllComments && _mockComments.length > 2)
+                              Center(
+                                child: TextButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      showAllComments = true;
+                                    });
+                                  },
+                                  child: Text(
+                                    'ALL COMMENTS',
+                                    style: TextStyle(
+                                      color: AppColor.kPrimaryColor,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 16,
+                                      letterSpacing: 0.2,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                    Divider(height: 32, thickness: 1, color: Colors.grey[200]),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        top: 10,
+                        bottom: 20,
+                        left: 11,
+                        right: 11,
+                      ),
+                      child: AppButton(
+                        title: 'Exit',
+                        onTap: () => Navigator.pop(context),
+                        backGroundColor: AppColor.lightGrey,
+                        textColor: AppColor.black,
+                      ),
+                    ),
+                  ],
                 ),
-                Divider(height: 32, thickness: 1, color: Colors.grey[200]),
-                Padding(
-                  padding: const EdgeInsets.only(
-                    top: 10,
-                    bottom: 20,
-                    left: 11,
-                    right: 11,
-                  ),
-                  child: AppButton(title: 'Exit', onTap: () => Navigator.pop(context), backGroundColor: AppColor.lightGrey, textColor: AppColor.black,),
-                ),
-              ],
-            ),
+              );
+            },
           );
         },
       );
