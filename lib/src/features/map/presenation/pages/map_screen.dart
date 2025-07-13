@@ -495,7 +495,7 @@ class _MapScreenState extends State<MapScreen> {
                         print(
                           'Davom etish: ${selectedLocation!.coordinates.lat}, ${selectedLocation!.coordinates.lng}',
                         );
-                        context.go(Pages.home);
+                        context.go(Pages.main);
                       } else {
                         print('Joy tanlanmadi');
                       }

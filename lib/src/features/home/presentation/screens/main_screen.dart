@@ -5,6 +5,7 @@ import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
 import 'package:taxi_app/src/features/home/presentation/screens/home_screen.dart';
+import 'package:taxi_app/src/features/worker_info/presentation/pages/worker_info_page.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -16,7 +17,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   final List<Widget> _pages = [
     HomeScreen(),
-    Center(child: Text('Services')),
+    WorkerInfoPage(),
     Center(child: Text('Masters')),
     Center(child: Text('Profile')),
   ];
@@ -51,7 +52,10 @@ class _MainScreenState extends State<MainScreen> {
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.only(bottom: 25, top: 12), // Adjust as needed
+          padding: const EdgeInsets.only(
+            bottom: 25,
+            top: 12,
+          ), // Adjust as needed
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: List.generate(_bottomIcons.length, (i) {

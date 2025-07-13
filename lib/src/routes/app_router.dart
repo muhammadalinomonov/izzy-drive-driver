@@ -18,6 +18,7 @@ import 'package:taxi_app/src/features/truck_info/data/repo/driver_info_repo_impl
 import 'package:taxi_app/src/features/truck_info/data/source/driver_info_source.dart';
 import 'package:taxi_app/src/features/truck_info/presentation/bloc/bloc/track_info_bloc.dart';
 import 'package:taxi_app/src/features/truck_info/presentation/screens/track_info.dart';
+import 'package:taxi_app/src/features/worker_info/presentation/pages/worker_info_page.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 
 import '../features/map/data/repo/map_repo_imp.dart';
@@ -26,7 +27,7 @@ import '../features/map/data/source/map_data_source.dart';
 class Routes {
   static final GoRouter router = GoRouter(
     initialLocation: StorageRepository.getString('token').isNotEmpty
-        ? Pages.main
+        ? Pages.map
         : Pages.signIn,
     routes: [
       GoRoute(
@@ -55,6 +56,12 @@ class Routes {
         path: Pages.chat,
         builder: (context, state) {
           return ChatPage();
+        },
+      ),
+      GoRoute(
+        path: Pages.workerInfo,
+        builder: (context, state) {
+          return WorkerInfoPage();
         },
       ),
       GoRoute(
