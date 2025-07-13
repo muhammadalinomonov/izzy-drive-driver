@@ -28,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text(
           'Asosiy',
@@ -38,37 +39,29 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(onPressed: () {}, icon: SvgPicture.asset(AppIcons.bell)),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Column(
-              children: [
-                SearchInputWidget(hint: 'Usta qayerga borsin ?'),
-                SizedBox(height: 12),
-                LastLocationWidget(),
-                SizedBox(height: 12),
-                LastLocationWidget(),
-              ],
+      body: GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Column(
+                children: [
+                  SearchInputWidget(hint: 'Usta qayerga borsin ?', textInputAction: TextInputAction.search,),
+                  SizedBox(height: 12),
+                  LastLocationWidget(),
+                  SizedBox(height: 12),
+                  LastLocationWidget(),
+                ],
+              ),
             ),
-          ),
-          SizedBox(height: 20),
-          OtherOpportunitiesWidget(),
-          SizedBox(height: 25),
-          BannerWidget(),
-          // DEMO: Button to show the responsive bottom sheet
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: () => showOrderDetailBottomSheet(context),
-              child: Text('Show Order Detail Bottom Sheet'),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => showCommentSectionModalSheet(context),
-            child: Text('Show Comment Bottom Sheet'),
-          ),
-        ],
+            SizedBox(height: 20),
+            OtherOpportunitiesWidget(),
+            SizedBox(height: 25),
+            BannerWidget(),
+           
+          ],
+        ),
       ),
     );
   }

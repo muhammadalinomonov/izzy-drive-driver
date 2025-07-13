@@ -33,7 +33,6 @@ void showCommentSectionModalSheet(BuildContext context) {
                 ),
                 child: Column(
                   children: [
-                    // Profile Section
                     Container(
                       padding: EdgeInsets.only(
                         top: 12,
@@ -69,7 +68,6 @@ void showCommentSectionModalSheet(BuildContext context) {
                         ],
                       ),
                     ),
-                    // Comments Section
                     Expanded(
                       child: Container(
                         width: double.infinity,

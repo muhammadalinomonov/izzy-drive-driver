@@ -5,5 +5,5 @@ class Pages {
   static const String map = '/map';
   static const String tackScreen = '/trackScreen';
   static const String home = '/home';
-
+  static const String main = '/';
 }
