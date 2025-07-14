@@ -21,6 +21,9 @@ import 'package:taxi_app/src/features/truck_info/presentation/screens/track_info
 import 'package:taxi_app/src/features/worker_info/presentation/pages/worker_info_page.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 
+import '../features/chat/data/repo/chat_repo_imp.dart';
+import '../features/chat/data/source/chat_data_source.dart';
+import '../features/chat/presentation/bloc/chat_bloc.dart';
 import '../features/map/data/repo/map_repo_imp.dart';
 import '../features/map/data/source/map_data_source.dart';
 
@@ -55,7 +58,12 @@ class Routes {
       GoRoute(
         path: Pages.chat,
         builder: (context, state) {
-          return ChatPage();
+          return BlocProvider(
+            create: (context) => ChatBloc(
+              chatRepo: ChatRepoImpl(chatDataSource: ChatDataSource()),
+            ),
+            child: ChatPage(),
+          );
         },
       ),
       GoRoute(
