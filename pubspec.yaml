@@ -42,7 +42,6 @@ dependencies:
   go_router: ^16.0.0
   voice_message_player: ^1.1.2
   record: ^4.3.0
-  card_swiper: ^1.0.0
   mapbox_maps_flutter: ^2.9.0
   geolocator: ^14.0.1
   flutter_dotenv: ^5.2.1
