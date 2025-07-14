@@ -56,9 +56,18 @@ class AuthDataSource {
       if (response.isSuccess) {
         print('Success on login');
         print(response.data);
+        final responseData = response.data['data']['access'];
+        StorageRepository.putString('token', responseData);
+        StorageRepository.putString(
+          'refresh',
+          response.data['data']['refresh'],
+        );
         return NetworkResponse(data: response.data);
       } else {
-        return NetworkResponse(errorText: response.statusMessage ?? "");
+        print('Log in error ${response.data}');
+        return NetworkResponse(
+          errorText: response.data['non_field_errors'].toString(),
+        );
       }
     } on DioException catch (e) {
       return NetworkResponse(

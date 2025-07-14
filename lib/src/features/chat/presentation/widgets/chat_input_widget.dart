@@ -77,20 +77,16 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
         color: const Color(0xFFEFF2F5),
         shape: RoundedRectangleBorder(
           side: const BorderSide(color: Color(0xFFE2E7EB), width: 1),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(24),
         ),
       ),
       child: Row(
         children: [
-          // Attach button
           _buildIconButton(
             icon: Icon(Icons.attach_file, size: 24, color: AppColor.grey),
             onTap: widget.onAttach,
           ),
-
           const SizedBox(width: 12),
-
-          // Text input
           Expanded(
             child: TextField(
               controller: widget.controller,
@@ -108,8 +104,6 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
               ),
             ),
           ),
-
-          // Recording controls or mic/send
           if (widget.isRecording) ...[
             _buildIconButton(
               icon: const Icon(Icons.close, size: 24, color: Colors.red),
