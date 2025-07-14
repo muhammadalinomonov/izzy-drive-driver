@@ -17,10 +17,9 @@ class WorkerInfoPage extends StatefulWidget {
 class _WorkerInfoPageState extends State<WorkerInfoPage> {
   final repo = WorkerInfoRepoImpl();
   int _selectedRating = 1;
+  int? _pickRate;
 
   final List<String> _ratingTitles = ["Yaxshi", "A'lo", "Yomon", "Izoh yozish"];
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -144,26 +143,62 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 4,
                                         ),
-                                        child: Chip(
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              18,
+                                        child: GestureDetector(
+                                          onTap: () => setState(() {
+                                            _pickRate = i;
+                                          }),
+                                          child: Chip(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(18),
                                             ),
+                                            side: BorderSide.none,
+                                            label: Text(
+                                              _ratingTitles[i],
+                                              style: context.textS.titleSmall
+                                                  ?.copyWith(
+                                                    fontSize: 13,
+                                                    color:
+                                                        _pickRate != null &&
+                                                            _pickRate == i
+                                                        ? AppColor.white
+                                                        : AppColor.black,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                            ),
+                                            backgroundColor:
+                                                _pickRate != null &&
+                                                    _pickRate == i
+                                                ? AppColor.kPrimaryColor
+                                                : AppColor.lightBlue,
                                           ),
-                                          side: BorderSide.none,
-                                          label: Text(
-                                            _ratingTitles[i],
-                                            style: context.textS.titleSmall
-                                                ?.copyWith(
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                          ),
-                                          backgroundColor: AppColor.lightBlue,
                                         ),
                                       ),
                                     ),
                                   ),
+                                  if (_pickRate == 3) ...[
+                                    const SizedBox(height: 16),
+                                    TextField(
+                                      maxLines: 5,
+                                      decoration: InputDecoration(
+                                        hintText: 'Izohingizni kiriting...',
+                                        filled: true,
+                                        fillColor: AppColor.lightBlue,
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 16,
+                                            ),
+                                      ),
+                                      style: context.textS.bodyMedium,
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),
