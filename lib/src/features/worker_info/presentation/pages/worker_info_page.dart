@@ -20,6 +20,8 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
 
   final List<String> _ratingTitles = ["Yaxshi", "A'lo", "Yomon", "Izoh yozish"];
 
+
+
   @override
   Widget build(BuildContext context) {
     final worker = repo.getWorker();
@@ -43,7 +45,6 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Replace the top info block with a conditional
                           if (worker.status == WorkerStatus.accepted) ...[
                             Container(
                               width: double.infinity,
@@ -93,8 +94,21 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                     textAlign: TextAlign.center,
                                   ),
                                   const SizedBox(height: 24),
-                                  Divider(height: 1, color: Color(0xFFF1F1F1)),
-                                  const SizedBox(height: 16),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 32,
+                                horizontal: 16,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Column(
+                                children: [
                                   Text(
                                     'Baholang',
                                     style: context.textS.titleMedium?.copyWith(
