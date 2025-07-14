@@ -11,12 +11,16 @@ class AppButton extends StatelessWidget {
     super.key,
     required this.title,
     required this.onTap,
+    this.size,
+    this.padding,
   });
 
   final String title;
   final Color? backGroundColor;
   final Color? textColor;
   final bool isLoading;
+  final Size? size;
+  final EdgeInsets? padding;
 
   final VoidCallback onTap;
 
@@ -25,6 +29,8 @@ class AppButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: onTap,
       style: ElevatedButton.styleFrom(
+        padding: padding,
+        fixedSize: size,
         backgroundColor:
             backGroundColor ??
             AppColor.kPrimaryColor, // Or use AppColor.primary if defined

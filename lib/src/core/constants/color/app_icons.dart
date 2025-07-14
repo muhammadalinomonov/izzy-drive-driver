@@ -20,5 +20,8 @@ class AppIcons {
   static const String paperclip = 'assets/icons/paperclip.svg';
   static const String bell = 'assets/icons/bell.svg';
   static const String search = 'assets/icons/search.svg';
+  static const String phone = 'assets/icons/phone.svg';
+  static const String x = 'assets/icons/x_mark.svg';
+
 
 }
