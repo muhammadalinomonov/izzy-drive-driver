@@ -16,6 +16,9 @@ class WorkerInfoPage extends StatefulWidget {
 
 class _WorkerInfoPageState extends State<WorkerInfoPage> {
   final repo = WorkerInfoRepoImpl();
+  int _selectedRating = 1;
+
+  final List<String> _ratingTitles = ["Yaxshi", "A'lo", "Yomon", "Izoh yozish"];
 
   @override
   Widget build(BuildContext context) {
@@ -40,39 +43,152 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              vertical: 18,
-                              horizontal: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColor.white,
-                              borderRadius: BorderRadius.only(
-                                bottomLeft: Radius.circular(16),
-                                bottomRight: Radius.circular(16),
+                          // Replace the top info block with a conditional
+                          if (worker.status == WorkerStatus.accepted) ...[
+                            Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 32,
+                                horizontal: 16,
                               ),
-                            ),
-                            child: RichText(
-                              text: TextSpan(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.only(
+                                  bottomLeft: Radius.circular(16),
+                                  bottomRight: Radius.circular(16),
+                                ),
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  TextSpan(
-                                    text:
-                                        'Usta ishni boshladi, tahminiy ish vaqti',
+                                  Container(
+                                    width: 64,
+                                    height: 64,
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFF3366FF),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.check,
+                                      color: Colors.white,
+                                      size: 40,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Text(
+                                    'Muvaffaqiyatli yakunlandi!',
                                     style: context.textS.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'Iltimos, ustani baholang, bu bizni yanada yaxshiroq bo’lishimizga yordam beradi!',
+                                    style: context.textS.bodyMedium?.copyWith(
+                                      color: AppColor.grey,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 24),
+                                  Divider(height: 1, color: Color(0xFFF1F1F1)),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Baholang',
+                                    style: context.textS.titleMedium?.copyWith(
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                  TextSpan(
-                                    text: ' 40 daqiqa',
-                                    style: context.textS.titleLarge?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColor.kPrimaryColor,
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: List.generate(5, (index) {
+                                      return GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            _selectedRating = index + 1;
+                                          });
+                                        },
+                                        child: Icon(
+                                          index < _selectedRating
+                                              ? Icons.star
+                                              : Icons.star_border,
+                                          color: Color(0xFFFFC107),
+                                          size: 32,
+                                        ),
+                                      );
+                                    }),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: List.generate(
+                                      _ratingTitles.length,
+                                      (i) => Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                        ),
+                                        child: Chip(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              18,
+                                            ),
+                                          ),
+                                          side: BorderSide.none,
+                                          label: Text(
+                                            _ratingTitles[i],
+                                            style: context.textS.titleSmall
+                                                ?.copyWith(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                          ),
+                                          backgroundColor: AppColor.lightBlue,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
+                          ] else ...[
+                            // Original info block
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 18,
+                                horizontal: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColor.white,
+                                borderRadius: BorderRadius.only(
+                                  bottomLeft: Radius.circular(16),
+                                  bottomRight: Radius.circular(16),
+                                ),
+                              ),
+                              child: RichText(
+                                text: TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text:
+                                          'Usta ishni boshladi, tahminiy ish vaqti',
+                                      style: context.textS.titleLarge?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: ' 40 daqiqa',
+                                      style: context.textS.titleLarge?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColor.kPrimaryColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 8),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
