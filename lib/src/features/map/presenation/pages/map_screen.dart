@@ -13,6 +13,7 @@ import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/features/map/data/model/nearby_masters_response.dart';
 import 'package:flutter/services.dart';
+import 'package:taxi_app/src/routes/pages.dart';
 import 'package:taxi_app/src/utils/local.dart';
 import '../../../../routes/pages.dart';
 import '../../data/repo/map_repo_imp.dart';
@@ -499,8 +500,6 @@ class _MapScreenState extends State<MapScreen> {
                         );
                         currentLocation = selectedLocation!.coordinates;
                         context.go(Pages.chat);
-
-                        // Navigate to chat page with selected location
                       } else {
                         print('Joy tanlanmadi');
                       }

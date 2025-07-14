@@ -165,6 +165,10 @@ packages:
     dependency: "direct main"
     description:
       name: card_swiper
+      sha256: "21e52a144decbf0054e7cfed8bbe46fc89635e6c86b767eaccfe7d5aeba32528"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.1"
       sha256: af5b58b582ad690c5002097404ab83fa604b8cb59b04384a5325ea485d9840f0
       url: "https://pub.dev"
     source: hosted

@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:taxi_app/src/core/components/app_snack_bar.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
 
 class SocialLoginWidget extends StatelessWidget {
-  const SocialLoginWidget({this.size,super.key, required this.title, required this.icon});
+  const SocialLoginWidget({
+    this.size,
+    super.key,
+    required this.title,
+    required this.icon,
+  });
 
   final String title;
   final String icon;
@@ -14,7 +20,9 @@ class SocialLoginWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () {},
+      onPressed: () {
+        AppSnackBar.showWarning(context, 'Social auth will be available sooon');
+      },
       style: ElevatedButton.styleFrom(
         fixedSize: size,
         backgroundColor: AppColor.white,
