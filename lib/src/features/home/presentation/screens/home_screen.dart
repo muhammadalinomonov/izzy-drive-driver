@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
@@ -10,6 +11,7 @@ import 'package:taxi_app/src/features/home/presentation/widgets/comment_section_
 import 'package:taxi_app/src/features/home/presentation/widgets/profile_order_model_sheet.dart';
 import 'package:taxi_app/src/features/home/presentation/widgets/search_input.dart';
 import 'package:card_swiper/card_swiper.dart';
+import 'package:taxi_app/src/routes/pages.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -179,33 +181,36 @@ class LastLocationWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: 55,
-      alignment: Alignment.center,
-      padding: EdgeInsets.symmetric(horizontal: 19, vertical: 8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColor.grey, width: 0.5),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SvgPicture.asset(AppIcons.pending),
-          SizedBox(width: 10),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Evos chilonzor'),
-              Text(
-                '2972 Westheimer Rd. Santa Ana, Illinois 85486',
-                style: context.textS.labelMedium,
-              ),
-            ],
-          ),
-        ],
+    return GestureDetector(
+      onTap: () => context.push(Pages.map),
+      child: Container(
+        width: double.infinity,
+        height: 55,
+        alignment: Alignment.center,
+        padding: EdgeInsets.symmetric(horizontal: 19, vertical: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColor.grey, width: 0.5),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SvgPicture.asset(AppIcons.pending),
+            SizedBox(width: 10),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Evos chilonzor'),
+                Text(
+                  '2972 Westheimer Rd. Santa Ana, Illinois 85486',
+                  style: context.textS.labelMedium,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

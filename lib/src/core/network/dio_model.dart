@@ -22,7 +22,7 @@ class DioSettings {
         onRequest: (options, handler) async {
           print('Request sent: ${options.method} ${options.path}');
           options.headers['Accept'] = 'application/json';
-          String? token = StorageRepository.getString('token');
+          String? token = StorageRepository.getString('refresh');
           if (token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
           }

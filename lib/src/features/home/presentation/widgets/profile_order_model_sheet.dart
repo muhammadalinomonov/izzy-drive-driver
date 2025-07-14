@@ -14,7 +14,6 @@ void showOrderDetailBottomSheet(BuildContext context) {
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (context) {
-      final mq = MediaQuery.of(context);
       return DraggableScrollableSheet(
         initialChildSize: 0.85,
         minChildSize: 0.5,
@@ -107,7 +106,7 @@ void showOrderDetailBottomSheet(BuildContext context) {
                       children: [
                         _OffersRow(),
                         SizedBox(height: 18),
-                        AppButton(title: 'Chiqarish', onTap: (){})
+                        AppButton(title: 'Chiqarish', onTap: () {}),
                       ],
                     ),
                   ),
@@ -296,11 +295,7 @@ class _PaymentOptionTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
               ),
               value: selected,
-              onChanged: (bool? value) {
-                setState(() {
-                  selected = value!;
-                });
-              },
+              onChanged: (bool? value) {},
             ),
           ),
           onTap: onTap,
@@ -316,9 +311,10 @@ class _OffersRow extends StatelessWidget {
     TextStyle? labelStyle = Theme.of(
       context,
     ).textTheme.bodySmall?.copyWith(color: AppColor.grey);
-    TextStyle? valueStyle = Theme.of(
-      context,
-    ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 18);
+    TextStyle? valueStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
+      fontWeight: FontWeight.w600,
+      fontSize: 18,
+    );
     return Container(
       padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(

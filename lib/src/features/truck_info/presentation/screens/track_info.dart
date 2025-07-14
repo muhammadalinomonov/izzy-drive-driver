@@ -292,6 +292,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                         AuthInputWidget(
                           hint: 'Kiriting',
                           label: 'Ishlab chiqarilgan sana',
+                          textInputType: TextInputType.number,
                           controller: _yearController,
                         ),
                         const SizedBox(height: 20),
@@ -299,6 +300,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                           hint: 'Phone number',
                           label: 'Enter your phone number',
                           controller: _phoneController,
+                          textInputType: TextInputType.phone,
                         ),
                         const SizedBox(height: 20),
                         AuthInputWidget(
@@ -310,6 +312,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                         AuthInputWidget(
                           hint: 'License number',
                           label: 'License number',
+                          
                           controller: _licenseController,
                         ),
                         const SizedBox(height: 32),
@@ -352,7 +355,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                                       context,
                                       'Your driver profile has been updated',
                                     );
-                                    context.go(Pages.chat);
+                                    context.go(Pages.main);
                                   });
                                 },
                               ),
