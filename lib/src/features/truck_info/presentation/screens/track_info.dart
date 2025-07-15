@@ -312,7 +312,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                         AuthInputWidget(
                           hint: 'License number',
                           label: 'License number',
-                          
+
                           controller: _licenseController,
                         ),
                         const SizedBox(height: 32),
@@ -321,6 +321,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                           title: "Ro'yxatdan o'tish",
                           onTap: () {
                             isCreatingProccess = true;
+                            setState(() {});
                             context.read<TrackInfoBloc>().add(
                               PutDriverInfoEvent(
                                 data: DriverInfoPutModel(

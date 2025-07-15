@@ -23,3 +23,15 @@ class FetchQuestionsEvent extends ChatEvent {
   @override
   List<Object> get props => [onSuccess, onError];
 }
+class CreateReportEvent extends ChatEvent {
+  final ReportModel reportModel;
+  final VoidCallback onSuccess;
+  final VoidCallback onError;
+
+  const CreateReportEvent({
+    required this.reportModel,
+    required this.onSuccess,
+    required this.onError,
+  });
+
+}

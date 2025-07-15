@@ -207,7 +207,6 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Mapbox Xarita')),
       body: Column(
         children: [
           Expanded(
@@ -499,7 +498,7 @@ class _MapScreenState extends State<MapScreen> {
                           'Davom etish: ${selectedLocation!.coordinates.lat}, ${selectedLocation!.coordinates.lng}',
                         );
                         currentLocation = selectedLocation!.coordinates;
-                        context.go(Pages.chat);
+                        context.push(Pages.chat);
                       } else {
                         print('Joy tanlanmadi');
                       }

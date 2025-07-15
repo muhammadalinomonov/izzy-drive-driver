@@ -7,6 +7,7 @@ import 'package:taxi_app/src/features/auth/presentation/bloc/bloc/auth_bloc.dart
 import 'package:taxi_app/src/features/auth/presentation/pages/sign_in_page.dart';
 import 'package:taxi_app/src/features/auth/presentation/pages/sign_up_page.dart';
 import 'package:taxi_app/src/features/chat/presentation/pages/chat_page.dart';
+import 'package:taxi_app/src/features/choose_inivates/presentation/pages/invates_screen.dart';
 import 'package:taxi_app/src/features/home/data/repository/home_repository_impl.dart';
 import 'package:taxi_app/src/features/home/data/source/home_data_source.dart';
 import 'package:taxi_app/src/features/home/presentation/bloc/bloc/home_bloc.dart';
@@ -112,6 +113,13 @@ class Routes {
           ),
           child: TrackInfoScreen(),
         ),
+      ),
+      GoRoute(
+        path: Pages.invatesPage,
+        builder: (context, state) {
+          return InvatesScreen();
+        },
+
       ),
     ],
   );
