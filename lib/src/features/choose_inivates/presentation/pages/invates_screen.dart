@@ -1,8 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
+import 'package:taxi_app/src/features/home/presentation/widgets/profile_order_model_sheet.dart';
+import 'package:taxi_app/src/features/worker_info/presentation/pages/worker_info_page.dart';
+import 'package:taxi_app/src/routes/pages.dart';
 import 'package:taxi_app/src/utils/local.dart';
 
 class InvatesScreen extends StatefulWidget {
@@ -215,8 +219,12 @@ class _InvatesScreenState extends State<InvatesScreen> {
                     itemCount: 5,
                     itemBuilder: (context, index) {
                       var percentageChange = index % 2 == 0 ? 5 : -3;
-                      Color changeColor = percentageChange >= 0 ? Colors.green : Colors.red;
-                      String changeText = percentageChange >= 0 ? '↑${percentageChange}%' : '↓${percentageChange.abs()}%';
+                      Color changeColor = percentageChange >= 0
+                          ? Colors.green
+                          : Colors.red;
+                      String changeText = percentageChange >= 0
+                          ? '↑${percentageChange}%'
+                          : '↓${percentageChange.abs()}%';
                       return _buildOfferItem(
                         context: context,
                         index: index,
@@ -313,20 +321,14 @@ class _InvatesScreenState extends State<InvatesScreen> {
               ),
               const SizedBox(width: 6),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 2,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: Colors.red[100],
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
                   changeText,
-                  style: TextStyle(
-                    color: changeColor,
-                    fontSize: 11.5,
-                  ),
+                  style: TextStyle(color: changeColor, fontSize: 11.5),
                 ),
               ),
             ],
@@ -334,16 +336,14 @@ class _InvatesScreenState extends State<InvatesScreen> {
           SizedBox(height: 13),
           MaterialButton(
             minWidth: double.infinity,
-            padding: const EdgeInsets.symmetric(
-              vertical: 12,
-            ),
+            padding: const EdgeInsets.symmetric(vertical: 12),
             onPressed: () {
+              showOrderDetailBottomSheet(context, () {
+                context.push(Pages.workerInfo);
+              });
             },
             shape: RoundedRectangleBorder(
-              side: BorderSide(
-                width: 1,
-                color: const Color(0xFFE2E7EB),
-              ),
+              side: BorderSide(width: 1, color: const Color(0xFFE2E7EB)),
               borderRadius: BorderRadius.circular(50),
             ),
             child: Text(
