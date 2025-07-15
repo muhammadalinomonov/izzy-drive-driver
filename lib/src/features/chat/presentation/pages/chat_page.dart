@@ -8,12 +8,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hl_image_picker/hl_image_picker.dart';
-import 'package:record/record.dart';
+// import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/chat/data/model/question_model.dart';
 import 'package:taxi_app/src/utils/local.dart';
-import 'package:voice_message_player/voice_message_player.dart';
+// import 'package:voice_message_player/voice_message_player.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
@@ -39,7 +39,7 @@ class _ChatPageState extends State<ChatPage>
   bool _isRequestSent = false;
 
   final _controller = TextEditingController();
-  final _recorder = Record();
+  // final _recorder = Record();
   final _picker = HLImagePicker();
   final Map<int, String> _answers = {};
   final List<File> _selectedImages = [];
@@ -93,7 +93,7 @@ class _ChatPageState extends State<ChatPage>
   void dispose() {
     _timer?.cancel();
     _controller.dispose();
-    _recorder.dispose();
+    // _recorder.dispose();
     _animationController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -108,12 +108,12 @@ class _ChatPageState extends State<ChatPage>
     }
     final path =
         '${dir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
-    await _recorder.start(
-      encoder: AudioEncoder.aacLc,
-      bitRate: 128000,
-      samplingRate: 44100,
-      path: path,
-    );
+    // await _recorder.start(
+    //   encoder: AudioEncoder.aacLc,
+    //   bitRate: 128000,
+    //   samplingRate: 44100,
+    //   path: path,
+    // );
     setState(() {
       isRecording = true;
       _recordedFilePath = path;
@@ -126,7 +126,7 @@ class _ChatPageState extends State<ChatPage>
 
   Future<void> _stopRecordingAndAdd() async {
     if (!isRecording) return;
-    final path = await _recorder.stop();
+    final path = "await _recorder.stop()";
     _timer?.cancel();
     setState(() => isRecording = false);
     if (path != null) {
@@ -167,7 +167,7 @@ class _ChatPageState extends State<ChatPage>
 
   Future<void> _cancelRecording() async {
     if (!isRecording) return;
-    await _recorder.stop();
+    // await _recorder.stop();
     _timer?.cancel();
     if (_recordedFilePath != null) {
       final f = File(_recordedFilePath!);
@@ -660,19 +660,21 @@ class _ChatPageState extends State<ChatPage>
         );
         break;
       case MessageType.voice:
-        content = VoiceMessagePlayer(
-          activeSliderColor: AppColor.kPrimaryColor,
-          controller: VoiceController(
-            audioSrc: msg.audioPath!,
-            onComplete: () {},
-            onPause: () {},
-            onPlaying: () {},
-            onError: (_) {},
-            isFile: true,
-            maxDuration: msg.voiceDuration!,
-          ),
-          innerPadding: 12,
-          cornerRadius: 12,
+        // VoiceMessagePlayer(
+        //   activeSliderColor: AppColor.kPrimaryColor,
+        //   controller: VoiceController(
+        //     audioSrc: msg.audioPath!,
+        //     onComplete: () {},
+        //     onPause: () {},
+        //     onPlaying: () {},
+        //     onError: (_) {},
+        //     isFile: true,
+        //     maxDuration: msg.voiceDuration!,
+        //   ),
+        //   innerPadding: 12,
+        //   cornerRadius: 12,
+        // );
+        content = Scaffold(
         );
         break;
       case MessageType.images:
@@ -721,20 +723,20 @@ class _ChatPageState extends State<ChatPage>
               ),
 
               if (_voiceFilePath != null) ...[
-                VoiceMessagePlayer(
-                  activeSliderColor: AppColor.kPrimaryColor,
-                  controller: VoiceController(
-                    audioSrc: msg.audioPath!,
-                    onComplete: () {},
-                    onPause: () {},
-                    onPlaying: () {},
-                    onError: (_) {},
-                    isFile: true,
-                    maxDuration: msg.voiceDuration!,
-                  ),
-                  innerPadding: 12,
-                  cornerRadius: 12,
-                ),
+                // VoiceMessagePlayer(
+                //   activeSliderColor: AppColor.kPrimaryColor,
+                //   controller: VoiceController(
+                //     audioSrc: msg.audioPath!,
+                //     onComplete: () {},
+                //     onPause: () {},
+                //     onPlaying: () {},
+                //     onError: (_) {},
+                //     isFile: true,
+                //     maxDuration: msg.voiceDuration!,
+                //   ),
+                //   innerPadding: 12,
+                //   cornerRadius: 12,
+                // ),
                 const SizedBox(height: 8),
               ] else ...[
                 Text(
