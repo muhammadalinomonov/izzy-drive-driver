@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hl_image_picker/hl_image_picker.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
@@ -20,35 +21,10 @@ import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
 import 'package:taxi_app/src/features/chat/presentation/bloc/chat_bloc.dart';
 import 'package:taxi_app/src/features/chat/presentation/widgets/chat_input_widget.dart';
+import '../../../../routes/pages.dart';
+import '../../data/model/report_model.dart';
 import '../../model/chat_question_data.dart';
 import '../models/chat_model.dart';
-
-class ReportModel {
-  final String text;
-  final List<File> images;
-  final String? voiceFile;
-  final String price;
-  final double latitude;
-  final double longitude;
-
-  ReportModel({
-    required this.text,
-    required this.images,
-    this.voiceFile,
-    required this.price,
-    required this.latitude,
-    required this.longitude,
-  });
-
-  Map<String, dynamic> toJson() => {
-    'text': text,
-    'images': images.map((file) => file.path).toList(),
-    'voice_file': voiceFile,
-    'price': price,
-    'latitude': latitude.toString(),
-    'longitude': longitude.toString(),
-  };
-}
 
 class ChatPage extends StatefulWidget {
   const ChatPage({Key? key}) : super(key: key);
@@ -97,24 +73,16 @@ class _ChatPageState extends State<ChatPage>
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeInOut,
+          ),
+        );
 
     context.read<ChatBloc>().add(
-      FetchQuestionsEvent(
-        onSuccess: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Questions fetched successfully!')),
-          );
-        },
-        onError: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to fetch questions')),
-          );
-        },
-      ),
+      FetchQuestionsEvent(onSuccess: () {}, onError: () {}),
     );
   }
 
@@ -135,7 +103,8 @@ class _ChatPageState extends State<ChatPage>
     } catch (_) {
       dir = Directory.systemTemp;
     }
-    final path = '${dir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+    final path =
+        '${dir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
     await _recorder.start(
       encoder: AudioEncoder.aacLc,
       bitRate: 128000,
@@ -161,12 +130,14 @@ class _ChatPageState extends State<ChatPage>
       if (_currentQuestionIndex == 0) {
         setState(() {
           _voiceFilePath = path;
-          _messages.add(ChatMessage(
-            type: MessageType.voice,
-            voiceDuration: Duration(seconds: _recordDuration),
-            audioPath: path,
-            isMe: true,
-          ));
+          _messages.add(
+            ChatMessage(
+              type: MessageType.voice,
+              voiceDuration: Duration(seconds: _recordDuration),
+              audioPath: path,
+              isMe: true,
+            ),
+          );
           _answers[_currentQuestionIndex] = 'Voice message';
           _processResponse();
         });
@@ -176,13 +147,15 @@ class _ChatPageState extends State<ChatPage>
         setState(() {
           _recordedFilePath = null;
           _recordDuration = 0;
-          _messages.add(ChatMessage(
-            type: MessageType.text,
-            text: _currentQuestionIndex == 1
-                ? 'Iltimos, rasm yuklang!'
-                : 'Iltimos, narxni kiriting!',
-            isMe: false,
-          ));
+          _messages.add(
+            ChatMessage(
+              type: MessageType.text,
+              text: _currentQuestionIndex == 1
+                  ? 'Iltimos, rasm yuklang!'
+                  : 'Iltimos, narxni kiriting!',
+              isMe: false,
+            ),
+          );
         });
       }
     }
@@ -210,26 +183,32 @@ class _ChatPageState extends State<ChatPage>
     if (text.isEmpty) return;
     if (_currentQuestionIndex == 0 || _currentQuestionIndex == 2) {
       setState(() {
-        _messages.add(ChatMessage(type: MessageType.text, text: text, isMe: true));
+        _messages.add(
+          ChatMessage(type: MessageType.text, text: text, isMe: true),
+        );
         _answers[_currentQuestionIndex] = text;
         _controller.clear();
         if (_currentQuestionIndex == 2 && !isNumeric(text)) {
-          _messages.add(ChatMessage(
-            type: MessageType.text,
-            text: 'Iltimos, faqat raqam kiriting!',
-            isMe: false,
-          ));
+          _messages.add(
+            ChatMessage(
+              type: MessageType.text,
+              text: 'Iltimos, faqat raqam kiriting!',
+              isMe: false,
+            ),
+          );
         } else {
           _processResponse();
         }
       });
     } else {
       setState(() {
-        _messages.add(ChatMessage(
-          type: MessageType.text,
-          text: 'Iltimos, rasm yuklang!',
-          isMe: false,
-        ));
+        _messages.add(
+          ChatMessage(
+            type: MessageType.text,
+            text: 'Iltimos, rasm yuklang!',
+            isMe: false,
+          ),
+        );
         _controller.clear();
       });
     }
@@ -238,53 +217,72 @@ class _ChatPageState extends State<ChatPage>
 
   Future<void> _pickImages() async {
     final picked = await _picker.openPicker(
-      pickerOptions: HLPickerOptions(mediaType: MediaType.image, maxSelectedAssets: 6),
+      pickerOptions: HLPickerOptions(
+        mediaType: MediaType.image,
+        maxSelectedAssets: 6,
+      ),
     );
     if (picked.isNotEmpty && _currentQuestionIndex == 1) {
       setState(() {
         _selectedImages.clear();
         _selectedImages.addAll(picked.map((e) => File(e.path)).toList());
-        _messages.add(ChatMessage(
-          type: MessageType.images,
-          images: _selectedImages,
-          isMe: true,
-        ));
+        _messages.add(
+          ChatMessage(
+            type: MessageType.images,
+            images: _selectedImages,
+            isMe: true,
+          ),
+        );
         _answers[_currentQuestionIndex] = 'Images uploaded';
         _processResponse();
       });
     } else if (_currentQuestionIndex != 1) {
       setState(() {
-        _messages.add(ChatMessage(
-          type: MessageType.text,
-          text: _currentQuestionIndex == 0
-              ? 'Iltimos, avval matn yoki ovozli xabar yuboring!'
-              : 'Iltimos, narxni kiriting!',
-          isMe: false,
-        ));
+        _messages.add(
+          ChatMessage(
+            type: MessageType.text,
+            text: _currentQuestionIndex == 0
+                ? 'Iltimos, avval matn yoki ovozli xabar yuboring!'
+                : 'Iltimos, narxni kiriting!',
+            isMe: false,
+          ),
+        );
       });
     }
     _scrollToBottom();
   }
 
   void _processResponse() {
-    if (_currentQuestionIndex < 3 && _currentQuestionIndex < _questions.length) {
+    if (_currentQuestionIndex < 3 &&
+        _currentQuestionIndex < _questions.length) {
       setState(() {
         _currentQuestionIndex++;
-        if (_currentQuestionIndex < 3 && _currentQuestionIndex < _questions.length) {
-          _messages.add(ChatMessage(
-            type: MessageType.text,
-            text: _questions[_currentQuestionIndex].title,
-            isMe: false,
-          ));
+        if (_currentQuestionIndex < 3 &&
+            _currentQuestionIndex < _questions.length) {
+          _messages.add(
+            ChatMessage(
+              type: MessageType.text,
+              text: _questions[_currentQuestionIndex].title,
+              isMe: false,
+            ),
+          );
         } else if (_acceptText != null) {
-          _submittedTextOrVoice = _voiceFilePath != null ? 'Ovozli xabar' : _answers[0];
+          _submittedTextOrVoice = _voiceFilePath != null
+              ? 'Ovozli xabar'
+              : _answers[0];
           _submittedImages = List.from(_selectedImages);
           _submittedPrice = _answers[2];
-          _messages.add(ChatMessage(
-            type: MessageType.finish,
-            text: 'Ma\'lumotlar tekshiruvi:',
-            isMe: false,
-          ));
+          _messages.add(
+            ChatMessage(
+              voiceDuration: _voiceFilePath != null
+                  ? Duration(seconds: _recordDuration)
+                  : null,
+              audioPath: _submittedTextOrVoice,
+              type: MessageType.finish,
+              text: _submittedTextOrVoice,
+              isMe: false,
+            ),
+          );
           _showAcceptUI = true;
         }
       });
@@ -299,7 +297,8 @@ class _ChatPageState extends State<ChatPage>
 
   void _onLongPress(BuildContext itemCtx, int idx) {
     final renderBox = itemCtx.findRenderObject() as RenderBox;
-    final overlay = Overlay.of(context)!.context.findRenderObject() as RenderBox;
+    final overlay =
+        Overlay.of(context)!.context.findRenderObject() as RenderBox;
     final topLeft = renderBox.localToGlobal(Offset.zero, ancestor: overlay);
     final size = renderBox.size;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -310,8 +309,13 @@ class _ChatPageState extends State<ChatPage>
     const menuGap = 4.0;
 
     final showAbove = topLeft.dy + size.height + menuHeight > screenHeight;
-    final menuLeft = (topLeft.dx + size.width - menuWidth).clamp(16.0, screenWidth - menuWidth - 16.0);
-    final menuTop = showAbove ? topLeft.dy - menuHeight - menuGap : topLeft.dy + size.height + menuGap;
+    final menuLeft = (topLeft.dx + size.width - menuWidth).clamp(
+      16.0,
+      screenWidth - menuWidth - 16.0,
+    );
+    final menuTop = showAbove
+        ? topLeft.dy - menuHeight - menuGap
+        : topLeft.dy + size.height + menuGap;
 
     _animationController.forward();
     showGeneralDialog(
@@ -324,7 +328,9 @@ class _ChatPageState extends State<ChatPage>
           Positioned.fill(
             child: GestureDetector(
               onTap: () {
-                _animationController.reverse().then((_) => Navigator.of(context).pop());
+                _animationController.reverse().then(
+                  (_) => Navigator.of(context).pop(),
+                );
               },
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
@@ -339,7 +345,11 @@ class _ChatPageState extends State<ChatPage>
               color: Colors.transparent,
               child: SizedBox(
                 width: size.width,
-                child: _buildQuestionBubble(_messages[idx], idx, highlight: true),
+                child: _buildQuestionBubble(
+                  _messages[idx],
+                  idx,
+                  highlight: true,
+                ),
               ),
             ),
           ),
@@ -409,22 +419,47 @@ class _ChatPageState extends State<ChatPage>
                   children: [
                     _actionTile(Icons.reply, 'Reply', () => _dismissAnd(() {})),
                     if (msg.type == MessageType.text)
-                      _actionTile(Icons.copy, 'Copy', () => _dismissAnd(() {
-                        Clipboard.setData(ClipboardData(text: msg.text!));
-                      })),
+                      _actionTile(
+                        Icons.copy,
+                        'Copy',
+                        () => _dismissAnd(() {
+                          Clipboard.setData(ClipboardData(text: msg.text!));
+                        }),
+                      ),
                     if (msg.type == MessageType.text && msg.isMe)
                       _actionTile(Icons.edit, 'Edit', () => _dismissAnd(() {})),
                     if (msg.type == MessageType.images) ...[
-                      _actionTile(Icons.remove_red_eye, 'View Images', () => _dismissAnd(() {})),
-                      _actionTile(Icons.download, 'Save Images', () => _dismissAnd(() {})),
+                      _actionTile(
+                        Icons.remove_red_eye,
+                        'View Images',
+                        () => _dismissAnd(() {}),
+                      ),
+                      _actionTile(
+                        Icons.download,
+                        'Save Images',
+                        () => _dismissAnd(() {}),
+                      ),
                     ],
                     if (msg.type == MessageType.voice) ...[
-                      _actionTile(Icons.play_arrow, 'Play Voice', () => _dismissAnd(() {})),
-                      _actionTile(Icons.share, 'Share Voice', () => _dismissAnd(() {})),
+                      _actionTile(
+                        Icons.play_arrow,
+                        'Play Voice',
+                        () => _dismissAnd(() {}),
+                      ),
+                      _actionTile(
+                        Icons.share,
+                        'Share Voice',
+                        () => _dismissAnd(() {}),
+                      ),
                     ],
-                    _actionTile(Icons.delete, 'Delete', () => _dismissAnd(() {
-                      setState(() => _messages.removeAt(idx));
-                    }), textColor: Colors.redAccent),
+                    _actionTile(
+                      Icons.delete,
+                      'Delete',
+                      () => _dismissAnd(() {
+                        setState(() => _messages.removeAt(idx));
+                      }),
+                      textColor: Colors.redAccent,
+                    ),
                   ],
                 ),
               ),
@@ -442,12 +477,21 @@ class _ChatPageState extends State<ChatPage>
     });
   }
 
-  ListTile _actionTile(IconData icon, String label, VoidCallback onTap, {Color textColor = Colors.black}) {
+  ListTile _actionTile(
+    IconData icon,
+    String label,
+    VoidCallback onTap, {
+    Color textColor = Colors.black,
+  }) {
     return ListTile(
       leading: Icon(icon, size: 20, color: textColor),
       title: Text(
         label,
-        style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.w400),
+        style: TextStyle(
+          color: textColor,
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+        ),
       ),
       dense: true,
       visualDensity: VisualDensity.compact,
@@ -463,14 +507,22 @@ class _ChatPageState extends State<ChatPage>
         if (state is ChatSuccess) {
           setState(() {
             final questions = state.questionTemplate.questions;
-            _questions = questions.where((q) => q.key != 'accept_text').toList();
-            _acceptText = questions.firstWhere((q) => q.key == 'accept_text').title;
-            if (_questions.isNotEmpty && _currentQuestionIndex < 3 && _currentQuestionIndex < _questions.length) {
-              _messages.add(ChatMessage(
-                type: MessageType.text,
-                text: _questions[_currentQuestionIndex].title,
-                isMe: false,
-              ));
+            _questions = questions
+                .where((q) => q.key != 'accept_text')
+                .toList();
+            _acceptText = questions
+                .firstWhere((q) => q.key == 'accept_text')
+                .title;
+            if (_questions.isNotEmpty &&
+                _currentQuestionIndex < 3 &&
+                _currentQuestionIndex < _questions.length) {
+              _messages.add(
+                ChatMessage(
+                  type: MessageType.text,
+                  text: _questions[_currentQuestionIndex].title,
+                  isMe: false,
+                ),
+              );
             }
           });
         }
@@ -480,7 +532,7 @@ class _ChatPageState extends State<ChatPage>
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.of(context).pop(),
           ),
           backgroundColor: Colors.white,
           elevation: 0,
@@ -528,7 +580,10 @@ class _ChatPageState extends State<ChatPage>
             Expanded(
               child: ListView.builder(
                 controller: _scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 itemCount: _messages.length,
                 itemBuilder: (ctx, i) {
                   final msg = _messages[i];
@@ -544,11 +599,16 @@ class _ChatPageState extends State<ChatPage>
             if (!_showAcceptUI && !_isSubmitted)
               SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: ChatInputWidget(
                     controller: _controller,
                     onAttach: _pickImages,
-                    onVoice: isRecording ? _stopRecordingAndAdd : _startRecording,
+                    onVoice: isRecording
+                        ? _stopRecordingAndAdd
+                        : _startRecording,
                     onCancel: _cancelRecording,
                     onSend: _sendText,
                     isRecording: isRecording,
@@ -562,24 +622,28 @@ class _ChatPageState extends State<ChatPage>
     );
   }
 
-  Widget _buildQuestionBubble(ChatMessage msg, int index, {bool highlight = false}) {
+  Widget _buildQuestionBubble(
+    ChatMessage msg,
+    int index, {
+    bool highlight = false,
+  }) {
     final bg = highlight
         ? Colors.yellow.shade100
         : (msg.isMe ? AppColor.kPrimary2Color : const Color(0xFFF0F2F5));
     final align = msg.isMe ? MainAxisAlignment.end : MainAxisAlignment.start;
     final radius = msg.isMe
         ? const BorderRadius.only(
-      topLeft: Radius.circular(16),
-      topRight: Radius.circular(16),
-      bottomLeft: Radius.circular(16),
-      bottomRight: Radius.circular(4),
-    )
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+            bottomLeft: Radius.circular(16),
+            bottomRight: Radius.circular(4),
+          )
         : const BorderRadius.only(
-      topLeft: Radius.circular(16),
-      topRight: Radius.circular(16),
-      bottomLeft: Radius.circular(4),
-      bottomRight: Radius.circular(16),
-    );
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+            bottomLeft: Radius.circular(4),
+            bottomRight: Radius.circular(16),
+          );
 
     Widget content;
     switch (msg.type) {
@@ -615,153 +679,186 @@ class _ChatPageState extends State<ChatPage>
         content = Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: radius,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
+          decoration: ShapeDecoration(
+            color: const Color(0xFFEFF2F5),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.only(
+                topRight: Radius.circular(18),
+                bottomLeft: Radius.circular(18),
+                bottomRight: Radius.circular(18),
               ),
-            ],
+            ),
           ),
+
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Ma\'lumotlar tekshiruvi:',
+                'Tekshirib o’tamiz..',
                 style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                  height: 1.40,
+                  letterSpacing: -0.30,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
+              Text(
+                'Muammo matni yoki audiosi',
+                style: TextStyle(
+                  color: const Color(0xFF6B7073),
+                  fontSize: 14,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w400,
+                  height: 1.40,
+                  letterSpacing: -0.30,
+                ),
+              ),
+
               if (_voiceFilePath != null) ...[
-                Row(
-                  children: [
-                    Icon(Icons.mic, color: AppColor.kPrimaryColor, size: 24),
-                    const SizedBox(width: 12),
-                    Text('Ovozli xabar', style: TextStyle(fontSize: 16, color: Colors.black54)),
-                  ],
+                VoiceMessagePlayer(
+                  activeSliderColor: AppColor.kPrimaryColor,
+                  controller: VoiceController(
+                    audioSrc: msg.audioPath!,
+                    onComplete: () {},
+                    onPause: () {},
+                    onPlaying: () {},
+                    onError: (_) {},
+                    isFile: true,
+                    maxDuration: msg.voiceDuration!,
+                  ),
+                  innerPadding: 12,
+                  cornerRadius: 12,
                 ),
                 const SizedBox(height: 8),
+              ] else ...[
+                Text(
+                  msg.text!,
+                  style: TextStyle(color: Colors.black87, fontSize: 15),
+                ),
               ],
+              const SizedBox(height: 12),
+              Text(
+                'Muammo rasmi yoki videosi',
+                style: TextStyle(
+                  color: const Color(0xFF6B7073),
+                  fontSize: 14,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w400,
+                  height: 1.40,
+                  letterSpacing: -0.30,
+                ),
+              ),
               if (_submittedImages.isNotEmpty) ...[
-                Row(
-                  children: [
-                    Icon(Icons.image, color: AppColor.kPrimaryColor, size: 24),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Rasm(lar): ${_submittedImages.length} ta',
-                        style: TextStyle(fontSize: 16, color: Colors.black54),
-                      ),
-                    ),
-                    if (_submittedImages.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 12),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.file(
-                            _submittedImages[0],
-                            width: 100,
-                            height: 100,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+                const SizedBox(height: 8),
+                _buildImageGrid(_submittedImages),
                 const SizedBox(height: 8),
               ],
+              const SizedBox(height: 12),
               if (_submittedPrice != null) ...[
-                Row(
-                  children: [
-                    Icon(Icons.attach_money, color: AppColor.kPrimaryColor, size: 24),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Narx: ${_formatPrice(_submittedPrice!)}',
-                      style: TextStyle(fontSize: 16, color: Colors.black54),
-                    ),
-                  ],
+                Text(
+                  'Ushbu ishni uchun nechpul bermoqchisiz?',
+                  style: TextStyle(
+                    color: const Color(0xFF6B7073),
+                    fontSize: 14,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w400,
+                    height: 1.40,
+                    letterSpacing: -0.30,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _formatPrice(_submittedPrice!),
+                  style: TextStyle(color: Colors.black87, fontSize: 15),
                 ),
                 const SizedBox(height: 12),
               ],
-              if (_validateForm()) ...[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          _editField();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blueGrey,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+              SizedBox(height: 8),
+              Text(
+                'Agar barchasi to’g’ri bo’lsa, “yuborish” tugmasini bosing, yoki yuborish deb yozing.',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 15,
+                  fontStyle: FontStyle.italic,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w400,
+                  height: 1.40,
+                  letterSpacing: -0.30,
+                ),
+              ),
+              const SizedBox(height: 15),
+              MaterialButton(
+                minWidth: double.infinity,
+                height: 48,
+                color: AppColor.kPrimaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(50),
+                ),
+                onPressed: () {
+                  var reportModel = ReportModel(
+                    text: _submittedTextOrVoice ?? '',
+                    voiceFile: File(_voiceFilePath ?? ''),
+                    images: _submittedImages,
+                    price: _submittedPrice ?? '',
+                    latitude: currentLocation.lat.toDouble(),
+                    longitude: currentLocation.lng.toDouble(),
+                  );
+                  context.read<ChatBloc>().add(
+                    CreateReportEvent(
+                      reportModel: reportModel,
+                      onError: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Xatolik yuz berdi. Iltimos, qayta urinib ko\'ring.',
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          'O\'zgartirish',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          _submitReport();
-                          setState(() {
-                            _isSubmitted = true;
-                            _messages.add(ChatMessage(
-                              type: MessageType.finish,
-                              text: 'Ma\'lumotlar yuborildi!',
+                        );
+                      },
+                      onSuccess: () {
+                        context.push(Pages.invatesPage);
+                        setState(() {
+                          _isSubmitted = true;
+                          // _messages.clear() ni olib tashlaymiz
+                          _messages.add(
+                            ChatMessage(
+                              type: MessageType.text,
+                              text: 'Muammo muvaffaqiyatli yuborildi!',
                               isMe: false,
-                            ));
-                          });
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColor.kPrimaryColor,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: Text(
-                          'Yuborish',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
+                            ),
+                          ); // Muvaffaqiyat xabarini qo'shamiz
+                          _currentQuestionIndex = 0;
+                          _showAcceptUI = false;
+                        });
+                        _scrollToBottom();
+
+                      },
                     ),
-                  ],
+                  );
+                },
+                child: Center(
+                  child: Text(
+                    'Yuborish',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w600,
+                      height: 1.40,
+                      letterSpacing: -0.30,
+                    ),
+                  ),
                 ),
-              ] else
-                Text(
-                  'Ma\'lumotlarni to\'liq kiriting!',
-                  style: TextStyle(color: Colors.red, fontSize: 14),
-                ),
+              ),
               const SizedBox(height: 8),
               Align(
                 alignment: Alignment.bottomRight,
                 child: Text(
                   '09:59 PM +05, Jul 14, 2025', // Updated to current time
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ),
             ],
@@ -775,7 +872,9 @@ class _ChatPageState extends State<ChatPage>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.8,
+          ),
           margin: const EdgeInsets.symmetric(vertical: 8),
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
@@ -819,19 +918,20 @@ class _ChatPageState extends State<ChatPage>
           padding: const EdgeInsets.only(right: 4, bottom: 4),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(4),
-            child: Image.file(
-              item,
-              width: 50,
-              height: 50,
-              fit: BoxFit.cover,
-            ),
+            child: Image.file(item, width: 50, height: 50, fit: BoxFit.cover),
           ),
         );
       }).toList(),
     );
   }
 
-  Widget _buildActionButton(String text, Color color, VoidCallback onPressed, {bool isPrimary = false, bool isEdit = false}) {
+  Widget _buildActionButton(
+    String text,
+    Color color,
+    VoidCallback onPressed, {
+    bool isPrimary = false,
+    bool isEdit = false,
+  }) {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
@@ -880,69 +980,27 @@ class _ChatPageState extends State<ChatPage>
     setState(() {
       _showAcceptUI = false;
       _currentQuestionIndex = 0; // Start from the first question
-      _messages.add(ChatMessage(
-        type: MessageType.text,
-        text: 'Ma\'lumotlar qayta kiritish uchun boshlanadi.',
-        isMe: false,
-      ));
+      _messages.add(
+        ChatMessage(
+          type: MessageType.text,
+          text: 'Ma\'lumotlar qayta kiritish uchun boshlanadi.',
+          isMe: false,
+        ),
+      );
       _voiceFilePath = null; // Clear voice file
       _selectedImages.clear(); // Clear images
       _submittedTextOrVoice = null; // Clear submitted text or voice
       _submittedPrice = null; // Clear submitted price
       _answers.clear(); // Clear all answers
       if (_questions.isNotEmpty) {
-        _messages.add(ChatMessage(
-          type: MessageType.text,
-          text: _questions[_currentQuestionIndex].title,
-          isMe: false,
-        ));
+        _messages.add(
+          ChatMessage(
+            type: MessageType.text,
+            text: _questions[_currentQuestionIndex].title,
+            isMe: false,
+          ),
+        );
       }
     });
-  }
-
-  void _submitReport() async {
-    if (!_validateForm()) return;
-
-    final report = ReportModel(
-      text: _answers[0] ?? '',
-      images: _submittedImages,
-      voiceFile: _voiceFilePath,
-      price: _submittedPrice ?? '0',
-      latitude: 40.3757,
-      longitude: 71.7890,
-    );
-
-    final url = Uri.parse('https://master-api.ataxi.uz/api/v1/drivers/create-report/');
-    final token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzUxODQzOTY5LCJpYXQiOjE3NTE0MTE5NjksImp0aSI6IjM2MjdmMmVmM2U5YTQ1ZjI4NjUzZDMyNDYzYmYwNzMyIiwidXNlcl9pZCI6NDF9.t5bl_ceXTtz70NpfgmIcip102yzyCPuLq87YjFf5Dro';
-    var request = http.MultipartRequest('POST', url)
-      ..headers['Authorization'] = 'Bearer $token'
-      ..fields['text'] = report.text
-      ..fields['price'] = report.price
-      ..fields['latitude'] = report.latitude.toString()
-      ..fields['longitude'] = report.longitude.toString();
-
-    for (var image in report.images) {
-      request.files.add(await http.MultipartFile.fromPath('images', image.path));
-    }
-    if (report.voiceFile != null) {
-      request.files.add(await http.MultipartFile.fromPath('voice_file', report.voiceFile!));
-    }
-
-    try {
-      final response = await request.send();
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Report submitted successfully!')),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to submit report')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
-    }
   }
 }

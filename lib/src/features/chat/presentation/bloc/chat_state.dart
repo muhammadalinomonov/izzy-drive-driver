@@ -14,7 +14,10 @@ sealed class ChatState extends Equatable {
 final class ChatInitial extends ChatState {}
 
 final class ChatLoading extends ChatState {}
-
+final class SubmittedReport extends ChatState {
+  final ReportResponse reportResponse;
+  const SubmittedReport({required this.reportResponse});
+}
 final class ChatSuccess extends ChatState {
   final QuestionTemplate questionTemplate;
 
