@@ -8,8 +8,8 @@ class AppSnackBar {
       context,
       message,
       icon: Icons.check_circle_rounded,
-      backgroundColor: AppColor.lightGreen,
-      iconColor: Colors.green.shade700,
+      backgroundColor: AppColor.kPrimaryColor,
+      iconColor: AppColor.white,
       textColor: AppColor.black,
     );
   }
