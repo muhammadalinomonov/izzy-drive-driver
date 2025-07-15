@@ -7,6 +7,7 @@ import 'package:taxi_app/src/features/auth/presentation/bloc/bloc/auth_bloc.dart
 import 'package:taxi_app/src/features/auth/presentation/pages/sign_in_page.dart';
 import 'package:taxi_app/src/features/auth/presentation/pages/sign_up_page.dart';
 import 'package:taxi_app/src/features/chat/presentation/pages/chat_page.dart';
+import 'package:taxi_app/src/features/choose_inivates/presentation/pages/invates_screen.dart';
 import 'package:taxi_app/src/features/home/data/repository/home_repository_impl.dart';
 import 'package:taxi_app/src/features/home/data/source/home_data_source.dart';
 import 'package:taxi_app/src/features/home/presentation/bloc/bloc/home_bloc.dart';
@@ -21,13 +22,16 @@ import 'package:taxi_app/src/features/truck_info/presentation/screens/track_info
 import 'package:taxi_app/src/features/worker_info/presentation/pages/worker_info_page.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 
+import '../features/chat/data/repo/chat_repo_imp.dart';
+import '../features/chat/data/source/chat_data_source.dart';
+import '../features/chat/presentation/bloc/chat_bloc.dart';
 import '../features/map/data/repo/map_repo_imp.dart';
 import '../features/map/data/source/map_data_source.dart';
 
 class Routes {
   static final GoRouter router = GoRouter(
     initialLocation: StorageRepository.getString('token').isNotEmpty
-        ? Pages.main
+        ? Pages.home
         : Pages.signIn,
     routes: [
       GoRoute(
@@ -55,7 +59,12 @@ class Routes {
       GoRoute(
         path: Pages.chat,
         builder: (context, state) {
-          return ChatPage();
+          return BlocProvider(
+            create: (context) => ChatBloc(
+              chatRepo: ChatRepoImpl(chatDataSource: ChatDataSource()),
+            ),
+            child: ChatPage(),
+          );
         },
       ),
       GoRoute(
@@ -104,6 +113,13 @@ class Routes {
           ),
           child: TrackInfoScreen(),
         ),
+      ),
+      GoRoute(
+        path: Pages.invatesPage,
+        builder: (context, state) {
+          return InvatesScreen();
+        },
+
       ),
     ],
   );

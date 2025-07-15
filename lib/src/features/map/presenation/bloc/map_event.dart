@@ -13,6 +13,7 @@ class FetchNearbyMechanicsEvent extends MapEvent {
   });
 }
 
+
 class FetchNearbyLocationsEvent extends MapEvent {
   final double latitude;
   final double longitude;

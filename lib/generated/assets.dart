@@ -5,25 +5,35 @@ class Assets {
   static const String iconsAddImageIcon = 'assets/icons/add_image_icon.svg';
   static const String iconsAppleIcon = 'assets/icons/apple_icon.svg';
   static const String iconsBack = 'assets/icons/back.svg';
+  static const String iconsBell = 'assets/icons/bell.svg';
   static const String iconsGmailIcon = 'assets/icons/gmail_icon.svg';
   static const String iconsGoogleIcon = 'assets/icons/google_icon.svg';
+  static const String iconsGooglePlay = 'assets/icons/google_play.svg';
   static const String iconsHome = 'assets/icons/home.svg';
+  static const String iconsIcDown = 'assets/icons/ic_down.svg';
+  static const String iconsIcUp = 'assets/icons/ic_up.svg';
   static const String iconsLocation = 'assets/icons/location.svg';
   static const String iconsMastericon = 'assets/icons/mastericon.png';
   static const String iconsMasters = 'assets/icons/masters.svg';
   static const String iconsMic = 'assets/icons/mic.svg';
   static const String iconsPaperclip = 'assets/icons/paperclip.svg';
   static const String iconsPending = 'assets/icons/pending.svg';
+  static const String iconsPhone = 'assets/icons/phone.svg';
   static const String iconsProfile = 'assets/icons/profile.svg';
+  static const String iconsSearch = 'assets/icons/search.svg';
   static const String iconsServices = 'assets/icons/services.svg';
   static const String iconsTruck = 'assets/icons/truck.svg';
+  static const String iconsXMark = 'assets/icons/x_mark.svg';
   static const String imagesActivities = 'assets/images/activities.png';
+  static const String imagesCardio = 'assets/images/cardio.png';
   static const String imagesDeliver = 'assets/images/deliver.png';
   static const String imagesFood = 'assets/images/food.png';
   static const String imagesGradient1 = 'assets/images/gradient1.png';
   static const String imagesGradient2 = 'assets/images/gradient2.png';
   static const String imagesGrocery = 'assets/images/grocery.png';
+  static const String imagesGym = 'assets/images/gym.png';
   static const String imagesLoginbg = 'assets/images/loginbg.png';
   static const String imagesMassage = 'assets/images/massage.png';
+  static const String taxiApp = '.env';
 
 }
