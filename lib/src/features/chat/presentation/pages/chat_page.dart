@@ -722,20 +722,20 @@ class _ChatPageState extends State<ChatPage>
               ),
 
               if (_voiceFilePath != null) ...[
-                // VoiceMessagePlayer(
-                //   activeSliderColor: AppColor.kPrimaryColor,
-                //   controller: VoiceController(
-                //     audioSrc: msg.audioPath!,
-                //     onComplete: () {},
-                //     onPause: () {},
-                //     onPlaying: () {},
-                //     onError: (_) {},
-                //     isFile: true,
-                //     maxDuration: msg.voiceDuration!,
-                //   ),
-                //   innerPadding: 12,
-                //   cornerRadius: 12,
-                // ),
+                VoiceMessagePlayer(
+                  activeSliderColor: AppColor.kPrimaryColor,
+                  controller: VoiceController(
+                    audioSrc: msg.audioPath!,
+                    onComplete: () {},
+                    onPause: () {},
+                    onPlaying: () {},
+                    onError: (_) {},
+                    isFile: true,
+                    maxDuration: msg.voiceDuration!,
+                  ),
+                  innerPadding: 12,
+                  cornerRadius: 12,
+                ),
                 const SizedBox(height: 8),
               ] else ...[
                 Text(
