@@ -10,7 +10,7 @@ class AppSnackBar {
       icon: Icons.check_circle_rounded,
       backgroundColor: AppColor.kPrimaryColor,
       iconColor: AppColor.white,
-      textColor: AppColor.black,
+      textColor: AppColor.white,
     );
   }
 

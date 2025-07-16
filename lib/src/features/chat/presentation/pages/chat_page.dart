@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hl_image_picker/hl_image_picker.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/chat/data/model/question_model.dart';
 import 'package:taxi_app/src/utils/local.dart';
 import 'package:voice_message_player/voice_message_player.dart';
@@ -35,6 +36,8 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage>
     with SingleTickerProviderStateMixin {
+  bool _isRequestSent = false;
+
   final _controller = TextEditingController();
   final _recorder = Record();
   final _picker = HLImagePicker();
@@ -790,14 +793,18 @@ class _ChatPageState extends State<ChatPage>
                 ),
               ),
               const SizedBox(height: 15),
-              MaterialButton(
-                minWidth: double.infinity,
-                height: 48,
-                color: AppColor.kPrimaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(50),
-                ),
-                onPressed: () {
+              AppButton(
+                // minWidth: double.infinity,
+                // height: 48,
+                // color: AppColor.kPrimaryColor,
+                // shape: RoundedRectangleBorder(
+                //   borderRadius: BorderRadius.circular(50),
+                // ),
+                isLoading: _isRequestSent,
+                onTap: () {
+                  setState(() {
+                    _isRequestSent = true;
+                  });
                   var reportModel = ReportModel(
                     text: _submittedTextOrVoice ?? '',
                     voiceFile: File(_voiceFilePath ?? ''),
@@ -810,6 +817,9 @@ class _ChatPageState extends State<ChatPage>
                     CreateReportEvent(
                       reportModel: reportModel,
                       onError: () {
+                        _isRequestSent = false;
+                        setState(() {});
+
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(
@@ -819,6 +829,9 @@ class _ChatPageState extends State<ChatPage>
                         );
                       },
                       onSuccess: () {
+                        setState(() {
+                          _isRequestSent = false;
+                        });
                         context.push(Pages.invatesPage);
                         setState(() {
                           _isSubmitted = true;
@@ -834,24 +847,24 @@ class _ChatPageState extends State<ChatPage>
                           _showAcceptUI = false;
                         });
                         _scrollToBottom();
-
                       },
                     ),
                   );
                 },
-                child: Center(
-                  child: Text(
-                    'Yuborish',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w600,
-                      height: 1.40,
-                      letterSpacing: -0.30,
-                    ),
-                  ),
-                ),
+                title: 'Yuborish',
+                // child: Center(
+                //   child: Text(
+                //     ,
+                //     style: TextStyle(
+                //       color: Colors.white,
+                //       fontSize: 16,
+                //       fontFamily: 'Inter',
+                //       fontWeight: FontWeight.w600,
+                //       height: 1.40,
+                //       letterSpacing: -0.30,
+                //     ),
+                //   ),
+                // ),
               ),
               const SizedBox(height: 8),
               Align(

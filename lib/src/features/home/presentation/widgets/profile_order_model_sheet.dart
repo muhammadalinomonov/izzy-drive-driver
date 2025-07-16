@@ -4,11 +4,13 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
+import 'package:taxi_app/src/routes/pages.dart';
 
-void showOrderDetailBottomSheet(BuildContext context) {
+void showOrderDetailBottomSheet(BuildContext context, VoidCallback onDoneTap) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -106,7 +108,10 @@ void showOrderDetailBottomSheet(BuildContext context) {
                       children: [
                         _OffersRow(),
                         SizedBox(height: 18),
-                        AppButton(title: 'Chiqarish', onTap: () {}),
+                        AppButton(
+                          title: 'Chiqarish',
+                          onTap:onDoneTap,
+                        ),
                       ],
                     ),
                   ),

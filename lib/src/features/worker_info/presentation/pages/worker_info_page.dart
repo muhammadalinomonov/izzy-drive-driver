@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/home/presentation/widgets/comment_section_modal_sheet.dart';
 import 'package:taxi_app/src/features/home/presentation/widgets/profile_order_model_sheet.dart';
+import 'package:taxi_app/src/routes/pages.dart';
 import '../../data/model/worker_info_model.dart';
 import '../../data/repo/worker_info_repo_impl.dart';
 
@@ -547,19 +549,22 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              Column(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 28,
-                                    backgroundColor: AppColor.lightBlue,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(14),
-                                      child: SvgPicture.asset(AppIcons.phone),
+                              GestureDetector(
+                                onTap: () => context.go(Pages.main),
+                                child: Column(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 28,
+                                      backgroundColor: AppColor.lightBlue,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(14),
+                                        child: SvgPicture.asset(AppIcons.phone),
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(height: 12),
-                                  Text('Call', style: context.textS.bodySmall),
-                                ],
+                                    SizedBox(height: 12),
+                                    Text('Call', style: context.textS.bodySmall),
+                                  ],
+                                ),
                               ),
                               Column(
                                 children: [

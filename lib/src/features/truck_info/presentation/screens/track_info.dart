@@ -356,7 +356,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                                       context,
                                       'Your driver profile has been updated',
                                     );
-                                    context.go(Pages.main);
+                                    context.push(Pages.main);
                                   });
                                 },
                               ),
@@ -369,7 +369,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                           textColor: AppColor.black,
                           title: "O'tkazib yuborish",
                           onTap: () {
-                            context.go(Pages.chat);
+                            context.push(Pages.map);
                           },
                         ),
                         const SizedBox(height: 24),

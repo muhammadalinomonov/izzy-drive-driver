@@ -31,7 +31,7 @@ import '../features/map/data/source/map_data_source.dart';
 class Routes {
   static final GoRouter router = GoRouter(
     initialLocation: StorageRepository.getString('token').isNotEmpty
-        ? Pages.home
+        ? Pages.main
         : Pages.signIn,
     routes: [
       GoRoute(
