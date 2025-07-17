@@ -1,11 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
+import 'package:taxi_app/src/core/network/token_service.dart';
 import 'package:taxi_app/src/features/home/presentation/screens/home_screen.dart';
 import 'package:taxi_app/src/features/worker_info/presentation/pages/worker_info_page.dart';
+import 'package:taxi_app/src/routes/pages.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -19,7 +22,7 @@ class _MainScreenState extends State<MainScreen> {
     HomeScreen(),
     WorkerInfoPage(),
     Center(child: Text('Masters')),
-    Center(child: Text('Profile')),
+    ProfileWidget(),
   ];
 
   int _initialIndex = 0;
@@ -89,6 +92,23 @@ class _MainScreenState extends State<MainScreen> {
             }),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class ProfileWidget extends StatelessWidget {
+  const ProfileWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: TextButton(
+        onPressed: () {
+          StorageRepository.deleteString('token');
+          context.go(Pages.signIn);
+        },
+        child: Text('Log out'),
       ),
     );
   }

@@ -1,4 +1,4 @@
-package com.ajmal.taxi_app
+package com.ajmal.izzydriveapp
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -805,51 +805,56 @@ class _ChatPageState extends State<ChatPage>
                   setState(() {
                     _isRequestSent = true;
                   });
-                  var reportModel = ReportModel(
-                    text: _submittedTextOrVoice ?? '',
-                    voiceFile: File(_voiceFilePath ?? ''),
-                    images: _submittedImages,
-                    price: _submittedPrice ?? '',
-                    latitude: currentLocation.lat.toDouble(),
-                    longitude: currentLocation.lng.toDouble(),
-                  );
-                  context.read<ChatBloc>().add(
-                    CreateReportEvent(
-                      reportModel: reportModel,
-                      onError: () {
-                        _isRequestSent = false;
-                        setState(() {});
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Xatolik yuz berdi. Iltimos, qayta urinib ko\'ring.',
-                            ),
-                          ),
-                        );
-                      },
-                      onSuccess: () {
-                        setState(() {
+                  try {
+                    var reportModel = ReportModel(
+                      text: _submittedTextOrVoice ?? '',
+                      voiceFile: File(_voiceFilePath ?? ''),
+                      images: _submittedImages,
+                      price: _submittedPrice ?? '',
+                      latitude: currentLocation.lat.toDouble(),
+                      longitude: currentLocation.lng.toDouble(),
+                    );
+                    context.read<ChatBloc>().add(
+                      CreateReportEvent(
+                        reportModel: reportModel,
+                        onError: () {
                           _isRequestSent = false;
-                        });
-                        context.push(Pages.invatesPage);
-                        setState(() {
-                          _isSubmitted = true;
-                          // _messages.clear() ni olib tashlaymiz
-                          _messages.add(
-                            ChatMessage(
-                              type: MessageType.text,
-                              text: 'Muammo muvaffaqiyatli yuborildi!',
-                              isMe: false,
+                          setState(() {});
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Xatolik yuz berdi. Iltimos, qayta urinib ko\'ring.',
+                              ),
                             ),
-                          ); // Muvaffaqiyat xabarini qo'shamiz
-                          _currentQuestionIndex = 0;
-                          _showAcceptUI = false;
-                        });
-                        _scrollToBottom();
-                      },
-                    ),
-                  );
+                          );
+                        },
+                        onSuccess: () {
+                          setState(() {
+                            _isRequestSent = false;
+                          });
+                          context.push(Pages.invatesPage);
+                          setState(() {
+                            _isSubmitted = true;
+                            // _messages.clear() ni olib tashlaymiz
+                            _messages.add(
+                              ChatMessage(
+                                type: MessageType.text,
+                                text: 'Muammo muvaffaqiyatli yuborildi!',
+                                isMe: false,
+                              ),
+                            ); // Muvaffaqiyat xabarini qo'shamiz
+                            _currentQuestionIndex = 0;
+                            _showAcceptUI = false;
+                          });
+                          _scrollToBottom();
+                        },
+                      ),
+                    );
+                  } catch (e) {
+                    setState(() {
+                      _isRequestSent = false;
+                    });
+                  }
                 },
                 title: 'Yuborish',
                 // child: Center(

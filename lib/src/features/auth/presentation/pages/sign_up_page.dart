@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:taxi_app/src/core/components/app_snack_bar.dart';
 import 'package:taxi_app/src/core/components/app_validators.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
@@ -183,15 +184,9 @@ class _SignUpPageState extends State<SignUpPage> {
                                       setState(() {
                                         isButtonOnProgress = false;
                                       });
-                                      ScaffoldMessenger.of(
+                                      AppSnackBar.showError(
                                         context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Registration failed. Please try again.',
-                                          ),
-                                          backgroundColor: Colors.red,
-                                        ),
+                                        'Registration failed. Please try again.',
                                       );
                                     },
                                     onSuccess: () {
