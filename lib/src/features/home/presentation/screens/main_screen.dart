@@ -4,7 +4,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
-import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
 import 'package:taxi_app/src/features/home/presentation/screens/home_screen.dart';
 import 'package:taxi_app/src/features/profile/presentation/pages/profile_page.dart';
@@ -37,63 +36,27 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _pages[_initialIndex],
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
+    return CupertinoTabScaffold(
+      tabBar: CupertinoTabBar(
+        items: _bottomIcons.map((item) => BottomNavigationBarItem(
+          icon: SvgPicture.asset(
+            item['icon'],
+            color: _initialIndex == _bottomIcons.indexOf(item)
+                ? AppColor.kPrimaryColor
+                : AppColor.grey,
           ),
-          color: AppColor.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.3),
-              spreadRadius: 5,
-              blurRadius: 7,
-              offset: Offset(0, 3), // changes position of shadow
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.only(
-            bottom: 25,
-            top: 12,
-          ), // Adjust as needed
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(_bottomIcons.length, (i) {
-              final isSelected = i == _initialIndex;
-              return GestureDetector(
-                onTap: () => setState(() => _initialIndex = i),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SvgPicture.asset(
-                      _bottomIcons[i]['icon'],
-                      colorFilter: ColorFilter.mode(
-                        isSelected ? AppColor.kPrimaryColor : AppColor.grey,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      _bottomIcons[i]['title'],
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isSelected
-                            ? AppColor.kPrimaryColor
-                            : AppColor.grey,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-          ),
-        ),
+          label: item['title'],
+        )).toList(),
+        currentIndex: _initialIndex,
+        onTap: (index) {
+          setState(() {
+            _initialIndex = index;
+          });
+        },
       ),
+      tabBuilder: (context, index) {
+        return _pages[index];
+      },
     );
   }
 }
