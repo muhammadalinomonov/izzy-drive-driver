@@ -7,6 +7,7 @@ import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
 import 'package:taxi_app/src/features/home/presentation/screens/home_screen.dart';
+import 'package:taxi_app/src/features/profile/presentation/pages/profile_page.dart';
 import 'package:taxi_app/src/features/worker_info/presentation/pages/worker_info_page.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 
@@ -22,7 +23,7 @@ class _MainScreenState extends State<MainScreen> {
     HomeScreen(),
     WorkerInfoPage(),
     Center(child: Text('Masters')),
-    ProfileWidget(),
+    ProfilePage(),
   ];
 
   int _initialIndex = 0;
