@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -11,7 +9,6 @@ import 'package:taxi_app/src/core/extensions/size_extension.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/auth/presentation/widgets/auth_input_widget.dart';
-import 'package:taxi_app/src/features/auth/presentation/widgets/email_confirmation_widget.dart';
 import 'package:taxi_app/src/features/auth/presentation/widgets/social_login_widget.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 import 'package:taxi_app/src/features/auth/data/model/auth_model.dart';
