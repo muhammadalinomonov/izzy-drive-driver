@@ -1,126 +1,150 @@
 // ! Responsive Order Detail Bottom Sheet
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
+import 'package:taxi_app/src/features/home/presentation/bloc/bloc/proposal_bloc.dart';
 
 //! {{url}}/api/v1/drivers/get-proposal/?proposal_id=4 get taklif
 
-void showOrderDetailBottomSheet(BuildContext context, VoidCallback onDoneTap) {
+void showOrderDetailBottomSheet(BuildContext c, VoidCallback onDoneTap) {
+  final proposalBloc = BlocProvider.of<ProposalBloc>(c);
+  proposalBloc.add(GetProposalEvent(id: 1));
   showModalBottomSheet(
-    context: context,
+    context: c,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (context) {
-      return DraggableScrollableSheet(
-        initialChildSize: 0.85,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (context, scrollController) {
-          return Container(
-            decoration: BoxDecoration(
-              color: AppColor.kPrimary2Color,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 16,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            child: SingleChildScrollView(
-              controller: scrollController,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.only(
-                      top: 12,
-                      left: 50,
-                      right: 60,
-                      bottom: 18,
+      return BlocProvider.value(
+        value: proposalBloc,
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return BlocBuilder<ProposalBloc, ProposalState>(
+              builder: (c, state) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: AppColor.kPrimary2Color,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(28),
                     ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: AppColor.white,
-                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 16,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: SingleChildScrollView(
+                    controller: scrollController,
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Container(
-                          width: 40,
-                          height: 5,
-                          margin: EdgeInsets.only(bottom: 16),
+                          width: double.infinity,
+                          padding: EdgeInsets.only(
+                            top: 12,
+                            left: 50,
+                            right: 60,
+                            bottom: 18,
+                          ),
                           decoration: BoxDecoration(
-                            color: Colors.grey[300],
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(16),
+                            color: AppColor.white,
+                          ),
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 5,
+                                margin: EdgeInsets.only(bottom: 16),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              ProfileSection(),
+                              SizedBox(height: 18),
+                              _StatsRow(),
+                            ],
                           ),
                         ),
-                        ProfileSection(),
+                        SizedBox(height: 8),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 18,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            color: AppColor.white,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _SectionTitle('ABOUT ORDER'),
+                              _OrderInfoSection(),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 18,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            color: AppColor.white,
+                          ),
+                          child: Column(
+                            children: [
+                              _SectionTitle('PAYMENT INFORMATION'),
+                              _PaymentOptionsSection(),
+                            ],
+                          ),
+                        ),
                         SizedBox(height: 18),
-                        _StatsRow(),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 15,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            color: AppColor.white,
+                          ),
+                          child: Column(
+                            children: [
+                              _OffersRow(),
+                              SizedBox(height: 18),
+                              AppButton(title: 'Chiqarish', onTap: onDoneTap),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  SizedBox(height: 8),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 18),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: AppColor.white,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _SectionTitle('ABOUT ORDER'),
-                        _OrderInfoSection(),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 18),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: AppColor.white,
-                    ),
-                    child: Column(
-                      children: [
-                        _SectionTitle('PAYMENT INFORMATION'),
-                        _PaymentOptionsSection(),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 18),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 15),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: AppColor.white,
-                    ),
-                    child: Column(
-                      children: [
-                        _OffersRow(),
-                        SizedBox(height: 18),
-                        AppButton(title: 'Chiqarish', onTap: onDoneTap),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
+                );
+              },
+            );
+          },
+        ),
       );
     },
   );
 }
 
 class ProfileSection extends StatelessWidget {
+  const ProfileSection({super.key});
+
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);

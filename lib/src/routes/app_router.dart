@@ -11,6 +11,7 @@ import 'package:taxi_app/src/features/choose_inivates/presentation/pages/invates
 import 'package:taxi_app/src/features/home/data/repository/home_repository_impl.dart';
 import 'package:taxi_app/src/features/home/data/source/home_data_source.dart';
 import 'package:taxi_app/src/features/home/presentation/bloc/bloc/home_bloc.dart';
+import 'package:taxi_app/src/features/home/presentation/bloc/bloc/proposal_bloc.dart';
 import 'package:taxi_app/src/features/home/presentation/screens/home_screen.dart';
 import 'package:taxi_app/src/features/home/presentation/screens/main_screen.dart';
 import 'package:taxi_app/src/features/map/presenation/bloc/map_bloc.dart';
@@ -96,9 +97,13 @@ class Routes {
       GoRoute(
         path: Pages.main,
         builder: (context, state) {
-          return BlocProvider(
-            create: (context) =>
-                HomeBloc(HomeRepositoryImpl(dataSource: HomeDataSource())),
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (context) =>
+                    HomeBloc(HomeRepositoryImpl(dataSource: HomeDataSource())),
+              ),
+            ],
             child: MainScreen(),
           );
         },
@@ -117,9 +122,12 @@ class Routes {
       GoRoute(
         path: Pages.invatesPage,
         builder: (context, state) {
-          return InvatesScreen();
+          return BlocProvider(
+            create: (context) =>
+                ProposalBloc(HomeRepositoryImpl(dataSource: HomeDataSource())),
+            child: InvatesScreen(),
+          );
         },
-
       ),
     ],
   );

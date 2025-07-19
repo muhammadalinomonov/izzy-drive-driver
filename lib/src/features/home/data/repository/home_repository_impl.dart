@@ -12,4 +12,7 @@ class HomeRepositoryImpl extends HomeRepository {
   Future<NetworkResponse> getBanners() {
     return _dataSource.getBanners();
   }
+
+  @override
+  Future<NetworkResponse> getProsal(int id) => _dataSource.getProposal(id);
 }
