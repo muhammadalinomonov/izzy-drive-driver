@@ -8,6 +8,13 @@ class AppIcons {
   static const String gmail = 'assets/icons/gmail_icon.svg';
   static const String down = 'assets/icons/ic_down.svg';
   static const String up = 'assets/icons/ic_up.svg';
+  static const String close = 'assets/icons/close.svg';
+  static const String pair = 'assets/icons/pair.svg';
+  static const finishflag= 'assets/icons/finshflag.svg';
+  static const String about = 'assets/icons/about.svg';
+  static const String call= 'assets/icons/call.svg';
+  static const String rocket= 'assets/icons/rocket.svg';
+  static const  String maploc= 'assets/icons/maploc.svg';
   static const String google = 'assets/icons/google_icon.svg';
   static const String home = 'assets/icons/home.svg';
   static const String masters = 'assets/icons/masters.svg';

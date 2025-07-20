@@ -8,6 +8,7 @@ class ApiConstants {
   static final String searchLocation = "drivers/typing/";
   static final String getBanners = "others/banners/";
   static final String fetchQuestions="others/questions-templates/";
+  static final String fetchActiveOrder='drivers/active-order/';
   static final String getInvites = "drivers/get-proposal/";
   static final String createReport = "drivers/create-report/";
 }

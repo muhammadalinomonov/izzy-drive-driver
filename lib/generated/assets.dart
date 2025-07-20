@@ -2,10 +2,15 @@
 class Assets {
   Assets._();
 
+  static const String iconsAbout = 'assets/icons/about.svg';
   static const String iconsAddImageIcon = 'assets/icons/add_image_icon.svg';
+  static const String iconsApple Pay Logo = 'assets/icons/Apple Pay Logo.svg';
   static const String iconsAppleIcon = 'assets/icons/apple_icon.svg';
   static const String iconsBack = 'assets/icons/back.svg';
   static const String iconsBell = 'assets/icons/bell.svg';
+  static const String iconsCall = 'assets/icons/call.svg';
+  static const String iconsClose = 'assets/icons/close.svg';
+  static const String iconsFinshflag = 'assets/icons/finshflag.svg';
   static const String iconsGmailIcon = 'assets/icons/gmail_icon.svg';
   static const String iconsGoogleIcon = 'assets/icons/google_icon.svg';
   static const String iconsGooglePlay = 'assets/icons/google_play.svg';
@@ -13,13 +18,16 @@ class Assets {
   static const String iconsIcDown = 'assets/icons/ic_down.svg';
   static const String iconsIcUp = 'assets/icons/ic_up.svg';
   static const String iconsLocation = 'assets/icons/location.svg';
+  static const String iconsMaploc = 'assets/icons/maploc.svg';
   static const String iconsMastericon = 'assets/icons/mastericon.png';
   static const String iconsMasters = 'assets/icons/masters.svg';
   static const String iconsMic = 'assets/icons/mic.svg';
+  static const String iconsPair = 'assets/icons/pair.svg';
   static const String iconsPaperclip = 'assets/icons/paperclip.svg';
   static const String iconsPending = 'assets/icons/pending.svg';
   static const String iconsPhone = 'assets/icons/phone.svg';
   static const String iconsProfile = 'assets/icons/profile.svg';
+  static const String iconsRocket = 'assets/icons/rocket.svg';
   static const String iconsSearch = 'assets/icons/search.svg';
   static const String iconsServices = 'assets/icons/services.svg';
   static const String iconsTruck = 'assets/icons/truck.svg';

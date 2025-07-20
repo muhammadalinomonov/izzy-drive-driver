@@ -1,3 +1,4 @@
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
@@ -7,6 +8,7 @@ import 'package:taxi_app/src/routes/app_router.dart';
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   await setupLocator();
+
   runApp(TaxiApp());
 }
 
