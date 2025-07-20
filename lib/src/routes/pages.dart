@@ -6,6 +6,8 @@ class Pages {
   static const String tackScreen = '/trackScreen';
   static const String home = '/home';
   static const String main = '/';
+  static const String profile = '/profile';
   static const String workerInfo = '/workerInfo';
   static const String invatesPage = '/invatesPage';
+
 }

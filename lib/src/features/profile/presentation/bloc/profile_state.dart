@@ -1,24 +1,14 @@
 part of 'profile_bloc.dart';
 
-abstract class ProfileState extends Equatable {
+class ProfileState extends Equatable {
+  final ProfileModel? profile;
+  final String? message;
+  final ProfileStatus status;
+
+  ProfileState({this.profile, this.message, required this.status});
+
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [profile, message, status];
 }
 
-class ProfileInitial extends ProfileState {}
-
-class ProfileLoading extends ProfileState {}
-
-class ProfileLoaded extends ProfileState {
-  final ProfileEntity profile;
-  ProfileLoaded(this.profile);
-  @override
-  List<Object?> get props => [profile];
-}
-
-class ProfileError extends ProfileState {
-  final String message;
-  ProfileError(this.message);
-  @override
-  List<Object?> get props => [message];
-}
+enum ProfileStatus { initial, loading, loaded, error }

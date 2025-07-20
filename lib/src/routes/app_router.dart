@@ -16,6 +16,10 @@ import 'package:taxi_app/src/features/home/presentation/screens/home_screen.dart
 import 'package:taxi_app/src/features/home/presentation/screens/main_screen.dart';
 import 'package:taxi_app/src/features/map/presenation/bloc/map_bloc.dart';
 import 'package:taxi_app/src/features/map/presenation/pages/map_screen.dart';
+import 'package:taxi_app/src/features/profile/data/repository/profile_repository_impl.dart';
+import 'package:taxi_app/src/features/profile/data/source/profile_data_source.dart';
+import 'package:taxi_app/src/features/profile/presentation/bloc/profile_bloc.dart';
+import 'package:taxi_app/src/features/profile/presentation/pages/profile_page.dart';
 import 'package:taxi_app/src/features/truck_info/data/repo/driver_info_repo_impl.dart';
 import 'package:taxi_app/src/features/truck_info/data/source/driver_info_source.dart';
 import 'package:taxi_app/src/features/truck_info/presentation/bloc/bloc/track_info_bloc.dart';
@@ -103,6 +107,10 @@ class Routes {
                 create: (context) =>
                     HomeBloc(HomeRepositoryImpl(dataSource: HomeDataSource())),
               ),
+              BlocProvider(
+                create: (context) =>
+                    ProfileBloc(ProfileRepositoryImpl(ProfileDataSource())),
+              ),
             ],
             child: MainScreen(),
           );
@@ -126,6 +134,16 @@ class Routes {
             create: (context) =>
                 ProposalBloc(HomeRepositoryImpl(dataSource: HomeDataSource())),
             child: InvatesScreen(),
+          );
+        },
+      ),
+      GoRoute(
+        path: Pages.profile,
+        builder: (context, state) {
+          return BlocProvider(
+            create: (context) =>
+                ProfileBloc(ProfileRepositoryImpl(ProfileDataSource())),
+            child: ProfilePage(),
           );
         },
       ),
