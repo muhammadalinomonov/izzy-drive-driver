@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:taxi_app/src/features/master/data/model/master_model.dart';
 import 'package:taxi_app/src/features/master/presentation/bloc/master_bloc.dart';
 
 // ! Master get qilish uchun api -> drivers/masters-view/?driver_lat=40.391284&driver_long=71.793271
@@ -16,8 +17,9 @@ class MasterScreen extends StatefulWidget {
 
 class _MasterScreenState extends State<MasterScreen> {
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    BlocProvider.of<MasterBloc>(context).add(MasterFetch(lat: 0, long: 0));
   }
 
   @override
@@ -69,16 +71,31 @@ class _MasterScreenState extends State<MasterScreen> {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  mainAxisExtent: 280,
-                ),
-                itemCount: 6,
-                itemBuilder: (context, index) {
-                  return _MasterCard();
+              child: BlocBuilder<MasterBloc, MasterState>(
+                builder: (context, state) {
+                  if (state.status == MasterStatus.loading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (state.status == MasterStatus.success) {
+                    return GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                            mainAxisExtent: 280,
+                          ),
+                      itemCount: state.masters.length,
+                      itemBuilder: (context, index) {
+                        return _MasterCard(master: state.masters[index]);
+                      },
+                    );
+                  } else if (state.status == MasterStatus.failure) {
+                    return Center(
+                      child: Text(state.error ?? 'Something went wrong'),
+                    );
+                  } else {
+                    return const SizedBox.shrink();
+                  }
                 },
               ),
             ),
@@ -90,6 +107,10 @@ class _MasterScreenState extends State<MasterScreen> {
 }
 
 class _MasterCard extends StatelessWidget {
+  final MasterModel master;
+
+  const _MasterCard({required this.master});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -159,9 +180,9 @@ class _MasterCard extends StatelessWidget {
             style: TextStyle(fontSize: 16, color: Colors.grey),
           ),
           const SizedBox(height: 4),
-          const Text(
-            'Eshonov Fakhriyor',
-            style: TextStyle(
+          Text(
+            master.name,
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: Colors.black,
@@ -169,9 +190,9 @@ class _MasterCard extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 4),
-          const Text(
-            '10 years experience',
-            style: TextStyle(fontSize: 15, color: Colors.grey),
+          Text(
+            master.name,
+            style: const TextStyle(fontSize: 15, color: Colors.grey),
           ),
           const Spacer(),
           SizedBox(

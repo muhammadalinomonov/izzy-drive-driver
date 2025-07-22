@@ -40,8 +40,8 @@ class MasterFetch extends MasterEvent {
 class MasterBloc extends Bloc<MasterEvent, MasterState> {
   final MasterRepositoryImpl repository;
   MasterBloc(this.repository) : super(MasterState()) {
-    add(MasterFetch(lat: 40.391284, long: 71.793271));
     on<MasterFetch>((event, emit) async {
+      print('Master fetch function worked');
       emit(state.copyWith(status: MasterStatus.loading));
       final result = await repository.fetchMasters(
         lat: event.lat,

@@ -1,12 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:taxi_app/src/core/extensions/status_code_extension.dart';
 import 'package:taxi_app/src/core/network/api_constants.dart';
+import 'package:taxi_app/src/core/network/dio_model.dart';
 import 'package:taxi_app/src/core/network/network_response.dart';
+import 'package:taxi_app/src/core/service_locater.dart';
 import '../model/master_model.dart';
 
 class MasterRemoteDataSource {
-  final Dio dio;
-  MasterRemoteDataSource(this.dio);
+  MasterRemoteDataSource();
+
+  final client = serviceLocator.get<DioSettings>().dio;
 
   Future<NetworkResponse> fetchMasters({
     required double lat,
@@ -15,7 +18,7 @@ class MasterRemoteDataSource {
   }) async {
     try {
       print('Fetching masters from remote data source');
-      final response = await dio.get(
+      final response = await client.get(
         ApiConstants.mastersView,
         queryParameters: {
           'driver_lat': lat,

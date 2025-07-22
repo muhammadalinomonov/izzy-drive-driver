@@ -16,6 +16,9 @@ import 'package:taxi_app/src/features/home/presentation/screens/home_screen.dart
 import 'package:taxi_app/src/features/home/presentation/screens/main_screen.dart';
 import 'package:taxi_app/src/features/map/presenation/bloc/map_bloc.dart';
 import 'package:taxi_app/src/features/map/presenation/pages/map_screen.dart';
+import 'package:taxi_app/src/features/master/data/repository/master_repository_impl.dart';
+import 'package:taxi_app/src/features/master/data/source/master_remote_data_source.dart';
+import 'package:taxi_app/src/features/master/presentation/bloc/master_bloc.dart';
 import 'package:taxi_app/src/features/profile/data/repository/profile_repository_impl.dart';
 import 'package:taxi_app/src/features/profile/data/source/profile_data_source.dart';
 import 'package:taxi_app/src/features/profile/presentation/bloc/profile_bloc.dart';
@@ -110,6 +113,10 @@ class Routes {
               BlocProvider(
                 create: (context) =>
                     ProfileBloc(ProfileRepositoryImpl(ProfileDataSource())),
+              ),
+               BlocProvider(
+                create: (context) =>
+                    MasterBloc(MasterRepositoryImpl(MasterRemoteDataSource())),
               ),
             ],
             child: MainScreen(),
