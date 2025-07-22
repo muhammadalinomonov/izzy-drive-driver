@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:taxi_app/src/core/location_service.dart';
 import '../../data/model/master_model.dart';
 import '../../data/repository/master_repository_impl.dart';
 
@@ -31,21 +32,38 @@ class MasterState {
 abstract class MasterEvent {}
 
 class MasterFetch extends MasterEvent {
-  final double lat;
-  final double long;
+  final double? lat;
+  final double? long;
   final int pageSize;
-  MasterFetch({required this.lat, required this.long, this.pageSize = 5});
+  MasterFetch({this.lat, this.long, this.pageSize = 5});
 }
 
 class MasterBloc extends Bloc<MasterEvent, MasterState> {
   final MasterRepositoryImpl repository;
-  MasterBloc(this.repository) : super(MasterState()) {
+  final LocationService locationService;
+  MasterBloc(this.repository, this.locationService) : super(MasterState()) {
     on<MasterFetch>((event, emit) async {
-      print('Master fetch function worked');
       emit(state.copyWith(status: MasterStatus.loading));
+      double? lat = event.lat;
+      double? long = event.long;
+      if (lat == null || long == null) {
+        final position = await locationService.getCurrentLocation();
+        if (position != null) {
+          lat = position.latitude;
+          long = position.longitude;
+        } else {
+          emit(
+            state.copyWith(
+              status: MasterStatus.failure,
+              error: 'Could not get user location',
+            ),
+          );
+          return;
+        }
+      }
       final result = await repository.fetchMasters(
-        lat: event.lat,
-        long: event.long,
+        lat: lat,
+        long: long,
         pageSize: event.pageSize,
       );
       if (result.errorText.isEmpty) {

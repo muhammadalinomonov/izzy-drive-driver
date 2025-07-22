@@ -1,6 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
+import 'package:taxi_app/src/core/service_locater.dart';
+import 'package:taxi_app/src/core/location_service.dart';
 import 'package:taxi_app/src/features/auth/data/repo/auth_repo_impl.dart';
 import 'package:taxi_app/src/features/auth/data/source/auth_data_source.dart';
 import 'package:taxi_app/src/features/auth/presentation/bloc/bloc/auth_bloc.dart';
@@ -114,9 +116,11 @@ class Routes {
                 create: (context) =>
                     ProfileBloc(ProfileRepositoryImpl(ProfileDataSource())),
               ),
-               BlocProvider(
-                create: (context) =>
-                    MasterBloc(MasterRepositoryImpl(MasterRemoteDataSource())),
+              BlocProvider(
+                create: (context) => MasterBloc(
+                  MasterRepositoryImpl(MasterRemoteDataSource()),
+                  serviceLocator<LocationService>(),
+                ),
               ),
             ],
             child: MainScreen(),

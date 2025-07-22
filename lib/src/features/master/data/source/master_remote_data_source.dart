@@ -29,7 +29,7 @@ class MasterRemoteDataSource {
       print('Received response from remote data source');
       if (response.isSuccess) {
         print('Response is successful');
-        final data = response.data['results'] as List;
+        final data = response.data['data'] as List;
         return NetworkResponse(
           data: data.map((e) => MasterModel.fromJson(e)).toList(),
         );

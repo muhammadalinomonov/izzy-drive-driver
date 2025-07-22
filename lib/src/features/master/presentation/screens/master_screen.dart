@@ -181,7 +181,7 @@ class _MasterCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            master.name,
+            master.fullName ?? '',
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -191,7 +191,7 @@ class _MasterCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            master.name,
+            master.fullName ?? '',
             style: const TextStyle(fontSize: 15, color: Colors.grey),
           ),
           const Spacer(),
