@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:taxi_app/src/features/master/presentation/bloc/master_bloc.dart';
 
 // ! Master get qilish uchun api -> drivers/masters-view/?driver_lat=40.391284&driver_long=71.793271
 // ! More tugmani bosa detailed ob keladi drivers/mechanic-view/?mechanic_id=5&driver_lat=40.391284&driver_long=71.793271
 
+// ! {{url}}/api/v1/drivers/masters-view/?driver_lat=40.391284&driver_long=71.793271&page_size=5
 
-
-
-class MasterScreen extends StatelessWidget {
+class MasterScreen extends StatefulWidget {
   const MasterScreen({super.key});
+
+  @override
+  State<MasterScreen> createState() => _MasterScreenState();
+}
+
+class _MasterScreenState extends State<MasterScreen> {
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +75,6 @@ class MasterScreen extends StatelessWidget {
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
                   mainAxisExtent: 280,
-
                 ),
                 itemCount: 6,
                 itemBuilder: (context, index) {

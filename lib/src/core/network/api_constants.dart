@@ -12,4 +12,5 @@ class ApiConstants {
   static final String getInvites = "drivers/get-proposal/";
   static final String createReport = "drivers/create-report/";
   static final String getProposals = 'drivers/get-proposal/?proposal_id=';
+  static final String mastersView = "drivers/masters-view/";
 }

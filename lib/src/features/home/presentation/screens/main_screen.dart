@@ -13,6 +13,7 @@ import 'package:taxi_app/src/features/map/presenation/bloc/map_bloc.dart';
 import 'package:taxi_app/src/features/map/presenation/pages/map_screen.dart';
 import 'package:taxi_app/src/features/master/presentation/screens/master_screen.dart';
 import 'package:taxi_app/src/features/profile/presentation/pages/profile_page.dart';
+import 'package:taxi_app/src/features/service/presentation/screens/service_screen.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 
 class MainScreen extends StatefulWidget {
@@ -25,11 +26,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   final List<Widget> _pages = [
     HomeScreen(),
-    BlocProvider(
-      create: (context) =>
-          MapBloc(mapRepo: MapRepoImpl(dataSource: MapDataSource())),
-      child: MapScreen(),
-    ),
+    ServiceScreen(),
     MasterScreen(),
     ProfilePage(),
   ];
