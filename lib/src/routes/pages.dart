@@ -8,4 +8,5 @@ class Pages {
   static const String main = '/';
   static const String workerInfo = '/workerInfo';
   static const String invatesPage = '/invatesPage';
+  static const String proccessOrder = '/proccessOrder';
 }

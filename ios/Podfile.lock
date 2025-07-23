@@ -2,6 +2,8 @@ PODS:
   - audio_session (0.0.1):
     - Flutter
   - CropViewController (2.7.4)
+  - device_info_plus (0.0.1):
+    - Flutter
   - Flutter (1.0.0)
   - geolocator_apple (1.2.0):
     - Flutter
@@ -47,6 +49,7 @@ PODS:
 
 DEPENDENCIES:
   - audio_session (from `.symlinks/plugins/audio_session/ios`)
+  - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
   - Flutter (from `Flutter`)
   - geolocator_apple (from `.symlinks/plugins/geolocator_apple/darwin`)
   - hl_image_picker_ios (from `.symlinks/plugins/hl_image_picker_ios/ios`)
@@ -72,6 +75,8 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   audio_session:
     :path: ".symlinks/plugins/audio_session/ios"
+  device_info_plus:
+    :path: ".symlinks/plugins/device_info_plus/ios"
   Flutter:
     :path: Flutter
   geolocator_apple:
@@ -100,6 +105,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   audio_session: 9bb7f6c970f21241b19f5a3658097ae459681ba0
   CropViewController: 3489bbf95a3e11c654382b0bae08ac645cdf1b93
+  device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   geolocator_apple: ab36aa0e8b7d7a2d7639b3b4e48308394e8cef5e
   hl_image_picker_ios: a7283b7b39418d4b31bd1570a04a30513fd53810
@@ -118,6 +124,6 @@ SPEC CHECKSUMS:
   TLPhotoPicker: 1b7952acf715912aed3f8c30713d6939013c47df
   Turf: c9eb11a65d96af58cac523460fd40fec5061b081
 
-PODFILE CHECKSUM: e30f02f9d1c72c47bb6344a0a748c9d268180865
+PODFILE CHECKSUM: 6e700dec67e6deac9b1c69bb14c49a2217a12d15
 
 COCOAPODS: 1.16.2
