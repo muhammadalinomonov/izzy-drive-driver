@@ -1,0 +1,37 @@
+{
+  "name": "hl_image_picker_ios",
+  "version": "1.2.3",
+  "summary": "Choose images/videos from the library, crop images, and capture new photos/videos with ease.",
+  "description": "Choose images/videos from the library, crop images, and capture new photos/videos with ease.",
+  "homepage": "https://github.com/howljs/hl_image_picker/tree/main/hl_image_picker_ios",
+  "license": {
+    "file": "../LICENSE"
+  },
+  "authors": {
+    "Howl": "lehau.dev@gmail.com"
+  },
+  "source": {
+    "path": "."
+  },
+  "source_files": "Classes/**/*",
+  "dependencies": {
+    "Flutter": [
+
+    ],
+    "TLPhotoPicker": [
+
+    ],
+    "CropViewController": [
+
+    ]
+  },
+  "platforms": {
+    "ios": "11.0"
+  },
+  "pod_target_xcconfig": {
+    "DEFINES_MODULE": "YES",
+    "EXCLUDED_ARCHS[sdk=iphonesimulator*]": "i386"
+  },
+  "swift_versions": "5.0",
+  "swift_version": "5.0"
+}

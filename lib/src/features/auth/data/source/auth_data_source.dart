@@ -19,7 +19,9 @@ class AuthDataSource {
 
       if (response.isSuccess) {
         final responseData = response.data['data']['access'];
+        final responseID = response.data['data']['id'];
         StorageRepository.putString('token', responseData);
+        StorageRepository.putString('responseID', responseID);
         StorageRepository.putString(
           'refresh',
           response.data['data']['refresh'],
@@ -48,7 +50,9 @@ class AuthDataSource {
         print('Success on login');
         print(response.data);
         final responseData = response.data['data']['access'];
+        final responseID = response.data['data']['id'];
         StorageRepository.putString('token', responseData);
+        StorageRepository.putString('responseID', responseID);
         StorageRepository.putString(
           'refresh',
           response.data['data']['refresh'],

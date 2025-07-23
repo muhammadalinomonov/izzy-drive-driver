@@ -9,5 +9,5 @@ class Pages {
   static const String profile = '/profile';
   static const String workerInfo = '/workerInfo';
   static const String invatesPage = '/invatesPage';
-
+  static const String proccessOrder = '/proccessOrder';
 }

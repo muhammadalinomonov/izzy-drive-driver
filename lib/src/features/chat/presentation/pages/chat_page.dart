@@ -13,7 +13,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/chat/data/model/question_model.dart';
 import 'package:taxi_app/src/utils/local.dart';
-import 'package:voice_message_player/voice_message_player.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
@@ -22,6 +21,7 @@ import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
 import 'package:taxi_app/src/features/chat/presentation/bloc/chat_bloc.dart';
 import 'package:taxi_app/src/features/chat/presentation/widgets/chat_input_widget.dart';
+import 'package:voice_message_player/voice_message_player.dart';
 import '../../../../routes/pages.dart';
 import '../../data/model/report_model.dart';
 import '../../model/chat_question_data.dart';
@@ -660,6 +660,7 @@ class _ChatPageState extends State<ChatPage>
         );
         break;
       case MessageType.voice:
+
         content = VoiceMessagePlayer(
           activeSliderColor: AppColor.kPrimaryColor,
           controller: VoiceController(
@@ -805,10 +806,10 @@ class _ChatPageState extends State<ChatPage>
                   setState(() {
                     _isRequestSent = true;
                   });
-                  try {
+                  if (_voiceFilePath != null) {
                     var reportModel = ReportModel(
                       text: _submittedTextOrVoice ?? '',
-                      voiceFile: File(_voiceFilePath ?? ''),
+                      voiceFile: File(_voiceFilePath!),
                       images: _submittedImages,
                       price: _submittedPrice ?? '',
                       latitude: currentLocation.lat.toDouble(),
@@ -820,6 +821,7 @@ class _ChatPageState extends State<ChatPage>
                         onError: () {
                           _isRequestSent = false;
                           setState(() {});
+
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text(
@@ -850,10 +852,51 @@ class _ChatPageState extends State<ChatPage>
                         },
                       ),
                     );
-                  } catch (e) {
-                    setState(() {
-                      _isRequestSent = false;
-                    });
+                  } else {
+                    var reportModel = ReportModel(
+                      text: _submittedTextOrVoice ?? '',
+                      images: _submittedImages,
+                      price: _submittedPrice ?? '',
+                      latitude: currentLocation.lat.toDouble(),
+                      longitude: currentLocation.lng.toDouble(),
+                    );
+                    context.read<ChatBloc>().add(
+                      CreateReportEvent(
+                        reportModel: reportModel,
+                        onError: () {
+                          _isRequestSent = false;
+                          setState(() {});
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Xatolik yuz berdi. Iltimos, qayta urinib ko\'ring.',
+                              ),
+                            ),
+                          );
+                        },
+                        onSuccess: () {
+                          setState(() {
+                            _isRequestSent = false;
+                          });
+                          context.push(Pages.invatesPage);
+                          setState(() {
+                            _isSubmitted = true;
+                            // _messages.clear() ni olib tashlaymiz
+                            _messages.add(
+                              ChatMessage(
+                                type: MessageType.text,
+                                text: 'Muammo muvaffaqiyatli yuborildi!',
+                                isMe: false,
+                              ),
+                            ); // Muvaffaqiyat xabarini qo'shamiz
+                            _currentQuestionIndex = 0;
+                            _showAcceptUI = false;
+                          });
+                          _scrollToBottom();
+                        },
+                      ),
+                    );
                   }
                 },
                 title: 'Yuborish',
