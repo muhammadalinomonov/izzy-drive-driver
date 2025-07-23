@@ -27,7 +27,7 @@ class AppButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: onTap,
+      onPressed: isLoading ? (){} : onTap,
       style: ElevatedButton.styleFrom(
         padding: padding,
         fixedSize: size,

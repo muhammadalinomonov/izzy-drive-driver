@@ -5,10 +5,26 @@ plugins {
 }
 
 android {
+<<<<<<< HEAD
+    namespace = "com.ajmal.izzydriveapp"
+    compileSdk = flutter.compileSdkVersion
+
+    ndkVersion = "25.2.9519653" // Use the installed NDK version
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+=======
     namespace = "com.ajmal.taxi_app"
     compileSdk = 35 // yoki o'zingniki
+>>>>>>> main
     defaultConfig {
-        applicationId = "com.ajmal.taxi_app"
+        applicationId = "com.ajmal.izzydriveapp"
         minSdk = 23
         targetSdk = 35 // yoki o'zingniki
         versionCode = 1

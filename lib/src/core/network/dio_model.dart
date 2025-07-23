@@ -61,7 +61,9 @@ class DioSettings {
                 data: error.requestOptions.data,
                 queryParameters: error.requestOptions.queryParameters,
               );
-              print('Request cloned and sent again: ${error.requestOptions.method} ${error.requestOptions.path}');
+              print(
+                'Request cloned and sent again: ${error.requestOptions.method} ${error.requestOptions.path}',
+              );
               return handler.resolve(cloneReq);
             } catch (e) {
               await StorageRepository.deleteString('token');

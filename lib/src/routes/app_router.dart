@@ -1,6 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
+import 'package:taxi_app/src/core/service_locater.dart';
+import 'package:taxi_app/src/core/location_service.dart';
 import 'package:taxi_app/src/features/auth/data/repo/auth_repo_impl.dart';
 import 'package:taxi_app/src/features/auth/data/source/auth_data_source.dart';
 import 'package:taxi_app/src/features/auth/presentation/bloc/bloc/auth_bloc.dart';
@@ -13,10 +15,18 @@ import 'package:taxi_app/src/features/choose_inivates/presentation/pages/invates
 import 'package:taxi_app/src/features/home/data/repository/home_repository_impl.dart';
 import 'package:taxi_app/src/features/home/data/source/home_data_source.dart';
 import 'package:taxi_app/src/features/home/presentation/bloc/bloc/home_bloc.dart';
+import 'package:taxi_app/src/features/home/presentation/bloc/bloc/proposal_bloc.dart';
 import 'package:taxi_app/src/features/home/presentation/screens/home_screen.dart';
 import 'package:taxi_app/src/features/home/presentation/screens/main_screen.dart';
 import 'package:taxi_app/src/features/map/presenation/bloc/map_bloc.dart';
 import 'package:taxi_app/src/features/map/presenation/pages/map_screen.dart';
+import 'package:taxi_app/src/features/master/data/repository/master_repository_impl.dart';
+import 'package:taxi_app/src/features/master/data/source/master_remote_data_source.dart';
+import 'package:taxi_app/src/features/master/presentation/bloc/master_bloc.dart';
+import 'package:taxi_app/src/features/profile/data/repository/profile_repository_impl.dart';
+import 'package:taxi_app/src/features/profile/data/source/profile_data_source.dart';
+import 'package:taxi_app/src/features/profile/presentation/bloc/profile_bloc.dart';
+import 'package:taxi_app/src/features/profile/presentation/pages/profile_page.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/pages/order_proccess_screen.dart';
 import 'package:taxi_app/src/features/truck_info/data/repo/driver_info_repo_impl.dart';
 import 'package:taxi_app/src/features/truck_info/data/source/driver_info_source.dart';
@@ -36,7 +46,7 @@ import '../features/map/data/source/map_data_source.dart';
 class Routes {
   static final GoRouter router = GoRouter(
     initialLocation: StorageRepository.getString('token').isNotEmpty
-        ? Pages.proccessOrder
+        ? Pages.main
         : Pages.signIn,
     routes: [
       GoRoute(
@@ -111,9 +121,23 @@ class Routes {
       GoRoute(
         path: Pages.main,
         builder: (context, state) {
-          return BlocProvider(
-            create: (context) =>
-                HomeBloc(HomeRepositoryImpl(dataSource: HomeDataSource())),
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (context) =>
+                    HomeBloc(HomeRepositoryImpl(dataSource: HomeDataSource())),
+              ),
+              BlocProvider(
+                create: (context) =>
+                    ProfileBloc(ProfileRepositoryImpl(ProfileDataSource())),
+              ),
+              BlocProvider(
+                create: (context) => MasterBloc(
+                  MasterRepositoryImpl(MasterRemoteDataSource()),
+                  serviceLocator<LocationService>(),
+                ),
+              ),
+            ],
             child: MainScreen(),
           );
         },
@@ -131,14 +155,36 @@ class Routes {
       ),
       GoRoute(
         path: Pages.invatesPage,
-        builder: (context, state) => BlocProvider(
-          create: (_) => InivitesBloc(
-            activeOrderRepository: ActiveOrderRepositoryImpl(
-              activeOrderSource: ActiveOrderSource(),
+        builder: (context, state) {
+          return BlocProvider(
+            create: (context) =>
+                ProposalBloc(HomeRepositoryImpl(dataSource: HomeDataSource())),
+            child: InvatesScreen(),
+          );
+        },
+      ),
+      GoRoute(
+        path: Pages.profile,
+        builder: (context, state) {
+          return BlocProvider(
+            create: (context) =>
+                ProfileBloc(ProfileRepositoryImpl(ProfileDataSource())),
+            child: ProfilePage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: Pages.proccessOrder,
+        builder: (context, state) {
+          return BlocProvider(
+            create: (_) => InivitesBloc(
+              activeOrderRepository: ActiveOrderRepositoryImpl(
+                activeOrderSource: ActiveOrderSource(),
+              ),
             ),
-          ),
-          child: InvatesScreen(),
-        ),
+            child: OrderProccessScreen(),
+          );
+        },
       ),
     ],
   );

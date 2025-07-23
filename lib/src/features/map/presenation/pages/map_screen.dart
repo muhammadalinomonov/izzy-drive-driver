@@ -15,9 +15,6 @@ import 'package:taxi_app/src/features/map/data/model/nearby_masters_response.dar
 import 'package:flutter/services.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 import 'package:taxi_app/src/utils/local.dart';
-import '../../../../routes/pages.dart';
-import '../../data/repo/map_repo_imp.dart';
-import '../../data/source/map_data_source.dart';
 import '../bloc/map_bloc.dart';
 import '../widgets/search_location_bottomsheet.dart';
 

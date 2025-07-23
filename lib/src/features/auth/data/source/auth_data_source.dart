@@ -32,7 +32,7 @@ class AuthDataSource {
       }
     } on DioException catch (e) {
       return NetworkResponse(
-        errorText: e.response?.data['message'] ?? 'Dio exception error',
+        errorText: e.response?.data.runtimeType == String ? 'Server is down and not working' : e.response?.data['message'] ?? 'Dio exception error',
       );
     } catch (e) {
       return NetworkResponse(errorText: e.toString());

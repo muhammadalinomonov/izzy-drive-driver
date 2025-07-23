@@ -1,6 +1,7 @@
 class ApiConstants {
   static final String register = "accounts/register/";
   static final String login = "accounts/login/";
+  static final String profileGet = 'drivers/get-me/';
   static final String getTrackMarks = "drivers/truckmarks/";
   static final String getTrackModel = "drivers/truckmodels/";
   static final String driverInfo = "drivers/driverprofile/";
@@ -11,4 +12,6 @@ class ApiConstants {
   static final String fetchActiveOrder='drivers/active-order/';
   static final String getInvites = "drivers/get-proposal/";
   static final String createReport = "drivers/create-report/";
+  static final String getProposals = 'drivers/get-proposal/?proposal_id=';
+  static final String mastersView = "drivers/masters-view/";
 }

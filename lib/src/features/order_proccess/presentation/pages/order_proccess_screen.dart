@@ -278,7 +278,7 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
       await _mapboxMap.setCamera(
         mapbox.CameraOptions(
           center: mapbox.Point(coordinates: midpoint),
-          zoom: 15.0,
+          zoom: 19.0,
           pitch: 0.0,
           bearing: 0.0,
         ),
@@ -668,7 +668,7 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
       _mapboxMap.setCamera(
         mapbox.CameraOptions(
           center: mapbox.Point(coordinates: currentDriverPosition),
-          zoom: 16.0,
+          zoom: 19.0,
           pitch: 0.0,
           bearing: 0.0,
         ),
@@ -741,7 +741,7 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
                   ),
                 ),
                 pitch: 0.0,
-                zoom: 15.0,
+                zoom: 19.0,
                 bearing: 0.0,
               ),
               onCameraChangeListener: (cameraChanged) {
