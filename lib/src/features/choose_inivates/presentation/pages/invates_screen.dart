@@ -1,4 +1,3 @@
-// File: lib/src/features/invites/presentation/pages/invates_screen.dart
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,6 +25,13 @@ class _InvatesScreenState extends State<InvatesScreen> {
     context.read<InivitesBloc>().add(FetchActiveOrderEvent());
   }
 
+  // Function to handle the refresh action
+  Future<void> _onRefresh() async {
+    context.read<InivitesBloc>().add(FetchActiveOrderEvent());
+    // Optional delay to ensure the refresh indicator is visible
+    await Future.delayed(const Duration(seconds: 1));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,6 +54,7 @@ class _InvatesScreenState extends State<InvatesScreen> {
             final order = orderResponse.order;
             final offers = orderResponse.data;
             return SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -55,7 +62,7 @@ class _InvatesScreenState extends State<InvatesScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 15),
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: AppColor.white,
+                      color : AppColor.white,
                       borderRadius: BorderRadius.only(
                         bottomLeft: Radius.circular(20),
                         bottomRight: Radius.circular(20),
@@ -231,37 +238,40 @@ class _InvatesScreenState extends State<InvatesScreen> {
                             letterSpacing: -0.30,
                           ),
                         ),
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: offers.length,
-                          itemBuilder: (context, index) {
-                            final offer = offers[index];
-                            final percentageChange = offer.changePercent;
-                            final balanceColor = _getBalanceColors(
-                              offer.balance,
-                            );
-                            final changeColor = balanceColor['text']!;
-                            final changeBackgroundColor =
-                                balanceColor['background']!;
-                            final balanceText =
-                                offer.balance.toLowerCase() == 'equal'
-                                ? 'TENG'
-                                : offer.balance.toUpperCase();
-                            return _buildOfferItem(
-                              context: context,
-                              offer: offer,
-                              percentageChange: percentageChange,
-                              changeColor: changeColor,
-                              changeBackgroundColor: changeBackgroundColor,
-                              changeText: percentageChange >= 0
-                                  ? '↑${percentageChange.toStringAsFixed(1)}%'
-                                  : '↓${percentageChange.abs().toStringAsFixed(1)}%',
-                              balanceColor: balanceColor['background']!,
-                              balanceTextColor: balanceColor['text']!,
-                              balanceText: balanceText,
-                            );
-                          },
+                        RefreshIndicator(
+                          onRefresh: _onRefresh,
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            itemCount: offers.length,
+                            itemBuilder: (context, index) {
+                              final offer = offers[index];
+                              final percentageChange = offer.changePercent;
+                              final balanceColor = _getBalanceColors(
+                                offer.balance,
+                              );
+                              final changeColor = balanceColor['text']!;
+                              final changeBackgroundColor =
+                              balanceColor['background']!;
+                              final balanceText =
+                              offer.balance.toLowerCase() == 'equal'
+                                  ? 'TENG'
+                                  : offer.balance.toUpperCase();
+                              return _buildOfferItem(
+                                context: context,
+                                offer: offer,
+                                percentageChange: percentageChange,
+                                changeColor: changeColor,
+                                changeBackgroundColor: changeBackgroundColor,
+                                changeText: percentageChange >= 0
+                                    ? '↑${percentageChange.toStringAsFixed(1)}%'
+                                    : '↓${percentageChange.abs().toStringAsFixed(1)}%',
+                                balanceColor: balanceColor['background']!,
+                                balanceTextColor: balanceColor['text']!,
+                                balanceText: balanceText,
+                              );
+                            },
+                          ),
                         ),
                         const SizedBox(height: 20),
                       ],
@@ -351,43 +361,42 @@ class _InvatesScreenState extends State<InvatesScreen> {
                 child: ClipOval(
                   child: offer.avatar != null
                       ? Image.network(
-                          offer.avatar!,
-                          fit: BoxFit.cover,
-                          width: 50,
-                          height: 50,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return const Center(
-                              child: CircularProgressIndicator(),
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) {
-                            return Image.network(
-                              'https://avatars.githubusercontent.com/u/108933534?v=4',
-                              fit: BoxFit.cover,
-                              width: 50,
-                              height: 50,
-                              loadingBuilder: (context, child, loadingProgress) {
-                                if (loadingProgress == null) return child;
-                                return const Center(
-                                  child: CircularProgressIndicator(),
-                                );
-                              },
-                            );
-                          },
-                        )
-                      : Image.network(
-                          'https://avatars.githubusercontent.com/u/108933534?v=4',
-                          fit: BoxFit.cover,
-                          width: 50,
-                          height: 50,
+                    offer.avatar!,
+                    fit: BoxFit.cover,
+                    width: 50,
+                    height: 50,
                     loadingBuilder: (context, child, loadingProgress) {
                       if (loadingProgress == null) return child;
                       return const Center(
                         child: CircularProgressIndicator(),
                       );
                     },
-
+                    errorBuilder: (context, error, stackTrace) {
+                      return Image.network(
+                        'https://avatars.githubusercontent.com/u/108933534?v=4',
+                        fit: BoxFit.cover,
+                        width: 50,
+                        height: 50,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        },
+                      );
+                    },
+                  )
+                      : Image.network(
+                    'https://avatars.gitlabusercontent.com/u/108933534?v=4',
+                    fit: BoxFit.cover,
+                    width: 50,
+                    height: 50,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    },
                   ),
                 ),
               ),
@@ -452,18 +461,6 @@ class _InvatesScreenState extends State<InvatesScreen> {
                   style: TextStyle(color: changeColor, fontSize: 11.5),
                 ),
               ),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: balanceColor,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  balanceText,
-                  style: TextStyle(color: balanceTextColor, fontSize: 11.5),
-                ),
-              ),
             ],
           ),
           SizedBox(height: 13),
@@ -472,7 +469,7 @@ class _InvatesScreenState extends State<InvatesScreen> {
             padding: const EdgeInsets.symmetric(vertical: 12),
             onPressed: () {
               showOrderDetailBottomSheet(context, () {
-                context.push(Pages.workerInfo);
+                context.push(Pages.proccessOrder);
               });
             },
             shape: RoundedRectangleBorder(

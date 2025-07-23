@@ -12,6 +12,12 @@
 @import audio_session;
 #endif
 
+#if __has_include(<device_info_plus/FPPDeviceInfoPlusPlugin.h>)
+#import <device_info_plus/FPPDeviceInfoPlusPlugin.h>
+#else
+@import device_info_plus;
+#endif
+
 #if __has_include(<geolocator_apple/GeolocatorPlugin.h>)
 #import <geolocator_apple/GeolocatorPlugin.h>
 #else
@@ -82,6 +88,7 @@
 
 + (void)registerWithRegistry:(NSObject<FlutterPluginRegistry>*)registry {
   [AudioSessionPlugin registerWithRegistrar:[registry registrarForPlugin:@"AudioSessionPlugin"]];
+  [FPPDeviceInfoPlusPlugin registerWithRegistrar:[registry registrarForPlugin:@"FPPDeviceInfoPlusPlugin"]];
   [GeolocatorPlugin registerWithRegistrar:[registry registrarForPlugin:@"GeolocatorPlugin"]];
   [HLImagePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"HLImagePickerPlugin"]];
   [FLTImagePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTImagePickerPlugin"]];

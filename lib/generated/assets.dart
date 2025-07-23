@@ -4,7 +4,6 @@ class Assets {
 
   static const String iconsAbout = 'assets/icons/about.svg';
   static const String iconsAddImageIcon = 'assets/icons/add_image_icon.svg';
-  static const String iconsApple Pay Logo = 'assets/icons/Apple Pay Logo.svg';
   static const String iconsAppleIcon = 'assets/icons/apple_icon.svg';
   static const String iconsBack = 'assets/icons/back.svg';
   static const String iconsBell = 'assets/icons/bell.svg';
@@ -43,5 +42,4 @@ class Assets {
   static const String imagesLoginbg = 'assets/images/loginbg.png';
   static const String imagesMassage = 'assets/images/massage.png';
   static const String taxiApp = '.env';
-
 }
