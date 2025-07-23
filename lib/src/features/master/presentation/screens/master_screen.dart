@@ -1,5 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/features/master/data/model/master_model.dart';
 import 'package:taxi_app/src/features/master/presentation/bloc/master_bloc.dart';
 
@@ -49,25 +51,39 @@ class _MasterScreenState extends State<MasterScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEFF2F5),
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.location_on, size: 20, color: Colors.black),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '2972 Westheimer Rd. Santa Ana...',
-                      style: const TextStyle(fontSize: 16, color: Colors.black),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+            BlocBuilder<MasterBloc, MasterState>(
+              builder: (context, state) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
                   ),
-                ],
-              ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFF2F5),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on,
+                        size: 20,
+                        color: Colors.black,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          state.currentAddress ?? 'No location found',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 16),
             Expanded(

@@ -1,4 +1,7 @@
+import 'dart:ffi';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:taxi_app/src/core/location_service.dart';
 import '../../data/model/master_model.dart';
 import '../../data/repository/master_repository_impl.dart';
@@ -9,22 +12,26 @@ class MasterState {
   final MasterStatus status;
   final List<MasterModel> masters;
   final String? error;
+  final String? currentAddress;
 
   MasterState({
     this.status = MasterStatus.initial,
     this.masters = const [],
     this.error,
+    this.currentAddress,
   });
 
   MasterState copyWith({
     MasterStatus? status,
     List<MasterModel>? masters,
     String? error,
+    String? currentAddress,
   }) {
     return MasterState(
       status: status ?? this.status,
       masters: masters ?? this.masters,
       error: error,
+      currentAddress: currentAddress ?? this.currentAddress,
     );
   }
 }
@@ -46,12 +53,16 @@ class MasterBloc extends Bloc<MasterEvent, MasterState> {
       emit(state.copyWith(status: MasterStatus.loading));
       double? lat = event.lat;
       double? long = event.long;
+      String? address;
       if (lat == null || long == null) {
         final position = await locationService.getCurrentLocation();
         if (position != null) {
           lat = position.latitude;
           long = position.longitude;
+          print('position is not null');
+          address = await locationService.getAddressFromLatLng(lat, long);
         } else {
+          print('Could not get user location');
           emit(
             state.copyWith(
               status: MasterStatus.failure,
@@ -61,18 +72,28 @@ class MasterBloc extends Bloc<MasterEvent, MasterState> {
           return;
         }
       }
+      print('fetchMasters bloc $lat $long');
       final result = await repository.fetchMasters(
         lat: lat,
         long: long,
         pageSize: event.pageSize,
       );
       if (result.errorText.isEmpty) {
+        print('adress came here >>> $address');
         emit(
-          state.copyWith(status: MasterStatus.success, masters: result.data),
+          MasterState(
+            status: MasterStatus.success,
+            masters: result.data,
+            currentAddress: address,
+          ),
         );
       } else {
         emit(
-          state.copyWith(status: MasterStatus.failure, error: result.errorText),
+          state.copyWith(
+            status: MasterStatus.failure,
+            error: result.errorText,
+            currentAddress: address,
+          ),
         );
       }
     });

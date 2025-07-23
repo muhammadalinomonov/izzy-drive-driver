@@ -1,3 +1,4 @@
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 
 class LocationService {
@@ -24,6 +25,36 @@ class LocationService {
       return position;
     } catch (e) {
       print('Error getting current location: $e');
+      return null;
+    }
+  }
+
+  Future<String?> getAddressFromLatLng(
+    double latitude,
+    double longitude,
+  ) async {
+    try {
+      print('getAddressFromLatLng worked');
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        latitude,
+        longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+
+        String fullAddress =
+            '${place.name}, ${place.street}, ${place.subLocality}, '
+            '${place.locality}, ${place.administrativeArea}, ${place.country}, ${place.postalCode}';
+
+        print('Full Address: $fullAddress');
+        return fullAddress;
+      } else {
+        print('No address available for this location.');
+        return null;
+      }
+    } catch (e) {
+      print('Error on  getAddressFromLatLng: $e');
       return null;
     }
   }

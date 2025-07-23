@@ -17,7 +17,7 @@ class MasterRemoteDataSource {
     int pageSize = 5,
   }) async {
     try {
-      print('Fetching masters from remote data source');
+      print('Fetching masters from remote data source $lat $long');
       final response = await client.get(
         ApiConstants.mastersView,
         queryParameters: {

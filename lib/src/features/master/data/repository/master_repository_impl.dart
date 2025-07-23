@@ -9,7 +9,12 @@ class MasterRepositoryImpl extends MasterRepository {
   MasterRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<NetworkResponse> fetchMasters({required double lat ,required double long,required int pageSize}) {
-    return remoteDataSource.fetchMasters(lat: 3, long: 3);
+  Future<NetworkResponse> fetchMasters({
+    required double lat,
+    required double long,
+    required int pageSize,
+  }) {
+    print('MasterRepositoryImpl $lat $long');
+    return remoteDataSource.fetchMasters(lat: lat, long: long);
   }
 }
