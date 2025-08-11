@@ -117,7 +117,7 @@ class _MainScreenState extends State<MainScreen> {
                                         },
                                         child: OrderItem(
                                           title: order.orderTitle,
-                                          distance: order.distanceKm,
+                                          distance: order.distanceKm.toString(),
                                           price: MyFunctions.formatCost(order.price),
                                           createdAt: order.createdAt,
                                           isYouSentRequest: order.proposal.id != -1,

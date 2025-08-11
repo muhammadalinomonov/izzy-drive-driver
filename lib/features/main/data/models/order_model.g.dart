@@ -17,7 +17,7 @@ OrderModel _$OrderModelFromJson(Map<String, dynamic> json) => OrderModel(
           : const ProposalEntityConverter()
               .fromJson(json['proposal'] as Map<String, dynamic>),
       createdAt: json['created_at'] as String? ?? '',
-      distanceKm: json['distance_km'] as String? ?? '',
+      distanceKm: json['distance_km'] as double? ?? 0.0,
       description: json['description'] as String? ?? '',
       audio: json['audio'] as String? ?? '',
       images: (json['images'] as List<dynamic>?)
@@ -25,7 +25,7 @@ OrderModel _$OrderModelFromJson(Map<String, dynamic> json) => OrderModel(
                   .fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
-      distance: json['distance'] as String? ?? '',
+      distance: json['distance'] as double? ?? 0,
     );
 
 Map<String, dynamic> _$OrderModelToJson(OrderModel instance) =>

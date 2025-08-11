@@ -13,17 +13,14 @@ class OrderEntity extends Equatable {
   @ProposalEntityConverter()
   final ProposalEntity proposal;
   final String createdAt;
-
   ///distance km for list
-  final String distanceKm;
-
+  final double distanceKm;
   final String description;
   final String audio;
   @ImageEntityConverter()
   final List<ImageEntity> images;
-
   /// distance for details;
-  final String distance;
+  final double distance;
 
   const OrderEntity({
     this.id = -1,
@@ -33,11 +30,11 @@ class OrderEntity extends Equatable {
     this.selectedMechanic,
     this.proposal = const ProposalEntity(),
     this.createdAt = '',
-    this.distanceKm = '',
+    this.distanceKm = 0,
     this.description = '',
     this.audio = '',
     this.images = const [],
-    this.distance = '',
+    this.distance = 0,
   });
 
   @override

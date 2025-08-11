@@ -994,6 +994,13 @@
       ]
     },
     {
+      "name": "flutter_local_notifications_platform_interface",
+      "version": "9.1.0",
+      "dependencies": [
+        "plugin_platform_interface"
+      ]
+    },
+    {
       "name": "flutter_local_notifications_windows",
       "version": "1.0.2",
       "dependencies": [
@@ -1003,13 +1010,6 @@
         "meta",
         "timezone",
         "xml"
-      ]
-    },
-    {
-      "name": "flutter_local_notifications_platform_interface",
-      "version": "9.1.0",
-      "dependencies": [
-        "plugin_platform_interface"
       ]
     },
     {

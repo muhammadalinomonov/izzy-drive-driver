@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -132,5 +134,8 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     }
   }
 
-  void _handleMessage(String message, Emitter<OrdersState> emit) {}
+  void _handleMessage(String message, Emitter<OrdersState> emit) {
+    final json  = jsonDecode(message);
+    final type = json['type'] as String?;
+  }
 }
