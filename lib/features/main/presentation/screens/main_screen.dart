@@ -10,6 +10,7 @@ import 'package:mechanic/features/common/presentation/widgets/paginator.dart';
 import 'package:mechanic/features/main/presentation/blocs/orders/orders_bloc.dart';
 import 'package:mechanic/features/main/presentation/screens/order_single_screen.dart';
 import 'package:mechanic/features/main/presentation/widgets/balance_item.dart';
+import 'package:mechanic/features/main/presentation/widgets/current_active_order_widget.dart';
 import 'package:mechanic/features/main/presentation/widgets/main_screen_user_widget.dart';
 import 'package:mechanic/features/main/presentation/widgets/order_item.dart';
 import 'package:mechanic/features/main/presentation/widgets/working_status.dart';
@@ -40,6 +41,12 @@ class _MainScreenState extends State<MainScreen> {
             context.read<OrdersBloc>()
               ..add(GetOrdersEvent())
               ..add(ConnectToWebSocketEvent());
+          } else if (state.getProfileStatus.isSuccess && state.user.status == 'onwork') {
+            context.read<OrdersBloc>().add(GetCurrentOrderEvent());
+          } else if (state.getProfileStatus.isFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.errorMessage ?? 'Xatolik yuz berdi')),
+            );
           }
         },
         child: BlocListener<ProfileBloc, ProfileState>(
@@ -70,11 +77,12 @@ class _MainScreenState extends State<MainScreen> {
                   ],
                 ),
               ),
-              Expanded(
-                child: BlocBuilder<ProfileBloc, ProfileState>(
-                  builder: (context, profileState) {
-                    if (profileState.getProfileStatus.isSuccess) {
-                      return Container(
+              BlocBuilder<ProfileBloc, ProfileState>(
+                builder: (context, profileState) {
+                  if (profileState.getProfileStatus.isSuccess &&
+                      (profileState.status == 'online' || profileState.status == 'offline')) {
+                    return Expanded(
+                      child: Container(
                         height: MediaQuery.sizeOf(context).height,
                         decoration: BoxDecoration(
                           color: white,
@@ -93,6 +101,9 @@ class _MainScreenState extends State<MainScreen> {
                               )
                             : BlocBuilder<OrdersBloc, OrdersState>(
                                 builder: (context, state) {
+                                  if (profileState.status == 'onwork') {
+                                    return CurrentActiveOrderWidget();
+                                  }
                                   return Paginator(
                                     onRefresh: () async {
                                       context.read<OrdersBloc>().add(GetOrdersEvent());
@@ -143,19 +154,21 @@ class _MainScreenState extends State<MainScreen> {
                                   );
                                 },
                               ),
-                      );
-                    } else if (profileState.getProfileStatus.isInProgress) {
-                      return Center(child: CircularProgressIndicator.adaptive());
-                    } else {
-                      return Center(
-                        child: Text(
-                          profileState.errorMessage ?? 'Xatolik yuz berdi',
-                          style: TextStyle(color: red),
-                        ),
-                      );
-                    }
-                  },
-                ),
+                      ),
+                    );
+                  } else if (profileState.getProfileStatus.isSuccess && profileState.status == 'onwork') {
+                    return CurrentActiveOrderWidget();
+                  } else if (profileState.getProfileStatus.isInProgress) {
+                    return Expanded(child: Center(child: CircularProgressIndicator.adaptive()));
+                  } else {
+                    return Center(
+                      child: Text(
+                        profileState.errorMessage ?? 'Xatolik yuz berdi',
+                        style: TextStyle(color: red),
+                      ),
+                    );
+                  }
+                },
               )
             ],
           ),

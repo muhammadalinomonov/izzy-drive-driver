@@ -9,6 +9,8 @@ class OrdersState extends Equatable {
   final FormzSubmissionStatus orderDetailStatus;
   final OrderDetailEntity orderDetail;
   final FormzSubmissionStatus sendApplicationStatus;
+  final FormzSubmissionStatus getCurrentOrderStatus;
+  final CurrentOrderEntity currentOrder;
 
   const OrdersState({
     this.orders = const [],
@@ -18,6 +20,8 @@ class OrdersState extends Equatable {
     this.orderDetailStatus = FormzSubmissionStatus.initial,
     this.orderDetail = const OrderDetailEntity(),
     this.sendApplicationStatus = FormzSubmissionStatus.initial,
+    this.getCurrentOrderStatus = FormzSubmissionStatus.initial,
+    this.currentOrder = const CurrentOrderEntity(),
   });
 
   OrdersState copyWith({
@@ -28,6 +32,8 @@ class OrdersState extends Equatable {
     FormzSubmissionStatus? orderDetailStatus,
     OrderDetailEntity? orderDetail,
     FormzSubmissionStatus? sendApplicationStatus,
+    FormzSubmissionStatus? getCurrentOrderStatus,
+    CurrentOrderEntity? currentOrder,
   }) {
     return OrdersState(
       orders: orders ?? this.orders,
@@ -37,6 +43,8 @@ class OrdersState extends Equatable {
       orderDetailStatus: orderDetailStatus ?? this.orderDetailStatus,
       orderDetail: orderDetail ?? this.orderDetail,
       sendApplicationStatus: sendApplicationStatus ?? this.sendApplicationStatus,
+      getCurrentOrderStatus: getCurrentOrderStatus ?? this.getCurrentOrderStatus,
+      currentOrder: currentOrder ?? this.currentOrder,
     );
   }
 
@@ -49,5 +57,7 @@ class OrdersState extends Equatable {
         orderDetailStatus,
         orderDetail,
         sendApplicationStatus,
+        getCurrentOrderStatus,
+        currentOrder,
       ];
 }

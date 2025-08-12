@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:mechanic/features/main/data/models/order_model.dart';
+import 'package:mechanic/features/main/domain/entities/address_entity.dart';
 import 'package:mechanic/features/main/domain/entities/image_entity.dart';
 import 'package:mechanic/features/main/domain/entities/proposal_entity.dart';
 
@@ -9,6 +10,8 @@ class OrderEntity extends Equatable {
   final String orderTitle;
   final String price;
   final String status;
+  @CurrentAddressEntityConverter()
+  final CurrentAddressEntity currentAddress;
   final dynamic selectedMechanic;
   @ProposalEntityConverter()
   final ProposalEntity proposal;
@@ -35,6 +38,7 @@ class OrderEntity extends Equatable {
     this.audio = '',
     this.images = const [],
     this.distance = 0,
+    this.currentAddress = const CurrentAddressEntity(),
   });
 
   @override
@@ -51,6 +55,7 @@ class OrderEntity extends Equatable {
         audio,
         images,
         distance,
+        currentAddress,
       ];
 }
 

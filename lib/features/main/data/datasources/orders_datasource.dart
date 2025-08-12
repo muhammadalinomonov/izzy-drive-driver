@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:mechanic/core/exceptions/exceptions.dart';
 import 'package:mechanic/features/common/data/models/base_model.dart' show BaseModel;
 import 'package:mechanic/features/common/data/models/generic_pagination.dart';
+import 'package:mechanic/features/main/data/models/current_order_model.dart';
 import 'package:mechanic/features/main/data/models/order_detail_model.dart';
 import 'package:mechanic/features/main/data/models/order_model.dart';
 
@@ -15,6 +16,8 @@ abstract class OrdersDataSource {
     String? comment,
     required String proposedPrice,
   });
+
+  Future<BaseModel<CurrentOrderModel>> getCurrentOrder();
 }
 
 class OrdersDataSourceImpl implements OrdersDataSource {
@@ -25,12 +28,9 @@ class OrdersDataSourceImpl implements OrdersDataSource {
   @override
   Future<GenericPagination<OrderModel>> getOrders({String? next}) async {
     try {
-      final response = await dio.get(
-        next ?? 'mechanics/get-orders/',
-        queryParameters: {
-          'page_size':50,
-        }
-      );
+      final response = await dio.get(next ?? 'mechanics/get-orders/', queryParameters: {
+        'page_size': 50,
+      });
       if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
         return GenericPagination<OrderModel>.fromJson(
           response.data,
@@ -90,6 +90,28 @@ class OrdersDataSourceImpl implements OrdersDataSource {
       } else {
         throw ServerException(
           errorMessage: 'Failed to send application',
+          statusCode: response.statusCode ?? 500,
+        );
+      }
+    } on DioException catch (e) {
+      rethrow;
+    } on ServerException {
+      rethrow;
+    } catch (e) {
+      throw ParsingException(errorMessage: 'An unexpected error occurred: $e');
+    }
+  }
+
+  @override
+  Future<BaseModel<CurrentOrderModel>> getCurrentOrder() async {
+    try {
+      final response = await dio.get('mechanics/view-current-order/');
+
+      if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
+        return BaseModel.fromJson(response.data, (json) => CurrentOrderModel.fromJson(json));
+      } else {
+        throw ServerException(
+          errorMessage: 'Failed to fetch current order',
           statusCode: response.statusCode ?? 500,
         );
       }

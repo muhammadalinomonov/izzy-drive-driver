@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:mechanic/features/main/domain/entities/address_entity.dart';
 import 'package:mechanic/features/main/domain/entities/image_entity.dart';
 import 'package:mechanic/features/main/domain/entities/order_entity.dart';
 import 'package:mechanic/features/main/domain/entities/proposal_entity.dart';
@@ -20,7 +21,7 @@ class OrderModel extends OrderEntity {
     super.audio,
     super.images,
     super.distance,
-
+    super.currentAddress,
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) => _$OrderModelFromJson(json);

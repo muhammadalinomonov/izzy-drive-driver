@@ -16,5 +16,7 @@ class AppIcons{
   static const String arrowDown = 'assets/icons/arrow_down.svg';
   static const String arrowUp = 'assets/icons/arrow_top.svg';
   static const String send = 'assets/icons/send.svg';
+  static const String phone = 'assets/icons/phone.svg';
+  static const String check = 'assets/icons/check.svg';
 
 }

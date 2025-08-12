@@ -12,6 +12,8 @@ class GetOrdersEvent extends OrdersEvent {
 
 class GetMoreOrdersEvent extends OrdersEvent {}
 
+class GetCurrentOrderEvent extends OrdersEvent {}
+
 class GetOrderDetailEvent extends OrdersEvent {
   final int orderId;
 
@@ -32,6 +34,4 @@ class SendApplicationEvent extends OrdersEvent {
 
 class ConnectToWebSocketEvent extends OrdersEvent {}
 
-class DisConnectFromWebSocketEvent extends OrdersEvent{}
-
-
+class DisConnectFromWebSocketEvent extends OrdersEvent {}

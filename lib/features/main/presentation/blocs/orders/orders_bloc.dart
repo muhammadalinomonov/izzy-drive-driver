@@ -6,9 +6,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:mechanic/core/storage/storage_repository.dart';
 import 'package:mechanic/core/storage/store_keys.dart';
+import 'package:mechanic/core/usecases/use_case.dart';
 import 'package:mechanic/core/utils/service_locator.dart';
+import 'package:mechanic/features/main/domain/entities/current_order_entity.dart';
 import 'package:mechanic/features/main/domain/entities/order_detail_entity.dart';
 import 'package:mechanic/features/main/domain/entities/order_entity.dart';
+import 'package:mechanic/features/main/domain/usecases/get_current_order_usecase.dart';
 import 'package:mechanic/features/main/domain/usecases/get_order_detail_usecase.dart';
 import 'package:mechanic/features/main/domain/usecases/get_orders_usecase.dart';
 import 'package:mechanic/features/main/domain/usecases/send_application_usecase.dart';
@@ -21,6 +24,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
   final GetOrdersUseCase _getOrdersUseCase = GetOrdersUseCase(repository: serviceLocator.call());
   final GetOrderDetailUseCase _getOrderDetailUseCase = GetOrderDetailUseCase(repository: serviceLocator.call());
   final SendApplicationUseCase _sendApplicationUseCase = SendApplicationUseCase(repository: serviceLocator.call());
+  final GetCurrentOrderUseCase _getCurrentOrderUseCase = GetCurrentOrderUseCase(repository: serviceLocator.call());
   bool _isConnected = false;
 
   WebSocketChannel? _channel;
@@ -32,6 +36,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     on<SendApplicationEvent>(_onSendApplicationEvent);
     on<ConnectToWebSocketEvent>(_onConnectWebSocket);
     on<DisConnectFromWebSocketEvent>(_onDisconnectFromWebSocket);
+    on<GetCurrentOrderEvent>(_onGetCurrentOrderEvent);
   }
 
   void _onGetOrdersEvent(GetOrdersEvent event, Emitter<OrdersState> emit) async {
@@ -117,6 +122,18 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     _isConnected = false;
   }
 
+  void _onGetCurrentOrderEvent(GetCurrentOrderEvent event, Emitter<OrdersState> emit) async {
+    emit(state.copyWith(getCurrentOrderStatus: FormzSubmissionStatus.inProgress));
+    final result = await _getCurrentOrderUseCase(NoParams());
+    if (result.isRight && result.right.data != null) {
+      emit(
+        state.copyWith(getCurrentOrderStatus: FormzSubmissionStatus.success, currentOrder: result.right.data),
+      );
+    } else {
+      emit(state.copyWith(getCurrentOrderStatus: FormzSubmissionStatus.failure));
+    }
+  }
+
   Future<void> _listenToWebSocket(Emitter<OrdersState> emit) async {
     if (_channel == null) {
       return;
@@ -135,7 +152,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
   }
 
   void _handleMessage(String message, Emitter<OrdersState> emit) {
-    final json  = jsonDecode(message);
+    final json = jsonDecode(message);
     final type = json['type'] as String?;
   }
 }
