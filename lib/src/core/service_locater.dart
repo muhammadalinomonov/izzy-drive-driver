@@ -5,12 +5,15 @@ import 'package:taxi_app/src/core/network/dio_model.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
 import 'package:taxi_app/src/core/location_service.dart';
 
+import '../features/order_proccess/data/order_proccess_source.dart';
+
 final serviceLocator = GetIt.I;
 
 Future<void> setupLocator() async {
   await StorageRepository.getInstance();
   serviceLocator.registerLazySingleton(DioSettings.new);
   serviceLocator.registerLazySingleton(LocationService.new);
+
   await dotenv.load(fileName: '.env');
   MapboxOptions.setAccessToken(dotenv.env['MAPBOX_ACCESS_TOKEN']!);
 }

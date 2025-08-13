@@ -15,4 +15,9 @@ class HomeRepositoryImpl extends HomeRepository {
 
   @override
   Future<NetworkResponse> getProsal(int id) => _dataSource.getProposal(id);
+
+  @override
+  Future<NetworkResponse> selectProposal(int proposalId) {
+    return _dataSource.selectProposal(proposalId);
+  }
 }

@@ -15,9 +15,7 @@
   },
   "source_files": "mapbox_maps_flutter/Sources/mapbox_maps_flutter/Classes/**/*",
   "dependencies": {
-    "Flutter": [
-
-    ],
+    "Flutter": [],
     "MapboxMaps": [
       "11.13.3"
     ],

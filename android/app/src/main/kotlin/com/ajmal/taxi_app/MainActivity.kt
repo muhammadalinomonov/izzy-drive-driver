@@ -1,5 +1,5 @@
-package com.ajmal.izzydriveapp
+package com.ajmal.taxi_app
 
 import io.flutter.embedding.android.FlutterActivity
 
-class MainActivity : FlutterActivity()
+class MainAjmalActivity : FlutterActivity()

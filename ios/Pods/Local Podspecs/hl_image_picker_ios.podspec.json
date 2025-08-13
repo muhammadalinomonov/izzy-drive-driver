@@ -15,15 +15,9 @@
   },
   "source_files": "Classes/**/*",
   "dependencies": {
-    "Flutter": [
-
-    ],
-    "TLPhotoPicker": [
-
-    ],
-    "CropViewController": [
-
-    ]
+    "Flutter": [],
+    "TLPhotoPicker": [],
+    "CropViewController": []
   },
   "platforms": {
     "ios": "11.0"

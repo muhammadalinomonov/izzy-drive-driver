@@ -8,7 +8,7 @@ import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
 import 'package:taxi_app/src/features/home/presentation/bloc/bloc/home_bloc.dart';
 import 'package:taxi_app/src/features/home/presentation/widgets/comment_section_modal_sheet.dart';
-import 'package:taxi_app/src/features/home/presentation/widgets/profile_order_model_sheet.dart';
+import 'package:taxi_app/src/features/choose_inivates/presentation/widgets/profile_order_model_sheet.dart';
 import 'package:taxi_app/src/features/home/presentation/widgets/search_input.dart';
 import 'package:card_swiper/card_swiper.dart';
 import 'package:taxi_app/src/routes/pages.dart';

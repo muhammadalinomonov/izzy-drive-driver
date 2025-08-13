@@ -19,22 +19,26 @@ class AuthDataSource {
 
       if (response.isSuccess) {
         final responseData = response.data['data']['access'];
-        final responseID = response.data['data']['id'];
+        final responseID = response.data['data']['id'].toString();
+        print('Success on register');
+        StorageRepository.putString('responseID', responseID.toString().toString());
         StorageRepository.putString('token', responseData);
-        StorageRepository.putString('responseID', responseID);
         StorageRepository.putString(
           'refresh',
           response.data['data']['refresh'],
         );
         return NetworkResponse(data: response.data);
       } else {
+        print('Error on else ${response.statusMessage}');
         return NetworkResponse(errorText: response.statusMessage ?? "");
       }
     } on DioException catch (e) {
+      print('Error on catch ${e.response?.data}');
       return NetworkResponse(
         errorText: e.response?.data.runtimeType == String ? 'Server is down and not working' : e.response?.data['message'] ?? 'Dio exception error',
       );
     } catch (e) {
+      print('Error on catchcatch ${e.toString()}');
       return NetworkResponse(errorText: e.toString());
     }
   }
@@ -50,7 +54,7 @@ class AuthDataSource {
         print('Success on login');
         print(response.data);
         final responseData = response.data['data']['access'];
-        final responseID = response.data['data']['id'];
+        final responseID = response.data['data']['id'].toString();
         StorageRepository.putString('token', responseData);
         StorageRepository.putString('responseID', responseID);
         StorageRepository.putString(

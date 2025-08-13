@@ -36,20 +36,6 @@ class OrderResponse {
       order: Order.fromJson(json['order'] as Map<String, dynamic>),
     );
   }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'status': status,
-      'message': message,
-      'total': total,
-      'total_pages': totalPages,
-      'current_page': currentPage,
-      'next': next,
-      'previous': previous,
-      'data': data.map((e) => e.toJson()).toList(),
-      'order': order.toJson(),
-    };
-  }
 }
 
 class OrderData {
@@ -57,10 +43,10 @@ class OrderData {
   final int mechanicId;
   final String mechanicName;
   final String shopAddress;
-  final String distance;
+  final double distance;
   final String? avatar;
-  final String mechanicCurrentAddress;
-  final String proposedPrice;
+  final String mechanicCurrentAddress; // API'dan kelgan raw string
+  final double proposedPrice;
   final String createdAt;
   final String balance;
   final double changePercent;
@@ -85,37 +71,21 @@ class OrderData {
       mechanicId: json['mechanic_id'] as int,
       mechanicName: json['mechanic_name'] as String,
       shopAddress: json['shop_address'] as String,
-      distance: json['distance'] as String,
+      distance: _toDouble(json['distance']),
       avatar: json['avatar'] as String?,
       mechanicCurrentAddress: json['mechanic_current_address'] as String,
-      proposedPrice: json['proposed_price'] as String,
+      proposedPrice: _toDouble(json['proposed_price']),
       createdAt: json['created_at'] as String,
       balance: json['balance'] as String,
-      changePercent: (json['change_percent'] as num).toDouble(),
+      changePercent: _toDouble(json['change_percent']),
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'mechanic_id': mechanicId,
-      'mechanic_name': mechanicName,
-      'shop_address': shopAddress,
-      'distance': distance,
-      'avatar': avatar,
-      'mechanic_current_address': mechanicCurrentAddress,
-      'proposed_price': proposedPrice,
-      'created_at': createdAt,
-      'balance': balance,
-      'change_percent': changePercent,
-    };
   }
 }
 
 class Order {
   final int id;
   final String orderTitle;
-  final String price;
+  final double price;
   final String status;
   final CurrentAddress currentAddress;
   final String createdAt;
@@ -135,24 +105,12 @@ class Order {
     return Order(
       id: json['id'] as int,
       orderTitle: json['order_title'] as String,
-      price: json['price'] as String,
+      price: _toDouble(json['price']),
       status: json['status'] as String,
-      currentAddress: CurrentAddress.fromJson(json['current_address'] as Map<String, dynamic>),
+      currentAddress: CurrentAddress.fromJson(json['current_address']),
       createdAt: json['created_at'] as String,
-      totalPrice: (json['total_price'] as num).toDouble(),
+      totalPrice: _toDouble(json['total_price']),
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'order_title': orderTitle,
-      'price': price,
-      'status': status,
-      'current_address': currentAddress.toJson(),
-      'created_at': createdAt,
-      'total_price': totalPrice,
-    };
   }
 }
 
@@ -171,19 +129,17 @@ class CurrentAddress {
 
   factory CurrentAddress.fromJson(Map<String, dynamic> json) {
     return CurrentAddress(
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
+      latitude: _toDouble(json['latitude']),
+      longitude: _toDouble(json['longitude']),
       address: json['address'] as String,
       isStatic: json['is_static'] as bool,
     );
   }
+}
 
-  Map<String, dynamic> toJson() {
-    return {
-      'latitude': latitude,
-      'longitude': longitude,
-      'address': address,
-      'is_static': isStatic,
-    };
-  }
+/// Helper function to safely parse double from dynamic
+double _toDouble(dynamic value) {
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? 0.0;
+  return 0.0;
 }

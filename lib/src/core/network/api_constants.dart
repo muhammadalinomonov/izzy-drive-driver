@@ -7,11 +7,13 @@ class ApiConstants {
   static final String driverInfo = "drivers/driverprofile/";
   static final String nearMechanicsKm = "drivers/near-mechanics-km/";
   static final String searchLocation = "drivers/typing/";
-  static final String getBanners = "others/banners/";
-  static final String fetchQuestions="others/questions-templates/";
+  static final String getBanners = "accounts/banners/";
+  static final String fetchQuestions="accounts/questions-templates/";
   static final String fetchActiveOrder='drivers/active-order/';
   static final String getInvites = "drivers/get-proposal/";
   static final String createReport = "drivers/create-report/";
   static final String getProposals = 'drivers/get-proposal/?proposal_id=';
   static final String mastersView = "drivers/masters-view/";
+  static final String cancelOrder = "drivers/done-current-order/";
+  static var selectProposal="drivers/select-proposal/";
 }

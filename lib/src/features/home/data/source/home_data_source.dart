@@ -62,4 +62,37 @@ class HomeDataSource {
       return NetworkResponse(errorText: e.toString());
     }
   }
+  Future<NetworkResponse> selectProposal(int proposalId) async {
+    try {
+      final token = StorageRepository.getString('token');
+      final url = ApiConstants.selectProposal;
+      print(
+        'DEBUG: Token being used: [32m$token [0m',
+      );
+      print(
+        'DEBUG: Full request URL: [34m${client.options.baseUrl}$url [0m',
+      );
+      final response = await client.post(
+        url,
+        data: {'proposal_id': proposalId},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      if (response.isSuccess) {
+        print('Select proposal success ${response.data}');
+        final routeData = response.data['route'] as Map<String, dynamic>?;
+        return NetworkResponse(data: routeData ?? response.data);
+      } else {
+        print('Select proposal error ${response.data}');
+        return NetworkResponse(errorText: response.statusMessage ?? '');
+      }
+    } on DioException catch (e) {
+      print('Dio exception status code select: ${e.response?.statusCode}');
+      print('Dio exception response body select: ${e.response?.data}');
+      return NetworkResponse(
+        errorText: e.response?.data['message'] ?? 'Dio exception error',
+      );
+    } catch (e) {
+      return NetworkResponse(errorText: e.toString());
+    }
+  }
 }

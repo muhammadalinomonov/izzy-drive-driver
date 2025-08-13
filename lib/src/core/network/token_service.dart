@@ -45,6 +45,15 @@ class StorageRepository {
     return _preferences!.remove(key);
   }
 
+  static int getInt(String key, {int defValue = 0}) {
+    if (_preferences == null) return defValue;
+    return _preferences!.getInt(key) ?? defValue;
+  }
+  static Future<bool>? putInt(String key, int value) {
+    if (_preferences == null) return null;
+    return _preferences!.setInt(key, value);
+  }
+
   static double getDouble(String key, {double defValue = 0.0}) {
     if (_preferences == null) return defValue;
     return _preferences!.getDouble(key) ?? defValue;

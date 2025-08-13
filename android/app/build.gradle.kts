@@ -21,7 +21,7 @@ android {
     namespace = "com.ajmal.taxi_app"
     compileSdk = 35 // yoki o'zingniki
     defaultConfig {
-        applicationId = "com.ajmal.izzydriveapp"
+        applicationId = "com.ajmal.taxi_app"
         minSdk = 23
         targetSdk = 35 // yoki o'zingniki
         versionCode = 1
