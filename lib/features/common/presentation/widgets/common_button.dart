@@ -14,6 +14,8 @@ class CommonButton extends StatelessWidget {
     this.child,
     this.color,
     this.borderRadius = 50,
+    this.border,
+    this.margin,
   });
 
   final String? text;
@@ -24,28 +26,34 @@ class CommonButton extends StatelessWidget {
   final Widget? child;
   final Color? color;
   final double borderRadius;
+  final BoxBorder? border;
+  final EdgeInsets? margin;
 
   @override
   Widget build(BuildContext context) {
-    return CommonScaleAnimation(
-      onTap: isDisabled || isLoading ? null : onTap,
-      child: Container(
-        height: height,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: isDisabled ? (color ?? mainColor).withValues(alpha: 0.5) : color ?? mainColor,
-          borderRadius: BorderRadius.circular(borderRadius),
-        ),
-        child: CupertinoButton(
-          onPressed: isDisabled ? null : onTap,
-          padding: EdgeInsets.zero,
-          child: isLoading
-              ? CupertinoActivityIndicator(color: white)
-              : child ??
-                  Text(
-                    text ?? '',
-                    style: context.textTheme.titleMedium!.copyWith(color: white),
-                  ),
+    return Padding(
+      padding: margin ?? EdgeInsets.zero,
+      child: CommonScaleAnimation(
+        onTap: isDisabled || isLoading ? null : onTap,
+        child: Container(
+          height: height,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isDisabled ? (color ?? mainColor).withValues(alpha: 0.5) : color ?? mainColor,
+            borderRadius: BorderRadius.circular(borderRadius),
+            border: border,
+          ),
+          child: CupertinoButton(
+            onPressed: isDisabled ? null : onTap,
+            padding: EdgeInsets.zero,
+            child: isLoading
+                ? CupertinoActivityIndicator(color: white)
+                : child ??
+                    Text(
+                      text ?? '',
+                      style: context.textTheme.titleMedium!.copyWith(color: white),
+                    ),
+          ),
         ),
       ),
     );

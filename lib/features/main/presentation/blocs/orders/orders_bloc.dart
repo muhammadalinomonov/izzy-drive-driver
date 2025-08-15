@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
@@ -11,9 +12,13 @@ import 'package:mechanic/core/utils/service_locator.dart';
 import 'package:mechanic/features/main/domain/entities/current_order_entity.dart';
 import 'package:mechanic/features/main/domain/entities/order_detail_entity.dart';
 import 'package:mechanic/features/main/domain/entities/order_entity.dart';
+import 'package:mechanic/features/main/domain/entities/selected_order_entity.dart';
+import 'package:mechanic/features/main/domain/usecases/add_new_service_usecase.dart';
+import 'package:mechanic/features/main/domain/usecases/change_order_status_usecase.dart';
 import 'package:mechanic/features/main/domain/usecases/get_current_order_usecase.dart';
 import 'package:mechanic/features/main/domain/usecases/get_order_detail_usecase.dart';
 import 'package:mechanic/features/main/domain/usecases/get_orders_usecase.dart';
+import 'package:mechanic/features/main/domain/usecases/get_selected_order_usecase.dart';
 import 'package:mechanic/features/main/domain/usecases/send_application_usecase.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -25,6 +30,11 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
   final GetOrderDetailUseCase _getOrderDetailUseCase = GetOrderDetailUseCase(repository: serviceLocator.call());
   final SendApplicationUseCase _sendApplicationUseCase = SendApplicationUseCase(repository: serviceLocator.call());
   final GetCurrentOrderUseCase _getCurrentOrderUseCase = GetCurrentOrderUseCase(repository: serviceLocator.call());
+  final ChangeOrderStatusUseCase _changeOrderStatusUseCase =
+      ChangeOrderStatusUseCase(repository: serviceLocator.call());
+  final AddNewServiceUseCase _addNewServiceUseCase = AddNewServiceUseCase(repository: serviceLocator.call());
+  final GetSelectedOrderUseCase _getSelectedOrderUseCase = GetSelectedOrderUseCase(repository: serviceLocator.call());
+
   bool _isConnected = false;
 
   WebSocketChannel? _channel;
@@ -37,6 +47,10 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     on<ConnectToWebSocketEvent>(_onConnectWebSocket);
     on<DisConnectFromWebSocketEvent>(_onDisconnectFromWebSocket);
     on<GetCurrentOrderEvent>(_onGetCurrentOrderEvent);
+    on<_UpdateOrderAsSelectedMechanicEvent>(_onUpdateOrderAsSelectedMechanicEvent);
+    on<GetSelectedOrderEvent>(_onGetSelectedOrderEvent);
+    on<ChangeOrderStatusEvent>(_onChangeOrderStatusEvent);
+    on<AddNewServiceEvent>(_onAddNewServiceEvent);
   }
 
   void _onGetOrdersEvent(GetOrdersEvent event, Emitter<OrdersState> emit) async {
@@ -122,6 +136,22 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     _isConnected = false;
   }
 
+  void _onUpdateOrderAsSelectedMechanicEvent(
+      _UpdateOrderAsSelectedMechanicEvent event, Emitter<OrdersState> emit) async {
+    emit(state.copyWith(orderIdAsSelectedMechanic: event.orderId));
+    // final result = await _getOrderDetailUseCase(event.orderId);
+    // if (result.isRight && result.right.data != null) {
+    //   emit(
+    //     state.copyWith(
+    //       orderDetailStatus: FormzSubmissionStatus.success,
+    //       orderDetail: result.right.data,
+    //     ),
+    //   );
+    // } else {
+    //   emit(state.copyWith(orderDetailStatus: FormzSubmissionStatus.failure));
+    // }
+  }
+
   void _onGetCurrentOrderEvent(GetCurrentOrderEvent event, Emitter<OrdersState> emit) async {
     emit(state.copyWith(getCurrentOrderStatus: FormzSubmissionStatus.inProgress));
     final result = await _getCurrentOrderUseCase(NoParams());
@@ -134,6 +164,42 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     }
   }
 
+  void _onGetSelectedOrderEvent(GetSelectedOrderEvent event, Emitter<OrdersState> emit) async {
+    emit(state.copyWith(selectedOrderStatus: FormzSubmissionStatus.inProgress));
+    final result = await _getSelectedOrderUseCase(event.orderId);
+    if (result.isRight && result.right.data != null) {
+      emit(
+        state.copyWith(
+          selectedOrderStatus: FormzSubmissionStatus.success,
+          selectedOrder: result.right.data,
+        ),
+      );
+    } else {
+      emit(state.copyWith(selectedOrderStatus: FormzSubmissionStatus.failure));
+    }
+  }
+
+  void _onAddNewServiceEvent(AddNewServiceEvent event, Emitter<OrdersState> emit) async {
+    emit(state.copyWith(addNewServiceStatus: FormzSubmissionStatus.inProgress));
+    final result = await _addNewServiceUseCase.call((title: event.serviceName, price: event.servicePrice));
+    if (result.isRight) {
+      emit(state.copyWith(addNewServiceStatus: FormzSubmissionStatus.success));
+    } else {
+      emit(state.copyWith(addNewServiceStatus: FormzSubmissionStatus.failure));
+    }
+  }
+
+  void _onChangeOrderStatusEvent(ChangeOrderStatusEvent event, Emitter<OrdersState> emit) async {
+    emit(state.copyWith(changeOrderStatus: FormzSubmissionStatus.inProgress));
+    final result = await _changeOrderStatusUseCase.call((orderId: event.orderId, status: event.status));
+    if (result.isRight) {
+      emit(state.copyWith(changeOrderStatus: FormzSubmissionStatus.success, orderStatus: event.status));
+    } else {
+      emit(state.copyWith(changeOrderStatus: FormzSubmissionStatus.failure));
+    }
+  }
+
+  ///
   Future<void> _listenToWebSocket(Emitter<OrdersState> emit) async {
     if (_channel == null) {
       return;
@@ -154,5 +220,10 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
   void _handleMessage(String message, Emitter<OrdersState> emit) {
     final json = jsonDecode(message);
     final type = json['type'] as String?;
+    log('WebSocket message received: $json');
+
+    if (json is Map<String, dynamic> && json['event'] == 'direct') {
+      add(_UpdateOrderAsSelectedMechanicEvent(orderId: json['data']['order_id']));
+    }
   }
 }

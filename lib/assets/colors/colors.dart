@@ -17,3 +17,7 @@ const Color green = Color(0xff009011);
 const Color slateGrey = Color(0xff768491);
 const Color grayLine = Color(0xffECF0F3);
 const Color aliceBlue = Color(0xffE0F0FF);
+const Color matisse = Color(0xff33597C);
+const Color prussianBlue = Color(0xff01204F);
+const Color perano = Color(0xffA5BEE2);
+const Color westSide = Color(0xffE58027);

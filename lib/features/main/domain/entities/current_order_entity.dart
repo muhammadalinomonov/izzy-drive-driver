@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:mechanic/features/main/domain/entities/address_entity.dart';
+import 'package:mechanic/features/main/domain/entities/sub_order_entity.dart';
 
 class CurrentOrderEntity extends Equatable {
   final int id;
@@ -14,7 +15,8 @@ class CurrentOrderEntity extends Equatable {
   final String driverAvatar;
   final String paymentStatus;
   final String totalPrice;
-  final List<dynamic> suborders;
+  @SubOrderEntityConverter()
+  final List<SubOrderEntity> suborders;
 
   const CurrentOrderEntity({
     this.id = -1,

@@ -1,18 +1,16 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:mechanic/assets/colors/colors.dart';
 import 'package:mechanic/assets/constants/images.dart';
-import 'package:mechanic/core/utils/my_functions.dart';
 import 'package:mechanic/features/common/presentation/widgets/empty_widget.dart';
-import 'package:mechanic/features/common/presentation/widgets/paginator.dart';
 import 'package:mechanic/features/main/presentation/blocs/orders/orders_bloc.dart';
-import 'package:mechanic/features/main/presentation/screens/order_single_screen.dart';
 import 'package:mechanic/features/main/presentation/widgets/balance_item.dart';
+import 'package:mechanic/features/main/presentation/widgets/bottomsheets/selected_order_sheet.dart';
 import 'package:mechanic/features/main/presentation/widgets/current_active_order_widget.dart';
 import 'package:mechanic/features/main/presentation/widgets/main_screen_user_widget.dart';
-import 'package:mechanic/features/main/presentation/widgets/order_item.dart';
+import 'package:mechanic/features/main/presentation/widgets/order_action_buttons.dart';
+import 'package:mechanic/features/main/presentation/widgets/pending_orders_widget.dart';
 import 'package:mechanic/features/main/presentation/widgets/working_status.dart';
 import 'package:mechanic/features/profile/presentation/blocs/profile_bloc.dart';
 
@@ -33,6 +31,17 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(onPressed: () {
+        showModalBottomSheet(
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          context: context,
+          builder: (context) {
+            return SelectedOrderSheet(id: 22);
+          },
+        );
+      },),
+      bottomNavigationBar: OrderActionButtons(),
       backgroundColor: solitude,
       body: BlocListener<ProfileBloc, ProfileState>(
         listenWhen: (previous, current) => previous.getProfileStatus != current.getProfileStatus,
@@ -42,7 +51,9 @@ class _MainScreenState extends State<MainScreen> {
               ..add(GetOrdersEvent())
               ..add(ConnectToWebSocketEvent());
           } else if (state.getProfileStatus.isSuccess && state.user.status == 'onwork') {
-            context.read<OrdersBloc>().add(GetCurrentOrderEvent());
+            context.read<OrdersBloc>()
+              ..add(GetCurrentOrderEvent())
+              ..add(ConnectToWebSocketEvent());
           } else if (state.getProfileStatus.isFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.errorMessage ?? 'Xatolik yuz berdi')),
@@ -104,54 +115,7 @@ class _MainScreenState extends State<MainScreen> {
                                   if (profileState.status == 'onwork') {
                                     return CurrentActiveOrderWidget();
                                   }
-                                  return Paginator(
-                                    onRefresh: () async {
-                                      context.read<OrdersBloc>().add(GetOrdersEvent());
-                                    },
-                                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                                    separator: (context, index) => SizedBox(height: 12),
-                                    errorWidget: Center(
-                                      child: Text(
-                                        'Xatolik yuz berdi',
-                                        style: TextStyle(color: Colors.red),
-                                      ),
-                                    ),
-                                    itemBuilder: (context, index) {
-                                      final order = state.orders[index];
-                                      return GestureDetector(
-                                        onTap: () {
-                                          Navigator.of(context).push(
-                                            CupertinoPageRoute(
-                                              builder: (context) => OrderSingleScreen(orderId: order.id),
-                                            ),
-                                          );
-                                        },
-                                        child: OrderItem(
-                                          title: order.orderTitle,
-                                          distance: order.distanceKm.toString(),
-                                          price: MyFunctions.formatCost(order.price),
-                                          createdAt: order.createdAt,
-                                          isYouSentRequest: order.proposal.id != -1,
-                                        ),
-                                      );
-                                    },
-                                    emptyWidget: Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 50),
-                                      child: EmptyWidget(
-                                        icon: AppImages.emptyOrder,
-                                        imageHeight: 200,
-                                        imageWidth: 200,
-                                        title: 'Hozircha aktiv buyurtmalar yo’q',
-                                        subtitle: 'Odatda, yangi buyurtmalar 10-15 daqiqa ichida paydo bo’ladi.',
-                                      ),
-                                    ),
-                                    itemCount: state.orders.length,
-                                    status: state.ordersStatus,
-                                    hasMoreReach: state.hasMoreOrders,
-                                    onLoadMore: () {
-                                      context.read<OrdersBloc>().add(GetMoreOrdersEvent());
-                                    },
-                                  );
+                                  return PendingOrdersWidget();
                                 },
                               ),
                       ),

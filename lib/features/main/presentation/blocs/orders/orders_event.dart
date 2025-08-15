@@ -35,3 +35,35 @@ class SendApplicationEvent extends OrdersEvent {
 class ConnectToWebSocketEvent extends OrdersEvent {}
 
 class DisConnectFromWebSocketEvent extends OrdersEvent {}
+
+
+class _UpdateOrderAsSelectedMechanicEvent extends OrdersEvent {
+  final int orderId;
+
+  _UpdateOrderAsSelectedMechanicEvent({required this.orderId});
+}
+
+class GetSelectedOrderEvent extends OrdersEvent {
+  final int orderId;
+
+  GetSelectedOrderEvent({required this.orderId});
+}
+class ChangeOrderStatusEvent extends OrdersEvent {
+  final int orderId;
+  final String status;
+
+  ChangeOrderStatusEvent({
+    required this.orderId,
+    required this.status,
+  });
+}
+
+class AddNewServiceEvent extends OrdersEvent {
+  final String serviceName;
+  final double servicePrice;
+
+  AddNewServiceEvent({
+    required this.serviceName,
+    required this.servicePrice,
+  });
+}

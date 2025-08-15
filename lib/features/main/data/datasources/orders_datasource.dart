@@ -5,6 +5,7 @@ import 'package:mechanic/features/common/data/models/generic_pagination.dart';
 import 'package:mechanic/features/main/data/models/current_order_model.dart';
 import 'package:mechanic/features/main/data/models/order_detail_model.dart';
 import 'package:mechanic/features/main/data/models/order_model.dart';
+import 'package:mechanic/features/main/data/models/selected_order_model.dart';
 
 abstract class OrdersDataSource {
   Future<GenericPagination<OrderModel>> getOrders({String? next});
@@ -18,6 +19,18 @@ abstract class OrdersDataSource {
   });
 
   Future<BaseModel<CurrentOrderModel>> getCurrentOrder();
+
+  Future<BaseModel<SelectedOrderModel>> getSelectedOrder(int orderId);
+
+  Future<void> addNewService({
+    required String title,
+    required double price,
+  });
+
+  Future<void> changeOrderStatus({
+    required int orderId,
+    required String status,
+  });
 }
 
 class OrdersDataSourceImpl implements OrdersDataSource {
@@ -112,6 +125,89 @@ class OrdersDataSourceImpl implements OrdersDataSource {
       } else {
         throw ServerException(
           errorMessage: 'Failed to fetch current order',
+          statusCode: response.statusCode ?? 500,
+        );
+      }
+    } on DioException catch (e) {
+      rethrow;
+    } on ServerException {
+      rethrow;
+    } catch (e) {
+      throw ParsingException(errorMessage: 'An unexpected error occurred: $e');
+    }
+  }
+
+  @override
+  Future<void> addNewService({required String title, required double price}) async {
+    try {
+      final response = await dio.post(
+        'mechanics/create-suborder/',
+        data: {
+          'title': title,
+          'price': price,
+        },
+      );
+
+      if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
+        return;
+      } else {
+        throw ServerException(
+          errorMessage: 'Failed to add new service',
+          statusCode: response.statusCode ?? 500,
+        );
+      }
+    } on DioException catch (e) {
+      rethrow;
+    } on ServerException {
+      rethrow;
+    } catch (e) {
+      throw ParsingException(errorMessage: 'An unexpected error occurred: $e');
+    }
+  }
+
+  @override
+  Future<void> changeOrderStatus({required int orderId, required String status}) async {
+    try {
+      final response = await dio.post(
+        'mechanics/change-order-status/',
+        data: {
+          'order_id': orderId,
+          'status': status,
+        },
+      );
+
+      if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
+        return;
+      } else {
+        throw ServerException(
+          errorMessage: 'Failed to change order status',
+          statusCode: response.statusCode ?? 500,
+        );
+      }
+    } on DioException catch (e) {
+      rethrow;
+    } on ServerException {
+      rethrow;
+    } catch (e) {
+      throw ParsingException(errorMessage: 'An unexpected error occurred: $e');
+    }
+  }
+
+  @override
+  Future<BaseModel<SelectedOrderModel>> getSelectedOrder(int orderId) async {
+    try {
+      final response = await dio.get(
+        'mechanics/view-active-order/',
+        queryParameters: {
+          'order_id': orderId,
+        },
+      );
+
+      if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
+        return BaseModel.fromJson(response.data, (json) => SelectedOrderModel.fromJson(json));
+      } else {
+        throw ServerException(
+          errorMessage: 'Failed to fetch selected order',
           statusCode: response.statusCode ?? 500,
         );
       }

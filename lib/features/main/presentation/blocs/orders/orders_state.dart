@@ -11,6 +11,12 @@ class OrdersState extends Equatable {
   final FormzSubmissionStatus sendApplicationStatus;
   final FormzSubmissionStatus getCurrentOrderStatus;
   final CurrentOrderEntity currentOrder;
+  final FormzSubmissionStatus addNewServiceStatus;
+  final FormzSubmissionStatus changeOrderStatus;
+  final String orderStatus;
+  final int orderIdAsSelectedMechanic;
+  final FormzSubmissionStatus selectedOrderStatus;
+  final SelectedOrderEntity selectedOrder;
 
   const OrdersState({
     this.orders = const [],
@@ -22,6 +28,12 @@ class OrdersState extends Equatable {
     this.sendApplicationStatus = FormzSubmissionStatus.initial,
     this.getCurrentOrderStatus = FormzSubmissionStatus.initial,
     this.currentOrder = const CurrentOrderEntity(),
+    this.addNewServiceStatus = FormzSubmissionStatus.initial,
+    this.changeOrderStatus = FormzSubmissionStatus.initial,
+    this.orderStatus = '',
+    this.orderIdAsSelectedMechanic = -1,
+    this.selectedOrderStatus = FormzSubmissionStatus.initial,
+    this.selectedOrder = const SelectedOrderEntity(),
   });
 
   OrdersState copyWith({
@@ -34,6 +46,12 @@ class OrdersState extends Equatable {
     FormzSubmissionStatus? sendApplicationStatus,
     FormzSubmissionStatus? getCurrentOrderStatus,
     CurrentOrderEntity? currentOrder,
+    FormzSubmissionStatus? addNewServiceStatus,
+    FormzSubmissionStatus? changeOrderStatus,
+    String? orderStatus,
+    int? orderIdAsSelectedMechanic,
+    FormzSubmissionStatus? selectedOrderStatus,
+    SelectedOrderEntity? selectedOrder,
   }) {
     return OrdersState(
       orders: orders ?? this.orders,
@@ -45,6 +63,12 @@ class OrdersState extends Equatable {
       sendApplicationStatus: sendApplicationStatus ?? this.sendApplicationStatus,
       getCurrentOrderStatus: getCurrentOrderStatus ?? this.getCurrentOrderStatus,
       currentOrder: currentOrder ?? this.currentOrder,
+      addNewServiceStatus: addNewServiceStatus ?? this.addNewServiceStatus,
+      changeOrderStatus: changeOrderStatus ?? this.changeOrderStatus,
+      orderStatus: orderStatus ?? this.orderStatus,
+      orderIdAsSelectedMechanic: orderIdAsSelectedMechanic ?? this.orderIdAsSelectedMechanic,
+      selectedOrderStatus: selectedOrderStatus ?? this.selectedOrderStatus,
+      selectedOrder: selectedOrder ?? this.selectedOrder,
     );
   }
 
@@ -59,5 +83,11 @@ class OrdersState extends Equatable {
         sendApplicationStatus,
         getCurrentOrderStatus,
         currentOrder,
+        addNewServiceStatus,
+        changeOrderStatus,
+        orderStatus,
+        orderIdAsSelectedMechanic,
+        selectedOrderStatus,
+        selectedOrder,
       ];
 }

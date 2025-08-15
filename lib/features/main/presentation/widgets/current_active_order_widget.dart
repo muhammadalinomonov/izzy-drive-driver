@@ -5,9 +5,11 @@ import 'package:formz/formz.dart';
 import 'package:mechanic/assets/colors/colors.dart';
 import 'package:mechanic/assets/constants/icons.dart';
 import 'package:mechanic/core/utils/context_extensions.dart';
+import 'package:mechanic/features/common/presentation/widgets/common_button.dart';
 import 'package:mechanic/features/common/presentation/widgets/common_image.dart';
 import 'package:mechanic/features/common/presentation/widgets/common_scalel_animation.dart';
 import 'package:mechanic/features/main/presentation/blocs/orders/orders_bloc.dart';
+import 'package:mechanic/features/main/presentation/widgets/add_new_service_dialog.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class CurrentActiveOrderWidget extends StatelessWidget {
@@ -169,14 +171,13 @@ class CurrentActiveOrderWidget extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: white,
                   borderRadius: BorderRadius.circular(12),
-
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Qilishingiz kerek',
+                      'Qilishingiz kerak',
                       style: context.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w500,
                         fontSize: 16,
@@ -185,22 +186,126 @@ class CurrentActiveOrderWidget extends StatelessWidget {
                     SizedBox(height: 18),
                     Row(
                       children: [
-                        SvgPicture.asset(
-                          AppIcons.diogram,
-                          width: 20,
-                          height: 20,
+                        Text(
+                          state.currentOrder.orderTitle,
+                          style: context.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w400,
+                            fontSize: 14,
+                            color: gray4,
+                          ),
                         ),
-                        SizedBox(width: 12),
                         Expanded(
-                          child: Text(
-                            state.currentOrder.status,
-                            style: context.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                            ),
+                          child: Container(
+                            margin: EdgeInsets.symmetric(horizontal: 8),
+                            color: solitude,
+                            height: 1,
+                          ),
+                        ),
+                        Text(
+                          '\$${state.currentOrder.price}',
+                          style: context.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
                           ),
                         ),
                       ],
+                    ),
+                    SizedBox(height: 16),
+                    ...List.generate(
+                      state.currentOrder.suborders.length,
+                          (index) {
+                        final subOrder = state.currentOrder.suborders[index];
+                        return Padding(
+                          padding: EdgeInsets.only(bottom: index == state.currentOrder.suborders.length - 1 ? 0 : 12),
+                          child: Row(
+                            children: [
+                              Text(
+                                subOrder.title,
+                                style: context.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 14,
+                                  color: gray4,
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  margin: EdgeInsets.symmetric(horizontal: 8),
+                                  color: solitude,
+                                  height: 1,
+                                ),
+                              ),
+                              Container(
+                                margin: EdgeInsets.only(right: 8),
+                                height: 18,
+                                width: 18,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: subOrder.status == 'accepted' ? mainColor :
+                                  subOrder.status == 'rejected' ? Colors.red : westSide ,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  '!',
+                                  style: context.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14,
+                                    color: white,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                '\$${subOrder.price}',
+                                style: context.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                    CommonButton(
+                      margin: EdgeInsets.symmetric(vertical: 16),
+                      border: Border.all(color: aliceBlue),
+                      color: white,
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          barrierDismissible: true,
+                          builder: (BuildContext context) {
+                            return AddNewServiceDialog();
+                          },
+                        );
+                      },
+                      borderRadius: 12,
+                      child: Text(
+                        '+ Xizmat qo’shish',
+                        style: context.textTheme.bodyMedium
+                            ?.copyWith(fontWeight: FontWeight.w500, fontSize: 14, color: mainColor),
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: aliceBlue,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Umumiy summa',
+                            style: context.textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w400, fontSize: 14, color: matisse),
+                          ),
+                          Text(
+                            '\$${state.currentOrder.totalPrice}',
+                            style: context.textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w500, fontSize: 16, color: mainColor),
+                          )
+                        ],
+                      ),
                     )
                   ],
                 ),
@@ -211,7 +316,10 @@ class CurrentActiveOrderWidget extends StatelessWidget {
           return Center(
             child: Text(
               'Hozirda faol buyurtma mavjud emas',
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: Theme
+                  .of(context)
+                  .textTheme
+                  .bodyLarge,
             ),
           );
         }

@@ -374,6 +374,12 @@
       "languageVersion": "3.6"
     },
     {
+      "name": "flutter_swipe_button",
+      "rootUri": "file:///Users/macstore.uz/.pub-cache/hosted/pub.dev/flutter_swipe_button-2.1.3",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
       "name": "flutter_test",
       "rootUri": "file:///Users/macstore.uz/development/flutter/packages/flutter_test",
       "packageUri": "lib/",
@@ -495,9 +501,9 @@
     },
     {
       "name": "js",
-      "rootUri": "file:///Users/macstore.uz/.pub-cache/hosted/pub.dev/js-0.7.1",
+      "rootUri": "file:///Users/macstore.uz/.pub-cache/hosted/pub.dev/js-0.6.7",
       "packageUri": "lib/",
-      "languageVersion": "3.1"
+      "languageVersion": "2.19"
     },
     {
       "name": "json_annotation",

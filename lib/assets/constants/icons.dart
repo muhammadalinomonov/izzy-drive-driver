@@ -18,5 +18,8 @@ class AppIcons{
   static const String send = 'assets/icons/send.svg';
   static const String phone = 'assets/icons/phone.svg';
   static const String check = 'assets/icons/check.svg';
+  static const String circularCheck = 'assets/icons/circular_check.svg';
+  static const String location = 'assets/icons/location.svg';
+  static const String star = 'assets/icons/star.svg';
 
 }
