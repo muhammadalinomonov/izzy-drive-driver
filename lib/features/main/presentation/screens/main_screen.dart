@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
@@ -5,6 +6,7 @@ import 'package:mechanic/assets/colors/colors.dart';
 import 'package:mechanic/assets/constants/images.dart';
 import 'package:mechanic/features/common/presentation/widgets/empty_widget.dart';
 import 'package:mechanic/features/main/presentation/blocs/orders/orders_bloc.dart';
+import 'package:mechanic/features/main/presentation/screens/finished_order_single_screen.dart';
 import 'package:mechanic/features/main/presentation/widgets/balance_item.dart';
 import 'package:mechanic/features/main/presentation/widgets/bottomsheets/selected_order_sheet.dart';
 import 'package:mechanic/features/main/presentation/widgets/current_active_order_widget.dart';
@@ -31,16 +33,18 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(onPressed: () {
-        showModalBottomSheet(
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          context: context,
-          builder: (context) {
-            return SelectedOrderSheet(id: 22);
-          },
-        );
-      },),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () {
+      //     showModalBottomSheet(
+      //       isScrollControlled: true,
+      //       backgroundColor: Colors.transparent,
+      //       context: context,
+      //       builder: (context) {
+      //         return SelectedOrderSheet(id: 30);
+      //       },
+      //     );
+      //   },
+      // ),
       bottomNavigationBar: OrderActionButtons(),
       backgroundColor: solitude,
       body: BlocListener<ProfileBloc, ProfileState>(

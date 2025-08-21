@@ -10,6 +10,7 @@ class UserEntity extends Equatable {
   final String balance;
   final String deviceToken;
   final int wsId;
+  final String email;
 
 
   const UserEntity({
@@ -21,7 +22,7 @@ class UserEntity extends Equatable {
     this.balance = '',
     this.deviceToken = '',
     this.wsId = -1,
-
+    this.email = '',
   });
 
   @override
@@ -34,5 +35,6 @@ class UserEntity extends Equatable {
         balance,
         deviceToken,
         wsId,
+        email,
       ];
 }

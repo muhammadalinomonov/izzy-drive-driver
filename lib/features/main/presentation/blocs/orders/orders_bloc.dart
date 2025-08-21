@@ -139,17 +139,6 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
   void _onUpdateOrderAsSelectedMechanicEvent(
       _UpdateOrderAsSelectedMechanicEvent event, Emitter<OrdersState> emit) async {
     emit(state.copyWith(orderIdAsSelectedMechanic: event.orderId));
-    // final result = await _getOrderDetailUseCase(event.orderId);
-    // if (result.isRight && result.right.data != null) {
-    //   emit(
-    //     state.copyWith(
-    //       orderDetailStatus: FormzSubmissionStatus.success,
-    //       orderDetail: result.right.data,
-    //     ),
-    //   );
-    // } else {
-    //   emit(state.copyWith(orderDetailStatus: FormzSubmissionStatus.failure));
-    // }
   }
 
   void _onGetCurrentOrderEvent(GetCurrentOrderEvent event, Emitter<OrdersState> emit) async {
@@ -191,9 +180,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
 
   void _onChangeOrderStatusEvent(ChangeOrderStatusEvent event, Emitter<OrdersState> emit) async {
     emit(state.copyWith(changeOrderStatus: FormzSubmissionStatus.inProgress));
-    final result = await _changeOrderStatusUseCase.call((orderId: event.orderId, status: event.status));
+    final result = await _changeOrderStatusUseCase.call((orderId: event.orderId, status: event.status, code: event.code));
     if (result.isRight) {
       emit(state.copyWith(changeOrderStatus: FormzSubmissionStatus.success, orderStatus: event.status));
+      if (event.status == 'cancelled' || event.status == 'completed') {
+        add(GetOrdersEvent());
+      }
+      event.onSuccess?.call();
     } else {
       emit(state.copyWith(changeOrderStatus: FormzSubmissionStatus.failure));
     }
@@ -214,6 +207,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     } finally {
       print("WebSocket Disconnected");
       _isConnected = false;
+      add(ConnectToWebSocketEvent());
     }
   }
 
@@ -221,6 +215,8 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final json = jsonDecode(message);
     final type = json['type'] as String?;
     log('WebSocket message received: $json');
+
+    ///{event: direct, data: {event-status: suborder-cancelled, order_id: 26, suborder_id: 4, suborder_status: cancelled, total_price: 1650}}
 
     if (json is Map<String, dynamic> && json['event'] == 'direct') {
       add(_UpdateOrderAsSelectedMechanicEvent(orderId: json['data']['order_id']));

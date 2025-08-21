@@ -5,7 +5,7 @@
   "packages": [
     {
       "name": "mechanic",
-      "version": "1.0.0+1",
+      "version": "1.0.0+2",
       "dependencies": [
         "audio_waveforms",
         "cached_network_image",
@@ -21,6 +21,7 @@
         "flutter",
         "flutter_bloc",
         "flutter_local_notifications",
+        "flutter_otp_text_field",
         "flutter_svg",
         "flutter_swipe_button",
         "formz",
@@ -30,7 +31,9 @@
         "json_annotation",
         "just_audio",
         "keyboard_dismisser",
+        "mapbox_maps_flutter",
         "mask_text_input_formatter",
+        "mobile_scanner",
         "otp_pin_field",
         "pinput",
         "shared_preferences",
@@ -140,6 +143,36 @@
         "test_api",
         "vector_math",
         "vm_service"
+      ]
+    },
+    {
+      "name": "mapbox_maps_flutter",
+      "version": "2.10.0",
+      "dependencies": [
+        "flutter",
+        "flutter_plugin_android_lifecycle",
+        "meta",
+        "turf",
+        "typed_data"
+      ]
+    },
+    {
+      "name": "mobile_scanner",
+      "version": "7.0.1",
+      "dependencies": [
+        "collection",
+        "flutter",
+        "flutter_web_plugins",
+        "meta",
+        "plugin_platform_interface",
+        "web"
+      ]
+    },
+    {
+      "name": "flutter_otp_text_field",
+      "version": "1.5.1+1",
+      "dependencies": [
+        "flutter"
       ]
     },
     {
@@ -953,6 +986,50 @@
       ]
     },
     {
+      "name": "typed_data",
+      "version": "1.4.0",
+      "dependencies": [
+        "collection"
+      ]
+    },
+    {
+      "name": "turf",
+      "version": "0.0.10",
+      "dependencies": [
+        "geotypes",
+        "rbush",
+        "sweepline_intersections",
+        "turf_equality",
+        "turf_pip"
+      ]
+    },
+    {
+      "name": "flutter_plugin_android_lifecycle",
+      "version": "2.0.29",
+      "dependencies": [
+        "flutter"
+      ]
+    },
+    {
+      "name": "plugin_platform_interface",
+      "version": "2.1.8",
+      "dependencies": [
+        "meta"
+      ]
+    },
+    {
+      "name": "flutter_web_plugins",
+      "version": "0.0.0",
+      "dependencies": [
+        "characters",
+        "collection",
+        "flutter",
+        "material_color_utilities",
+        "meta",
+        "vector_math"
+      ]
+    },
+    {
       "name": "url_launcher_windows",
       "version": "3.1.4",
       "dependencies": [
@@ -1053,18 +1130,6 @@
         "flutter",
         "meta",
         "plugin_platform_interface",
-        "vector_math"
-      ]
-    },
-    {
-      "name": "flutter_web_plugins",
-      "version": "0.0.0",
-      "dependencies": [
-        "characters",
-        "collection",
-        "flutter",
-        "material_color_utilities",
-        "meta",
         "vector_math"
       ]
     },
@@ -1238,13 +1303,6 @@
         "source_span",
         "typed_data",
         "universal_io"
-      ]
-    },
-    {
-      "name": "plugin_platform_interface",
-      "version": "2.1.8",
-      "dependencies": [
-        "meta"
       ]
     },
     {
@@ -1550,13 +1608,6 @@
       ]
     },
     {
-      "name": "typed_data",
-      "version": "1.4.0",
-      "dependencies": [
-        "collection"
-      ]
-    },
-    {
       "name": "built_value",
       "version": "8.10.1",
       "dependencies": [
@@ -1570,6 +1621,42 @@
       "name": "built_collection",
       "version": "5.1.1",
       "dependencies": []
+    },
+    {
+      "name": "sweepline_intersections",
+      "version": "0.0.4",
+      "dependencies": [
+        "benchmark",
+        "collection",
+        "dart_sort_queue",
+        "turf"
+      ]
+    },
+    {
+      "name": "rbush",
+      "version": "1.1.1",
+      "dependencies": []
+    },
+    {
+      "name": "turf_pip",
+      "version": "0.0.2",
+      "dependencies": [
+        "turf"
+      ]
+    },
+    {
+      "name": "turf_equality",
+      "version": "0.1.0",
+      "dependencies": [
+        "geotypes"
+      ]
+    },
+    {
+      "name": "geotypes",
+      "version": "0.0.2",
+      "dependencies": [
+        "json_annotation"
+      ]
     },
     {
       "name": "xml",
@@ -1719,6 +1806,21 @@
       "version": "1.0.0",
       "dependencies": [
         "flutter"
+      ]
+    },
+    {
+      "name": "benchmark",
+      "version": "0.3.0",
+      "dependencies": [
+        "args",
+        "meta"
+      ]
+    },
+    {
+      "name": "dart_sort_queue",
+      "version": "0.0.2+3",
+      "dependencies": [
+        "collection"
       ]
     },
     {

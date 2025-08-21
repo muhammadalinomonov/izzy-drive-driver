@@ -7,6 +7,7 @@ import 'package:mechanic/features/main/data/datasources/orders_datasource.dart';
 import 'package:mechanic/features/main/domain/entities/current_order_entity.dart';
 import 'package:mechanic/features/main/domain/entities/order_detail_entity.dart';
 import 'package:mechanic/features/main/domain/entities/order_entity.dart';
+import 'package:mechanic/features/main/domain/entities/order_with_date_entity.dart';
 import 'package:mechanic/features/main/domain/entities/selected_order_entity.dart';
 import 'package:mechanic/features/main/domain/repositories/orders_repository.dart';
 
@@ -101,9 +102,9 @@ class OrdersRepositoryImpl extends OrdersRepository {
   }
 
   @override
-  Future<Either<Failure, void>> changeOrderStatus({required int orderId, required String status}) async {
+  Future<Either<Failure, void>> changeOrderStatus({required int orderId, required String status, String? code}) async {
     try {
-      final result = await dataSource.changeOrderStatus(orderId: orderId, status: status);
+      final result = await dataSource.changeOrderStatus(orderId: orderId, status: status, code: code);
       return Right(result);
     } on ServerException catch (e) {
       return Left(ServerFailure(errorMessage: e.errorMessage, statusCode: e.statusCode));
@@ -114,5 +115,31 @@ class OrdersRepositoryImpl extends OrdersRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, BaseModel<CurrentOrderEntity>>> getOrderHistoryDetail(int orderId) async {
+    try {
+      final result = await dataSource.getOrderHistoryDetail(orderId);
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(errorMessage: e.errorMessage, statusCode: e.statusCode));
+    } on ParsingException catch (e) {
+      return Left(ParsingFailure(errorMessage: e.errorMessage));
+    } catch (e) {
+      return Left(ParsingFailure(errorMessage: e.toString()));
+    }
+  }
 
+  @override
+  Future<Either<Failure, GenericPagination<OrdersWithDataEntity>>> getOrdersHistory({String? next}) async {
+    try {
+      final result = await dataSource.getOrdersHistory(next: next);
+      return Right(result);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(errorMessage: e.errorMessage, statusCode: e.statusCode));
+    } on ParsingException catch (e) {
+      return Left(ParsingFailure(errorMessage: e.errorMessage));
+    } catch (e) {
+      return Left(ParsingFailure(errorMessage: e.toString()));
+    }
+  }
 }

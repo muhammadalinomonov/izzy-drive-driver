@@ -9,7 +9,7 @@ import 'package:mechanic/features/common/presentation/widgets/common_button.dart
 import 'package:mechanic/features/common/presentation/widgets/common_image.dart';
 import 'package:mechanic/features/common/presentation/widgets/common_scalel_animation.dart';
 import 'package:mechanic/features/main/presentation/blocs/orders/orders_bloc.dart';
-import 'package:mechanic/features/main/presentation/widgets/add_new_service_dialog.dart';
+import 'package:mechanic/features/main/presentation/widgets/bottomsheets/add_new_service_dialog.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class CurrentActiveOrderWidget extends StatelessWidget {
@@ -234,22 +234,34 @@ class CurrentActiveOrderWidget extends StatelessWidget {
                                   height: 1,
                                 ),
                               ),
-                              Container(
-                                margin: EdgeInsets.only(right: 8),
-                                height: 18,
-                                width: 18,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: subOrder.status == 'accepted' ? mainColor :
-                                  subOrder.status == 'rejected' ? Colors.red : westSide ,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Text(
-                                  '!',
-                                  style: context.textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 14,
-                                    color: white,
+                              GestureDetector(
+                                onTap: () {
+                                  final subOrderStatus = subOrder.status;
+                                  if (subOrderStatus == 'accepted') {
+                                    context.showPopUp(status: PopUpStatus.success, message: 'Bu buyurtma qabul qilingan.');
+                                  } else if (subOrderStatus == 'cancelled') {
+                                    context.showPopUp(status: PopUpStatus.error, message: 'Haydovchi bekor qildi.');
+                                  } else {
+                                    context.showPopUp(status: PopUpStatus.warning, message: 'Haydovchi tasdiqlashi kutilmoqda...');
+                                  }
+                                },
+                                child: Container(
+                                  margin: EdgeInsets.only(right: 8),
+                                  height: 18,
+                                  width: 18,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: subOrder.status == 'accepted' ? green :
+                                    subOrder.status == 'cancelled' ? Colors.red : westSide ,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(
+                                    '!',
+                                    style: context.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 14,
+                                      color: white,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -265,7 +277,7 @@ class CurrentActiveOrderWidget extends StatelessWidget {
                         );
                       },
                     ),
-                    CommonButton(
+                    if(state.currentOrder.status != 'accepted')CommonButton(
                       margin: EdgeInsets.symmetric(vertical: 16),
                       border: Border.all(color: aliceBlue),
                       color: white,

@@ -60,6 +60,18 @@
 @import just_audio;
 #endif
 
+#if __has_include(<mapbox_maps_flutter/MapboxMapsPlugin.h>)
+#import <mapbox_maps_flutter/MapboxMapsPlugin.h>
+#else
+@import mapbox_maps_flutter;
+#endif
+
+#if __has_include(<mobile_scanner/MobileScannerPlugin.h>)
+#import <mobile_scanner/MobileScannerPlugin.h>
+#else
+@import mobile_scanner;
+#endif
+
 #if __has_include(<otp_pin_field/OtpPinFieldPlugin.h>)
 #import <otp_pin_field/OtpPinFieldPlugin.h>
 #else
@@ -114,6 +126,8 @@
   [FlutterLocalNotificationsPlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterLocalNotificationsPlugin"]];
   [GeolocatorPlugin registerWithRegistrar:[registry registrarForPlugin:@"GeolocatorPlugin"]];
   [JustAudioPlugin registerWithRegistrar:[registry registrarForPlugin:@"JustAudioPlugin"]];
+  [MapboxMapsPlugin registerWithRegistrar:[registry registrarForPlugin:@"MapboxMapsPlugin"]];
+  [MobileScannerPlugin registerWithRegistrar:[registry registrarForPlugin:@"MobileScannerPlugin"]];
   [OtpPinFieldPlugin registerWithRegistrar:[registry registrarForPlugin:@"OtpPinFieldPlugin"]];
   [PathProviderPlugin registerWithRegistrar:[registry registrarForPlugin:@"PathProviderPlugin"]];
   [SharedPreferencesPlugin registerWithRegistrar:[registry registrarForPlugin:@"SharedPreferencesPlugin"]];

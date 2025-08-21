@@ -17,6 +17,18 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 
+	<key>io.flutter.embedded_views_preview</key>
+    <true/>
+    <key>NSCameraUsageDescription</key>
+    <string>This app needs camera access to scan QR codes</string>
+
+    <key>NSMicrophoneUsageDescription</key>
+    <string>This app needs access to the microphone to record and play audio.</string>
+
+
+    <key>MGLMapboxAccessToken</key>
+    <string>pk.eyJ1IjoiamFob25naXI3NyIsImEiOiJjbG9tajIzYW4yMWhsMnJudnRjbGUzOGFzIn0.WeJnZlP1FGzGJ3FK2IM9UA</string>
+
 
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
     <string>We use your location to provide better service even when the app is in the background.</string>

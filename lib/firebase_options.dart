@@ -63,6 +63,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: '540877296691',
     projectId: 'driver-aaf8c',
     storageBucket: 'driver-aaf8c.firebasestorage.app',
-    iosBundleId: 'uz.drive.mechanic.mechanic',
+    iosBundleId: 'com.izzy.drive.mechanic',
   );
 }

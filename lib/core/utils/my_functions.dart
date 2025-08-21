@@ -109,6 +109,29 @@ class MyFunctions {
     }
   }
 
+  static String formatDate(String dateString) {
+    final date = DateTime.parse(dateString).toLocal();
+    final now = DateTime.now();
+
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final dateOnly = DateTime(date.year, date.month, date.day);
+
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+
+    final hhmm = "${twoDigits(date.hour)}:${twoDigits(date.minute)}";
+    final full = "${twoDigits(date.day)}.${twoDigits(date.month)}.${date.year}, $hhmm";
+
+    if (dateOnly == today) {
+      return "Bugun, $hhmm";
+    } else if (dateOnly == yesterday) {
+      return "Kecha, $hhmm";
+    } else {
+      return full;
+    }
+  }
+
+
 
 // static List<MapObject> getCarMapObjects(List<CarEntity> cars) {
   //   return cars.map((car) {

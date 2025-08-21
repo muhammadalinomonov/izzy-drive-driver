@@ -1,4 +1,4 @@
-package uz.drive.mechanic.mechanic
+package com.izzy.drive.mechanic
 
 import io.flutter.embedding.android.FlutterActivity
 

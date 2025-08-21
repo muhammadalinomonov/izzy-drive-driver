@@ -21,5 +21,13 @@ class AppIcons{
   static const String circularCheck = 'assets/icons/circular_check.svg';
   static const String location = 'assets/icons/location.svg';
   static const String star = 'assets/icons/star.svg';
+  static const String qrCode = 'assets/icons/qr_code.svg';
+  static const String edit = 'assets/icons/edit.svg';
+  static const String pen = 'assets/icons/pen.svg';
+  static const String wallet = 'assets/icons/wallet.svg';
+  static const String history = 'assets/icons/history.svg';
+  static const String contact = 'assets/icons/contact.svg';
+  static const String starOutline = 'assets/icons/star_outline.svg';
+  static const String globe = 'assets/icons/globe.svg';
 
 }

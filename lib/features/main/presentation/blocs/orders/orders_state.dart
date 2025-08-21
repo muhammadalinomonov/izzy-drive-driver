@@ -52,6 +52,7 @@ class OrdersState extends Equatable {
     int? orderIdAsSelectedMechanic,
     FormzSubmissionStatus? selectedOrderStatus,
     SelectedOrderEntity? selectedOrder,
+    S
   }) {
     return OrdersState(
       orders: orders ?? this.orders,

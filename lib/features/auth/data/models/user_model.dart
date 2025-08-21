@@ -15,6 +15,7 @@ class UserModel extends UserEntity {
     super.balance,
     super.deviceToken,
     super.wsId,
+    super.email,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => _$UserModelFromJson(json);

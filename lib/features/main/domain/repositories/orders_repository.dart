@@ -5,6 +5,7 @@ import 'package:mechanic/features/common/data/models/generic_pagination.dart';
 import 'package:mechanic/features/main/domain/entities/current_order_entity.dart';
 import 'package:mechanic/features/main/domain/entities/order_detail_entity.dart';
 import 'package:mechanic/features/main/domain/entities/order_entity.dart';
+import 'package:mechanic/features/main/domain/entities/order_with_date_entity.dart';
 import 'package:mechanic/features/main/domain/entities/selected_order_entity.dart';
 
 abstract class OrdersRepository {
@@ -30,5 +31,10 @@ abstract class OrdersRepository {
   Future<Either<Failure, void>> changeOrderStatus({
     required int orderId,
     required String status,
+    String? code,
   });
+
+  Future<Either<Failure, GenericPagination<OrdersWithDataEntity>>> getOrdersHistory({String? next});
+
+  Future<Either<Failure, BaseModel<CurrentOrderEntity>>> getOrderHistoryDetail(int orderId);
 }

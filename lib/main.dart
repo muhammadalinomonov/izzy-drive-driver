@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:mechanic/assets/theme/theme.dart';
 import 'package:mechanic/core/utils/service_locator.dart';
 import 'package:mechanic/features/auth/data/repositories/auth_repository_impl.dart';
@@ -17,6 +18,7 @@ import 'package:mechanic/firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  MapboxOptions.setAccessToken('pk.eyJ1IjoiamFob25naXI3NyIsImEiOiJjbG9tajIzYW4yMWhsMnJudnRjbGUzOGFzIn0.WeJnZlP1FGzGJ3FK2IM9UA');
 
   await EasyLocalization.ensureInitialized();
 

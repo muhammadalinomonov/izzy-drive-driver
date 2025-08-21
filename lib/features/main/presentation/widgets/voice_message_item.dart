@@ -24,6 +24,7 @@ class _VoiceMessageItemState extends State<VoiceMessageItem> {
   void initState() {
     super.initState();
     _initAudio();
+
     _audioPlayer.positionStream.listen((position) {
       if (!_isUserSeeking) {
         setState(() => _position = position);
@@ -36,8 +37,19 @@ class _VoiceMessageItemState extends State<VoiceMessageItem> {
       }
     });
 
-
+    // 🔥 Audio tugaganda qayta reset qilish
+    _audioPlayer.playerStateStream.listen((state) {
+      if (state.processingState == ProcessingState.completed) {
+        setState(() {
+          _isPlaying = false;
+          _position = Duration.zero; // boshiga qaytadi
+        });
+        _audioPlayer.seek(Duration.zero);
+        _audioPlayer.pause();
+      }
+    });
   }
+
 
   Future<void> _initAudio() async {
     await _audioPlayer.setUrl(widget.audioUrl);
@@ -59,7 +71,6 @@ class _VoiceMessageItemState extends State<VoiceMessageItem> {
           GestureDetector(
             onTap: _togglePlayPause,
             child: AnimatedIcon(
-
               icon: AnimatedIcons.play_pause,
               progress: AlwaysStoppedAnimation(_isPlaying ? 1 : 0),
             ),
@@ -98,7 +109,7 @@ class _VoiceMessageItemState extends State<VoiceMessageItem> {
           // ),
           const SizedBox(width: 6),
           Text(
-            _formatTime(_duration),
+            _formatTime(_duration - _position),
             style: const TextStyle(fontSize: 14, color: Colors.black54),
           ),
         ],
@@ -120,5 +131,12 @@ class _VoiceMessageItemState extends State<VoiceMessageItem> {
     } else {
       _audioPlayer.play();
     }
+    _isPlaying = !_isPlaying;
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.stop();
+    super.dispose();
   }
 }

@@ -22,14 +22,14 @@ class _WorkingStatusState extends State<WorkingStatus> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ProfileBloc, ProfileState>(
+    return BlocConsumer<ProfileBloc, ProfileState>(
       listenWhen: (previous, current) => previous.user != current.user,
       listener: (context, state) {
         setState(() {
           isOnline = state.user.status != 'offline';
         });
       },
-      child: Container(
+      builder: (context, state) => Container(
         padding: EdgeInsets.fromLTRB(10, 8, 0, 8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(50),
@@ -68,6 +68,10 @@ class _WorkingStatusState extends State<WorkingStatus> {
                 child: CupertinoSwitch(
                   value: isOnline,
                   onChanged: (value) {
+                    // if (state.status == 'onwork') {
+                    //   context.showPopUp(status: PopUpStatus.warning, message: 'Sizda hozirda aktiv buyurtma bor');
+                    //   return;
+                    // }
                     context.read<ProfileBloc>().add(UpdateStatusEvent(isOnline: !isOnline));
                     setState(() {
                       isOnline = value;

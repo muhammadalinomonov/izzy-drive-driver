@@ -11,12 +11,15 @@ MapModel _$MapModelFromJson(Map<String, dynamic> json) => MapModel(
       durationMin: (json['duration_min'] as num?)?.toDouble() ?? 0,
       startPoint: json['start_point'] == null
           ? const LatLngEntity()
-          : const LatLngEntityConverter().fromJson(json['start_point'] as Map<String, dynamic>),
+          : const LatLngEntityConverter()
+              .fromJson(json['start_point'] as Map<String, dynamic>),
       endPoint: json['end_point'] == null
           ? const LatLngEntity()
-          : const LatLngEntityConverter().fromJson(json['end_point'] as Map<String, dynamic>),
+          : const LatLngEntityConverter()
+              .fromJson(json['end_point'] as Map<String, dynamic>),
       route: (json['route'] as List<dynamic>?)
-              ?.map((e) => const LatLngEntityConverter().fromJson(e as Map<String, dynamic>))
+              ?.map((e) => const LatLngEntityConverter()
+                  .fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
     );
@@ -26,5 +29,6 @@ Map<String, dynamic> _$MapModelToJson(MapModel instance) => <String, dynamic>{
       'duration_min': instance.durationMin,
       'start_point': const LatLngEntityConverter().toJson(instance.startPoint),
       'end_point': const LatLngEntityConverter().toJson(instance.endPoint),
-      'route': instance.route.map(const LatLngEntityConverter().toJson).toList(),
+      'route':
+          instance.route.map(const LatLngEntityConverter().toJson).toList(),
     };

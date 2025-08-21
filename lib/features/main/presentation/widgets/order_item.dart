@@ -13,6 +13,8 @@ class OrderItem extends StatelessWidget {
     required this.distance,
     required this.price,
     required this.createdAt,
+    this.yourProposalPrice = '',
+    this.yourProposalPricePercent = 0.0,
   });
 
   final bool isYouSentRequest;
@@ -20,6 +22,8 @@ class OrderItem extends StatelessWidget {
   final String distance;
   final String price;
   final String createdAt;
+  final String yourProposalPrice;
+  final double yourProposalPricePercent;
 
   @override
   Widget build(BuildContext context) {
@@ -85,96 +89,118 @@ class OrderItem extends StatelessWidget {
                   style: context.textTheme.titleSmall!.copyWith(color: gray5),
                 ),
               ),
-              Text(
-                '\$2400',
-                style: context.textTheme.bodySmall!.copyWith(
-                  color: gray6,
-                  decoration: TextDecoration.lineThrough,
-                ),
-              ),
+              // Text(
+              //   '\$2400',
+              //   style: context.textTheme.bodySmall!.copyWith(
+              //     color: gray6,
+              //     decoration: TextDecoration.lineThrough,
+              //   ),
+              // ),
               SizedBox(width: 6),
               Text(
-                '\$3000',
+                '\$$price',
                 style: context.textTheme.titleMedium,
               ),
               SizedBox(width: 6),
-              Container(
-                padding: EdgeInsets.symmetric(vertical: 3, horizontal: 4),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(50),
-                  color: white,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SvgPicture.asset(AppIcons.arrowUp),
-                    SizedBox(width: 2),
-                    Text(
-                      '25%',
-                      style: context.textTheme.bodySmall!
-                          .copyWith(color: green, fontSize: 10, fontWeight: FontWeight.w400),
-                    ),
-                  ],
-                ),
-              )
+              // Container(
+              //   padding: EdgeInsets.symmetric(vertical: 3, horizontal: 4),
+              //   decoration: BoxDecoration(
+              //     borderRadius: BorderRadius.circular(50),
+              //     color: white,
+              //   ),
+              //   child: Row(
+              //     mainAxisSize: MainAxisSize.min,
+              //     children: [
+              //       SvgPicture.asset(AppIcons.arrowUp),
+              //       SizedBox(width: 2),
+              //       Text(
+              //         '25%',
+              //         style: context.textTheme.bodySmall!
+              //             .copyWith(color: green, fontSize: 10, fontWeight: FontWeight.w400),
+              //       ),
+              //     ],
+              //   ),
+              // )
             ],
           ),
-          if(isYouSentRequest)Divider(height: 25, color: solitude, thickness: 1),
-          if(isYouSentRequest)Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Keyingi taklif yuborish',
-                    style: context.textTheme.bodySmall!.copyWith(color: gray6),
+          if (isYouSentRequest) Divider(height: 25, color: solitude, thickness: 1),
+          if (isYouSentRequest)
+            Row(
+              children: [
+                Text(
+                  'Sizning taklifingiz',
+                  style: context.textTheme.bodySmall!.copyWith(color: gray6),
+                ),
+                Spacer(),
+                Text(
+                  '\$$yourProposalPrice',
+                  style: context.textTheme.titleMedium,
+                ),
+                Container(
+                  margin: EdgeInsets.only(left: 8),
+                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(50),
+                    color: red.withValues(alpha: .1),
                   ),
-                  SizedBox(height: 2),
-                  Text(
-                    '3:00',
-                    style: context.textTheme.titleMedium,
+                  child: Text(
+                    '${yourProposalPricePercent.toStringAsFixed(0)}%',
+                    style: context.textTheme.bodySmall!.copyWith(
+                      color: red,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'Keyingi taklif yuborish',
-                    style: context.textTheme.bodySmall!.copyWith(color: gray6),
-                  ),
-                  SizedBox(height: 2),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '3:00',
-                        style: context.textTheme.titleMedium,
-                      ),
-                      SizedBox(width: 4),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(50),
-                          color: green.withValues(alpha: 0.08),
-                        ),
-                        child: Text(
-                          '8%',
-                          style: context.textTheme.bodySmall!.copyWith(
-                            color: green,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      )
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          )
+                )
+                // Column(
+                //   crossAxisAlignment: CrossAxisAlignment.start,
+                //   children: [
+                //
+                //     SizedBox(height: 2),
+                //     Text(
+                //       '3:00',
+                //       style: context.textTheme.titleMedium,
+                //     ),
+                //   ],
+                // ),
+                // Column(
+                //   crossAxisAlignment: CrossAxisAlignment.end,
+                //   children: [
+                //     Text(
+                //       'Keyingi taklif yuborish',
+                //       style: context.textTheme.bodySmall!.copyWith(color: gray6),
+                //     ),
+                //     SizedBox(height: 2),
+                //     Row(
+                //       mainAxisAlignment: MainAxisAlignment.end,
+                //       mainAxisSize: MainAxisSize.min,
+                //       children: [
+                //         Text(
+                //           '3:00',
+                //           style: context.textTheme.titleMedium,
+                //         ),
+                //         SizedBox(width: 4),
+                //         Container(
+                //           padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                //           decoration: BoxDecoration(
+                //             borderRadius: BorderRadius.circular(50),
+                //             color: green.withValues(alpha: 0.08),
+                //           ),
+                //           child: Text(
+                //             '8%',
+                //             style: context.textTheme.bodySmall!.copyWith(
+                //               color: green,
+                //               fontSize: 12,
+                //               fontWeight: FontWeight.w500,
+                //             ),
+                //           ),
+                //         )
+                //       ],
+                //     ),
+                //   ],
+                // ),
+              ],
+            )
         ],
       ),
     );

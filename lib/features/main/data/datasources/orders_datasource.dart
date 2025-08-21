@@ -5,6 +5,7 @@ import 'package:mechanic/features/common/data/models/generic_pagination.dart';
 import 'package:mechanic/features/main/data/models/current_order_model.dart';
 import 'package:mechanic/features/main/data/models/order_detail_model.dart';
 import 'package:mechanic/features/main/data/models/order_model.dart';
+import 'package:mechanic/features/main/data/models/orders_with_date_model.dart';
 import 'package:mechanic/features/main/data/models/selected_order_model.dart';
 
 abstract class OrdersDataSource {
@@ -30,7 +31,12 @@ abstract class OrdersDataSource {
   Future<void> changeOrderStatus({
     required int orderId,
     required String status,
+    String? code,
   });
+
+  Future<GenericPagination<OrdersWithDateModel>> getOrdersHistory({String? next});
+
+  Future<BaseModel<CurrentOrderModel>> getOrderHistoryDetail(int orderId);
 }
 
 class OrdersDataSourceImpl implements OrdersDataSource {
@@ -55,7 +61,7 @@ class OrdersDataSourceImpl implements OrdersDataSource {
           statusCode: response.statusCode ?? 500,
         );
       }
-    } on DioException catch (e) {
+    } on DioException {
       rethrow;
     } on ServerException {
       rethrow;
@@ -77,7 +83,7 @@ class OrdersDataSourceImpl implements OrdersDataSource {
           statusCode: response.statusCode ?? 500,
         );
       }
-    } on DioException catch (e) {
+    } on DioException {
       rethrow;
     } on ServerException {
       rethrow;
@@ -93,7 +99,7 @@ class OrdersDataSourceImpl implements OrdersDataSource {
         'mechanics/proposals/create/',
         data: {
           'order_id': orderId,
-          if (comment != null) 'comment': comment ?? '',
+          if (comment != null) 'comment': comment,
           'proposed_price': proposedPrice,
         },
       );
@@ -106,7 +112,7 @@ class OrdersDataSourceImpl implements OrdersDataSource {
           statusCode: response.statusCode ?? 500,
         );
       }
-    } on DioException catch (e) {
+    } on DioException {
       rethrow;
     } on ServerException {
       rethrow;
@@ -128,7 +134,7 @@ class OrdersDataSourceImpl implements OrdersDataSource {
           statusCode: response.statusCode ?? 500,
         );
       }
-    } on DioException catch (e) {
+    } on DioException {
       rethrow;
     } on ServerException {
       rethrow;
@@ -156,7 +162,7 @@ class OrdersDataSourceImpl implements OrdersDataSource {
           statusCode: response.statusCode ?? 500,
         );
       }
-    } on DioException catch (e) {
+    } on DioException {
       rethrow;
     } on ServerException {
       rethrow;
@@ -166,13 +172,14 @@ class OrdersDataSourceImpl implements OrdersDataSource {
   }
 
   @override
-  Future<void> changeOrderStatus({required int orderId, required String status}) async {
+  Future<void> changeOrderStatus({required int orderId, required String status, String? code}) async {
     try {
       final response = await dio.post(
-        'mechanics/change-order-status/',
+        'mechanics/update-order-status/',
         data: {
           'order_id': orderId,
           'status': status,
+          if (code != null && status == 'completed') 'code': code,
         },
       );
 
@@ -184,7 +191,7 @@ class OrdersDataSourceImpl implements OrdersDataSource {
           statusCode: response.statusCode ?? 500,
         );
       }
-    } on DioException catch (e) {
+    } on DioException {
       rethrow;
     } on ServerException {
       rethrow;
@@ -211,7 +218,63 @@ class OrdersDataSourceImpl implements OrdersDataSource {
           statusCode: response.statusCode ?? 500,
         );
       }
-    } on DioException catch (e) {
+    } on DioException {
+      rethrow;
+    } on ServerException {
+      rethrow;
+    } catch (e) {
+      throw ParsingException(errorMessage: 'An unexpected error occurred: $e');
+    }
+  }
+
+  @override
+  Future<GenericPagination<OrdersWithDateModel>> getOrdersHistory({String? next}) async {
+    try {
+      final response = await dio.get(
+        next ?? 'mechanics/order-history/',
+        queryParameters: {
+          if (next == null) 'page_size': 3,
+        },
+      );
+      if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
+        return GenericPagination<OrdersWithDateModel>.fromJson(
+          response.data,
+          (json) => OrdersWithDateModel.fromJson(json),
+        );
+      } else {
+        throw ServerException(
+          errorMessage: 'Failed to fetch orders history',
+          statusCode: response.statusCode ?? 500,
+        );
+      }
+    } on DioException {
+      rethrow;
+    } on ServerException {
+      rethrow;
+    } catch (e) {
+      throw ParsingException(errorMessage: 'An unexpected error occurred: $e');
+    }
+  }
+
+  @override
+  Future<BaseModel<CurrentOrderModel>> getOrderHistoryDetail(int orderId) async {
+    try {
+      final response = await dio.get(
+        'mechanics/order-info/',
+        queryParameters: {
+          'order_id': orderId,
+        },
+      );
+
+      if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
+        return BaseModel.fromJson(response.data, (json) => CurrentOrderModel.fromJson(json));
+      } else {
+        throw ServerException(
+          errorMessage: 'Failed to fetch order history detail',
+          statusCode: response.statusCode ?? 500,
+        );
+      }
+    } on DioException {
       rethrow;
     } on ServerException {
       rethrow;

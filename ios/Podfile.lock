@@ -42,6 +42,9 @@ PODS:
   - Flutter (1.0.0)
   - flutter_local_notifications (0.0.1):
     - Flutter
+  - geolocator_apple (1.2.0):
+    - Flutter
+    - FlutterMacOS
   - GoogleDataTransport (10.1.0):
     - nanopb (~> 3.30910.0)
     - PromisesObjC (~> 2.4)
@@ -72,6 +75,21 @@ PODS:
   - just_audio (0.0.1):
     - Flutter
     - FlutterMacOS
+  - mapbox_maps_flutter (2.10.0):
+    - Flutter
+    - MapboxMaps (= 11.14.0)
+    - Turf (= 4.0.0)
+  - MapboxCommon (24.14.0):
+    - Turf (= 4.0.0)
+  - MapboxCoreMaps (11.14.0):
+    - MapboxCommon (= 24.14.0)
+  - MapboxMaps (11.14.0):
+    - MapboxCommon (= 24.14.0)
+    - MapboxCoreMaps (= 11.14.0)
+    - Turf (= 4.0.0)
+  - mobile_scanner (7.0.0):
+    - Flutter
+    - FlutterMacOS
   - nanopb (3.30910.0):
     - nanopb/decode (= 3.30910.0)
     - nanopb/encode (= 3.30910.0)
@@ -91,6 +109,9 @@ PODS:
   - sqflite_darwin (0.0.4):
     - Flutter
     - FlutterMacOS
+  - Turf (4.0.0)
+  - url_launcher_ios (0.0.1):
+    - Flutter
   - vibration (3.0.0):
     - Flutter
 
@@ -103,12 +124,16 @@ DEPENDENCIES:
   - firebase_messaging (from `.symlinks/plugins/firebase_messaging/ios`)
   - Flutter (from `Flutter`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
+  - geolocator_apple (from `.symlinks/plugins/geolocator_apple/darwin`)
   - just_audio (from `.symlinks/plugins/just_audio/darwin`)
+  - mapbox_maps_flutter (from `.symlinks/plugins/mapbox_maps_flutter/ios`)
+  - mobile_scanner (from `.symlinks/plugins/mobile_scanner/darwin`)
   - otp_pin_field (from `.symlinks/plugins/otp_pin_field/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - smart_auth (from `.symlinks/plugins/smart_auth/ios`)
   - sqflite_darwin (from `.symlinks/plugins/sqflite_darwin/darwin`)
+  - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
   - vibration (from `.symlinks/plugins/vibration/ios`)
 
 SPEC REPOS:
@@ -120,8 +145,12 @@ SPEC REPOS:
     - FirebaseMessaging
     - GoogleDataTransport
     - GoogleUtilities
+    - MapboxCommon
+    - MapboxCoreMaps
+    - MapboxMaps
     - nanopb
     - PromisesObjC
+    - Turf
 
 EXTERNAL SOURCES:
   audio_session:
@@ -140,8 +169,14 @@ EXTERNAL SOURCES:
     :path: Flutter
   flutter_local_notifications:
     :path: ".symlinks/plugins/flutter_local_notifications/ios"
+  geolocator_apple:
+    :path: ".symlinks/plugins/geolocator_apple/darwin"
   just_audio:
     :path: ".symlinks/plugins/just_audio/darwin"
+  mapbox_maps_flutter:
+    :path: ".symlinks/plugins/mapbox_maps_flutter/ios"
+  mobile_scanner:
+    :path: ".symlinks/plugins/mobile_scanner/darwin"
   otp_pin_field:
     :path: ".symlinks/plugins/otp_pin_field/ios"
   path_provider_foundation:
@@ -152,35 +187,45 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/smart_auth/ios"
   sqflite_darwin:
     :path: ".symlinks/plugins/sqflite_darwin/darwin"
+  url_launcher_ios:
+    :path: ".symlinks/plugins/url_launcher_ios/ios"
   vibration:
     :path: ".symlinks/plugins/vibration/ios"
 
 SPEC CHECKSUMS:
-  audio_session: 19e9480dbdd4e5f6c4543826b2e8b0e4ab6145fe
-  audio_waveforms: cd736909ebc6b6a164eb74701d8c705ce3241e1c
-  connectivity_plus: 2a701ffec2c0ae28a48cf7540e279787e77c447d
-  device_info_plus: bf2e3232933866d73fe290f2942f2156cdd10342
+  audio_session: 9bb7f6c970f21241b19f5a3658097ae459681ba0
+  audio_waveforms: a6dde7fe7c0ea05f06ffbdb0f7c1b2b2ba6cedcf
+  connectivity_plus: cb623214f4e1f6ef8fe7403d580fdad517d2f7dd
+  device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
   Firebase: d99ac19b909cd2c548339c2241ecd0d1599ab02e
-  firebase_core: cf4d42a8ac915e51c0c2dc103442f3036d941a2d
-  firebase_messaging: fee490327c1aae28a0da1e65fca856547deca493
+  firebase_core: ece862f94b2bc72ee0edbeec7ab5c7cb09fe1ab5
+  firebase_messaging: e1a5fae495603115be1d0183bc849da748734e2b
   FirebaseCore: efb3893e5b94f32b86e331e3bd6dadf18b66568e
   FirebaseCoreInternal: 9afa45b1159304c963da48addb78275ef701c6b4
   FirebaseInstallations: 317270fec08a5d418fdbc8429282238cab3ac843
   FirebaseMessaging: 3b26e2cee503815e01c3701236b020aa9b576f09
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  flutter_local_notifications: ff50f8405aaa0ccdc7dcfb9022ca192e8ad9688f
+  flutter_local_notifications: a5a732f069baa862e728d839dd2ebb904737effb
+  geolocator_apple: ab36aa0e8b7d7a2d7639b3b4e48308394e8cef5e
   GoogleDataTransport: aae35b7ea0c09004c3797d53c8c41f66f219d6a7
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
-  just_audio: a42c63806f16995daf5b219ae1d679deb76e6a79
+  just_audio: 4e391f57b79cad2b0674030a00453ca5ce817eed
+  mapbox_maps_flutter: 63957d7c8978bba514fb113906e0d87767eadb5f
+  MapboxCommon: 7aa10394fbcfc1d5a737d2a157c35388666e77e5
+  MapboxCoreMaps: fddb4a008e3200c963a68074afccd8f6d816544c
+  MapboxMaps: 308bb0be5e7a59c9f68a3b06f48998ccb4477583
+  mobile_scanner: 9157936403f5a0644ca3779a38ff8404c5434a93
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
-  otp_pin_field: 0f0935fafc56252e6a48a5a045ac689b6bad3857
-  path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
+  otp_pin_field: d7876d051dc3061287d586940de50e9c7012069d
+  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
-  shared_preferences_foundation: fcdcbc04712aee1108ac7fda236f363274528f78
-  smart_auth: 4bedbc118723912d0e45a07e8ab34039c19e04f2
-  sqflite_darwin: 5a7236e3b501866c1c9befc6771dfd73ffb8702d
-  vibration: 3797858f8cbf53d841e189ef8bd533d96e4ca93c
+  shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
+  smart_auth: 33668081c5f646af84f10492a067d25fdcd16951
+  sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
+  Turf: c9eb11a65d96af58cac523460fd40fec5061b081
+  url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
+  vibration: 69774ad57825b11c951ee4c46155f455d7a592ce
 
-PODFILE CHECKSUM: a57f30d18f102dd3ce366b1d62a55ecbef2158e5
+PODFILE CHECKSUM: 9c46fd01abff66081b39f5fa5767b3f1d0b11d76
 
 COCOAPODS: 1.16.2

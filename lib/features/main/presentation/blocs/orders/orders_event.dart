@@ -36,7 +36,6 @@ class ConnectToWebSocketEvent extends OrdersEvent {}
 
 class DisConnectFromWebSocketEvent extends OrdersEvent {}
 
-
 class _UpdateOrderAsSelectedMechanicEvent extends OrdersEvent {
   final int orderId;
 
@@ -51,10 +50,16 @@ class GetSelectedOrderEvent extends OrdersEvent {
 class ChangeOrderStatusEvent extends OrdersEvent {
   final int orderId;
   final String status;
+  final  String? code;
+  final VoidCallback? onSuccess;
+  final VoidCallback? onFailure;
 
   ChangeOrderStatusEvent({
     required this.orderId,
     required this.status,
+    this.code,
+    this.onSuccess,
+    this.onFailure,
   });
 }
 

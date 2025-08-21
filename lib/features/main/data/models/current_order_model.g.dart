@@ -27,6 +27,11 @@ CurrentOrderModel _$CurrentOrderModelFromJson(Map<String, dynamic> json) =>
                   .fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
+      workTime: json['work_time'] == null
+          ? const WorkTimeEntity()
+          : const WorkTimeEntityConverter()
+              .fromJson(json['work_time'] as Map<String, dynamic>),
+      completedAt: json['completed_at'] as String? ?? '',
     );
 
 Map<String, dynamic> _$CurrentOrderModelToJson(CurrentOrderModel instance) =>
@@ -46,4 +51,6 @@ Map<String, dynamic> _$CurrentOrderModelToJson(CurrentOrderModel instance) =>
       'suborders': instance.suborders
           .map(const SubOrderEntityConverter().toJson)
           .toList(),
+      'work_time': const WorkTimeEntityConverter().toJson(instance.workTime),
+      'completed_at': instance.completedAt,
     };

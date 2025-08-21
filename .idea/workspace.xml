@@ -9,67 +9,49 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c49a5c62-95f3-430e-9bec-172258224ce8" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/assets/icons/circular_check.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/icons/location.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/icons/star.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/features/main/data/models/lat_lng_model.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/features/main/data/models/lat_lng_model.g.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/features/main/data/models/map_model.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/features/main/data/models/map_model.g.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/features/main/data/models/selected_order_model.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/features/main/data/models/selected_order_model.g.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/features/main/data/models/sub_order_model.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/features/main/data/models/sub_order_model.g.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/features/main/domain/entities/lat_lng_entity.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/features/main/domain/entities/map_entity.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/features/main/domain/entities/selected_order_entity.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/features/main/domain/entities/sub_order_entity.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/features/main/domain/usecases/add_new_service_usecase.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/features/main/domain/usecases/change_order_status_usecase.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/features/main/domain/usecases/get_selected_order_usecase.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/features/main/presentation/widgets/add_new_service_dialog.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/features/main/presentation/widgets/bottomsheets/selected_order_sheet.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/features/main/presentation/widgets/order_action_buttons.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/features/main/presentation/widgets/pending_orders_widget.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/extension_discovery/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/extension_discovery/devtools.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/0db21a3dade0364f16900fed9d4f9908/.filecache" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/0db21a3dade0364f16900fed9d4f9908/app.dill" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/0db21a3dade0364f16900fed9d4f9908/dart_build.d" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/0db21a3dade0364f16900fed9d4f9908/dart_build.stamp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/0db21a3dade0364f16900fed9d4f9908/dart_build_result.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/0db21a3dade0364f16900fed9d4f9908/debug_android_application.stamp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/0db21a3dade0364f16900fed9d4f9908/flutter_assets.d" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/0db21a3dade0364f16900fed9d4f9908/gen_dart_plugin_registrant.stamp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/0db21a3dade0364f16900fed9d4f9908/gen_localizations.stamp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/0db21a3dade0364f16900fed9d4f9908/install_code_assets.d" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/0db21a3dade0364f16900fed9d4f9908/install_code_assets.stamp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/0db21a3dade0364f16900fed9d4f9908/kernel_snapshot_program.d" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/0db21a3dade0364f16900fed9d4f9908/kernel_snapshot_program.stamp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/0db21a3dade0364f16900fed9d4f9908/native_assets.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/0db21a3dade0364f16900fed9d4f9908/outputs.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/fb75612503841ccdec43b46a2b9d86ea/.filecache" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/fb75612503841ccdec43b46a2b9d86ea/app.dill" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/fb75612503841ccdec43b46a2b9d86ea/dart_build.d" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/fb75612503841ccdec43b46a2b9d86ea/dart_build.stamp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/fb75612503841ccdec43b46a2b9d86ea/dart_build_result.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/fb75612503841ccdec43b46a2b9d86ea/debug_android_application.stamp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/fb75612503841ccdec43b46a2b9d86ea/flutter_assets.d" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/fb75612503841ccdec43b46a2b9d86ea/gen_dart_plugin_registrant.stamp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/fb75612503841ccdec43b46a2b9d86ea/gen_localizations.stamp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/fb75612503841ccdec43b46a2b9d86ea/install_code_assets.d" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/fb75612503841ccdec43b46a2b9d86ea/install_code_assets.stamp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/fb75612503841ccdec43b46a2b9d86ea/kernel_snapshot_program.d" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/fb75612503841ccdec43b46a2b9d86ea/kernel_snapshot_program.stamp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/fb75612503841ccdec43b46a2b9d86ea/native_assets.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.dart_tool/flutter_build/fb75612503841ccdec43b46a2b9d86ea/outputs.json" beforeDir="false" />
+    <list default="true" id="c49a5c62-95f3-430e-9bec-172258224ce8" name="Changes" comment="selected order bottomsheet">
+      <change afterPath="$PROJECT_DIR$/assets/icons/contact.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/icons/edit.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/icons/globe.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/icons/history.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/icons/pen.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/icons/qr_code.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/icons/star_outline.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/icons/wallet.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/from_marker.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/to_marker.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/main/data/models/order_history_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/main/data/models/order_history_model.g.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/main/data/models/orders_with_date_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/main/data/models/orders_with_date_model.g.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/main/data/models/work_time_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/main/data/models/work_time_model.g.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/main/domain/entities/order_history_entity.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/main/domain/entities/order_with_date_entity.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/main/domain/entities/work_time_entity.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/main/domain/usecases/get_order_history_detail_usecase.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/main/domain/usecases/get_orders_history_usecase.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/main/presentation/screens/finished_order_single_screen.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/main/presentation/screens/qr_code_overlay.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/main/presentation/screens/qr_code_screen.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/main/presentation/widgets/bottomsheets/confirm_cancel_order_sheet.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/main/presentation/widgets/bottomsheets/enter_code_dialog.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/main/presentation/widgets/bottomsheets/finish_order_dialog.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/main/presentation/widgets/info_item.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/main/presentation/widgets/map_widget.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/main/presentation/widgets/order_information_widget.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/profile/presentation/blocs/history/orders_history_bloc.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/profile/presentation/blocs/history/orders_history_event.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/profile/presentation/blocs/history/orders_history_state.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/profile/presentation/pages/order_history_single_screen.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/profile/presentation/pages/orders_history_screen.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/profile/presentation/pages/profile_screen.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/features/profile/presentation/widgets/profile_item.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.dart_tool/package_config.json" beforeDir="false" afterPath="$PROJECT_DIR$/.dart_tool/package_config.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.dart_tool/package_config_subset" beforeDir="false" afterPath="$PROJECT_DIR$/.dart_tool/package_config_subset" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.dart_tool/package_graph.json" beforeDir="false" afterPath="$PROJECT_DIR$/.dart_tool/package_graph.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.flutter-plugins-dependencies" beforeDir="false" afterPath="$PROJECT_DIR$/.flutter-plugins-dependencies" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Dart_Packages.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Flutter_Plugins.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/android/.gradle/8.5/checksums/checksums.lock" beforeDir="false" afterPath="$PROJECT_DIR$/android/.gradle/8.5/checksums/checksums.lock" afterDir="false" />
@@ -83,23 +65,56 @@
       <change beforePath="$PROJECT_DIR$/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/android/.gradle/buildOutputCleanup/outputFiles.bin" beforeDir="false" afterPath="$PROJECT_DIR$/android/.gradle/buildOutputCleanup/outputFiles.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/android/.gradle/file-system.probe" beforeDir="false" afterPath="$PROJECT_DIR$/android/.gradle/file-system.probe" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/google-services.json" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/google-services.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/app/src/main/kotlin/uz/drive/mechanic/mechanic/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/kotlin/uz/drive/mechanic/mechanic/MainActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/local.properties" beforeDir="false" afterPath="$PROJECT_DIR$/android/local.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/.symlinks/plugins/flutter_local_notifications" beforeDir="false" afterPath="$PROJECT_DIR$/ios/.symlinks/plugins/flutter_local_notifications" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ios/Flutter/Generated.xcconfig" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Flutter/Generated.xcconfig" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ios/Flutter/flutter_export_environment.sh" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Flutter/flutter_export_environment.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/assets/colors/colors.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/assets/colors/colors.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Podfile" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Podfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Podfile.lock" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Podfile.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner.xcodeproj/project.pbxproj" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner.xcodeproj/project.pbxproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner.xcworkspace/xcuserdata/macstore.uz.xcuserdatad/UserInterfaceState.xcuserstate" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner.xcworkspace/xcuserdata/macstore.uz.xcuserdatad/UserInterfaceState.xcuserstate" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner/GeneratedPluginRegistrant.m" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/GeneratedPluginRegistrant.m" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner/GoogleService-Info.plist" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/GoogleService-Info.plist" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ios/Runner/Info.plist" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Runner/Info.plist" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/assets/constants/icons.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/assets/constants/icons.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/core/utils/context_extensions.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/core/utils/context_extensions.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/features/common/presentation/widgets/common_button.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/common/presentation/widgets/common_button.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/core/utils/my_functions.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/core/utils/my_functions.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/auth/data/models/user_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/auth/data/models/user_model.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/auth/data/models/user_model.g.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/auth/data/models/user_model.g.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/auth/domain/entities/user_entity.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/auth/domain/entities/user_entity.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/common/data/models/generic_pagination.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/common/data/models/generic_pagination.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/features/main/data/datasources/orders_datasource.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/data/datasources/orders_datasource.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/features/main/data/models/current_order_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/data/models/current_order_model.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/features/main/data/models/current_order_model.g.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/data/models/current_order_model.g.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/main/data/models/map_model.g.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/data/models/map_model.g.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/features/main/data/repositories/orders_repository_impl.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/data/repositories/orders_repository_impl.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/features/main/domain/entities/current_order_entity.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/domain/entities/current_order_entity.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/features/main/domain/repositories/orders_repository.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/domain/repositories/orders_repository.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/main/domain/usecases/change_order_status_usecase.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/domain/usecases/change_order_status_usecase.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/features/main/presentation/blocs/orders/orders_bloc.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/presentation/blocs/orders/orders_bloc.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/features/main/presentation/blocs/orders/orders_event.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/presentation/blocs/orders/orders_event.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/features/main/presentation/blocs/orders/orders_state.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/presentation/blocs/orders/orders_state.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/features/main/presentation/screens/main_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/presentation/screens/main_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/main/presentation/screens/order_single_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/presentation/screens/order_single_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/main/presentation/widgets/add_new_service_dialog.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/presentation/widgets/bottomsheets/add_new_service_dialog.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/main/presentation/widgets/balance_item.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/presentation/widgets/balance_item.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/main/presentation/widgets/bottomsheets/selected_order_sheet.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/presentation/widgets/bottomsheets/selected_order_sheet.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/features/main/presentation/widgets/current_active_order_widget.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/presentation/widgets/current_active_order_widget.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/main/presentation/widgets/main_screen_user_widget.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/presentation/widgets/main_screen_user_widget.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/main/presentation/widgets/offer_item.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/presentation/widgets/offer_item.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/main/presentation/widgets/order_action_buttons.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/presentation/widgets/order_action_buttons.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/main/presentation/widgets/order_item.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/presentation/widgets/order_item.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/main/presentation/widgets/pending_orders_widget.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/presentation/widgets/pending_orders_widget.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/main/presentation/widgets/voice_message_item.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/presentation/widgets/voice_message_item.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/features/main/presentation/widgets/working_status.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/features/main/presentation/widgets/working_status.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/firebase_options.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/firebase_options.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mechanic.iml" beforeDir="false" afterPath="$PROJECT_DIR$/mechanic.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
     </list>
@@ -157,20 +172,22 @@
     &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;io.flutter.reload.alreadyRun&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/macstore.uz/StudioProjects/mechanic-app/lib/features/main/domain/usecases&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.sourceCode.Dart&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/macstore.uz/StudioProjects/mechanic-app/android&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
     &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
   }
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/android" />
+      <recent name="$PROJECT_DIR$/lib/features/profile/presentation/pages" />
       <recent name="$PROJECT_DIR$/lib/features/main/domain/usecases" />
+      <recent name="$PROJECT_DIR$/lib/features/main/presentation/widgets/bottomsheets" />
       <recent name="$PROJECT_DIR$/lib/features/profile/domain/usecases" />
-      <recent name="$PROJECT_DIR$/lib/features/common/data/models" />
-      <recent name="$PROJECT_DIR$/lib/features/auth/domain/usecases" />
-      <recent name="$PROJECT_DIR$/lib/features/auth" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/lib/features/profile/presentation/blocs" />
+      <recent name="$PROJECT_DIR$/lib/features/main/presentation/widgets/bottomsheets" />
       <recent name="$PROJECT_DIR$/lib/assets/constants" />
       <recent name="$PROJECT_DIR$/lib/assets" />
     </key>
@@ -184,6 +201,15 @@
       <option name="presentableId" value="Default" />
       <updated>1751474437136</updated>
     </task>
+    <task id="LOCAL-00001" summary="selected order bottomsheet">
+      <option name="closed" value="true" />
+      <created>1755226749745</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1755226749745</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -196,6 +222,10 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="selected order bottomsheet" />
+    <option name="LAST_COMMIT_MESSAGE" value="selected order bottomsheet" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -251,14 +281,24 @@
           <option name="timeStamp" value="29" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="Dart">
-          <url>file://$PROJECT_DIR$/lib/features/main/presentation/blocs/orders/orders_bloc.dart</url>
-          <line>225</line>
-          <option name="timeStamp" value="33" />
+          <url>file://$PROJECT_DIR$/lib/features/main/data/datasources/orders_datasource.dart</url>
+          <line>250</line>
+          <option name="timeStamp" value="42" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="Dart">
-          <url>file://$PROJECT_DIR$/lib/features/main/presentation/blocs/orders/orders_bloc.dart</url>
-          <line>140</line>
-          <option name="timeStamp" value="35" />
+          <url>file://$PROJECT_DIR$/lib/features/main/data/datasources/orders_datasource.dart</url>
+          <line>252</line>
+          <option name="timeStamp" value="43" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="Dart">
+          <url>file://$PROJECT_DIR$/lib/features/main/data/datasources/orders_datasource.dart</url>
+          <line>254</line>
+          <option name="timeStamp" value="44" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="Dart">
+          <url>file://$PROJECT_DIR$/lib/features/main/data/datasources/orders_datasource.dart</url>
+          <line>244</line>
+          <option name="timeStamp" value="45" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>

@@ -86,146 +86,114 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> {
                 ),
               );
             }
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                  width: MediaQuery.sizeOf(context).width,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
-                    color: white,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        state.orderDetail.order.orderTitle,
-                        style: context.textTheme.displayMedium,
-                      ),
-                      SizedBox(height: 5),
-                      Row(
-                        children: [
-                          SvgPicture.asset(AppIcons.currentLocation),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
+            return SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    width: MediaQuery.sizeOf(context).width,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
+                      color: white,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          state.orderDetail.order.orderTitle,
+                          style: context.textTheme.displayMedium,
+                        ),
+                        SizedBox(height: 5),
+                        Row(
+                          children: [
+                            Text(
+                              MyFunctions.formatTimeAgo(state.orderDetail.order.createdAt),
+                              style: context.textTheme.titleSmall!.copyWith(color: gray5),
+                            ),
+                            Spacer(),
+                            SvgPicture.asset(AppIcons.currentLocation),
+                            SizedBox(width: 8),
+                            Text(
                               '${state.orderDetail.order.distance} km',
                               style: context.textTheme.titleSmall!.copyWith(color: gray5),
                             ),
+                          ],
+                        ),
+                        SizedBox(height: 12),
+                        if (state.orderDetail.order.audio.isNotEmpty)
+                          VoiceMessageItem(
+                            audioUrl: state.orderDetail.order.audio,
                           ),
-
-                          ///Text(
-                          //   '\$2400',
-                          //   style: context.textTheme.bodySmall!.copyWith(
-                          //     color: gray6,
-                          //     decoration: TextDecoration.lineThrough,
-                          //   ),
-                          // ),
-                          SizedBox(width: 6),
-                          Text(
-                            '\$3000',
-                            style: context.textTheme.titleMedium,
-                          ),
-                          SizedBox(width: 6),
+                        SizedBox(height: 12),
+                        Text(
+                          state.orderDetail.order.description,
+                          style: context.textTheme.titleSmall!.copyWith(color: gray5, fontStyle: FontStyle.italic),
+                        ),
+                        if (state.orderDetail.yourProposal.price != 0)
                           Container(
-                            padding: EdgeInsets.symmetric(vertical: 3, horizontal: 4),
+                            margin: EdgeInsets.only(top: 12),
+                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(50),
-                              color: white,
-                            ),
+                                borderRadius: BorderRadius.circular(50),
+                                border: Border.all(
+                                  color: grayLine,
+                                )),
                             child: Row(
-                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                SvgPicture.asset(AppIcons.arrowUp),
-                                SizedBox(width: 2),
                                 Text(
-                                  '25%',
-                                  style: context.textTheme.bodySmall!
-                                      .copyWith(color: green, fontSize: 10, fontWeight: FontWeight.w400),
+                                  'Sizning takfilingiz',
+                                  style: context.textTheme.titleSmall!.copyWith(),
                                 ),
+                                Spacer(),
+                                Text(
+                                  '\$${state.orderDetail.order.price}',
+                                  style: context.textTheme.bodySmall!.copyWith(
+                                    color: gray6,
+                                    decoration: TextDecoration.lineThrough,
+                                  ),
+                                ),
+                                SizedBox(width: 6),
+                                Text(
+                                  '\$${state.orderDetail.yourProposal.price}',
+                                  style: context.textTheme.titleMedium,
+                                ),
+                                SizedBox(width: 6),
+                                Container(
+                                  padding: EdgeInsets.symmetric(vertical: 3, horizontal: 4),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(50),
+                                    color: red.withValues(alpha: .1),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      SvgPicture.asset(AppIcons.arrowUp),
+                                      SizedBox(width: 2),
+                                      Text(
+                                        '${state.orderDetail.yourProposal.changePercent}%',
+                                        style: context.textTheme.bodySmall!
+                                            .copyWith(color: red, fontSize: 10, fontWeight: FontWeight.w400),
+                                      ),
+                                    ],
+                                  ),
+                                )
                               ],
                             ),
                           )
-                        ],
-                      ),
-                      SizedBox(height: 12),
-                      if (state.orderDetail.order.audio.isNotEmpty)
-                        VoiceMessageItem(
-                          audioUrl: state.orderDetail.order.audio,
-                        ),
-                      SizedBox(height: 12),
-                      Text(
-                        state.orderDetail.order.description,
-                        style: context.textTheme.titleSmall!.copyWith(color: gray5, fontStyle: FontStyle.italic),
-                      ),
-                      Container(
-                        margin: EdgeInsets.only(top: 12),
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(50),
-                            border: Border.all(
-                              color: grayLine,
-                            )),
-                        child: Row(
-                          children: [
-                            Text(
-                              'Sizning takfilingiz',
-                              style: context.textTheme.titleSmall!.copyWith(),
-                            ),
-                            Spacer(),
-                            Text(
-                              '\$2400',
-                              style: context.textTheme.bodySmall!.copyWith(
-                                color: gray6,
-                                decoration: TextDecoration.lineThrough,
-                              ),
-                            ),
-                            SizedBox(width: 6),
-                            Text(
-                              '\$3000',
-                              style: context.textTheme.titleMedium,
-                            ),
-                            SizedBox(width: 6),
-                            Container(
-                              padding: EdgeInsets.symmetric(vertical: 3, horizontal: 4),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(50),
-                                color: white,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  SvgPicture.asset(AppIcons.arrowUp),
-                                  SizedBox(width: 2),
-                                  Text(
-                                    '25%',
-                                    style: context.textTheme.bodySmall!
-                                        .copyWith(color: green, fontSize: 10, fontWeight: FontWeight.w400),
-                                  ),
-                                ],
-                              ),
-                            )
-                          ],
-                        ),
-                      )
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                if (state.orderDetail.order.images.isNotEmpty)
-                  OrderPhotosWidget(
-                    photos: state.orderDetail.order.images.map((e) => e.image).toList(),
-                  ),
-                if (state.orderDetail.proposals.isNotEmpty || state.orderDetail.yourProposal.id != -1)
-                  Expanded(
-                    ///todo
-                    child: Container(
+                  if (state.orderDetail.order.images.isNotEmpty)
+                    OrderPhotosWidget(
+                      photos: state.orderDetail.order.images.map((e) => e.image).toList(),
+                    ),
+                  if (state.orderDetail.proposals.isNotEmpty || state.orderDetail.yourProposal.price != 0)
+                    Container(
                       padding: EdgeInsets.symmetric(vertical: 18.5, horizontal: 12),
                       decoration: BoxDecoration(
                         color: white,
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(12),
-                        ),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -236,36 +204,34 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> {
                             style: context.textTheme.bodyMedium,
                           ),
                           SizedBox(height: 17.5),
-                          Expanded(
-                            child: ListView.separated(
-                              itemBuilder: (context, index) {
-                                late ProposalEntity proposal;
-                                if (index == 0 && state.orderDetail.yourProposal.id != -1) {
-                                  proposal = state.orderDetail.yourProposal;
-                                } else if (index == 0 && state.orderDetail.yourProposal.id == -1) {
-                                  proposal = state.orderDetail.proposals[index];
-                                } else if (index > 0 && state.orderDetail.yourProposal.id != -1) {
-                                  proposal = state.orderDetail.proposals[index - 1];
-                                } else {
-                                  proposal = state.orderDetail.proposals[index];
-                                }
-                                return OfferItem(
-                                  image: proposal.proposedPrice,
-                                  name: MyFunctions.formatTimeAgo(proposal.createdAt),
-                                  time: MyFunctions.formatTimeAgo(proposal.createdAt),
-                                  offer: '\$${MyFunctions.formatCost(proposal.price)}',
-                                );
-                              },
-                              separatorBuilder: (context, index) => Divider(),
-                              itemCount: state.orderDetail.proposals.length +
-                                  (state.orderDetail.yourProposal.id != -1 ? 1 : 0),
-                            ),
+                          ...List.generate(
+                            state.orderDetail.proposals.length + (state.orderDetail.yourProposal.price != 0 ? 1 : 0),
+                            (index) {
+                              late ProposalEntity proposal;
+                              if (index == 0 && state.orderDetail.yourProposal.price != 0) {
+                                proposal = state.orderDetail.yourProposal;
+                              } else if (index == 0 && state.orderDetail.yourProposal.id == -1) {
+                                proposal = state.orderDetail.proposals[index];
+                              } else if (index > 0 && state.orderDetail.yourProposal.price != 0) {
+                                proposal = state.orderDetail.proposals[index - 1];
+                              } else {
+                                proposal = state.orderDetail.proposals[index];
+                              }
+                              return OfferItem(
+                                isYou: index == 0 && state.orderDetail.yourProposal.price != 0,
+                                image: proposal.proposedPrice,
+                                name: proposal.balance,
+                                time: MyFunctions.formatTimeAgo(proposal.createdAt),
+                                offer: '\$${MyFunctions.formatCost(proposal.price)}',
+                                percent: '${proposal.changePercent}%',
+                              );
+                            },
                           ),
                         ],
                       ),
-                    ),
-                  )
-              ],
+                    )
+                ],
+              ),
             );
           },
         ),

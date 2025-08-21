@@ -47,6 +47,11 @@
             android:name="io.flutter.embedding.android.EnableImpeller"
             android:value="false" />
 
+        <meta-data
+            android:name="com.mapbox.token"
+            android:value="pk.eyJ1IjoiamFob25naXI3NyIsImEiOiJjbG9tajIzYW4yMWhsMnJudnRjbGUzOGFzIn0.WeJnZlP1FGzGJ3FK2IM9UA" />
+
+
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

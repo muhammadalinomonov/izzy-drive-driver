@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:mechanic/features/main/domain/entities/address_entity.dart';
 import 'package:mechanic/features/main/domain/entities/sub_order_entity.dart';
+import 'package:mechanic/features/main/domain/entities/work_time_entity.dart';
 
 class CurrentOrderEntity extends Equatable {
   final int id;
@@ -17,6 +18,9 @@ class CurrentOrderEntity extends Equatable {
   final String totalPrice;
   @SubOrderEntityConverter()
   final List<SubOrderEntity> suborders;
+  @WorkTimeEntityConverter()
+  final WorkTimeEntity workTime;
+  final String completedAt;
 
   const CurrentOrderEntity({
     this.id = -1,
@@ -31,6 +35,8 @@ class CurrentOrderEntity extends Equatable {
     this.paymentStatus = '',
     this.totalPrice = '',
     this.suborders = const [],
+    this.workTime = const WorkTimeEntity(),
+    this.completedAt = '',
   });
 
   @override
@@ -47,5 +53,7 @@ class CurrentOrderEntity extends Equatable {
         paymentStatus,
         totalPrice,
         suborders,
+        workTime,
+        completedAt,
       ];
 }

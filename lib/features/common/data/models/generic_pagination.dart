@@ -5,6 +5,7 @@ class GenericPagination<T> {
   final String? next;
   final String previous;
   final List<T>? data;
+  final String totalSum;
 
   const GenericPagination({
     this.total = 0,
@@ -13,6 +14,7 @@ class GenericPagination<T> {
     this.status = false,
     this.message = '',
     this.data = const [],
+    this.totalSum = '',
   });
 
   factory GenericPagination.fromJson(
@@ -28,6 +30,7 @@ class GenericPagination<T> {
       data: (json['data'] as List<dynamic>?)
           ?.map((item) => fromJsonT(item))
           .toList(growable: false) ?? const [],
+      totalSum: json['total_sum'] as String? ?? '',
     );
   }
 }

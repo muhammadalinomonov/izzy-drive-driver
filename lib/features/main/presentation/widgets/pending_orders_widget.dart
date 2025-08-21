@@ -56,6 +56,8 @@ class PendingOrdersWidget extends StatelessWidget {
                 price: MyFunctions.formatCost(order.price),
                 createdAt: order.createdAt,
                 isYouSentRequest: order.proposal.id != -1,
+                yourProposalPrice: order.proposal.price.toString(),
+                yourProposalPricePercent: order.proposal.changePercent,
               ),
             );
           },

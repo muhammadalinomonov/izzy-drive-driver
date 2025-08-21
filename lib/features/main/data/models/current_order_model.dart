@@ -2,6 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:mechanic/features/main/domain/entities/address_entity.dart';
 import 'package:mechanic/features/main/domain/entities/current_order_entity.dart';
 import 'package:mechanic/features/main/domain/entities/sub_order_entity.dart';
+import 'package:mechanic/features/main/domain/entities/work_time_entity.dart';
 
 part 'current_order_model.g.dart';
 
@@ -20,6 +21,8 @@ class CurrentOrderModel extends CurrentOrderEntity {
     super.paymentStatus,
     super.totalPrice,
     super.suborders,
+    super.workTime,
+    super.completedAt,
   });
 
   factory CurrentOrderModel.fromJson(Map<String, dynamic> json) => _$CurrentOrderModelFromJson(json);
