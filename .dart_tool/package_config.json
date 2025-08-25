@@ -326,6 +326,12 @@
       "languageVersion": "3.1"
     },
     {
+      "name": "fl_chart",
+      "rootUri": "file:///Users/macstore.uz/.pub-cache/hosted/pub.dev/fl_chart-1.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
+    },
+    {
       "name": "flutter",
       "rootUri": "file:///Users/macstore.uz/development/flutter/packages/flutter",
       "packageUri": "lib/",

@@ -44,6 +44,7 @@ dependencies:
   flutter_otp_text_field: ^1.5.1+1
   mobile_scanner: ^7.0.1
   mapbox_maps_flutter: ^2.10.0
+  fl_chart: ^1.0.0
 #  mapbox_gl: ^0.16.0
 
 dev_dependencies:
@@ -60,8 +61,6 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/fonts/
-    - assets/raw/
-    - assets/translations/
 
   fonts:
     - family: Inter

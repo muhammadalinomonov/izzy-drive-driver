@@ -1,12 +1,18 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
-import 'package:mechanic/assets/constants/images.dart';
 
 class OrderMapWidget extends StatefulWidget {
-  const OrderMapWidget({super.key});
+  const OrderMapWidget({
+    super.key,
+    required this.fromPoint,
+    required this.toPoint,
+    required this.routePoints,
+  });
+
+  final Point fromPoint;
+  final Point toPoint;
+  final List<List<double>> routePoints;
 
   @override
   _OrderMapWidgetState createState() => _OrderMapWidgetState();
@@ -18,45 +24,20 @@ class _OrderMapWidgetState extends State<OrderMapWidget> {
   PolylineAnnotationManager? polylineAnnotationManager;
 
   // Sizning koordinatalaringiz - bu yerga o'zgartiring
-  final Point pointA = Point(coordinates: Position(-104.9903, 39.7392)); // Boshlanish nuqtasi
-  final Point pointB = Point(coordinates: Position(-74.0059, 40.7128));   // Tugash nuqtasi
+  late Point pointA ; // Boshlanish nuqtasi
+  late Point pointB ; // Tugash nuqtasi
 
   // Route koordinatalari - sizning tayyor route koordinatalaringiz
-  final List<List<double>> routeCoordinates = [
-    [-104.9903, 39.7392],  // boshlanish
-    [-104.8, 39.8],        // oraliq nuqtalar
-    [-104.5, 40.1],
-    [-103.2, 40.8],
-    [-102.1, 41.2],
-    [-101.3, 41.1],
-    [-100.2, 40.9],
-    [-99.1, 40.8],
-    [-98.3, 40.7],
-    [-97.2, 40.8],
-    [-96.1, 40.9],
-    [-95.2, 41.0],
-    [-94.3, 41.1],
-    [-93.1, 40.9],
-    [-92.2, 40.8],
-    [-91.1, 40.7],
-    [-90.2, 40.6],
-    [-89.1, 40.5],
-    [-88.2, 40.6],
-    [-87.1, 40.7],
-    [-86.2, 40.8],
-    [-85.1, 40.7],
-    [-84.2, 40.6],
-    [-83.1, 40.5],
-    [-82.2, 40.6],
-    [-81.1, 40.7],
-    [-80.2, 40.8],
-    [-79.1, 40.7],
-    [-78.2, 40.6],
-    [-77.1, 40.5],
-    [-76.2, 40.6],
-    [-75.1, 40.7],
-    [-74.0059, 40.7128],   // tugash
-  ];
+  late List<List<double>> routeCoordinates;
+
+  @override
+  void initState() {
+    super.initState();
+
+    pointA = widget.fromPoint;
+    pointB = widget.toPoint;
+    routeCoordinates = widget.routePoints;
+  }
 
   void _onMapCreated(MapboxMap mapboxMap) async {
     this.mapboxMap = mapboxMap;
@@ -72,9 +53,7 @@ class _OrderMapWidgetState extends State<OrderMapWidget> {
   }
 
   Future<void> _drawRoute() async {
-    final List<Position> routePositions = routeCoordinates
-        .map((coord) => Position(coord[0], coord[1]))
-        .toList();
+    final List<Position> routePositions = routeCoordinates.map((coord) => Position(coord[0], coord[1])).toList();
 
     await polylineAnnotationManager!.create(
       PolylineAnnotationOptions(
@@ -89,6 +68,7 @@ class _OrderMapWidgetState extends State<OrderMapWidget> {
     final ByteData data = await rootBundle.load(assetPath);
     return data.buffer.asUint8List();
   }
+
   Future<void> _addMarkers() async {
     // A markeri (qora doira, oq A harfi)
     await pointAnnotationManager!.create(
@@ -110,7 +90,6 @@ class _OrderMapWidgetState extends State<OrderMapWidget> {
       ),
     );
   }
-
 
   void _fitMapToRoute() {
     double minLat = routeCoordinates.map((e) => e[1]).reduce((a, b) => a < b ? a : b);

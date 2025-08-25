@@ -81,9 +81,14 @@ class PushNotifications {
 
 
   static Future<String> getToken()async{
-    String? token = await FirebaseMessaging.instance.getToken();
-    print("🔑 FCM Token: $token");
-    return token??'';
+    try {
+      String? token = await FirebaseMessaging.instance.getToken();
+      print("🔑 FCM Token: $token");
+      return token ?? '';
+    }catch(e){
+      print("Error fetching FCM token: $e");
+      return '';
+    }
   }
 
 }

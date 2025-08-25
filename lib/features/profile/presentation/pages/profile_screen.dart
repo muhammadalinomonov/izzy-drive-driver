@@ -1,11 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mechanic/assets/colors/colors.dart';
 import 'package:mechanic/assets/constants/icons.dart';
 import 'package:mechanic/core/utils/context_extensions.dart';
 import 'package:mechanic/features/main/presentation/widgets/balance_item.dart';
 import 'package:mechanic/features/main/presentation/widgets/main_screen_user_widget.dart';
+import 'package:mechanic/features/profile/presentation/blocs/profile_bloc.dart';
 import 'package:mechanic/features/profile/presentation/pages/orders_history_screen.dart';
+import 'package:mechanic/features/profile/presentation/widgets/chart_widget.dart';
+import 'package:mechanic/features/profile/presentation/widgets/choose_language_bottom_sheet.dart';
 import 'package:mechanic/features/profile/presentation/widgets/profile_item.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -16,6 +20,14 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    final str = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    context.read<ProfileBloc>().add(GetUserStatisticsEvent(filter: 'days', period: str));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,6 +59,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 borderRadius: BorderRadius.circular(12),
                 color: white,
               ),
+              child: ChartWidget(),
             ),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 18, vertical: 2),
@@ -64,26 +77,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     data: '',
                     onTap: () {
                       Navigator.of(context).push(CupertinoPageRoute(builder: (context) => OrdersHistoryScreen()));
-
                     },
                   ),
-                  Divider(color: grayLine, height: 1,thickness: 1),
+                  Divider(color: grayLine, height: 1, thickness: 1),
 
                   ProfileItem(
                     icon: AppIcons.contact,
                     title: 'Mening ma’lumotlarim',
                   ),
 
-                  Divider(color: grayLine, height: 1,thickness: 1),
+                  Divider(color: grayLine, height: 1, thickness: 1),
 
-                  ProfileItem(
-                    icon: AppIcons.starOutline,
-                    title: 'Ilovamizni baholang',
-                  ),
-                  Divider(color: grayLine, height: 1,thickness: 1),
+                  // ProfileItem(
+                  //   icon: AppIcons.starOutline,
+                  //   title: 'Ilovamizni baholang',
+                  // ),
+                  // Divider(color: grayLine, height: 1,thickness: 1),
                   ProfileItem(
                     icon: AppIcons.globe,
                     title: 'Til',
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => ChooseLanguageBottomSheet(),
+                      );
+                    },
                     data: 'O’zbekcha',
                   ),
                 ],

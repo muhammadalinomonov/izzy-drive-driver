@@ -106,11 +106,11 @@ class _OrderSingleBottomState extends State<OrderSingleBottom> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Padding(
-                                padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+                        Padding(
+                          padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+                          child: Row(
+                            children: [
+                              Expanded(
                                 child: CommonTextField(
                                   controller: _proposedPriceController,
                                   hint: 'Sizning taklifingiz',
@@ -123,40 +123,52 @@ class _OrderSingleBottomState extends State<OrderSingleBottom> {
                                   ),
                                 ),
                               ),
-                            ),
-                            CommonScaleAnimation(
-                              onTap: () {
-                                context.read<OrdersBloc>().add(SendApplicationEvent(
-                                    orderId: widget.orderId, proposedPrice: _proposedPriceController.text));
-                              },
-                              child: Container(
-                                height: 48,
-                                width: 48,
-                                margin: EdgeInsets.only(left: 12),
-                                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: mainColor,
-                                  borderRadius: BorderRadius.circular(12),
+                              CommonScaleAnimation(
+                                onTap: () {
+                                  context.read<OrdersBloc>().add(SendApplicationEvent(
+                                      orderId: widget.orderId, proposedPrice: _proposedPriceController.text));
+                                },
+                                child: Container(
+                                  height: 48,
+                                  width: 48,
+                                  margin: EdgeInsets.only(left: 12),
+                                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                  decoration: BoxDecoration(
+                                    color: mainColor,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: SvgPicture.asset(AppIcons.send),
                                 ),
-                                child: SvgPicture.asset(AppIcons.send),
-                              ),
-                            )
-                          ],
+                              )
+                            ],
+                          ),
                         ),
-                        SizedBox(height: 12),
-                        CommonButton(
-                          onTap: () {
-                            context.read<OrdersBloc>().add(SendApplicationEvent(
-                                orderId: widget.orderId, proposedPrice: state.orderDetail.order.price));
-                          },
-                          text: 'Asl narxga rozi bo\'lish',
-                        ),
-                        SizedBox(height: 9),
-                        Text(
-                          'Takliflarni har 5 daqiqada yuborish mumkin',
-                          style: context.textTheme.bodySmall!
-                              .copyWith(color: gray6, fontSize: 12, fontWeight: FontWeight.w400),
-                        )
+                        AnimatedCrossFade(
+                            firstChild: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CommonButton(
+                                  margin: EdgeInsets.only(top: 12),
+                                  onTap: () {
+                                    context.read<OrdersBloc>().add(SendApplicationEvent(
+                                        orderId: widget.orderId, proposedPrice: state.orderDetail.order.price));
+                                  },
+                                  text: 'Asl narxga rozi bo\'lish',
+                                ),
+                                SizedBox(height: 9),
+                                Text(
+                                  'Takliflarni har 5 daqiqada yuborish mumkin',
+                                  style: context.textTheme.bodySmall!
+                                      .copyWith(color: gray6, fontSize: 12, fontWeight: FontWeight.w400),
+                                )
+                              ],
+                            ),
+                            secondChild: SizedBox(),
+                            crossFadeState: MediaQuery.viewInsetsOf(context).bottom == 0
+                                ? CrossFadeState.showFirst
+                                : CrossFadeState.showSecond,
+                            duration: Duration(milliseconds: 200))
                       ],
                     )
                   : Row(

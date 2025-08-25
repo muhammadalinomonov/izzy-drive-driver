@@ -8,6 +8,11 @@ class ProfileState extends Equatable {
   final UserEntity user;
   final String status;
   final FormzSubmissionStatus updateCurrentLocationStatus;
+  final FormzSubmissionStatus getUserStatisticsStatus;
+  final List<StatisticEntity> statistics;
+  final String selectedFilter;
+  final String selectedPeriod;
+  final StatisticEntity selectedStatistic;
 
   const ProfileState({
     this.updateStatusStatus = FormzSubmissionStatus.initial,
@@ -16,6 +21,11 @@ class ProfileState extends Equatable {
     this.user = const UserEntity(),
     this.status = '',
     this.updateCurrentLocationStatus = FormzSubmissionStatus.initial,
+    this.getUserStatisticsStatus = FormzSubmissionStatus.initial,
+    this.statistics = const [],
+    this.selectedFilter = 'days',
+    this.selectedPeriod = '',
+    this.selectedStatistic = const StatisticEntity(),
   });
 
   ProfileState copyWith({
@@ -25,6 +35,11 @@ class ProfileState extends Equatable {
     UserEntity? user,
     String? status,
     FormzSubmissionStatus? updateCurrentLocationStatus,
+    FormzSubmissionStatus? getUserStatisticsStatus,
+    List<StatisticEntity>? statistics,
+    String? selectedFilter,
+    String? selectedPeriod,
+    StatisticEntity? selectedStatistic,
   }) {
     return ProfileState(
       updateStatusStatus: updateStatusStatus ?? this.updateStatusStatus,
@@ -33,6 +48,11 @@ class ProfileState extends Equatable {
       user: user ?? this.user,
       status: status ?? this.status,
       updateCurrentLocationStatus: updateCurrentLocationStatus ?? this.updateCurrentLocationStatus,
+      getUserStatisticsStatus: getUserStatisticsStatus ?? this.getUserStatisticsStatus,
+      statistics: statistics ?? this.statistics,
+      selectedFilter: selectedFilter ?? this.selectedFilter,
+      selectedPeriod: selectedPeriod ?? this.selectedPeriod,
+      selectedStatistic: selectedStatistic ?? this.selectedStatistic,
     );
   }
 
@@ -44,5 +64,10 @@ class ProfileState extends Equatable {
         user,
         status,
         updateCurrentLocationStatus,
+        getUserStatisticsStatus,
+        statistics,
+        selectedFilter,
+        selectedPeriod,
+        selectedStatistic,
       ];
 }

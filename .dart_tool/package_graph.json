@@ -18,6 +18,7 @@
         "equatable",
         "firebase_core",
         "firebase_messaging",
+        "fl_chart",
         "flutter",
         "flutter_bloc",
         "flutter_local_notifications",
@@ -143,6 +144,15 @@
         "test_api",
         "vector_math",
         "vm_service"
+      ]
+    },
+    {
+      "name": "fl_chart",
+      "version": "1.0.0",
+      "dependencies": [
+        "equatable",
+        "flutter",
+        "vector_math"
       ]
     },
     {

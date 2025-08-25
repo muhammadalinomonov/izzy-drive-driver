@@ -31,9 +31,9 @@ class OrdersRepositoryImpl extends OrdersRepository {
   }
 
   @override
-  Future<Either<Failure, GenericPagination<OrderEntity>>> getOrders({String? next}) async {
+  Future<Either<Failure, GenericPagination<OrderEntity>>> getOrders({String? next, bool? isSelected}) async {
     try {
-      final result = await dataSource.getOrders(next: next);
+      final result = await dataSource.getOrders(next: next, isSelected: isSelected);
       return Right(result);
     } on ServerException catch (e) {
       return Left(ServerFailure(errorMessage: e.errorMessage, statusCode: e.statusCode));

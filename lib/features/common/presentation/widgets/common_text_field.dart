@@ -68,11 +68,13 @@ class _CommonTextFieldState extends State<CommonTextField> {
           height: 48,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            color: widget.hasError
-                ? red
-                : _focusNode.hasFocus
-                    ? white
-                    : solitude,
+            border: Border.all(
+              color: widget.hasError
+                  ? red
+                  : _focusNode.hasFocus
+                      ? white
+                      : solitude,
+            ),
           ),
           child: TextField(
             obscureText: isPasswordVisible,
@@ -102,7 +104,7 @@ class _CommonTextFieldState extends State<CommonTextField> {
                               width: 24,
                               margin: EdgeInsets.only(right: 8),
                               child: SvgPicture.asset(
-                                AppIcons.eye,
+                                isPasswordVisible ? AppIcons.eye : AppIcons.eyeOff,
                                 width: 24,
                                 height: 24,
                               )),
@@ -123,9 +125,9 @@ class _CommonTextFieldState extends State<CommonTextField> {
               // fillColor: solitude,
               //
               // filled: true,
-              focusedBorder: OutlineInputBorder(
+              focusedBorder:widget.hasError?null: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: widget.hasError ? red : mainColor, width: 1),
+                borderSide: BorderSide(color:  mainColor, width: 1),
               ),
             ),
           ),

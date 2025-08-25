@@ -56,7 +56,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
   void _onGetOrdersEvent(GetOrdersEvent event, Emitter<OrdersState> emit) async {
     emit(state.copyWith(ordersStatus: FormzSubmissionStatus.inProgress));
 
-    final result = await _getOrdersUseCase(null);
+    final result = await _getOrdersUseCase((null, null));
 
     if (result.isRight) {
       emit(
@@ -73,7 +73,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
   }
 
   void _onGetMoreOrdersEvent(GetMoreOrdersEvent event, Emitter<OrdersState> emit) async {
-    final result = await _getOrdersUseCase(state.nextOrders);
+    final result = await _getOrdersUseCase((state.nextOrders, null));
 
     if (result.isRight) {
       emit(
@@ -180,7 +180,8 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
 
   void _onChangeOrderStatusEvent(ChangeOrderStatusEvent event, Emitter<OrdersState> emit) async {
     emit(state.copyWith(changeOrderStatus: FormzSubmissionStatus.inProgress));
-    final result = await _changeOrderStatusUseCase.call((orderId: event.orderId, status: event.status, code: event.code));
+    final result =
+        await _changeOrderStatusUseCase.call((orderId: event.orderId, status: event.status, code: event.code));
     if (result.isRight) {
       emit(state.copyWith(changeOrderStatus: FormzSubmissionStatus.success, orderStatus: event.status));
       if (event.status == 'cancelled' || event.status == 'completed') {

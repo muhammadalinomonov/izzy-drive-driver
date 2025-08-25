@@ -31,7 +31,7 @@ class ProfileItem extends StatelessWidget {
             SizedBox(width: 18),
             Expanded(
               child: Text(
-                'Mening ma’lumotlarim',
+                title,
                 style: context.textTheme.bodyMedium!.copyWith(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,

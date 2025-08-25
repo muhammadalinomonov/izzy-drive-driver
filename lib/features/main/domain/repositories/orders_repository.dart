@@ -9,7 +9,7 @@ import 'package:mechanic/features/main/domain/entities/order_with_date_entity.da
 import 'package:mechanic/features/main/domain/entities/selected_order_entity.dart';
 
 abstract class OrdersRepository {
-  Future<Either<Failure, GenericPagination<OrderEntity>>> getOrders({String? next});
+  Future<Either<Failure, GenericPagination<OrderEntity>>> getOrders({String? next, bool? isSelected});
 
   Future<Either<Failure, BaseModel<OrderDetailEntity>>> getOrderDetail(int orderId);
 

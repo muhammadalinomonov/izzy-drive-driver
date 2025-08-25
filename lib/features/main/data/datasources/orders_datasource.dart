@@ -9,7 +9,7 @@ import 'package:mechanic/features/main/data/models/orders_with_date_model.dart';
 import 'package:mechanic/features/main/data/models/selected_order_model.dart';
 
 abstract class OrdersDataSource {
-  Future<GenericPagination<OrderModel>> getOrders({String? next});
+  Future<GenericPagination<OrderModel>> getOrders({String? next, bool? isSelected});
 
   Future<BaseModel<OrderDetailModel>> getOrderDetail(int orderId);
 
@@ -45,11 +45,15 @@ class OrdersDataSourceImpl implements OrdersDataSource {
   OrdersDataSourceImpl({required this.dio});
 
   @override
-  Future<GenericPagination<OrderModel>> getOrders({String? next}) async {
+  Future<GenericPagination<OrderModel>> getOrders({String? next, bool? isSelected}) async {
     try {
-      final response = await dio.get(next ?? 'mechanics/get-orders/', queryParameters: {
-        'page_size': 50,
-      });
+      final response = await dio.get(
+        next ?? 'mechanics/get-orders/',
+        queryParameters: {
+          if (next == null) 'page_size': 10,
+          if (isSelected != null && next == null) 'is_selected': isSelected,
+        },
+      );
       if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
         return GenericPagination<OrderModel>.fromJson(
           response.data,

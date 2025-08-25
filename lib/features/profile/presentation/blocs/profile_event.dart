@@ -21,3 +21,22 @@ class _UpdateCurrentLocationEvent extends ProfileEvent {
 class _ListenUserLocationEvent extends ProfileEvent {}
 
 class _CancelListenUserLocationEvent extends ProfileEvent {}
+
+class GetUserStatisticsEvent extends ProfileEvent {
+  final String filter;
+  final String period;
+
+  GetUserStatisticsEvent({required this.filter, required this.period});
+}
+
+class SelectStatisticFilterEvent extends ProfileEvent {
+  final String filter;
+
+  SelectStatisticFilterEvent({required this.filter});
+}
+
+class SelectStatistic extends ProfileEvent {
+  final StatisticEntity statistic;
+
+  SelectStatistic({required this.statistic});
+}

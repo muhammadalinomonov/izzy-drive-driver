@@ -25,6 +25,7 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   late TextEditingController emailController;
   late TextEditingController passwordController;
+  bool hasError = false;
 
   @override
   void initState() {
@@ -41,18 +42,30 @@ class _AuthScreenState extends State<AuthScreen> {
     return Scaffold(
       backgroundColor: mainColor,
       body: KeyboardDismisser(
-        child: BlocBuilder<AuthBloc, AuthState>(
+        child: BlocConsumer<AuthBloc, AuthState>(
+          listenWhen: (previous, current) => previous.loginStatus != current.loginStatus,
+          listener: (context, state) {
+            if (state.loginStatus.isSuccess) {
+              Navigator.of(context).pop(true);
+            } else if (state.loginStatus.isFailure) {
+              context.showPopUp(status: PopUpStatus.error, message: 'Login yoki parolda xatolik bor');
+              setState(() {
+                hasError = true;
+              });
+            }
+          },
           builder: (context, state) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(height: MediaQuery.paddingOf(context).top + 12),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 40),
-                  child: Image.asset(AppImages.handHolding),
-                ),
-                Expanded(
-                  child: Container(
+            return SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(height: MediaQuery.paddingOf(context).top + 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: Image.asset(AppImages.handHolding),
+                  ),
+                  Container(
+                    height: context.sizeOf.height - 145 - context.padding.top,
                     padding: EdgeInsets.only(
                       top: 24,
                       left: 12,
@@ -75,13 +88,9 @@ class _AuthScreenState extends State<AuthScreen> {
                           style: context.textTheme.displayLarge,
                         ),
                         SizedBox(height: 24),
-                        SocialAuthItem(
-                            icon: AppIcons.google,
-                            title: 'Google orqali davom ettirish'),
+                        SocialAuthItem(icon: AppIcons.google, title: 'Google orqali davom ettirish'),
                         SizedBox(height: 18),
-                        SocialAuthItem(
-                            icon: AppIcons.apple,
-                            title: 'Apple orqali davom ettirish'),
+                        SocialAuthItem(icon: AppIcons.apple, title: 'Apple orqali davom ettirish'),
                         SizedBox(height: 18),
                         Row(
                           children: [
@@ -100,19 +109,30 @@ class _AuthScreenState extends State<AuthScreen> {
                         CommonTextField(
                           controller: emailController,
                           title: 'E-mail',
+                          hasError: hasError,
                           hint: 'E-mail manzilingizni kiriting',
-                          onChanged: (value) {},
+                          onChanged: (value) {
+                            setState(() {
+                              hasError = false;
+                            });
+                          },
                         ),
                         SizedBox(height: 24),
                         CommonTextField(
                           controller: passwordController,
                           title: 'Password',
+                          hasError: hasError,
                           hint: 'Passwordingizni kiriting',
                           isPassword: true,
-                          onChanged: (value) {},
+                          onChanged: (value) {
+                            setState(() {
+                              hasError = false;
+                            });
+                          },
                         ),
                         SizedBox(height: 24),
                         CommonButton(
+                          margin: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
                           text: 'Tizimga kirish',
                           onTap: () {
                             context.read<AuthBloc>().add(LoginUser(
@@ -134,14 +154,12 @@ class _AuthScreenState extends State<AuthScreen> {
                               children: [
                                 TextSpan(
                                   text: 'Ro\'yxatdan o\'tish',
-                                  style: context.textTheme.titleSmall!
-                                      .copyWith(fontWeight: FontWeight.w600),
+                                  style: context.textTheme.titleSmall!.copyWith(fontWeight: FontWeight.w600),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () {
                                       Navigator.of(context).push(
                                         CupertinoPageRoute(
-                                          builder: (context) =>
-                                              const RegisterScreen(),
+                                          builder: (context) => const RegisterScreen(),
                                         ),
                                       );
                                     },
@@ -152,9 +170,9 @@ class _AuthScreenState extends State<AuthScreen> {
                         )
                       ],
                     ),
-                  ),
-                )
-              ],
+                  )
+                ],
+              ),
             );
           },
         ),

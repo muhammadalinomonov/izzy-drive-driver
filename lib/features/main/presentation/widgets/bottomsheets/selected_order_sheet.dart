@@ -180,7 +180,11 @@ class _SelectedOrderSheetState extends State<SelectedOrderSheet> {
                           ),
                           child: ClipRRect(
                             borderRadius:  BorderRadius.circular(12),
-                            child: OrderMapWidget(),
+                            child: OrderMapWidget(
+                              fromPoint: state.selectedOrder.map.startPoint.toPoint(),
+                              toPoint: state.selectedOrder.map.endPoint.toPoint(),
+                              routePoints: state.selectedOrder.map.route.map((e) => [e.lng, e.lat]).toList(),
+                            ),
                           ),
                         )
                       ],

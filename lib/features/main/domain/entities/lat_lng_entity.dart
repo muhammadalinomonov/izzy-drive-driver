@@ -1,5 +1,8 @@
+
+
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:mechanic/features/main/data/models/lat_lng_model.dart';
 
 class LatLngEntity extends Equatable {
@@ -13,6 +16,8 @@ class LatLngEntity extends Equatable {
 
   @override
   List<Object?> get props => [lat, lng];
+
+  Point toPoint() => Point(coordinates: Position(lng, lat));
 }
 
 class LatLngEntityConverter implements JsonConverter<LatLngEntity, Map<String, dynamic>> {

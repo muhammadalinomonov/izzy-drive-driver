@@ -1,10 +1,7 @@
-import 'dart:ui' as ui;
+import 'dart:developer';
 
-import 'package:mechanic/assets/constants/icons.dart';
-import 'package:mechanic/assets/constants/images.dart';
-import 'package:mechanic/core/utils/enums.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/services.dart';
+
 // import 'package:geolocator/geolocator.dart';
 // import 'package:yandex_mapkit/yandex_mapkit.dart';
 
@@ -52,11 +49,11 @@ class MyFunctions {
       return cost;
     }
     if (cost is num) {
-      int rounded =withRounding? ((cost / 1000).round() * 1000) : cost.round();
+      int rounded = withRounding ? ((cost / 1000).round() * 1000) : cost.round();
       return rounded.toString().replaceAllMapped(
-        RegExp(r'(?<=\d)(?=(\d{3})+$)'),
+            RegExp(r'(?<=\d)(?=(\d{3})+$)'),
             (match) => ' ',
-      );
+          );
     }
     return cost.toString();
   }
@@ -110,91 +107,93 @@ class MyFunctions {
   }
 
   static String formatDate(String dateString) {
-    final date = DateTime.parse(dateString).toLocal();
-    final now = DateTime.now();
+    try {
+      final date = DateTime.parse(dateString).toLocal();
+      final now = DateTime.now();
 
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-    final dateOnly = DateTime(date.year, date.month, date.day);
+      final today = DateTime(now.year, now.month, now.day);
+      final yesterday = today.subtract(const Duration(days: 1));
+      final dateOnly = DateTime(date.year, date.month, date.day);
 
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
+      String twoDigits(int n) => n.toString().padLeft(2, '0');
 
-    final hhmm = "${twoDigits(date.hour)}:${twoDigits(date.minute)}";
-    final full = "${twoDigits(date.day)}.${twoDigits(date.month)}.${date.year}, $hhmm";
+      final hhmm = "${twoDigits(date.hour)}:${twoDigits(date.minute)}";
+      final full = "${twoDigits(date.day)}.${twoDigits(date.month)}.${date.year}, $hhmm";
 
-    if (dateOnly == today) {
-      return "Bugun, $hhmm";
-    } else if (dateOnly == yesterday) {
-      return "Kecha, $hhmm";
-    } else {
-      return full;
+      if (dateOnly == today) {
+        return "Bugun, $hhmm";
+      } else if (dateOnly == yesterday) {
+        return "Kecha, $hhmm";
+      } else {
+        return full;
+      }
+    } catch (e) {
+      log('Error formatting date: $e');
+      return dateString;
     }
   }
 
-
-
 // static List<MapObject> getCarMapObjects(List<CarEntity> cars) {
-  //   return cars.map((car) {
-  //     if (car.isMyTaxi) {
-  //       return ClusterizedPlacemarkCollection(
-  //         mapId: const MapObjectId('cars-taxi'),
-  //         placemarks: [
-  //           PlacemarkMapObject(
-  //             opacity: 1,
-  //             mapId: const MapObjectId('car-taxi'),
-  //             direction: car.angle.toDouble() + 55,
-  //             // direction: r.location.angle.toDouble(),
-  //             point: Point(
-  //               latitude: (car.latitude is String) ? double.parse(car.latitude.toString()) : car.latitude,
-  //               longitude: (car.longitude is String) ? double.parse(car.longitude.toString()) : car.longitude,
-  //             ),
-  //             // Example: Tashkent coordinates
-  //             icon: PlacemarkIcon.single(
-  //               PlacemarkIconStyle(
-  //                 image: BitmapDescriptor.fromAssetImage(AppImages.taxiMarker),
-  //                 scale: 1.15,
-  //                 rotationType: RotationType.rotate,
-  //               ),
-  //             ),
-  //           )
-  //         ],
-  //         radius: 50,
-  //         minZoom: 0,
-  //       );
-  //     }
-  //     return ClusterizedPlacemarkCollection(
-  //       mapId: MapObjectId('cars ${car.id}'),
-  //       placemarks: [
-  //         PlacemarkMapObject(
-  //           opacity: 1,
-  //           direction: car.angle + 55,
-  //           mapId: MapObjectId('car${car.id}'),
-  //           point: Point(
-  //             latitude: car.latitude,
-  //             longitude: car.longitude,
-  //           ),
-  //           // Example: Tashkent coordinates
-  //           icon: PlacemarkIcon.single(
-  //             PlacemarkIconStyle(
-  //               image: BitmapDescriptor.fromAssetImage(AppImages.carMarker),
-  //               scale: 1.0,
-  //               rotationType: RotationType.rotate,
-  //             ),
-  //           ),
-  //         )
-  //       ],
-  //       radius: 50,
-  //       minZoom: 0,
-  //     );
-  //   }).toList();
-  // }
+//   return cars.map((car) {
+//     if (car.isMyTaxi) {
+//       return ClusterizedPlacemarkCollection(
+//         mapId: const MapObjectId('cars-taxi'),
+//         placemarks: [
+//           PlacemarkMapObject(
+//             opacity: 1,
+//             mapId: const MapObjectId('car-taxi'),
+//             direction: car.angle.toDouble() + 55,
+//             // direction: r.location.angle.toDouble(),
+//             point: Point(
+//               latitude: (car.latitude is String) ? double.parse(car.latitude.toString()) : car.latitude,
+//               longitude: (car.longitude is String) ? double.parse(car.longitude.toString()) : car.longitude,
+//             ),
+//             // Example: Tashkent coordinates
+//             icon: PlacemarkIcon.single(
+//               PlacemarkIconStyle(
+//                 image: BitmapDescriptor.fromAssetImage(AppImages.taxiMarker),
+//                 scale: 1.15,
+//                 rotationType: RotationType.rotate,
+//               ),
+//             ),
+//           )
+//         ],
+//         radius: 50,
+//         minZoom: 0,
+//       );
+//     }
+//     return ClusterizedPlacemarkCollection(
+//       mapId: MapObjectId('cars ${car.id}'),
+//       placemarks: [
+//         PlacemarkMapObject(
+//           opacity: 1,
+//           direction: car.angle + 55,
+//           mapId: MapObjectId('car${car.id}'),
+//           point: Point(
+//             latitude: car.latitude,
+//             longitude: car.longitude,
+//           ),
+//           // Example: Tashkent coordinates
+//           icon: PlacemarkIcon.single(
+//             PlacemarkIconStyle(
+//               image: BitmapDescriptor.fromAssetImage(AppImages.carMarker),
+//               scale: 1.0,
+//               rotationType: RotationType.rotate,
+//             ),
+//           ),
+//         )
+//       ],
+//       radius: 50,
+//       minZoom: 0,
+//     );
+//   }).toList();
+// }
 
-  // static String getCardIcon(String cardNumber){
-  //   if(cardNumber.startsWith('9860') || cardNumber.startsWith('4067')){
-  //     return AppImages.humo;
-  //   }else{
-  //     return AppImages.uzcard;
-  //   }
-  // }
-
+// static String getCardIcon(String cardNumber){
+//   if(cardNumber.startsWith('9860') || cardNumber.startsWith('4067')){
+//     return AppImages.humo;
+//   }else{
+//     return AppImages.uzcard;
+//   }
+// }
 }

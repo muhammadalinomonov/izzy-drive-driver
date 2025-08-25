@@ -3,7 +3,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mechanic/assets/colors/colors.dart';
 import 'package:mechanic/assets/constants/icons.dart';
 import 'package:mechanic/core/utils/context_extensions.dart';
+import 'package:mechanic/features/common/presentation/widgets/common_image.dart';
 import 'package:mechanic/features/common/presentation/widgets/common_scalel_animation.dart';
+
+import '../screens/photo_view_screen.dart';
 
 class OrderPhotosWidget extends StatefulWidget {
   const OrderPhotosWidget({super.key, required this.photos});
@@ -62,14 +65,31 @@ class _OrderPhotosWidgetState extends State<OrderPhotosWidget> {
               child: Wrap(
                 children: [
                   for (int i = 0; i < widget.photos.length; i++)
-                    Container(
-                      margin: EdgeInsets.all(4),
-                      width: 85,
-                      height: 79,
-                      decoration: BoxDecoration(
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => PhotoViewScreen(
+                                  image: widget.photos[i],
+                                  tag: 'tag=${widget.photos[i]}',
+                                )));
+                      },
+                      child: Container(
+                        margin: EdgeInsets.all(4),
+                        width: 85,
+                        height: 79,
+                        decoration: BoxDecoration(
                           color: white,
                           borderRadius: BorderRadius.circular(12),
-                          image: DecorationImage(image: NetworkImage(widget.photos[i]), fit: BoxFit.cover)),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Hero(
+                            tag: 'tag=${widget.photos[i]}',
+                            child: CommonImage(imageUrl: widget.photos[i], fit: BoxFit.cover),
+                          ),
+                        ),
+                      ),
                     )
                 ],
               ),
