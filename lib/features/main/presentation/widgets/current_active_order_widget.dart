@@ -213,7 +213,7 @@ class CurrentActiveOrderWidget extends StatelessWidget {
                     SizedBox(height: 16),
                     ...List.generate(
                       state.currentOrder.suborders.length,
-                          (index) {
+                      (index) {
                         final subOrder = state.currentOrder.suborders[index];
                         return Padding(
                           padding: EdgeInsets.only(bottom: index == state.currentOrder.suborders.length - 1 ? 0 : 12),
@@ -238,11 +238,13 @@ class CurrentActiveOrderWidget extends StatelessWidget {
                                 onTap: () {
                                   final subOrderStatus = subOrder.status;
                                   if (subOrderStatus == 'accepted') {
-                                    context.showPopUp(status: PopUpStatus.success, message: 'Bu buyurtma qabul qilingan.');
+                                    context.showPopUp(
+                                        status: PopUpStatus.success, message: 'Bu buyurtma qabul qilingan.');
                                   } else if (subOrderStatus == 'cancelled') {
                                     context.showPopUp(status: PopUpStatus.error, message: 'Haydovchi bekor qildi.');
                                   } else {
-                                    context.showPopUp(status: PopUpStatus.warning, message: 'Haydovchi tasdiqlashi kutilmoqda...');
+                                    context.showPopUp(
+                                        status: PopUpStatus.warning, message: 'Haydovchi tasdiqlashi kutilmoqda...');
                                   }
                                 },
                                 child: Container(
@@ -251,8 +253,11 @@ class CurrentActiveOrderWidget extends StatelessWidget {
                                   width: 18,
                                   alignment: Alignment.center,
                                   decoration: BoxDecoration(
-                                    color: subOrder.status == 'accepted' ? green :
-                                    subOrder.status == 'cancelled' ? Colors.red : westSide ,
+                                    color: subOrder.status == 'accepted'
+                                        ? green
+                                        : subOrder.status == 'cancelled'
+                                            ? Colors.red
+                                            : westSide,
                                     shape: BoxShape.circle,
                                   ),
                                   child: Text(
@@ -277,26 +282,27 @@ class CurrentActiveOrderWidget extends StatelessWidget {
                         );
                       },
                     ),
-                    if(state.currentOrder.status != 'accepted')CommonButton(
-                      margin: EdgeInsets.symmetric(vertical: 16),
-                      border: Border.all(color: aliceBlue),
-                      color: white,
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          barrierDismissible: true,
-                          builder: (BuildContext context) {
-                            return AddNewServiceDialog();
-                          },
-                        );
-                      },
-                      borderRadius: 12,
-                      child: Text(
-                        '+ Xizmat qo’shish',
-                        style: context.textTheme.bodyMedium
-                            ?.copyWith(fontWeight: FontWeight.w500, fontSize: 14, color: mainColor),
+                    if (state.currentOrder.status != 'accepted')
+                      CommonButton(
+                        margin: EdgeInsets.symmetric(vertical: 16),
+                        border: Border.all(color: aliceBlue),
+                        color: white,
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            barrierDismissible: true,
+                            builder: (BuildContext context) {
+                              return AddNewServiceDialog();
+                            },
+                          );
+                        },
+                        borderRadius: 12,
+                        child: Text(
+                          '+ Xizmat qo’shish',
+                          style: context.textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w500, fontSize: 14, color: mainColor),
+                        ),
                       ),
-                    ),
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 11, vertical: 5),
                       decoration: BoxDecoration(
@@ -328,10 +334,7 @@ class CurrentActiveOrderWidget extends StatelessWidget {
           return Center(
             child: Text(
               'Hozirda faol buyurtma mavjud emas',
-              style: Theme
-                  .of(context)
-                  .textTheme
-                  .bodyLarge,
+              style: Theme.of(context).textTheme.bodyLarge,
             ),
           );
         }

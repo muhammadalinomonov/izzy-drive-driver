@@ -30,5 +30,6 @@ class AppIcons{
   static const String contact = 'assets/icons/contact.svg';
   static const String starOutline = 'assets/icons/star_outline.svg';
   static const String globe = 'assets/icons/globe.svg';
+  static const String lightning = 'assets/icons/lightning.svg';
 
 }

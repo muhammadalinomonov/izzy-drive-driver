@@ -3,6 +3,10 @@ part of 'orders_bloc.dart';
 @immutable
 class OrdersEvent {}
 
+
+class GetSelectedOrdersEvent extends OrdersEvent {}
+
+
 class GetOrdersEvent extends OrdersEvent {
   final String? status;
   final String? mechanicId;

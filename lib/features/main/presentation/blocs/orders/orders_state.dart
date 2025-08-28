@@ -17,6 +17,8 @@ class OrdersState extends Equatable {
   final int orderIdAsSelectedMechanic;
   final FormzSubmissionStatus selectedOrderStatus;
   final SelectedOrderEntity selectedOrder;
+  final FormzSubmissionStatus getSelectedOrdersStatus;
+  final List<OrderEntity> selectedOrders;
 
   const OrdersState({
     this.orders = const [],
@@ -34,6 +36,8 @@ class OrdersState extends Equatable {
     this.orderIdAsSelectedMechanic = -1,
     this.selectedOrderStatus = FormzSubmissionStatus.initial,
     this.selectedOrder = const SelectedOrderEntity(),
+    this.getSelectedOrdersStatus = FormzSubmissionStatus.initial,
+    this.selectedOrders = const [],
   });
 
   OrdersState copyWith({
@@ -52,6 +56,8 @@ class OrdersState extends Equatable {
     int? orderIdAsSelectedMechanic,
     FormzSubmissionStatus? selectedOrderStatus,
     SelectedOrderEntity? selectedOrder,
+    FormzSubmissionStatus? getSelectedOrdersStatus,
+    List<OrderEntity>? selectedOrders,
     S
   }) {
     return OrdersState(
@@ -70,6 +76,8 @@ class OrdersState extends Equatable {
       orderIdAsSelectedMechanic: orderIdAsSelectedMechanic ?? this.orderIdAsSelectedMechanic,
       selectedOrderStatus: selectedOrderStatus ?? this.selectedOrderStatus,
       selectedOrder: selectedOrder ?? this.selectedOrder,
+      getSelectedOrdersStatus: getSelectedOrdersStatus ?? this.getSelectedOrdersStatus,
+      selectedOrders: selectedOrders ?? this.selectedOrders,
     );
   }
 
@@ -90,5 +98,7 @@ class OrdersState extends Equatable {
         orderIdAsSelectedMechanic,
         selectedOrderStatus,
         selectedOrder,
+        getSelectedOrdersStatus,
+        selectedOrders,
       ];
 }

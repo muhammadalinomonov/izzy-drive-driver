@@ -91,22 +91,38 @@ class _OrderMapWidgetState extends State<OrderMapWidget> {
     );
   }
 
-  void _fitMapToRoute() {
-    double minLat = routeCoordinates.map((e) => e[1]).reduce((a, b) => a < b ? a : b);
-    double maxLat = routeCoordinates.map((e) => e[1]).reduce((a, b) => a > b ? a : b);
-    double minLng = routeCoordinates.map((e) => e[0]).reduce((a, b) => a < b ? a : b);
-    double maxLng = routeCoordinates.map((e) => e[0]).reduce((a, b) => a > b ? a : b);
+  void _fitMapToRoute() async{
+    // double minLat = routeCoordinates.map((e) => e[1]).reduce((a, b) => a < b ? a : b);
+    // double maxLat = routeCoordinates.map((e) => e[1]).reduce((a, b) => a > b ? a : b);
+    // double minLng = routeCoordinates.map((e) => e[0]).reduce((a, b) => a < b ? a : b);
+    // double maxLng = routeCoordinates.map((e) => e[0]).reduce((a, b) => a > b ? a : b);
+    //
+    // final centerLat = (minLat + maxLat) / 2;
+    // final centerLng = (minLng + maxLng) / 2;
 
-    final centerLat = (minLat + maxLat) / 2;
-    final centerLng = (minLng + maxLng) / 2;
 
-    mapboxMap?.setCamera(
-      CameraOptions(
-        center: Point(coordinates: Position(centerLng, centerLat)),
-        zoom: 4.0,
-        padding: MbxEdgeInsets(top: 50, left: 50, right: 50, bottom: 50),
-      ),
+    final padding = EdgeInsets.all(50.0);
+
+    // Camera bounds o'rnatish
+    final bounds = CoordinateBounds(
+      southwest: pointA,
+      northeast: pointB, infiniteBounds: false,
     );
+
+    final cameraOptions =  CameraBoundsOptions(
+        bounds: bounds,
+        maxZoom: 14.0, // maksimal zoom
+        minZoom: 8.0,  // minimal zoom
+
+    );
+    mapboxMap?.setBounds(cameraOptions);
+    // mapboxMap?.setCamera(
+    //   CameraOptions(
+    //     center: Point(coordinates: Position(centerLng, centerLat)),
+    //     zoom: 4.0,
+    //     padding: MbxEdgeInsets(top: 50, left: 50, right: 50, bottom: 50),
+    //   ),
+    // );
   }
 
   @override

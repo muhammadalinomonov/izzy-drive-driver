@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:formz/formz.dart';
 import 'package:mechanic/assets/constants/images.dart';
 import 'package:mechanic/core/utils/my_functions.dart';
 import 'package:mechanic/features/common/presentation/widgets/empty_widget.dart';
@@ -28,9 +29,49 @@ class PendingOrdersWidget extends StatelessWidget {
         );
       },
       builder: (context, state) {
+        if(state.getSelectedOrdersStatus.isInProgress){
+          return Center(child: CircularProgressIndicator.adaptive());
+        }
+        if(state.getSelectedOrdersStatus.isSuccess && state.selectedOrders.isNotEmpty){
+          return  RefreshIndicator.adaptive(
+            onRefresh: () async {
+              context.read<OrdersBloc>().add(GetSelectedOrdersEvent());
+            },
+            child: ListView.separated(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              separatorBuilder: (context, index) => SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final order = state.selectedOrders[index];
+                return GestureDetector(
+                  onTap: () {
+                    showModalBottomSheet(
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      context: context,
+                      builder: (context) {
+                        return SelectedOrderSheet(id: order.id);
+                      },
+                    );
+                  },
+                  child: OrderItem(
+                    title: order.orderTitle,
+                    distance: order.distanceKm.toString(),
+                    price: MyFunctions.formatCost(order.price),
+                    createdAt: order.createdAt,
+                    isYouSentRequest: order.proposal.id != -1,
+                    yourProposalPrice: order.proposal.price.toString(),
+                    yourProposalPricePercent: order.proposal.changePercent,
+                  ),
+                );
+              },
+              itemCount: state.selectedOrders.length,
+
+            ),
+          );
+        }
         return Paginator(
           onRefresh: () async {
-            context.read<OrdersBloc>().add(GetOrdersEvent());
+            context.read<OrdersBloc>().add(GetSelectedOrdersEvent());
           },
           padding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
           separator: (context, index) => SizedBox(height: 12),

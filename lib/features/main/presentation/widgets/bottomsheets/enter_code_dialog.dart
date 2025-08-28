@@ -9,6 +9,8 @@ import 'package:mechanic/assets/constants/icons.dart';
 import 'package:mechanic/core/utils/context_extensions.dart';
 import 'package:mechanic/features/common/presentation/widgets/common_button.dart';
 import 'package:mechanic/features/main/presentation/blocs/orders/orders_bloc.dart';
+import 'package:mechanic/features/profile/presentation/blocs/history/orders_history_bloc.dart';
+import 'package:mechanic/features/profile/presentation/blocs/profile_bloc.dart';
 import 'package:mechanic/features/profile/presentation/pages/order_history_single_screen.dart';
 
 class EnterOrderDialog extends StatefulWidget {
@@ -31,14 +33,28 @@ class _EnterOrderDialogState extends State<EnterOrderDialog> {
         listenWhen: (previous, current) => previous.changeOrderStatus != current.changeOrderStatus,
         listener: (context, state) {
           if (state.changeOrderStatus.isSuccess) {
-            Navigator.of(context).push(CupertinoPageRoute(builder: (context) => OrderHistorySingleScreen(orderId: widget.orderId, fromHistory: false)));
+            context.read<ProfileBloc>().add(GetProfileEvent());
+            context.read<OrdersBloc>().add(GetSelectedOrdersEvent());
+            final bloc = OrdersHistoryBloc();
+            Navigator.pop(context);
+            if(Navigator.canPop(context)){
+              Navigator.pop(context);
+            }
+            Navigator.of(context).push(
+              CupertinoPageRoute(
+                builder: (context) => BlocProvider.value(
+                  value: bloc,
+                  child: OrderHistorySingleScreen(orderId: widget.orderId, fromHistory: false),
+                ),
+              ),
+            );
           } else if (state.changeOrderStatus.isFailure) {
             context.showPopUp(status: PopUpStatus.error, message: 'Xizmatni jo\'natishda xatolik yuz berdi.');
           }
         },
         builder: (context, state) {
           return Container(
-            width: MediaQuery.of(context).size.width * 0.89,
+            width: MediaQuery.of(context).size.width,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
@@ -89,7 +105,7 @@ class _EnterOrderDialogState extends State<EnterOrderDialog> {
                 ),
                 // Content
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -113,9 +129,9 @@ class _EnterOrderDialogState extends State<EnterOrderDialog> {
                       SizedBox(
                         width: MediaQuery.sizeOf(context).width,
                         child: OtpTextField(
-                          fieldWidth: 42,
+                          fieldWidth: 40,
                           fieldHeight: 42,
-                          numberOfFields: 5,
+                          numberOfFields: 6,
                           borderColor: mainColor,
                           focusedBorderColor: mainColor,
                           filled: true,
@@ -132,7 +148,9 @@ class _EnterOrderDialogState extends State<EnterOrderDialog> {
                           onCodeChanged: (String code) {
                             this.code = code;
                           },
-                          onSubmit: (String verificationCode) {}, // end onSubmit
+                          onSubmit: (String verificationCode) {
+                            this.code = verificationCode;
+                          }, // end onSubmit
                         ),
                       ),
                       SizedBox(height: 24),

@@ -51,6 +51,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     on<GetSelectedOrderEvent>(_onGetSelectedOrderEvent);
     on<ChangeOrderStatusEvent>(_onChangeOrderStatusEvent);
     on<AddNewServiceEvent>(_onAddNewServiceEvent);
+    on<GetSelectedOrdersEvent>(_onGetSelectedOrdersEvent);
   }
 
   void _onGetOrdersEvent(GetOrdersEvent event, Emitter<OrdersState> emit) async {
@@ -108,6 +109,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       (orderId: event.orderId, comment: event.comment, price: event.proposedPrice),
     );
     if (result.isRight) {
+      add(GetSelectedOrdersEvent());
       emit(state.copyWith(sendApplicationStatus: FormzSubmissionStatus.success));
     } else {
       emit(state.copyWith(sendApplicationStatus: FormzSubmissionStatus.failure));
@@ -185,11 +187,29 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     if (result.isRight) {
       emit(state.copyWith(changeOrderStatus: FormzSubmissionStatus.success, orderStatus: event.status));
       if (event.status == 'cancelled' || event.status == 'completed') {
-        add(GetOrdersEvent());
+
+        add(GetSelectedOrdersEvent());
       }
       event.onSuccess?.call();
     } else {
       emit(state.copyWith(changeOrderStatus: FormzSubmissionStatus.failure));
+    }
+  }
+
+  void _onGetSelectedOrdersEvent(GetSelectedOrdersEvent event, Emitter<OrdersState> emit) async {
+    emit(state.copyWith(getSelectedOrdersStatus: FormzSubmissionStatus.inProgress));
+    final result = await _getOrdersUseCase((null, true));
+    if (result.isRight) {
+      emit(
+        state.copyWith(
+          getSelectedOrdersStatus: FormzSubmissionStatus.success,
+          selectedOrders: result.right.data,
+          nextOrders: result.right.next,
+          hasMoreOrders: result.right.next != null,
+        ),
+      );
+    } else {
+      emit(state.copyWith(getSelectedOrdersStatus: FormzSubmissionStatus.failure));
     }
   }
 
@@ -208,7 +228,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     } finally {
       print("WebSocket Disconnected");
       _isConnected = false;
-      add(ConnectToWebSocketEvent());
+      // add(ConnectToWebSocketEvent());
     }
   }
 

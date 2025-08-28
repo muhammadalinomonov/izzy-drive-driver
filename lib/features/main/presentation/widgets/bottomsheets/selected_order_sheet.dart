@@ -36,7 +36,7 @@ class _SelectedOrderSheetState extends State<SelectedOrderSheet> {
   Widget build(BuildContext context) {
     return Container(
       constraints: BoxConstraints(
-        maxHeight: context.sizeOf.height * 0.85,
+        maxHeight: context.sizeOf.height * 0.87,
       ),
       decoration: BoxDecoration(color: solitude, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       child: BlocListener<OrdersBloc, OrdersState>(
@@ -47,7 +47,7 @@ class _SelectedOrderSheetState extends State<SelectedOrderSheet> {
             context.read<OrdersBloc>().add(GetCurrentOrderEvent());
             Navigator.pop(context);
           } else if (state.changeOrderStatus.isSuccess) {
-            context.read<OrdersBloc>().add(GetOrdersEvent());
+            context.read<OrdersBloc>().add(GetSelectedOrdersEvent());
             Navigator.pop(context);
           }
         },
@@ -160,7 +160,7 @@ class _SelectedOrderSheetState extends State<SelectedOrderSheet> {
                                   ),
                                   SizedBox(height: 4),
                                   Text(
-                                    '8 km uzoqlikda',
+                                    '${state.selectedOrder.map.distanceKm} km uzoqlikda',
                                     style: context.textTheme.bodySmall!.copyWith(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w400,

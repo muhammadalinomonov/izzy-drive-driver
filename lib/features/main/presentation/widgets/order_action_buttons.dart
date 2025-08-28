@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -62,10 +64,24 @@ class OrderActionButtons extends StatelessWidget {
                         GestureDetector(
                           behavior: HitTestBehavior.opaque,
                           onTap: () async {
-                            final Uri uri = Uri.parse(
-                                "geo:${currentOrder.currentAddress.latitude},${currentOrder.currentAddress.longitude}?q=${currentOrder.currentAddress.latitude},${currentOrder.currentAddress.longitude}");
+                            Uri uri;
+                            if (Platform.isAndroid) {
+                              uri = Uri.parse(
+                                "geo:${currentOrder.currentAddress.latitude},${currentOrder.currentAddress.longitude}?q=${currentOrder.currentAddress.latitude},${currentOrder.currentAddress.longitude}(Manzil)",
+                              );
+                            } else if (Platform.isIOS) {
+                              uri = Uri.parse(
+                                "http://maps.apple.com/?ll=${currentOrder.currentAddress.latitude},${currentOrder.currentAddress.longitude}",
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Platforma qo‘llab-quvvatlanmaydi')),
+                              );
+                              return;
+                            }
+
                             if (await canLaunchUrl(uri)) {
-                              launchUrl(uri);
+                              await launchUrl(uri, mode: LaunchMode.externalApplication);
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text('Xarita ilovasi ochilmadi')),
@@ -76,7 +92,7 @@ class OrderActionButtons extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: Text(
-                                  '3517 W. Gray St. Utica, Pennsylvania',
+                            currentOrder.currentAddress.address,
                                   style: context.textTheme.bodyMedium!.copyWith(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -122,6 +138,15 @@ class OrderActionButtons extends StatelessWidget {
                           ),
                         ),
                         onSwipe: () {
+                          if(currentOrder.status == 'mechanic_done'){
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return FinishOrderDialog(orderId: currentOrder.id);
+                              },
+                            );
+                            return;
+                          }
                           ///todo
                           final nextS = nextStatus(currentOrder.status).key;
                           context.read<OrdersBloc>().add(
@@ -214,6 +239,9 @@ class OrderActionButtons extends StatelessWidget {
         return (key: 'in_progress', text: 'Men ishni boshladim');
       case 'in_progress':
         return (key: 'mechanic_done', text: 'Ishni yakunlash');
+
+      case 'mechanic_done':
+        return (key: 'completed', text: 'Kod kiritish');
     }
     return (key: '', text: '');
   }

@@ -25,8 +25,6 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   final GetUserStatisticsUseCase _getUserStatisticsUseCase =
       GetUserStatisticsUseCase(repository: serviceLocator.call());
 
-  Timer? _timer;
-
   ProfileBloc() : super(ProfileState()) {
     on<GetProfileEvent>(_onGetProfileEvent);
     on<UpdateStatusEvent>(_onUpdateStatus);
@@ -75,40 +73,40 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   }
 
   Future<void> _onListenUserLocationEvent(_ListenUserLocationEvent event, Emitter<ProfileState> emit) async {
-    _timer = Timer.periodic(Duration(seconds: 5000), (timer) async {
-      LocationPermission permission = await Geolocator.requestPermission();
+    // _timer = Timer.periodic(Duration(seconds: 5000), (timer) async {
+    LocationPermission permission = await Geolocator.requestPermission();
 
-      if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
-        final position = await Geolocator.getCurrentPosition(
+    if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
+      Geolocator.getPositionStream(
           locationSettings: LocationSettings(
-            accuracy: LocationAccuracy.high,
-            distanceFilter: 10,
-          ),
-        );
-        add(_UpdateCurrentLocationEvent(latitude: position.latitude, longitude: position.latitude));
-      } else {
-        await Geolocator.openAppSettings();
-      }
-    });
+        distanceFilter: 10,
+        timeLimit: Duration(seconds: 5),
+      )).listen((Position position) {
+        add(_UpdateCurrentLocationEvent(latitude: position.latitude, longitude: position.longitude));
+      });
+    } else {
+      await Geolocator.openAppSettings();
+    }
+    // });
   }
 
   Future<void> _onCancelListenUserLocationEvent(
       _CancelListenUserLocationEvent event, Emitter<ProfileState> emit) async {
-    _timer?.cancel();
-    _timer = null;
+    // _timer?.cancel();
+    // _timer = null;
     emit(state.copyWith(updateCurrentLocationStatus: FormzSubmissionStatus.initial));
   }
 
   Future<void> _onUpdateCurrentLocationEvent(_UpdateCurrentLocationEvent event, Emitter<ProfileState> emit) async {
     emit(state.copyWith(updateCurrentLocationStatus: FormzSubmissionStatus.inProgress));
-    // final result = await _updateCurrentLocationUseCase((event.latitude, event.longitude));
-    // result.either(
-    //   (failure) => emit(state.copyWith(
-    //       updateCurrentLocationStatus: FormzSubmissionStatus.failure, errorMessage: failure.errorMessage ?? '')),
-    //   (_) {
-    emit(state.copyWith(updateCurrentLocationStatus: FormzSubmissionStatus.success));
-    //   },
-    // );
+    final result = await _updateCurrentLocationUseCase((event.latitude, event.longitude));
+    result.either(
+      (failure) => emit(state.copyWith(
+          updateCurrentLocationStatus: FormzSubmissionStatus.failure, errorMessage: failure.errorMessage ?? '')),
+      (_) {
+        emit(state.copyWith(updateCurrentLocationStatus: FormzSubmissionStatus.success));
+      },
+    );
   }
 
   Future<void> _onGetUserStatisticsEvent(GetUserStatisticsEvent event, Emitter<ProfileState> emit) async {

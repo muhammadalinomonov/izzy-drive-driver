@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
@@ -6,7 +5,6 @@ import 'package:mechanic/assets/colors/colors.dart';
 import 'package:mechanic/assets/constants/images.dart';
 import 'package:mechanic/features/common/presentation/widgets/empty_widget.dart';
 import 'package:mechanic/features/main/presentation/blocs/orders/orders_bloc.dart';
-import 'package:mechanic/features/main/presentation/screens/finished_order_single_screen.dart';
 import 'package:mechanic/features/main/presentation/widgets/balance_item.dart';
 import 'package:mechanic/features/main/presentation/widgets/bottomsheets/selected_order_sheet.dart';
 import 'package:mechanic/features/main/presentation/widgets/current_active_order_widget.dart';
@@ -40,7 +38,7 @@ class _MainScreenState extends State<MainScreen> {
       //       backgroundColor: Colors.transparent,
       //       context: context,
       //       builder: (context) {
-      //         return SelectedOrderSheet(id: 30);
+      //         return SelectedOrderSheet(id: 38);
       //       },
       //     );
       //   },
@@ -52,32 +50,43 @@ class _MainScreenState extends State<MainScreen> {
         listener: (context, state) {
           if (state.getProfileStatus.isSuccess && state.user.status == 'online') {
             context.read<OrdersBloc>()
-              ..add(GetOrdersEvent())
-              ..add(ConnectToWebSocketEvent());
+              ..add(GetSelectedOrdersEvent())..add(ConnectToWebSocketEvent());
           } else if (state.getProfileStatus.isSuccess && state.user.status == 'onwork') {
             context.read<OrdersBloc>()
-              ..add(GetCurrentOrderEvent())
-              ..add(ConnectToWebSocketEvent());
+              ..add(GetCurrentOrderEvent())..add(ConnectToWebSocketEvent());
           } else if (state.getProfileStatus.isFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.errorMessage ?? 'Xatolik yuz berdi')),
             );
           }
         },
-        child: BlocListener<ProfileBloc, ProfileState>(
-          listenWhen: (previous, current) => previous.updateStatusStatus != current.updateStatusStatus,
-          listener: (context, state) {
-            if (state.updateStatusStatus.isSuccess && state.status == 'online') {
-              context.read<OrdersBloc>()
-                ..add(GetOrdersEvent())
-                ..add(ConnectToWebSocketEvent());
-            } else if (state.status == 'offline' && state.updateStatusStatus.isSuccess) {
-              context.read<OrdersBloc>().add(DisConnectFromWebSocketEvent());
-            }
-          },
+        child: MultiBlocListener(
+          listeners: [
+            BlocListener<ProfileBloc, ProfileState>(
+              listenWhen: (previous, current) => previous.updateStatusStatus != current.updateStatusStatus,
+              listener: (context, state) {
+                if (state.updateStatusStatus.isSuccess && state.status == 'online') {
+                  context.read<OrdersBloc>()
+                    ..add(GetSelectedOrdersEvent())..add(ConnectToWebSocketEvent());
+                } else if (state.status == 'offline' && state.updateStatusStatus.isSuccess) {
+                  context.read<OrdersBloc>().add(DisConnectFromWebSocketEvent());
+                }
+              },
+            ),
+            BlocListener<OrdersBloc, OrdersState>(
+              listenWhen: (previous, current) => previous.getSelectedOrdersStatus != current.getSelectedOrdersStatus,
+              listener: (context, state) {
+                if(state.getSelectedOrdersStatus.isSuccess && state.selectedOrders.isEmpty){
+                  context.read<OrdersBloc>().add(GetOrdersEvent());
+                }
+              },
+            ),
+          ],
           child: Column(
             children: [
-              SizedBox(height: MediaQuery.paddingOf(context).top + 6),
+              SizedBox(height: MediaQuery
+                  .paddingOf(context)
+                  .top + 6),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 12),
                 child: MainScreenUserWidget(),
@@ -98,30 +107,32 @@ class _MainScreenState extends State<MainScreen> {
                       (profileState.status == 'online' || profileState.status == 'offline')) {
                     return Expanded(
                       child: Container(
-                        height: MediaQuery.sizeOf(context).height,
+                        height: MediaQuery
+                            .sizeOf(context)
+                            .height,
                         decoration: BoxDecoration(
                           color: white,
                           borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
                         ),
                         child: profileState.status == 'offline'
                             ? Padding(
-                                padding: const EdgeInsets.only(left: 50, right: 50, top: 200),
-                                child: EmptyWidget(
-                                  icon: AppImages.layInSoft,
-                                  imageHeight: 200,
-                                  imageWidth: 200,
-                                  title: 'Siz hozirda oflaynsiz',
-                                  subtitle: 'Ishni boshlash uchun, “Ishga chiqish” tugmasini bosing',
-                                ),
-                              )
+                          padding: const EdgeInsets.only(left: 50, right: 50, top: 200),
+                          child: EmptyWidget(
+                            icon: AppImages.layInSoft,
+                            imageHeight: 200,
+                            imageWidth: 200,
+                            title: 'Siz hozirda oflaynsiz',
+                            subtitle: 'Ishni boshlash uchun, “Ishga chiqish” tugmasini bosing',
+                          ),
+                        )
                             : BlocBuilder<OrdersBloc, OrdersState>(
-                                builder: (context, state) {
-                                  if (profileState.status == 'onwork') {
-                                    return CurrentActiveOrderWidget();
-                                  }
-                                  return PendingOrdersWidget();
-                                },
-                              ),
+                          builder: (context, state) {
+                            if (profileState.status == 'onwork') {
+                              return CurrentActiveOrderWidget();
+                            }
+                            return PendingOrdersWidget();
+                          },
+                        ),
                       ),
                     );
                   } else if (profileState.getProfileStatus.isSuccess && profileState.status == 'onwork') {

@@ -5,7 +5,7 @@
   "packages": [
     {
       "name": "mechanic",
-      "version": "1.0.0+2",
+      "version": "1.0.0+3",
       "dependencies": [
         "audio_waveforms",
         "cached_network_image",
@@ -36,6 +36,7 @@
         "mask_text_input_formatter",
         "mobile_scanner",
         "otp_pin_field",
+        "permission_handler",
         "pinput",
         "shared_preferences",
         "shimmer",
@@ -144,6 +145,19 @@
         "test_api",
         "vector_math",
         "vm_service"
+      ]
+    },
+    {
+      "name": "permission_handler",
+      "version": "12.0.1",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "permission_handler_android",
+        "permission_handler_apple",
+        "permission_handler_html",
+        "permission_handler_platform_interface",
+        "permission_handler_windows"
       ]
     },
     {
@@ -993,6 +1007,49 @@
         "stream_channel",
         "string_scanner",
         "term_glyph"
+      ]
+    },
+    {
+      "name": "permission_handler_platform_interface",
+      "version": "4.3.0",
+      "dependencies": [
+        "flutter",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "permission_handler_windows",
+      "version": "0.2.1",
+      "dependencies": [
+        "flutter",
+        "permission_handler_platform_interface"
+      ]
+    },
+    {
+      "name": "permission_handler_html",
+      "version": "0.1.3+5",
+      "dependencies": [
+        "flutter",
+        "flutter_web_plugins",
+        "permission_handler_platform_interface",
+        "web"
+      ]
+    },
+    {
+      "name": "permission_handler_apple",
+      "version": "9.4.7",
+      "dependencies": [
+        "flutter",
+        "permission_handler_platform_interface"
+      ]
+    },
+    {
+      "name": "permission_handler_android",
+      "version": "13.0.1",
+      "dependencies": [
+        "flutter",
+        "permission_handler_platform_interface"
       ]
     },
     {

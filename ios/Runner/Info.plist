@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Mechanic</string>
+	<string>Izzy Drive Fix</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -19,12 +19,16 @@
 
 	<key>io.flutter.embedded_views_preview</key>
     <true/>
+
+
     <key>NSCameraUsageDescription</key>
-    <string>This app needs camera access to scan QR codes</string>
-
+    <string>Kameradan foydalanish QR kodni skanerlash uchun kerak</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>This app needs access to the microphone to record and play audio.</string>
+    <string>Mikrofon kerak emas, faqat iOS xatosini oldini olish uchun</string>
 
+    <!-- Qo'shimcha: Camera access reason (iOS 17+) -->
+    <key>NSCameraUsageDescription</key>
+    <string>QR kodlarni skanerlash uchun kamera kerak</string>
 
     <key>MGLMapboxAccessToken</key>
     <string>pk.eyJ1IjoiamFob25naXI3NyIsImEiOiJjbG9tajIzYW4yMWhsMnJudnRjbGUzOGFzIn0.WeJnZlP1FGzGJ3FK2IM9UA</string>
