@@ -194,10 +194,10 @@ class AuthDataSourceImpl implements AuthDataSource {
     try {
       final response = await dio.post('accounts/register/', data: {
         'email': email,
-        'is_mechanic': true,
+        'is_mechanic': false,
         'full_name': fullName,
         'password': password,
-        'is_driver': false,
+        'is_driver': true,
         'device_token': fcmToken
       });
 
