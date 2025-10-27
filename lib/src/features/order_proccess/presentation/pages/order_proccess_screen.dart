@@ -4,10 +4,12 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/features/home/presentation/screens/main_screen.dart';
+import 'package:taxi_app/src/routes/pages.dart';
 
 import '../../data/model/order_accepted.dart';
 import '../bloc/orders_bloc.dart';
@@ -20,8 +22,7 @@ class OrderProccessScreen extends StatefulWidget {
   State<OrderProccessScreen> createState() => _OrderProccessScreenState();
 }
 
-class _OrderProccessScreenState extends State<OrderProccessScreen>
-    with TickerProviderStateMixin {
+class _OrderProccessScreenState extends State<OrderProccessScreen> with TickerProviderStateMixin {
   late mapbox.MapboxMap _mapboxMap;
   mapbox.PolylineAnnotationManager? _polylineAnnotationManager;
   mapbox.PointAnnotationManager? _pointAnnotationManager;
@@ -81,10 +82,8 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
     _mapboxMap = mapboxMap;
     try {
       await Future.delayed(const Duration(milliseconds: 500));
-      _polylineAnnotationManager = await _mapboxMap.annotations
-          .createPolylineAnnotationManager();
-      _pointAnnotationManager = await _mapboxMap.annotations
-          .createPointAnnotationManager();
+      _polylineAnnotationManager = await _mapboxMap.annotations.createPolylineAnnotationManager();
+      _pointAnnotationManager = await _mapboxMap.annotations.createPointAnnotationManager();
       print('Annotation managers created successfully');
       await _setInitialCamera();
       setState(() => _mapReady = true);
@@ -100,12 +99,7 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
         (startPosition.lat + endPosition.lat) / 2,
       );
       await _mapboxMap.setCamera(
-        mapbox.CameraOptions(
-          center: mapbox.Point(coordinates: midpoint),
-          zoom: 15.5,
-          pitch: 0.0,
-          bearing: 0.0,
-        ),
+        mapbox.CameraOptions(center: mapbox.Point(coordinates: midpoint), zoom: 15.5, pitch: 0.0, bearing: 0.0),
       );
       print('Initial camera set successfully');
     } catch (e) {
@@ -114,24 +108,16 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
   }
 
   void _processOrderAcceptedData(OrderAccepted orderAccepted) {
-    if (!_mapReady ||
-        _polylineAnnotationManager == null ||
-        _pointAnnotationManager == null) {
+    if (!_mapReady || _polylineAnnotationManager == null || _pointAnnotationManager == null) {
       print('Map not ready');
       return;
     }
 
     try {
       // Update positions from socket data
-      startPosition = mapbox.Position(
-        orderAccepted.maps.startPoint.lng,
-        orderAccepted.maps.startPoint.lat,
-      );
+      startPosition = mapbox.Position(orderAccepted.maps.startPoint.lng, orderAccepted.maps.startPoint.lat);
 
-      endPosition = mapbox.Position(
-        orderAccepted.maps.endPoint.lng,
-        orderAccepted.maps.endPoint.lat,
-      );
+      endPosition = mapbox.Position(orderAccepted.maps.endPoint.lng, orderAccepted.maps.endPoint.lat);
 
       // Convert route points to mapbox positions
       final route = orderAccepted.maps.route.map((point) {
@@ -140,8 +126,7 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
 
       if (route.isNotEmpty) {
         fullRouteCoordinates = route;
-        currentDriverPosition =
-            route.first; // Driver starts at first route point
+        currentDriverPosition = route.first; // Driver starts at first route point
         currentRouteIndex = 0;
 
         // Update estimates from socket data
@@ -203,9 +188,7 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
       await _polylineAnnotationManager?.deleteAll();
       await _pointAnnotationManager?.deleteAll();
       if (remainingRoute.length > 1) {
-        final remainingLineString = mapbox.LineString(
-          coordinates: remainingRoute,
-        );
+        final remainingLineString = mapbox.LineString(coordinates: remainingRoute);
         await _polylineAnnotationManager?.create(
           mapbox.PolylineAnnotationOptions(
             geometry: remainingLineString,
@@ -224,9 +207,7 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
         );
       }
       if (completedRoute.length > 1) {
-        final completedLineString = mapbox.LineString(
-          coordinates: completedRoute,
-        );
+        final completedLineString = mapbox.LineString(coordinates: completedRoute);
         await _polylineAnnotationManager?.create(
           mapbox.PolylineAnnotationOptions(
             geometry: completedLineString,
@@ -265,24 +246,14 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
   Future<void> _updateRadiationPosition() async {
     if (!_mapReady || isScrolling) return;
     try {
-      final screenCoordinate = await _mapboxMap.pixelForCoordinate(
-        mapbox.Point(coordinates: currentDriverPosition),
-      );
-      if (mounted)
-        setState(
-          () => radiationPosition = Offset(
-            screenCoordinate.x,
-            screenCoordinate.y,
-          ),
-        );
+      final screenCoordinate = await _mapboxMap.pixelForCoordinate(mapbox.Point(coordinates: currentDriverPosition));
+      if (mounted) setState(() => radiationPosition = Offset(screenCoordinate.x, screenCoordinate.y));
     } catch (e) {
       print('Error updating radiation position: $e');
       if (mounted)
         setState(
-          () => radiationPosition = Offset(
-            MediaQuery.of(context).size.width / 2,
-            MediaQuery.of(context).size.height / 2,
-          ),
+          () =>
+              radiationPosition = Offset(MediaQuery.of(context).size.width / 2, MediaQuery.of(context).size.height / 2),
         );
     }
   }
@@ -294,18 +265,10 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
     final shadowPaint = Paint()
       ..color = Colors.black.withOpacity(0.3)
       ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 6);
-    canvas.drawCircle(
-      Offset(size / 2 + 3, size / 2 + 12),
-      size / 2.5,
-      shadowPaint,
-    );
+    canvas.drawCircle(Offset(size / 2 + 3, size / 2 + 12), size / 2.5, shadowPaint);
     final bodyPaint = Paint()..color = const Color(0xFFFF8C42);
     final bodyRect = ui.RRect.fromRectAndRadius(
-      ui.Rect.fromCenter(
-        center: Offset(size / 2, size / 2 + 12),
-        width: 32,
-        height: 40,
-      ),
+      ui.Rect.fromCenter(center: Offset(size / 2, size / 2 + 12), width: 32, height: 40),
       const ui.Radius.circular(16),
     );
     canvas.drawRRect(bodyRect, bodyPaint);
@@ -317,30 +280,14 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
       ..color = const Color(0xFFFFDBB5)
       ..strokeWidth = 6
       ..strokeCap = ui.StrokeCap.round;
-    canvas.drawLine(
-      Offset(size / 2 - 16, size / 2),
-      Offset(size / 2 - 24, size / 2 + 8),
-      armPaint,
-    );
-    canvas.drawLine(
-      Offset(size / 2 + 16, size / 2),
-      Offset(size / 2 + 24, size / 2 + 8),
-      armPaint,
-    );
+    canvas.drawLine(Offset(size / 2 - 16, size / 2), Offset(size / 2 - 24, size / 2 + 8), armPaint);
+    canvas.drawLine(Offset(size / 2 + 16, size / 2), Offset(size / 2 + 24, size / 2 + 8), armPaint);
     final legPaint = Paint()
       ..color = const Color(0xFF2C5F2D)
       ..strokeWidth = 8
       ..strokeCap = ui.StrokeCap.round;
-    canvas.drawLine(
-      Offset(size / 2 - 8, size / 2 + 24),
-      Offset(size / 2 - 12, size / 2 + 40),
-      legPaint,
-    );
-    canvas.drawLine(
-      Offset(size / 2 + 8, size / 2 + 24),
-      Offset(size / 2 + 12, size / 2 + 40),
-      legPaint,
-    );
+    canvas.drawLine(Offset(size / 2 - 8, size / 2 + 24), Offset(size / 2 - 12, size / 2 + 40), legPaint);
+    canvas.drawLine(Offset(size / 2 + 8, size / 2 + 24), Offset(size / 2 + 12, size / 2 + 40), legPaint);
     final outlinePaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
@@ -360,11 +307,7 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
     final shadowPaint = Paint()
       ..color = Colors.black.withOpacity(0.3)
       ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 6);
-    canvas.drawCircle(
-      Offset(size / 2 + 3, size / 2 + 3),
-      size / 2.5,
-      shadowPaint,
-    );
+    canvas.drawCircle(Offset(size / 2 + 3, size / 2 + 3), size / 2.5, shadowPaint);
     final bgPaint = Paint()..color = const Color(0xFF007AFF);
     canvas.drawCircle(Offset(size / 2, size / 2), size / 2.5, bgPaint);
     final borderPaint = Paint()
@@ -390,10 +333,7 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
   void _startDriverMovement() {
     if (fullRouteCoordinates.isEmpty) return;
     setState(() => isDriverMoving = true);
-    _driverMovementTimer = Timer.periodic(
-      const Duration(seconds: 3),
-      (timer) => _updateDriverPosition(),
-    );
+    _driverMovementTimer = Timer.periodic(const Duration(seconds: 3), (timer) => _updateDriverPosition());
   }
 
   void _updateDriverPosition() {
@@ -431,9 +371,7 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
   }
 
   String _calculateArrivalTime(int durationMinutes) {
-    final now = DateTime.now().toUtc().add(
-      const Duration(hours: 5),
-    ); // +05 vaqt zonasi
+    final now = DateTime.now().toUtc().add(const Duration(hours: 5)); // +05 vaqt zonasi
     final arrival = now.add(Duration(minutes: durationMinutes));
     final endTime = arrival.add(const Duration(minutes: 20));
     return '${arrival.hour.toString().padLeft(2, '0')}:${arrival.minute.toString().padLeft(2, '0')}-${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}';
@@ -464,11 +402,8 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
                 context.read<OrdersBloc>().add(CancelOrderEvent());
                 context.read<OrdersBloc>().add(DisConnectFromWebSocketEvent());
 
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (context) => const MainScreen()),
-                );
-
-                },
+                Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const MainScreen()));
+              },
               style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: const Text('Ha, bekor qil'),
             ),
@@ -492,12 +427,20 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocListener<OrdersBloc, OrdersState>(
-        listener: (context, state) {
-          if (state.orderAccepted != null) {
-            _processOrderAcceptedData(state.orderAccepted!);
-          }
-        },
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<OrdersBloc, OrdersState>(
+            listener: (context, state) {
+              if (state.orderAccepted != null) {
+                _processOrderAcceptedData(state.orderAccepted!);
+              }
+            },
+          ),
+          BlocListener<OrdersBloc, OrdersState>(
+            listenWhen: (previous, current) => previous.currentOrderStatus != current.currentOrderStatus,
+            listener: (context, state) {},
+          ),
+        ],
         child: Stack(
           children: [
             Container(
@@ -506,8 +449,7 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
               padding: EdgeInsets.only(
                 bottom: isLoading
                     ? 0
-                    : MediaQuery.of(context).padding.bottom +
-                          (MediaQuery.of(context).size.height * 0.3),
+                    : MediaQuery.of(context).padding.bottom + (MediaQuery.of(context).size.height * 0.3),
               ),
               child: mapbox.MapWidget(
                 key: const ValueKey('beautifulPulseMapWidget'),
@@ -530,8 +472,7 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
                   _debounceTimer = Timer(const Duration(milliseconds: 400), () {
                     if (mounted) {
                       setState(() => isScrolling = false);
-                      if (hasArrived && !isScrolling)
-                        _updateRadiationPosition();
+                      if (hasArrived && !isScrolling) _updateRadiationPosition();
                     }
                   });
                 },
@@ -540,10 +481,7 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
             BeautifulRadiationWidget(
               isVisible: isLoading || hasArrived,
               position: isLoading
-                  ? Offset(
-                      MediaQuery.of(context).size.width / 2,
-                      MediaQuery.of(context).size.height / 2,
-                    )
+                  ? Offset(MediaQuery.of(context).size.width / 2, MediaQuery.of(context).size.height / 2)
                   : radiationPosition,
             ),
             if (isLoading)
@@ -557,25 +495,16 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
                   height: 333,
                   decoration: const BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(20),
-                    ),
-                    boxShadow: [
-                      BoxShadow(blurRadius: 10, color: Colors.black12),
-                    ],
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    boxShadow: [BoxShadow(blurRadius: 10, color: Colors.black12)],
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 16.0,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColor.blueMain,
-                          ),
+                          valueColor: AlwaysStoppedAnimation<Color>(AppColor.blueMain),
                           strokeWidth: 4.0,
                         ),
                         const SizedBox(height: 16),
@@ -593,38 +522,24 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
                         Text(
                           'Odatda haydovchi 1 daqiqa ichida topiladi ($_searchSeconds soniya)',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                          ),
+                          style: TextStyle(color: Colors.grey[600], fontSize: 14, fontWeight: FontWeight.w400),
                         ),
                         const SizedBox(height: 16),
                         TextButton(
                           onPressed: () {
                             setState(() => isLoading = false);
                             _searchTimer?.cancel();
-                            context.read<OrdersBloc>().add(
-                              DisConnectFromWebSocketEvent(),
-                            );
-                            Navigator.of(context).pop();
+                            context.read<OrdersBloc>().add(DisConnectFromWebSocketEvent());
+                            // Navigator.of(context).pop();
                           },
                           style: TextButton.styleFrom(
                             foregroundColor: Colors.red,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 10,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           ),
                           child: const Text(
                             'Bekor qilish',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                           ),
                         ),
                       ],
@@ -638,31 +553,19 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
                 right: 0,
                 bottom: 0,
                 child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(24),
-                  ),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                   child: Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: AppColor.greyBg,
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(24),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          blurRadius: 16,
-                          color: Colors.black.withOpacity(0.08),
-                        ),
-                      ],
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                      boxShadow: [BoxShadow(blurRadius: 16, color: Colors.black.withOpacity(0.08))],
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 16,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                           width: double.infinity,
                           decoration: const ShapeDecoration(
                             color: Colors.white,
@@ -728,8 +631,7 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
                                     ),
                                     const SizedBox(height: 16),
                                     Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
+                                      mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         _stepIcon(AppIcons.rocket, true),
                                         _stepLine(),
@@ -784,8 +686,7 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
                                     ),
                                     const SizedBox(height: 16),
                                     Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
+                                      mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         _stepIcon(AppIcons.rocket, true),
                                         _stepLine(),
@@ -807,17 +708,11 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
                             children: [
                               const SizedBox(height: 12),
                               Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
                                 width: double.infinity,
                                 decoration: const ShapeDecoration(
                                   color: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(12),
-                                    ),
-                                  ),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -847,8 +742,7 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
                                         const SizedBox(width: 11),
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 mechanicName,
@@ -877,10 +771,7 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
                                         TextButton(
                                           style: TextButton.styleFrom(
                                             minimumSize: Size.zero,
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 18,
-                                              vertical: 8,
-                                            ),
+                                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                                             backgroundColor: AppColor.greyBg,
                                           ),
                                           onPressed: () {},
@@ -904,23 +795,15 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
                               const SizedBox(height: 12),
                               Container(
                                 width: double.infinity,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 13,
-                                  horizontal: 44,
-                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 44),
                                 decoration: const ShapeDecoration(
                                   color: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.all(
-                                      Radius.circular(12),
-                                    ),
-                                  ),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
                                 ),
                                 child: Column(
                                   children: [
                                     Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
+                                      mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         const Spacer(),
                                         GestureDetector(
@@ -931,19 +814,12 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
                                           child: Column(
                                             children: [
                                               Container(
-                                                padding: const EdgeInsets.all(
-                                                  10,
+                                                padding: const EdgeInsets.all(10),
+                                                decoration: const ShapeDecoration(
+                                                  color: Color(0xFFEFF2F5),
+                                                  shape: CircleBorder(),
                                                 ),
-                                                decoration:
-                                                    const ShapeDecoration(
-                                                      color: Color(0xFFEFF2F5),
-                                                      shape: CircleBorder(),
-                                                    ),
-                                                child: SvgPicture.asset(
-                                                  AppIcons.call,
-                                                  height: 30,
-                                                  width: 30,
-                                                ),
+                                                child: SvgPicture.asset(AppIcons.call, height: 30, width: 30),
                                               ),
                                               const SizedBox(height: 7),
                                               const Text(
@@ -964,24 +840,19 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
                                         GestureDetector(
                                           onTap: () {
                                             // Show order details
+                                            context.push(Pages.orderInfo);
+
                                             print('Show order details');
                                           },
                                           child: Column(
                                             children: [
                                               Container(
-                                                padding: const EdgeInsets.all(
-                                                  10,
+                                                padding: const EdgeInsets.all(10),
+                                                decoration: const ShapeDecoration(
+                                                  color: Color(0xFFEFF2F5),
+                                                  shape: CircleBorder(),
                                                 ),
-                                                decoration:
-                                                    const ShapeDecoration(
-                                                      color: Color(0xFFEFF2F5),
-                                                      shape: CircleBorder(),
-                                                    ),
-                                                child: SvgPicture.asset(
-                                                  AppIcons.about,
-                                                  height: 30,
-                                                  width: 30,
-                                                ),
+                                                child: SvgPicture.asset(AppIcons.about, height: 30, width: 30),
                                               ),
                                               const SizedBox(height: 7),
                                               const Text(
@@ -1007,19 +878,12 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
                                           child: Column(
                                             children: [
                                               Container(
-                                                padding: const EdgeInsets.all(
-                                                  10,
+                                                padding: const EdgeInsets.all(10),
+                                                decoration: const ShapeDecoration(
+                                                  color: Color(0xFFEFF2F5),
+                                                  shape: CircleBorder(),
                                                 ),
-                                                decoration:
-                                                    const ShapeDecoration(
-                                                      color: Color(0xFFEFF2F5),
-                                                      shape: CircleBorder(),
-                                                    ),
-                                                child: SvgPicture.asset(
-                                                  AppIcons.close,
-                                                  height: 30,
-                                                  width: 30,
-                                                ),
+                                                child: SvgPicture.asset(AppIcons.close, height: 30, width: 30),
                                               ),
                                               const SizedBox(height: 7),
                                               const Text(
@@ -1058,19 +922,13 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
                   color: Colors.white,
                   shape: BoxShape.circle,
                   boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
+                    BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2)),
                   ],
                 ),
                 child: IconButton(
                   icon: const Icon(Icons.arrow_back, color: Colors.black),
                   onPressed: () {
-                    context.read<OrdersBloc>().add(
-                      DisConnectFromWebSocketEvent(),
-                    );
+                    context.read<OrdersBloc>().add(DisConnectFromWebSocketEvent());
                     Navigator.of(context).pop();
                   },
                 ),
@@ -1086,10 +944,7 @@ class _OrderProccessScreenState extends State<OrderProccessScreen>
     return CircleAvatar(
       backgroundColor: active ? AppColor.blueMain : AppColor.greyBg,
       radius: 24,
-      child: SvgPicture.asset(
-        icon,
-        color: active ? AppColor.white : AppColor.black,
-      ),
+      child: SvgPicture.asset(icon, color: active ? AppColor.white : AppColor.black),
     );
   }
 

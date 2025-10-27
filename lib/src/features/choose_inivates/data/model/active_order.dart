@@ -131,7 +131,7 @@ class CurrentAddress {
     return CurrentAddress(
       latitude: _toDouble(json['latitude']),
       longitude: _toDouble(json['longitude']),
-      address: json['address'] as String,
+      address: json['address'] as String? ?? '',
       isStatic: json['is_static'] as bool,
     );
   }

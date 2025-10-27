@@ -1,3 +1,5 @@
+import 'package:taxi_app/src/features/master/data/model/review_model.dart';
+
 class MasterModel {
   final int? id;
   final String? fullName;
@@ -6,8 +8,15 @@ class MasterModel {
   final String? status;
   final int? experience;
   final String? distanceKm;
+  final String createdAt;
+  final int allOrdersCount;
+  final int successOrdersCount;
+  final int reviewCount;
+  final ReviewModel? review;
+  final String allReviewsUrl;
+  final double distance;
 
-  MasterModel({
+  const MasterModel({
     this.id,
     this.fullName,
     this.photo,
@@ -15,6 +24,13 @@ class MasterModel {
     this.status,
     this.experience,
     this.distanceKm,
+    this.createdAt = '',
+    this.allOrdersCount = 0,
+    this.successOrdersCount = 0,
+    this.reviewCount = 0,
+    this.review,
+    this.allReviewsUrl = '',
+    this.distance = 0,
   });
 
   factory MasterModel.fromJson(Map<String, dynamic> json) {
@@ -26,6 +42,13 @@ class MasterModel {
       status: json['status'] as String? ?? '',
       experience: json['experience'] as int? ?? 0,
       distanceKm: json['distance_km']?.toString() ?? '',
+      createdAt: json['created_at']?.toString() ?? '',
+      allOrdersCount: json['all_orders_count'] as int? ?? 0,
+      successOrdersCount: json['success_orders_count'] as int? ?? 0,
+      reviewCount: json['review_count'] as int? ?? 0,
+      review: json['review'] != null ? ReviewModel.fromJson(json['review'] as Map<String, dynamic>) : null,
+      allReviewsUrl: json['all_reviews_url']?.toString() ?? '',
+      distance: (json['distance'] as num?)?.toDouble() ?? 0,
     );
   }
 }

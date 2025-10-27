@@ -14,7 +14,7 @@ class AppIcons {
   static const String about = 'assets/icons/about.svg';
   static const String call= 'assets/icons/call.svg';
   static const String rocket= 'assets/icons/rocket.svg';
-  static const  String maploc= 'assets/icons/maploc.svg';
+  static const String maploc= 'assets/icons/maploc.svg';
   static const String google = 'assets/icons/google_icon.svg';
   static const String home = 'assets/icons/home.svg';
   static const String masters = 'assets/icons/masters.svg';
@@ -31,6 +31,10 @@ class AppIcons {
   static const String search = 'assets/icons/search.svg';
   static const String phone = 'assets/icons/phone.svg';
   static const String x = 'assets/icons/x_mark.svg';
+  static const String info = 'assets/icons/info.svg';
+  static const String key = 'assets/icons/key.svg';
+  static const String check = 'assets/icons/check.svg';
+  static const String star = 'assets/icons/star.svg';
 
 
 }

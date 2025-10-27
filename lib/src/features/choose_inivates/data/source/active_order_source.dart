@@ -17,7 +17,7 @@ class ActiveOrderSource {
     try {
       var token = StorageRepository.getString("token");
       final response = await client.get(
-        ApiConstants.fetchActiveOrder,
+        ApiConstants.fetchActiveOffers,
         options: Options(
           headers: {
             'Authorization': 'Bearer $token',

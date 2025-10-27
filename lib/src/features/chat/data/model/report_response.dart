@@ -6,11 +6,7 @@ class ReportResponse {
   final String message;
   final ReportData data;
 
-  ReportResponse({
-    required this.status,
-    required this.message,
-    required this.data,
-  });
+  ReportResponse({required this.status, required this.message, required this.data});
 
   factory ReportResponse.fromJson(Map<String, dynamic> json) {
     try {
@@ -23,18 +19,15 @@ class ReportResponse {
       print('Error parsing ReportResponse: $e');
       rethrow; // Xatni qayta chiqarish
     }
-  }}
+  }
+}
 
 class ReportData {
   final Report report;
   final int orderId;
   final String orderStatus;
 
-  ReportData({
-    required this.report,
-    required this.orderId,
-    required this.orderStatus,
-  });
+  ReportData({required this.report, required this.orderId, required this.orderStatus});
 
   factory ReportData.fromJson(Map<String, dynamic> json) {
     return ReportData(
@@ -68,7 +61,7 @@ class Report {
 
   factory Report.fromJson(Map<String, dynamic> json) {
     return Report(
-      id: json['id'],
+      id: json['id'] ?? 0,
       sender: json['sender'],
       text: json['text'],
       voiceFile: json['voice_file'],
@@ -86,19 +79,14 @@ class Address {
   final String address;
   final bool isStatic;
 
-  Address({
-    required this.latitude,
-    required this.longitude,
-    required this.address,
-    required this.isStatic,
-  });
+  const Address({this.latitude = 0, this.longitude = 0, this.address = '', this.isStatic = false});
 
   factory Address.fromJson(Map<String, dynamic> json) {
     return Address(
-      latitude: json['latitude'],
-      longitude: json['longitude'],
-      address: json['address'],
-      isStatic: json['is_static'],
+      latitude: json['latitude'] ?? 0,
+      longitude: json['longitude'] ?? 0,
+      address: json['address'] ?? '',
+      isStatic: json['is_static'] ?? false,
     );
   }
 }

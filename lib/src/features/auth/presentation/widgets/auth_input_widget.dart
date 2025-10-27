@@ -13,6 +13,7 @@ class AuthInputWidget extends StatefulWidget {
     this.textInputType,
     this.obscureText = false,
     this.isPassword = false,
+    this.readOnly,
   });
 
   final String hint, label;
@@ -22,13 +23,13 @@ class AuthInputWidget extends StatefulWidget {
   final bool isPassword;
   final TextInputAction? textInputAction;
   final TextInputType? textInputType;
+  final bool? readOnly;
 
   @override
   State<AuthInputWidget> createState() => _AuthInputWidgetState();
 }
 
-class _AuthInputWidgetState extends State<AuthInputWidget>
-    with SingleTickerProviderStateMixin {
+class _AuthInputWidgetState extends State<AuthInputWidget> with SingleTickerProviderStateMixin {
   late bool _obscureText;
   late AnimationController _iconController;
 
@@ -36,11 +37,7 @@ class _AuthInputWidgetState extends State<AuthInputWidget>
   void initState() {
     super.initState();
     _obscureText = widget.obscureText;
-    _iconController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-      upperBound: 0.5,
-    );
+    _iconController = AnimationController(vsync: this, duration: const Duration(milliseconds: 200), upperBound: 0.5);
     if (!_obscureText) {
       _iconController.value = 0.5;
     }
@@ -68,36 +65,26 @@ class _AuthInputWidgetState extends State<AuthInputWidget>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          widget.label,
-          style: context.textS.titleSmall!.copyWith(
-            fontWeight: FontWeight.w400,
-          ),
-        ),
+        Text(widget.label, style: context.textS.titleSmall!.copyWith(fontWeight: FontWeight.w400)),
         const SizedBox(height: 10),
         TextFormField(
+          canRequestFocus: !(widget.readOnly ?? false),
+          readOnly: widget.readOnly ?? false,
           controller: widget.controller,
           validator: widget.validator,
           obscureText: widget.isPassword ? _obscureText : widget.obscureText,
           keyboardType: widget.textInputType,
           textInputAction: widget.textInputAction ?? TextInputAction.next,
+          obscuringCharacter: '*',
           decoration: InputDecoration(
             hintText: widget.hint,
-            hintStyle: context.textS.titleMedium!.copyWith(
-              color: AppColor.lightGreyBlue,
-              fontWeight: FontWeight.w400,
-            ),
+            hintStyle: context.textS.titleMedium!.copyWith(color: AppColor.lightGreyBlue, fontWeight: FontWeight.w400),
             fillColor: AppColor.lightBlue,
             filled: true,
+
             labelStyle: TextStyle(color: AppColor.grey),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(color: AppColor.red),
@@ -114,12 +101,7 @@ class _AuthInputWidgetState extends State<AuthInputWidget>
                       builder: (context, child) {
                         return Transform.rotate(
                           angle: _iconController.value * 3.1416 * 2,
-                          child: Icon(
-                            _obscureText
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                            color: AppColor.grey,
-                          ),
+                          child: Icon(_obscureText ? Icons.visibility_off : Icons.visibility, color: AppColor.grey),
                         );
                       },
                     ),

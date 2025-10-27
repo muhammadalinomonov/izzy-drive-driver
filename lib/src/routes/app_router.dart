@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:taxi_app/src/core/location_service.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
-import 'package:taxi_app/src/core/location_service.dart';
 import 'package:taxi_app/src/features/auth/data/repo/auth_repo_impl.dart';
 import 'package:taxi_app/src/features/auth/data/source/auth_data_source.dart';
 import 'package:taxi_app/src/features/auth/presentation/bloc/bloc/auth_bloc.dart';
@@ -11,11 +11,11 @@ import 'package:taxi_app/src/features/auth/presentation/pages/sign_up_page.dart'
 import 'package:taxi_app/src/features/chat/presentation/pages/chat_page.dart';
 import 'package:taxi_app/src/features/choose_inivates/data/repo/active_order_repository_imp.dart';
 import 'package:taxi_app/src/features/choose_inivates/presentation/bloc/inivites_bloc.dart';
+import 'package:taxi_app/src/features/choose_inivates/presentation/bloc/proposal_bloc.dart';
 import 'package:taxi_app/src/features/choose_inivates/presentation/pages/invates_screen.dart';
 import 'package:taxi_app/src/features/home/data/repository/home_repository_impl.dart';
 import 'package:taxi_app/src/features/home/data/source/home_data_source.dart';
 import 'package:taxi_app/src/features/home/presentation/bloc/bloc/home_bloc.dart';
-import 'package:taxi_app/src/features/choose_inivates/presentation/bloc/proposal_bloc.dart';
 import 'package:taxi_app/src/features/home/presentation/screens/home_screen.dart';
 import 'package:taxi_app/src/features/home/presentation/screens/main_screen.dart';
 import 'package:taxi_app/src/features/map/presenation/bloc/map_bloc.dart';
@@ -23,12 +23,13 @@ import 'package:taxi_app/src/features/map/presenation/pages/map_screen.dart';
 import 'package:taxi_app/src/features/master/data/repository/master_repository_impl.dart';
 import 'package:taxi_app/src/features/master/data/source/master_remote_data_source.dart';
 import 'package:taxi_app/src/features/master/presentation/bloc/master_bloc.dart';
-import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bloc.dart';
-import 'package:taxi_app/src/features/profile/data/repository/profile_repository_impl.dart';
-import 'package:taxi_app/src/features/profile/data/source/profile_data_source.dart';
-import 'package:taxi_app/src/features/profile/presentation/bloc/profile_bloc.dart';
+import 'package:taxi_app/src/features/order_proccess/presentation/pages/finished_order_screen.dart';
+import 'package:taxi_app/src/features/order_proccess/presentation/pages/order_info_screen.dart';
+import 'package:taxi_app/src/features/order_proccess/presentation/pages/order_single_screen.dart';
+import 'package:taxi_app/src/features/profile/presentation/pages/order_history_single_screen.dart';
+import 'package:taxi_app/src/features/profile/presentation/pages/orders_history_screen.dart';
+import 'package:taxi_app/src/features/profile/presentation/pages/profile_edit_screen.dart';
 import 'package:taxi_app/src/features/profile/presentation/pages/profile_page.dart';
-import 'package:taxi_app/src/features/order_proccess/presentation/pages/order_proccess_screen.dart';
 import 'package:taxi_app/src/features/truck_info/data/repo/driver_info_repo_impl.dart';
 import 'package:taxi_app/src/features/truck_info/data/source/driver_info_source.dart';
 import 'package:taxi_app/src/features/truck_info/presentation/bloc/bloc/track_info_bloc.dart';
@@ -40,25 +41,18 @@ import '../features/chat/data/repo/chat_repo_imp.dart';
 import '../features/chat/data/source/chat_data_source.dart';
 import '../features/chat/presentation/bloc/chat_bloc.dart';
 import '../features/choose_inivates/data/source/active_order_source.dart';
-import '../features/choose_inivates/domain/active_order_repository.dart';
 import '../features/map/data/repo/map_repo_imp.dart';
 import '../features/map/data/source/map_data_source.dart';
-import '../features/order_proccess/data/order_proccess_source.dart';
-import '../features/order_proccess/domain/order_repo.dart';
 
 class Routes {
   static final GoRouter router = GoRouter(
-    initialLocation: StorageRepository.getString('token').isNotEmpty
-        ? Pages.main
-        : Pages.signIn,
+    initialLocation: StorageRepository.getString('token').isNotEmpty ? Pages.main : Pages.signIn,
     routes: [
       GoRoute(
         path: Pages.signIn,
         builder: (context, state) {
           return BlocProvider(
-            create: (context) => AuthBloc(
-              authRepo: AuthRepoImpl(authDataSource: AuthDataSource()),
-            ),
+            create: (context) => AuthBloc(authRepo: AuthRepoImpl(authDataSource: AuthDataSource())),
             child: SignInPage(),
           );
         },
@@ -67,9 +61,7 @@ class Routes {
         path: Pages.signUp,
         builder: (context, state) {
           return BlocProvider(
-            create: (context) => AuthBloc(
-              authRepo: AuthRepoImpl(authDataSource: AuthDataSource()),
-            ),
+            create: (context) => AuthBloc(authRepo: AuthRepoImpl(authDataSource: AuthDataSource())),
             child: SignUpPage(),
           );
         },
@@ -78,9 +70,7 @@ class Routes {
         path: Pages.chat,
         builder: (context, state) {
           return BlocProvider(
-            create: (context) => ChatBloc(
-              chatRepo: ChatRepoImpl(chatDataSource: ChatDataSource()),
-            ),
+            create: (context) => ChatBloc(chatRepo: ChatRepoImpl(chatDataSource: ChatDataSource())),
             child: ChatPage(),
           );
         },
@@ -95,8 +85,7 @@ class Routes {
         path: Pages.map,
         builder: (context, state) {
           return BlocProvider(
-            create: (context) =>
-                MapBloc(mapRepo: MapRepoImpl(dataSource: MapDataSource())),
+            create: (context) => MapBloc(mapRepo: MapRepoImpl(dataSource: MapDataSource())),
             child: MapScreen(),
           );
         },
@@ -105,8 +94,7 @@ class Routes {
         path: Pages.home,
         builder: (context, state) {
           return BlocProvider(
-            create: (context) =>
-                HomeBloc(HomeRepositoryImpl(dataSource: HomeDataSource())),
+            create: (context) => HomeBloc(HomeRepositoryImpl(dataSource: HomeDataSource())),
             child: HomeScreen(),
           );
         },
@@ -116,19 +104,10 @@ class Routes {
         builder: (context, state) {
           return MultiBlocProvider(
             providers: [
+              BlocProvider(create: (context) => HomeBloc(HomeRepositoryImpl(dataSource: HomeDataSource()))),
               BlocProvider(
                 create: (context) =>
-                    HomeBloc(HomeRepositoryImpl(dataSource: HomeDataSource())),
-              ),
-              BlocProvider(
-                create: (context) =>
-                    ProfileBloc(ProfileRepositoryImpl(ProfileDataSource())),
-              ),
-              BlocProvider(
-                create: (context) => MasterBloc(
-                  MasterRepositoryImpl(MasterRemoteDataSource()),
-                  serviceLocator<LocationService>(),
-                ),
+                    MasterBloc(MasterRepositoryImpl(MasterRemoteDataSource()), serviceLocator<LocationService>()),
               ),
             ],
             child: MainScreen(),
@@ -138,11 +117,7 @@ class Routes {
       GoRoute(
         path: Pages.tackScreen,
         builder: (context, state) => BlocProvider(
-          create: (_) => TrackInfoBloc(
-            driverInfoRepo: DriverInfoRepoImpl(
-              driverInfoSource: DriverInfoSource(),
-            ),
-          ),
+          create: (_) => TrackInfoBloc(driverInfoRepo: DriverInfoRepoImpl(driverInfoSource: DriverInfoSource())),
           child: TrackInfoScreen(),
         ),
       ),
@@ -153,16 +128,10 @@ class Routes {
             providers: [
               BlocProvider(
                 create: (context) => InivitesBloc(
-                  activeOrderRepository: ActiveOrderRepositoryImpl(
-                    activeOrderSource: ActiveOrderSource(),
-                  ),
+                  activeOrderRepository: ActiveOrderRepositoryImpl(activeOrderSource: ActiveOrderSource()),
                 )..add(FetchActiveOrderEvent()),
               ),
-              BlocProvider(
-                create: (context) => ProposalBloc(
-                  HomeRepositoryImpl(dataSource: HomeDataSource()),
-                ),
-              ),
+              BlocProvider(create: (context) => ProposalBloc(HomeRepositoryImpl(dataSource: HomeDataSource()))),
             ],
             child: InvatesScreen(),
           );
@@ -171,20 +140,29 @@ class Routes {
       GoRoute(
         path: Pages.profile,
         builder: (context, state) {
-          return BlocProvider(
-            create: (context) =>
-                ProfileBloc(ProfileRepositoryImpl(ProfileDataSource())),
-            child: ProfilePage(),
-          );
+          return ProfilePage();
         },
       ),
       GoRoute(
-        path: Pages.proccessOrder,
-        builder: (context, state) => BlocProvider(
-          create: (context) => OrdersBloc(),
-          child: const OrderProccessScreen(),
-        ),
+        path: Pages.editProfile,
+        builder: (context, state) {
+          return ProfileEditScreen();
+        },
       ),
+
+      GoRoute(
+        path: Pages.proccessOrder,
+        builder: (context, state) => const OrderSingleScreen(),
+        // builder: (context, state) => const OrderProccessScreen(),
+      ),
+      GoRoute(path: Pages.orderInfo, builder: (context, state) => const OrderInfoScreen()),
+      GoRoute(path: Pages.ordersHistory, builder: (context, state) => const OrdersHistoryScreen()),
+      GoRoute(
+        path: Pages.orderHistoryDetail,
+        builder: (context, state) => OrderHistorySingleScreen(orderId: (state.extra as Map)['id']),
+      ),
+
+      GoRoute(path: Pages.finishedOrder, builder: (context, state) => const FinishedOrderScreen()),
     ],
   );
 }

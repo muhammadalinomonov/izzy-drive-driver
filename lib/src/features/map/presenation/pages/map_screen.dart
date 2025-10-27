@@ -340,6 +340,7 @@ class _MapScreenState extends State<MapScreen> {
                     width: 50,
                     child: FloatingActionButton(
                       elevation: 1,
+                      heroTag: 'map_floating',
                       highlightElevation: 1,
                       mini: false,
                       backgroundColor: Colors.white,

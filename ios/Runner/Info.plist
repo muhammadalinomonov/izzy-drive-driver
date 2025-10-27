@@ -2,21 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-    <string>Joylashuvingiz kerak bo'ladi xarita xizmatlari uchun.</string>
-    <key>NSLocationAlwaysUsageDescription</key>
-    <string>Doimiy joylashuvdan foydalanish xarita xizmatlari uchun kerak.</string>
 	<key>CFBundleDisplayName</key>
 	<string>Taxi App</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-    <string>This app requires access to your photo library to select images for uploading.</string>
-    <key>NSCameraUsageDescription</key>
-    <string>This app requires camera access to take photos for uploading.</string>
-    <key>NSPhotoLibraryAddUsageDescription</key>
-    <string>This app needs to save images to your photo library.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -35,6 +26,25 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>This app requires camera access to take photos for uploading.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Doimiy joylashuvdan foydalanish xarita xizmatlari uchun kerak.</string>
+	<key>NSMicrophoneUsageDescription</key>
+    <string>This app needs access to the microphone to record or transmit audio.</string>
+
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>This app needs your location to show nearby trucks and delivery routes.</string>
+
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>This app uses your location in the background to track deliveries and routes.</string>
+
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app needs to save images to your photo library.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires access to your photo library to select images for uploading.</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -52,9 +62,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
 </dict>
 </plist>

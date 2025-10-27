@@ -1,6 +1,0 @@
-framework module hl_image_picker_ios {
-  umbrella header "hl_image_picker_ios-umbrella.h"
-
-  export *
-  module * { export * }
-}

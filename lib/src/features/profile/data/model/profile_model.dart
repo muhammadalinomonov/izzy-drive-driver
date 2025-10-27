@@ -19,6 +19,7 @@ class ProfileResponse {
 }
 
 class ProfileModel {
+  final int id;
   final String email;
   final String fullName;
   final String photo;
@@ -32,19 +33,20 @@ class ProfileModel {
   final int wsId;
   final int driverId;
 
-  ProfileModel({
-    required this.truckName,
-    required this.email,
-    required this.truckmodel,
-    required this.fullName,
-    required this.photo,
-    required this.truckImage,
-    required this.truckYear,
-    required this.phoneNumber,
-    required this.licenseNumber,
-    required this.deviceToken,
-    required this.wsId,
-    required this.driverId,
+  const ProfileModel({
+     this.truckName = '',
+     this.email = '',
+     this.truckmodel = '',
+     this.fullName = '',
+     this.photo = '',
+     this.truckImage = '',
+     this.truckYear = '',
+     this.phoneNumber = '',
+     this.licenseNumber = '',
+     this.deviceToken = '',
+     this.wsId = -1,
+     this.driverId = -1,
+     this.id = -1,
   });
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
@@ -61,6 +63,7 @@ class ProfileModel {
       deviceToken: json['device_token'] ?? '',
       wsId: json['ws_id'] ?? 0,
       driverId: json['driver_id'] ?? 0,
+      id: json['id']??0,
     );
   }
 }

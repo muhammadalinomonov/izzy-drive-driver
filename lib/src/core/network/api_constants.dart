@@ -8,12 +8,22 @@ class ApiConstants {
   static final String nearMechanicsKm = "drivers/near-mechanics-km/";
   static final String searchLocation = "drivers/typing/";
   static final String getBanners = "accounts/banners/";
-  static final String fetchQuestions="accounts/questions-templates/";
-  static final String fetchActiveOrder='drivers/active-order/';
+  static final String fetchQuestions = "accounts/questions-templates/";
+  static final String fetchActiveOffers = 'drivers/active-order/';
   static final String getInvites = "drivers/get-proposal/";
   static final String createReport = "drivers/create-report/";
   static final String getProposals = 'drivers/get-proposal/?proposal_id=';
   static final String mastersView = "drivers/masters-view/";
+  static final String masterDetail = "drivers/mechanic-view/";
   static final String cancelOrder = "drivers/done-current-order/";
-  static var selectProposal="drivers/select-proposal/";
+  static var selectProposal = "drivers/select-proposal/";
+  static final String currentOrder = "drivers/current-order/";
+  static final String subOrderStatus = "drivers/confirm-suborder/";
+  static final String doneCurrentOrder = "drivers/done-current-order/";
+  static final String rateMaster = "drivers/create-review/";
+  static final String getOutputs = "drivers/expense/";
+  static final String createOutput = "drivers/expense/";
+  static final String updatePassword = "accounts/update-password/";
+  static final String ordersHistory = "drivers/order-history/";
+  static final String ordersHistoryDetail = "drivers/order-history-detail/";
 }

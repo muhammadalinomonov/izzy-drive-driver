@@ -70,20 +70,3 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 }
-
-class ProfileWidget extends StatelessWidget {
-  const ProfileWidget({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: TextButton(
-        onPressed: () {
-          StorageRepository.deleteString('token');
-          context.go(Pages.signIn);
-        },
-        child: Text('Log out'),
-      ),
-    );
-  }
-}

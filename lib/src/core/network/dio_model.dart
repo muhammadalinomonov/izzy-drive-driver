@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
 import 'package:taxi_app/src/core/network/token_service.dart'; // Adjust import as needed
 import 'package:taxi_app/src/features/auth/data/repo/auth_repo_impl.dart'; // Adjust import as needed
@@ -17,7 +19,7 @@ class DioSettings {
       ),
     );
 
-    dio.interceptors.add(
+    dio.interceptors..add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           print('Request sent: ${options.method} ${options.path}');
@@ -74,6 +76,14 @@ class DioSettings {
           return handler.next(error);
         },
       ),
-    );
+    )..add(LogInterceptor(
+      requestBody: true,
+      responseBody: true,
+      error: true,
+      logPrint: (obj) => log('$obj'),
+      request: true,
+      requestHeader: true,
+      responseHeader: false,
+    ));
   }
 }

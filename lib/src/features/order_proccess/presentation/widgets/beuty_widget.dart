@@ -1,46 +1,43 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 
 class BeautifulRadiationWidget extends StatefulWidget {
   final bool isVisible;
   final Offset position;
 
-  const BeautifulRadiationWidget({
-    Key? key,
-    required this.isVisible,
-    required this.position,
-  }) : super(key: key);
+  const BeautifulRadiationWidget({Key? key, required this.isVisible, required this.position}) : super(key: key);
 
   @override
   State<BeautifulRadiationWidget> createState() => _BeautifulRadiationWidgetState();
 }
 
-class _BeautifulRadiationWidgetState extends State<BeautifulRadiationWidget>
-    with TickerProviderStateMixin {
+class _BeautifulRadiationWidgetState extends State<BeautifulRadiationWidget> with TickerProviderStateMixin {
   late AnimationController _radiationController;
   late Animation<double> _radiationAnimation;
 
   @override
   void initState() {
     super.initState();
-    _radiationController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    )..addStatusListener((status) {
-      if (status == AnimationStatus.completed) _radiationController.forward(from: 0.0);
-    });
-    _radiationAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
-      parent: _radiationController,
-      curve: Curves.easeOut,
-    ));
+    _radiationController = AnimationController(duration: const Duration(seconds: 2), vsync: this)
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.completed) _radiationController.forward(from: 0.0);
+      });
+    _radiationAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _radiationController, curve: Curves.easeOut));
     if (widget.isVisible) _radiationController.repeat();
   }
 
   @override
   void didUpdateWidget(BeautifulRadiationWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.isVisible && !oldWidget.isVisible) _radiationController.repeat();
-    else if (!widget.isVisible && oldWidget.isVisible) _radiationController.stop();
+    if (widget.isVisible && !oldWidget.isVisible)
+      _radiationController.repeat();
+    else if (!widget.isVisible && oldWidget.isVisible)
+      _radiationController.stop();
   }
 
   @override
@@ -55,14 +52,16 @@ class _BeautifulRadiationWidgetState extends State<BeautifulRadiationWidget>
     return Positioned(
       left: widget.position.dx - 150,
       top: widget.position.dy - 150,
-      child: AnimatedBuilder(
-        animation: _radiationAnimation,
-        builder: (context, child) {
-          return CustomPaint(
-            size: const Size(300, 300),
-            painter: RadiationPainter(_radiationAnimation.value),
-          );
-        },
+      child: Stack(
+        children: [
+          AnimatedBuilder(
+            animation: _radiationAnimation,
+            builder: (context, child) {
+              return CustomPaint(size: const Size(300, 300), painter: RadiationPainter(_radiationAnimation.value));
+            },
+          ),
+          Center(child: SvgPicture.asset(AppIcons.master))
+        ],
       ),
     );
   }
@@ -70,6 +69,7 @@ class _BeautifulRadiationWidgetState extends State<BeautifulRadiationWidget>
 
 class RadiationPainter extends CustomPainter {
   final double animationValue;
+
   RadiationPainter(this.animationValue);
 
   @override

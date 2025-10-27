@@ -183,7 +183,7 @@ class ProfileSection extends StatelessWidget {
     return BlocBuilder<ProposalBloc, ProposalState>(
       builder: (context, state) {
         if (state.status == ProposalStatus.loading) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator.adaptive());
         }
         if (state.status == ProposalStatus.error) {
           return Center(child: Text('Error: ${state.errorMessage ?? "Unknown error"}'));
@@ -193,7 +193,9 @@ class ProfileSection extends StatelessWidget {
           return Column(
             children: [
               CircleAvatar(
+                backgroundColor: Colors.transparent,
                 radius: mq.size.width * 0.13,
+
                 backgroundImage: NetworkImage(mechanic.avatar),
               ),
               const SizedBox(height: 12),
@@ -311,7 +313,7 @@ class _OrderInfoSection extends StatelessWidget {
             ),
           );
         }
-        return const Center(child: CircularProgressIndicator());
+        return const Center(child: CircularProgressIndicator.adaptive());
       },
     );
   }
