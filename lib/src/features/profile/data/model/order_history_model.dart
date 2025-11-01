@@ -14,30 +14,31 @@ class OrderHistoryModel extends OrderHistoryEntity {
     super.totalPrice,
     super.status,
     super.acceptedAt,
-    super.completedAt,
     super.currentAddress,
     super.selectedMechanic,
     super.subOrders,
     super.createdAt,
-    super.workTime,
+    super.completedTime,
     super.mechanicInfo,
     super.map,
+    super.address,
   });
 
   factory OrderHistoryModel.fromJson(Map<String, dynamic> json) {
     return OrderHistoryModel(
-      id: json['id'] as int? ?? -1,
+      id: json['order_id'] as int? ?? -1,
       orderTitle: json['order_title'] as String? ?? '',
       price: json['price'] as String? ?? '',
       totalPrice: json['total_price'] as double? ?? 0,
       status: OrderStatusConverter().fromJson(json['status'] as String? ?? 'pending'),
       acceptedAt: json['accepted_at'] as String? ?? '',
-      completedAt: json['completed_at'] as String? ?? '',
+      completedTime: WorkTimeEntityConverter().fromJson(json['completed_time'] ?? {}),
+      address: Address.fromJson(json['address']),
       currentAddress: Address.fromJson(json['current_address'] ?? {}),
       selectedMechanic: ProfileModel.fromJson(json['selected_mechanic'] ?? {}),
       subOrders: (json['sub_orders'] as List<dynamic>?)?.map((e) => SubOrderModel.fromJson(e)).toList() ?? [],
       createdAt: json['created_at'] as String? ?? '',
-      workTime: WorkTimeEntityConverter().fromJson(json['work_time'] ?? {}),
+
       mechanicInfo: ProfileModel.fromJson(json['mechanic_info'] ?? {}),
       map: MapEntity.fromJson(json['map'] ?? {}),
     );

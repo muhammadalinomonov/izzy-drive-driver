@@ -14,16 +14,16 @@ class OrderHistoryEntity extends Equatable {
   @OrderStatusConverter()
   final OrderStatus status;
   final String acceptedAt;
-  final String completedAt;
 
   final Address currentAddress;
   final ProfileModel selectedMechanic;
   final List<SubOrderEntity> subOrders;
   final String createdAt;
   @WorkTimeEntityConverter()
-  final WorkTimeEntity workTime;
+  final WorkTimeEntity completedTime;
   final ProfileModel mechanicInfo;
   final MapEntity map;
+  final Address address;
 
   const OrderHistoryEntity({
     this.id = -1,
@@ -32,14 +32,14 @@ class OrderHistoryEntity extends Equatable {
     this.totalPrice = 0,
     this.status = OrderStatus.pending,
     this.acceptedAt = '',
-    this.completedAt = '',
     this.currentAddress = const Address(),
     this.selectedMechanic = const ProfileModel(),
     this.subOrders = const [],
     this.createdAt = '',
-    this.workTime = const WorkTimeEntity(),
+    this.completedTime = const WorkTimeEntity(),
     this.mechanicInfo = const ProfileModel(),
     this.map = const MapEntity(),
+    this.address = const Address(),
   });
 
   @override
@@ -50,13 +50,13 @@ class OrderHistoryEntity extends Equatable {
     status,
     totalPrice,
     acceptedAt,
-    completedAt,
     currentAddress,
     selectedMechanic,
     subOrders,
     createdAt,
-    workTime,
+    completedTime,
     mechanicInfo,
     map,
+    address,
   ];
 }
