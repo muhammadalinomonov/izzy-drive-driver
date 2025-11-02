@@ -14,7 +14,7 @@ part 'orders_history_state.dart';
 class OrdersHistoryBloc extends Bloc<OrdersHistoryEvent, OrdersHistoryState> {
   final ProfileRepository _profileRepository = ProfileRepositoryImpl(ProfileDataSource());
 
-  OrdersHistoryBloc() : super(OrdersHistoryState()) {
+    OrdersHistoryBloc() : super(OrdersHistoryState()) {
     on<GetOrdersHistoryEvent>(_onGetOrdersHistoryEvent);
     on<GetMoreOrdersHistoryEvent>(_onGetMoreOrdersHistoryEvent);
     on<GetOrderHistoryDetailEvent>(_onGetOrderHistoryDetailEvent);

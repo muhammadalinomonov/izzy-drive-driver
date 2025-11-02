@@ -7,6 +7,7 @@ import 'package:taxi_app/src/features/map/data/model/nearby_masters_response.dar
 import '../../data/model/search_locations_response.dart';
 
 part 'map_event.dart';
+
 part 'map_state.dart';
 
 class MapBloc extends Bloc<MapEvent, MapState> {
@@ -15,10 +16,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   MapBloc({required this.mapRepo}) : super(MapInitial()) {
     on<FetchNearbyMechanicsEvent>((event, emit) async {
       emit(MapLoading());
-      final response = await mapRepo.getNearbyMechanics(
-        latitude: event.latitude,
-        longitude: event.longitude,
-      );
+      final response = await mapRepo.getNearbyMechanics(latitude: event.latitude, longitude: event.longitude);
       if (response.errorText.isEmpty && response.data != null) {
         emit(MapSuccess(nearbyMechanics: response.data as NearbyMastersResponse));
       } else {

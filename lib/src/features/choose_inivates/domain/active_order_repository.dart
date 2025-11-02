@@ -5,4 +5,6 @@ import '../../../core/network/network_response.dart';
 
 abstract class ActiveOrderRepository {
 Future<NetworkResponse> fetchActiveOrder();
+
+Future<NetworkResponse> updateOrderPrice(double price);
 }

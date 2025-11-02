@@ -8,6 +8,7 @@ import '../../data/model/active_order.dart';
 import '../../domain/active_order_repository.dart';
 
 part 'inivites_event.dart';
+
 part 'inivites_state.dart';
 
 class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
@@ -15,12 +16,12 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
   WebSocketChannel? _channel;
   bool _isConnected = false;
 
-  InivitesBloc({required this.activeOrderRepository})
-      : super(InivitesInitial()) {
+  InivitesBloc({required this.activeOrderRepository}) : super(InivitesInitial()) {
     on<FetchActiveOrderEvent>(_onFetchActiveOrder);
     on<ConnectToWebSocketEvent>(_onConnectWebSocket);
     on<DisconnectFromWebSocketEvent>(_onDisconnectFromWebSocket);
     on<NewProposalReceivedEvent>(_onNewProposalReceived);
+    on<UpdateOrderPriceEvent>(_onUpdateOrderPrice);
   }
 
   // Dastlabki takliflarni yuklash
@@ -64,7 +65,7 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
       }
 
       _channel = WebSocketChannel.connect(
-          Uri.parse('wss://ws.quadrix.ai/ws?user_id=$wsId&tab_id=1&browser_id=browser_1')
+        Uri.parse('wss://ws.quadrix.ai/ws?user_id=$wsId&tab_id=1&browser_id=browser_1'),
       );
       _isConnected = true;
       print('WebSocket Connected for Invites with user_id: $wsId');
@@ -94,7 +95,7 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
     if (_channel == null) return;
 
     _channel!.stream.listen(
-          (message) {
+      (message) {
         _handleWebSocketMessage(message, emit);
       },
       onError: (error) {
@@ -184,6 +185,32 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
       emit(InivitesLoaded(updatedOrderResponse));
     } else {
       print('Current state is not InvitesLoaded, cannot add proposal');
+    }
+  }
+
+  Future<void> _onUpdateOrderPrice(UpdateOrderPriceEvent event, Emitter<InivitesState> emit) async {
+    try {
+      if (state is InivitesLoaded) {
+        final order = (state as InivitesLoaded).orderResponse;
+
+        emit(InivitesLoading());
+        final response = await activeOrderRepository.updateOrderPrice(event.price);
+        if (response.data != null) {
+          final newOrder = order.copyWith(
+            order: order.order.copyWith(price: event.price, totalPrice: event.price),
+          );
+          emit(InivitesLoaded(newOrder));
+
+          // Ma'lumotlar yuklangandan so'ng WebSocket'ga ulaning
+          if (!_isConnected) {
+            add(ConnectToWebSocketEvent());
+          }
+        } else {
+          emit(InivitesError(response.errorText ?? 'Unknown error'));
+        }
+      }
+    } catch (e) {
+      emit(InivitesError(e.toString()));
     }
   }
 

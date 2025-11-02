@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hl_image_picker/hl_image_picker.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
@@ -40,7 +40,7 @@ class _ChatPageState extends State<ChatPage>
 
   final _controller = TextEditingController();
   final _recorder = Record();
-  final _picker = HLImagePicker();
+  final _picker = ImagePicker();
   final Map<int, String> _answers = {};
   final List<File> _selectedImages = [];
   String? _voiceFilePath;
@@ -219,16 +219,16 @@ class _ChatPageState extends State<ChatPage>
   }
 
   Future<void> _pickImages() async {
-    final picked = await _picker.openPicker(
-      pickerOptions: HLPickerOptions(
-        mediaType: MediaType.image,
-        maxSelectedAssets: 6,
-      ),
+    // Bir nechta rasm tanlash
+    final List<XFile> pickedFiles = await _picker.pickMultiImage(
+      imageQuality: 90, // optional: rasm sifatini pasaytirish uchun
     );
-    if (picked.isNotEmpty && _currentQuestionIndex == 1) {
+
+    if (pickedFiles.isNotEmpty && _currentQuestionIndex == 1) {
       setState(() {
         _selectedImages.clear();
-        _selectedImages.addAll(picked.map((e) => File(e.path)).toList());
+        _selectedImages.addAll(pickedFiles.map((e) => File(e.path)).toList());
+
         _messages.add(
           ChatMessage(
             type: MessageType.images,
@@ -236,6 +236,7 @@ class _ChatPageState extends State<ChatPage>
             isMe: true,
           ),
         );
+
         _answers[_currentQuestionIndex] = 'Images uploaded';
         _processResponse();
       });
@@ -252,6 +253,7 @@ class _ChatPageState extends State<ChatPage>
         );
       });
     }
+
     _scrollToBottom();
   }
 

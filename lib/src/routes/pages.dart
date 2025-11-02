@@ -15,4 +15,5 @@ class Pages {
   static const String orderInfo = '/orderInfo';
   static const String ordersHistory = '/ordersHistory';
   static const String orderHistoryDetail = '/orderHistoryDetail';
+  static const String searchLocation = '/searchLocation';
 }

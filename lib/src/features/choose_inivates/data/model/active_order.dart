@@ -23,17 +23,41 @@ class OrderResponse {
 
   factory OrderResponse.fromJson(Map<String, dynamic> json) {
     return OrderResponse(
-      status: json['status'] as bool,
-      message: json['message'] as String,
-      total: json['total'] as int,
-      totalPages: json['total_pages'] as int,
-      currentPage: json['current_page'] as int,
+      status: json['status'] as bool? ?? false,
+      message: json['message'] as String? ?? ' ',
+      total: json['total'] as int? ?? 0,
+      totalPages: json['total_pages'] as int? ?? 0,
+      currentPage: json['current_page'] as int? ?? 0,
       next: json['next'],
       previous: json['previous'],
-      data: (json['data'] as List<dynamic>)
+      data: (json['data'] is List<dynamic> ? json['data'] as List<dynamic>? ?? [] : [])
           .map((e) => OrderData.fromJson(e as Map<String, dynamic>))
           .toList(),
-      order: Order.fromJson(json['order'] as Map<String, dynamic>),
+      order: Order.fromJson(json['order'] as Map<String, dynamic>? ?? {}),
+    );
+  }
+
+  OrderResponse copyWith({
+    bool? status,
+    String? message,
+    int? total,
+    int? totalPages,
+    int? currentPage,
+    dynamic? next,
+    dynamic? previous,
+    List<OrderData>? data,
+    Order? order,
+  }) {
+    return OrderResponse(
+      status: status ?? this.status,
+      message: message ?? this.message,
+      total: total ?? this.total,
+      totalPages: totalPages ?? this.totalPages,
+      currentPage: currentPage ?? this.currentPage,
+      next: next ?? this.next,
+      previous: previous ?? this.previous,
+      data: data ?? this.data,
+      order: order ?? this.order,
     );
   }
 }
@@ -103,13 +127,25 @@ class Order {
 
   factory Order.fromJson(Map<String, dynamic> json) {
     return Order(
-      id: json['id'] as int,
-      orderTitle: json['order_title'] as String,
-      price: _toDouble(json['price']),
-      status: json['status'] as String,
-      currentAddress: CurrentAddress.fromJson(json['current_address']),
-      createdAt: json['created_at'] as String,
-      totalPrice: _toDouble(json['total_price']),
+      id: json['id'] as int? ?? -1,
+      orderTitle: json['order_title'] as String? ?? '',
+      price: _toDouble(json['price'] ?? 0),
+      status: json['status'] as String? ?? '',
+      currentAddress: CurrentAddress.fromJson(json['current_address']??{}),
+      createdAt: json['created_at'] as String? ?? '',
+      totalPrice: _toDouble(json['total_price']??0),
+    );
+  }
+
+  Order copyWith({double? price, String? status, CurrentAddress? currentAddress, double? totalPrice}) {
+    return Order(
+      id: id,
+      createdAt: createdAt,
+      currentAddress: currentAddress ?? this.currentAddress,
+      orderTitle: orderTitle,
+      price: price ?? this.price,
+      status: status ?? this.status,
+      totalPrice: totalPrice ?? this.totalPrice,
     );
   }
 }
@@ -120,19 +156,14 @@ class CurrentAddress {
   final String address;
   final bool isStatic;
 
-  CurrentAddress({
-    required this.latitude,
-    required this.longitude,
-    required this.address,
-    required this.isStatic,
-  });
+  CurrentAddress({required this.latitude, required this.longitude, required this.address, required this.isStatic});
 
   factory CurrentAddress.fromJson(Map<String, dynamic> json) {
     return CurrentAddress(
-      latitude: _toDouble(json['latitude']),
-      longitude: _toDouble(json['longitude']),
+      latitude: _toDouble(json['latitude']??0),
+      longitude: _toDouble(json['longitude']??0),
       address: json['address'] as String? ?? '',
-      isStatic: json['is_static'] as bool,
+      isStatic: json['is_static'] as bool? ?? false,
     );
   }
 }

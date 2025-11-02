@@ -3,11 +3,7 @@ class NearbyMastersResponse {
   final String message;
   final NearbyMastersData data;
 
-  NearbyMastersResponse({
-    required this.status,
-    required this.message,
-    required this.data,
-  });
+  NearbyMastersResponse({required this.status, required this.message, required this.data});
 
   factory NearbyMastersResponse.fromJson(Map<String, dynamic> json) {
     return NearbyMastersResponse(
@@ -17,30 +13,19 @@ class NearbyMastersResponse {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'status': status,
-    'message': message,
-    'data': data.toJson(),
-  };
+  Map<String, dynamic> toJson() => {'status': status, 'message': message, 'data': data.toJson()};
 }
 
 class NearbyMastersData {
   final DriverCurrentAddress driverCurrentAddress;
   final List<Mechanic> mechanics;
 
-  NearbyMastersData({
-    required this.driverCurrentAddress,
-    required this.mechanics,
-  });
+  NearbyMastersData({required this.driverCurrentAddress, required this.mechanics});
 
   factory NearbyMastersData.fromJson(Map<String, dynamic> json) {
     return NearbyMastersData(
-      driverCurrentAddress: DriverCurrentAddress.fromJson(
-        json['driver_current_address'] as Map<String, dynamic>,
-      ),
-      mechanics: (json['mechanics'] as List<dynamic>)
-          .map((e) => Mechanic.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      driverCurrentAddress: DriverCurrentAddress.fromJson(json['driver_current_address'] as Map<String, dynamic>),
+      mechanics: (json['mechanics'] as List<dynamic>).map((e) => Mechanic.fromJson(e as Map<String, dynamic>)).toList(),
     );
   }
 
@@ -55,11 +40,7 @@ class DriverCurrentAddress {
   final double longitude;
   final String address;
 
-  DriverCurrentAddress({
-    required this.latitude,
-    required this.longitude,
-    required this.address,
-  });
+  DriverCurrentAddress({required this.latitude, required this.longitude, required this.address});
 
   factory DriverCurrentAddress.fromJson(Map<String, dynamic> json) {
     return DriverCurrentAddress(
@@ -69,11 +50,15 @@ class DriverCurrentAddress {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'latitude': latitude,
-    'longitude': longitude,
-    'address': address,
-  };
+  factory DriverCurrentAddress.fromSearchApiJson(Map<String, dynamic> json) {
+    return DriverCurrentAddress(
+      latitude: (json['lat'] as num?)?.toDouble() ?? 0,
+      longitude: (json['lon'] as num?)?.toDouble() ?? 0,
+      address: json['formatted'] as String? ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {'latitude': latitude, 'longitude': longitude, 'address': address};
 }
 
 class Mechanic {
@@ -82,12 +67,7 @@ class Mechanic {
   final double longitude;
   final double distance;
 
-  Mechanic({
-    required this.id,
-    required this.latitude,
-    required this.longitude,
-    required this.distance,
-  });
+  Mechanic({required this.id, required this.latitude, required this.longitude, required this.distance});
 
   factory Mechanic.fromJson(Map<String, dynamic> json) {
     return Mechanic(
@@ -98,10 +78,5 @@ class Mechanic {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'latitude': latitude,
-    'longitude': longitude,
-    'distance': distance,
-  };
+  Map<String, dynamic> toJson() => {'id': id, 'latitude': latitude, 'longitude': longitude, 'distance': distance};
 }

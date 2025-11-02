@@ -8,6 +8,10 @@ class ActiveOrderRepositoryImpl extends ActiveOrderRepository {
   ActiveOrderRepositoryImpl({required this.activeOrderSource});
 
   @override
-  Future<NetworkResponse> fetchActiveOrder() =>
-      activeOrderSource.fetchActiveOrder();
+  Future<NetworkResponse> fetchActiveOrder() => activeOrderSource.fetchActiveOrder();
+
+  @override
+  Future<NetworkResponse> updateOrderPrice(double price) {
+    return activeOrderSource.updateOrderPrice(price);
+  }
 }

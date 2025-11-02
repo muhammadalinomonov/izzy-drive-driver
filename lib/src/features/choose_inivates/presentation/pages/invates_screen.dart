@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/features/choose_inivates/presentation/widgets/profile_order_model_sheet.dart';
+import 'package:taxi_app/src/features/common/presentation/widgets/common_scalel_animation.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 
 import '../../data/model/active_order.dart';
@@ -18,17 +19,19 @@ class InvatesScreen extends StatefulWidget {
 }
 
 class _InvatesScreenState extends State<InvatesScreen> {
+  late InivitesBloc inivitesBloc;
+
   @override
   void initState() {
     super.initState();
     // Dastlab ma'lumotlarni yuklash
-    context.read<InivitesBloc>().add(FetchActiveOrderEvent());
+    inivitesBloc = context.read<InivitesBloc>()..add(FetchActiveOrderEvent());
   }
 
   @override
   void dispose() {
     // WebSocket'dan uzilish
-    context.read<InivitesBloc>().add(DisconnectFromWebSocketEvent());
+    inivitesBloc.add(DisconnectFromWebSocketEvent());
     print('WebSocket disconnected');
     super.dispose();
   }
@@ -58,7 +61,7 @@ class _InvatesScreenState extends State<InvatesScreen> {
       body: BlocBuilder<InivitesBloc, InivitesState>(
         builder: (context, state) {
           if (state is InivitesLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator.adaptive());
           } else if (state is InivitesLoaded) {
             final orderResponse = state.orderResponse;
             final order = orderResponse.order;
@@ -176,26 +179,38 @@ class _InvatesScreenState extends State<InvatesScreen> {
                               ),
                               if (offers.isEmpty) ...[
                                 const SizedBox(width: 10),
-                                Container(
-                                  padding: const EdgeInsets.all(3),
-                                  width: 35,
-                                  height: 35,
-                                  decoration: ShapeDecoration(
-                                    color: const Color(0x19FB0000),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                CommonScaleAnimation(
+                                  onTap: () {
+                                    if (order.price > 1) {
+                                      context.read<InivitesBloc>().add(UpdateOrderPriceEvent(price: order.price - 1));
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(3),
+                                    width: 35,
+                                    height: 35,
+                                    decoration: ShapeDecoration(
+                                      color: const Color(0x19FB0000),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                    ),
+                                    child: SvgPicture.asset(AppIcons.down),
                                   ),
-                                  child: SvgPicture.asset(AppIcons.down),
                                 ),
                                 const SizedBox(width: 10),
-                                Container(
-                                  width: 38,
-                                  padding: const EdgeInsets.all(3),
-                                  height: 38,
-                                  decoration: ShapeDecoration(
-                                    color: const Color(0x1904A516),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                CommonScaleAnimation(
+                                  onTap: () {
+                                    context.read<InivitesBloc>().add(UpdateOrderPriceEvent(price: order.price + 1));
+                                  },
+                                  child: Container(
+                                    width: 38,
+                                    padding: const EdgeInsets.all(3),
+                                    height: 38,
+                                    decoration: ShapeDecoration(
+                                      color: const Color(0x1904A516),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                    ),
+                                    child: SvgPicture.asset(AppIcons.up),
                                   ),
-                                  child: SvgPicture.asset(AppIcons.up),
                                 ),
                               ],
                               const SizedBox(width: 12),

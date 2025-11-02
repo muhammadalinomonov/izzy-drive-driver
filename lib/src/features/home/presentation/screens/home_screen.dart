@@ -5,14 +5,19 @@ import 'package:flutter_svg/svg.dart';
 import 'package:formz/formz.dart';
 import 'package:go_router/go_router.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
+import 'package:taxi_app/src/features/common/presentation/widgets/common_scalel_animation.dart';
 import 'package:taxi_app/src/features/home/presentation/bloc/bloc/home_bloc.dart';
+import 'package:taxi_app/src/features/home/presentation/widgets/active_order_widget.dart';
 import 'package:taxi_app/src/features/home/presentation/widgets/search_input.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bloc.dart';
+import 'package:taxi_app/src/features/profile/presentation/bloc/history/orders_history_bloc.dart';
 import 'package:taxi_app/src/routes/pages.dart';
+import 'package:taxi_app/src/utils/local.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,9 +27,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  late OrdersHistoryBloc historyBloc;
+
   @override
   void initState() {
     super.initState();
+
+    historyBloc = OrdersHistoryBloc()..add(GetOrdersHistoryEvent());
 
     context.read<OrdersBloc>().add(GetCurrentOrderEvent());
     BlocProvider.of<HomeBloc>(context).add(GetBannersEvent());
@@ -33,65 +42,84 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return KeyboardDismisser(
-      child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        appBar: AppBar(
-          title: Text('Asosiy', style: context.textS.titleLarge?.copyWith(fontSize: 20)),
-          centerTitle: false,
-          // actions: [IconButton(onPressed: () {}, icon: SvgPicture.asset(AppIcons.bell))],
-        ),
-        body: GestureDetector(
-          onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: BlocBuilder<OrdersBloc, OrdersState>(
-                  builder: (context, state) {
-                    if (state.currentOrderStatus.isInProgress) {
-                      return Center(child: CircularProgressIndicator.adaptive());
-                    } else if (state.currentOrderStatus.isSuccess && state.currentOrder.id == -1 ||
-                        state.currentOrderStatus.isFailure) {
-                      return Column(
-                        children: [
-                          SearchInputWidget(hint: 'Usta qayerga borsin ?', textInputAction: TextInputAction.search),
-                          SizedBox(height: 12),
-                          LastLocationWidget(),
-                          SizedBox(height: 12),
-                          LastLocationWidget(),
-                        ],
-                      );
-                    } else if (state.currentOrderStatus.isSuccess) {
-                      return GestureDetector(
-                        onTap: () {
-                          if (state.currentOrder.status.isPending) {
-                            context.push(Pages.invatesPage);
-                          } else if (state.currentOrder.status.isMechanicDone) {
-                            context.push(Pages.finishedOrder);
-                          } else {
-                            context.push(Pages.proccessOrder);
-                          }
-                        },
+      child: BlocProvider.value(
+        value: historyBloc,
+        child: Scaffold(
+          resizeToAvoidBottomInset: false,
+          appBar: AppBar(
+            title: Text('Asosiy', style: context.textS.titleLarge?.copyWith(fontSize: 20)),
+            centerTitle: false,
+            // actions: [IconButton(onPressed: () {}, icon: SvgPicture.asset(AppIcons.bell))],
+          ),
+          body: GestureDetector(
+            onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: BlocBuilder<OrdersBloc, OrdersState>(
+                    builder: (context, state) {
+                      if (state.currentOrderStatus.isInProgress) {
+                        return Center(child: CircularProgressIndicator.adaptive());
+                      } else if ((state.currentOrderStatus.isSuccess && state.currentOrder.id == -1) ||
+                          state.currentOrderStatus.isFailure) {
+                        return BlocBuilder<OrdersHistoryBloc, OrdersHistoryState>(
+                          builder: (context, state) {
+                            return Column(
+                              children: [
+                                SearchInputWidget(
+                                  isReadOnly: true,
+                                  hint: 'Usta qayerga borsin ?',
+                                  textInputAction: TextInputAction.search,
+                                  onTap: () {
+                                    context.push(Pages.searchLocation);
+                                  },
+                                ),
+                                SizedBox(height: 12),
+                                ...List.generate(
+                                  state.ordersHistory.length > 2 ? 2 : state.ordersHistory.length,
+                                  (index) => LastLocationWidget(
+                                    address: state.ordersHistory[index].currentAddress.address,
+                                    onTap: () {
+                                      currentAddress = state.ordersHistory[index].currentAddress.address;
+                                      currentLocation = Position(
+                                        state.ordersHistory[index].currentAddress.latitude,
+                                        state.ordersHistory[index].currentAddress.longitude,
+                                      );
+                                      context.push(Pages.chat);
+                                    },
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      } else if (state.currentOrderStatus.isSuccess) {
+                        return GestureDetector(
+                          onTap: () {
+                            if (state.currentOrder.status.isPending) {
+                              context.push(Pages.invatesPage);
+                            } else if (state.currentOrder.status.isMechanicDone) {
+                              context.push(Pages.finishedOrder);
+                            } else {
+                              context.push(Pages.proccessOrder);
+                            }
+                          },
 
-                        child: Container(
-                          height: 160,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            color: AppColor.kPrimaryColor.withOpacity(0.1),
-                          ),
-                        ),
-                      );
-                    } else {
-                      return Center(child: Text('Xatolik yuz berdi', style: context.textS.bodyLarge));
-                    }
-                  },
+                          child: ActiveOrderWidget(orderId: state.currentOrder.id, status: state.currentOrder.status),
+                        );
+                      } else {
+                        return Center(child: Text('Xatolik yuz berdi', style: context.textS.bodyLarge));
+                      }
+                    },
+                  ),
                 ),
-              ),
-              SizedBox(height: 20),
-              OtherOpportunitiesWidget(),
-              SizedBox(height: 25),
-              BannerWidget(),
-            ],
+                SizedBox(height: 20),
+                OtherOpportunitiesWidget(),
+                SizedBox(height: 25),
+                BannerWidget(),
+              ],
+            ),
           ),
         ),
       ),
@@ -191,12 +219,16 @@ class BannerWidget extends StatelessWidget {
 }
 
 class LastLocationWidget extends StatelessWidget {
-  const LastLocationWidget({super.key});
+  const LastLocationWidget({super.key, required this.address, required this.onTap});
+
+  final String address;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.push(Pages.map),
+    return CommonScaleAnimation(
+      // behavior: HitTestBehavior.opaque,
+      onTap: () => onTap.call(), //context.push(Pages.map),
       child: Container(
         width: double.infinity,
         height: 55,
@@ -212,14 +244,7 @@ class LastLocationWidget extends StatelessWidget {
           children: [
             SvgPicture.asset(AppIcons.pending),
             SizedBox(width: 10),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Evos chilonzor'),
-                Text('2972 Westheimer Rd. Santa Ana, Illinois 85486', style: context.textS.labelMedium),
-              ],
-            ),
+            Expanded(child: Text(address)),
           ],
         ),
       ),

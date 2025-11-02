@@ -190,7 +190,6 @@ class _ProfileMenu extends StatelessWidget {
           },
         ),
         _ProfileMenuItem(icon: Icons.star_border, title: 'Ilovamizni baholang', onTap: () {}),
-        _ProfileMenuItem(icon: Icons.help_outline, title: 'Savol yoki takliflar uchun', onTap: () {}),
         _ProfileMenuItem(
           icon: Icons.language,
           title: 'Til',

@@ -72,7 +72,7 @@ class _MasterScreenState extends State<MasterScreen> {
               child: BlocBuilder<MasterBloc, MasterState>(
                 builder: (context, state) {
                   if (state.status == MasterStatus.loading) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const Center(child: CircularProgressIndicator.adaptive());
                   } else if (state.status == MasterStatus.success) {
                     return GridView.builder(
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

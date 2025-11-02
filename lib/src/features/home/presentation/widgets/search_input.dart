@@ -14,6 +14,10 @@ class SearchInputWidget extends StatefulWidget {
     this.textInputType,
     this.obscureText = false,
     this.isPassword = false,
+    this.suffix,
+    this.onChanged,
+    this.onTap,
+    this.isReadOnly,
   });
 
   final String hint;
@@ -23,13 +27,16 @@ class SearchInputWidget extends StatefulWidget {
   final bool isPassword;
   final TextInputAction? textInputAction;
   final TextInputType? textInputType;
+  final Widget? suffix;
+  final Function(String value)? onChanged;
+  final VoidCallback? onTap;
+  final bool? isReadOnly;
 
   @override
   State<SearchInputWidget> createState() => _SearchInputWidgetState();
 }
 
-class _SearchInputWidgetState extends State<SearchInputWidget>
-    with SingleTickerProviderStateMixin {
+class _SearchInputWidgetState extends State<SearchInputWidget> with SingleTickerProviderStateMixin {
   late bool _obscureText;
   late AnimationController _iconController;
 
@@ -37,11 +44,7 @@ class _SearchInputWidgetState extends State<SearchInputWidget>
   void initState() {
     super.initState();
     _obscureText = widget.obscureText;
-    _iconController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-      upperBound: 0.5,
-    );
+    _iconController = AnimationController(vsync: this, duration: const Duration(milliseconds: 200), upperBound: 0.5);
     if (!_obscureText) {
       _iconController.value = 0.5;
     }
@@ -67,6 +70,9 @@ class _SearchInputWidgetState extends State<SearchInputWidget>
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      readOnly: widget.isReadOnly ?? false,
+      onChanged: widget.onChanged,
+      onTap: widget.onTap,
       controller: widget.controller,
       validator: widget.validator,
       obscureText: widget.isPassword ? _obscureText : widget.obscureText,
@@ -74,26 +80,15 @@ class _SearchInputWidgetState extends State<SearchInputWidget>
       textInputAction: widget.textInputAction ?? TextInputAction.next,
       decoration: InputDecoration(
         contentPadding: EdgeInsets.symmetric(horizontal: 10),
-        prefixIcon: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: SvgPicture.asset(AppIcons.search),
-        ),
+        prefixIcon: Padding(padding: const EdgeInsets.all(12.0), child: SvgPicture.asset(AppIcons.search)),
         hintText: widget.hint,
-        hintStyle: context.textS.titleMedium!.copyWith(
-          color: AppColor.lightGreyBlue,
-          fontWeight: FontWeight.w400,
-        ),
+        hintStyle: context.textS.titleMedium!.copyWith(color: AppColor.lightGreyBlue, fontWeight: FontWeight.w400),
+        suffix: widget.suffix,
         fillColor: AppColor.lightBlue,
         filled: true,
         labelStyle: TextStyle(color: AppColor.grey),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: AppColor.red),
@@ -110,12 +105,7 @@ class _SearchInputWidgetState extends State<SearchInputWidget>
                   builder: (context, child) {
                     return Transform.rotate(
                       angle: _iconController.value * 3.1416 * 2,
-                      child: Icon(
-                        _obscureText
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                        color: AppColor.grey,
-                      ),
+                      child: Icon(_obscureText ? Icons.visibility_off : Icons.visibility, color: AppColor.grey),
                     );
                   },
                 ),

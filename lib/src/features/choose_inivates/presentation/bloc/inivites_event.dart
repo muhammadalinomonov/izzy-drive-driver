@@ -14,3 +14,9 @@ class NewProposalReceivedEvent extends InivitesEvent {
 
   NewProposalReceivedEvent(this.newProposal);
 }
+
+class UpdateOrderPriceEvent extends InivitesEvent {
+  final double price;
+
+  UpdateOrderPriceEvent({required this.price});
+}
