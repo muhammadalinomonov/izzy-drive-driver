@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:taxi_app/src/core/enums/order_enums.dart';
 import 'package:taxi_app/src/features/chat/data/model/report_response.dart';
+import 'package:taxi_app/src/features/order_proccess/data/model/current_order_model.dart';
+import 'package:taxi_app/src/features/order_proccess/domain/entities/current_order_entity.dart';
 import 'package:taxi_app/src/features/order_proccess/domain/entities/sub_order_entity.dart';
 import 'package:taxi_app/src/features/profile/data/model/profile_model.dart';
 import 'package:taxi_app/src/features/profile/domain/entities/map_entity.dart';
@@ -23,7 +25,7 @@ class OrderHistoryEntity extends Equatable {
   final WorkTimeEntity completedTime;
   final ProfileModel mechanicInfo;
   final MapEntity map;
-  final Address address;
+  final String address;
 
   const OrderHistoryEntity({
     this.id = -1,
@@ -39,7 +41,7 @@ class OrderHistoryEntity extends Equatable {
     this.completedTime = const WorkTimeEntity(),
     this.mechanicInfo = const ProfileModel(),
     this.map = const MapEntity(),
-    this.address = const Address(),
+    this.address = '',
   });
 
   @override
@@ -59,4 +61,13 @@ class OrderHistoryEntity extends Equatable {
     map,
     address,
   ];
+
+  CurrentOrderEntity toCurrentOrderEntity(){
+    return CurrentOrderEntity(
+      orderTitle: orderTitle,
+      price: price,
+      subOrders: subOrders,
+      totalPrice: totalPrice.toString(),
+    );
+  }
 }

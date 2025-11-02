@@ -22,6 +22,9 @@ class ProfileModel {
   final int id;
   final String email;
   final String fullName;
+  ///for selected mechanic name
+  final String mechanicName;
+  final int mechanicId;
   final String photo;
   final String truckImage;
   final String truckYear;
@@ -38,6 +41,8 @@ class ProfileModel {
      this.email = '',
      this.truckmodel = '',
      this.fullName = '',
+    this.mechanicName = '',
+    this.mechanicId = 0,
      this.photo = '',
      this.truckImage = '',
      this.truckYear = '',
@@ -54,6 +59,8 @@ class ProfileModel {
       email: json['email'] ?? '',
       truckmodel: json['truck_model'] ?? '',
       fullName: json['full_name'] ?? '',
+      mechanicName: json['mechanic_name'] ?? '',
+      mechanicId: json['mechanic_id'] ?? 0,
       photo: json['photo'] ?? '',
       truckImage: json['truck_image'] ?? '',
       truckName: json['truck_mar'] ?? '',

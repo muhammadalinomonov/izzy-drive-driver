@@ -3,10 +3,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
+import 'package:taxi_app/src/core/location_service.dart';
 import 'package:taxi_app/src/core/utils/extensions.dart';
 import 'package:taxi_app/src/core/utils/my_functions.dart';
 import 'package:taxi_app/src/features/common/presentation/widgets/common_button.dart';
 import 'package:taxi_app/src/features/common/presentation/widgets/common_image.dart';
+import 'package:taxi_app/src/features/common/presentation/widgets/common_scalel_animation.dart';
+import 'package:taxi_app/src/features/master/data/repository/master_repository_impl.dart';
+import 'package:taxi_app/src/features/master/data/source/master_remote_data_source.dart';
+import 'package:taxi_app/src/features/master/presentation/bloc/master_bloc.dart';
+import 'package:taxi_app/src/features/master/presentation/screens/master_detail_sheet.dart';
+import 'package:taxi_app/src/features/order_proccess/presentation/widgets/sub_orders_card.dart';
 import 'package:taxi_app/src/features/profile/presentation/bloc/history/orders_history_bloc.dart';
 import 'package:taxi_app/src/features/profile/presentation/widgets/map_widget.dart';
 import 'package:taxi_app/src/features/profile/presentation/widgets/order_information_widget.dart';
@@ -76,63 +83,96 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                     child: Column(
                       children: [
                         SizedBox(height: 269 + context.padding.top),
-                        if (widget.fromHistory)
-                          Container(
-                            width: context.sizeOf.width,
-                            padding: EdgeInsets.only(top: context.padding.top + 12, right: 27, left: 12, bottom: 18),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
-                              color: AppColor.white,
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(height: 22),
-                                Text(
-                                  MyFunctions.formatDateTime(state.orderHistoryDetail.completedTime.formattedTime),
-                                  style: context.textTheme.bodyMedium!.copyWith(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColor.blueMain
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        else
-                          Container(
-                            width: context.sizeOf.width,
-                            padding: EdgeInsets.only(top: context.padding.top + 18, right: 27, left: 27, bottom: 18),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
-                              color: AppColor.white,
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // SvgPicture.asset(AppIcons.circularCheck, width: 50, height: 50),
-                                SizedBox(height: 18),
-                                Text(
-                                  'Muvaffaqiyatli yakunlandi!',
-                                  style: context.textTheme.bodyMedium!.copyWith(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                SizedBox(height: 12),
-                                Text(
-                                  'Lorem Ipsum is simply dummy text of the printing and typesetting industry',
-                                  style: context.textTheme.bodySmall!.copyWith(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
-                                    color: AppColor.grey,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
+                        Container(
+                          width: context.sizeOf.width,
+                          padding: EdgeInsets.only(top: 12, right: 27, left: 12, bottom: 18),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
+                            color: AppColor.white,
                           ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Buyurtma ma’lumotlari',
+                                style: context.textTheme.bodyMedium!.copyWith(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              SizedBox(height: 12),
+                              Text(
+                                'Buyurtma berildi',
+                                style: context.textTheme.bodyMedium!.copyWith(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                  color: AppColor.grey,
+                                ),
+                              ),
+                              Text(
+                                MyFunctions.formatDateTime(state.orderHistoryDetail.acceptedAt),
+                                style: context.textTheme.bodyMedium!.copyWith(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Divider(height: 25, thickness: 1, color: AppColor.lightGrey),
+                              Text(
+                                'Sarflangan vaqt',
+                                style: context.textTheme.bodyMedium!.copyWith(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                  color: AppColor.grey,
+                                ),
+                              ),
+                              Text(
+                                MyFunctions.formatDuration(
+                                  state.orderHistoryDetail.completedTime.minutes +
+                                      state.orderHistoryDetail.completedTime.days * 1440 +
+                                      state.orderHistoryDetail.completedTime.hours * 60,
+                                ),
+                                style: context.textTheme.bodyMedium!.copyWith(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Divider(height: 25, thickness: 1, color: AppColor.lightGrey),
+                              Text(
+                                'Qayerga',
+                                style: context.textTheme.bodyMedium!.copyWith(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                  color: AppColor.grey,
+                                ),
+                              ),
+                              Text(
+                                state.orderHistoryDetail.address,
+                                style: context.textTheme.bodyMedium!.copyWith(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Divider(height: 25, thickness: 1, color: AppColor.lightGrey),
+                              Text(
+                                'To’lov turi',
+                                style: context.textTheme.bodyMedium!.copyWith(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                  color: AppColor.grey,
+                                ),
+                              ),
+                              Text(
+                                'Naqt pul',
+                                style: context.textTheme.bodyMedium!.copyWith(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
                         Container(
                           margin: EdgeInsets.symmetric(vertical: 8),
                           padding: EdgeInsets.symmetric(horizontal: 12, vertical: 18),
@@ -142,7 +182,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Haydovchi ma’lumotlari',
+                                'Master',
                                 style: context.textTheme.bodyMedium!.copyWith(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -151,160 +191,201 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                               SizedBox(height: 12),
                               Row(
                                 children: [
-                                  CommonNetworkImage(
-                                    imageUrl: state.orderHistoryDetail.selectedMechanic.photo,
+                                  Container(
                                     width: 44,
                                     height: 44,
-                                    radius: 22,
-                                    fit: BoxFit.cover,
+                                    decoration: BoxDecoration(shape: BoxShape.circle, color: AppColor.lightBlue),
+                                    child: CommonNetworkImage(
+                                      imageUrl: state.orderHistoryDetail.selectedMechanic.photo,
+                                      width: 44,
+                                      height: 44,
+                                      radius: 22,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
                                   SizedBox(width: 12),
-                                  Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        state.orderHistoryDetail.selectedMechanic.fullName,
-                                        style: context.textTheme.bodyMedium!.copyWith(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        state.orderHistoryDetail.selectedMechanic.phoneNumber,
-                                        style: context.textTheme.bodySmall!.copyWith(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w400,
-                                          color: AppColor.grey,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        OrderInformationWidget(
-                          createdAt: MyFunctions.formatDateTime(state.orderHistoryDetail.acceptedAt),
-                          workDuration: state.orderHistoryDetail.completedTime.formattedTime,
-                          address: state.orderHistoryDetail.currentAddress.address,
-                        ),
-                        Container(
-                          margin: EdgeInsets.only(top: 8),
-                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 18),
-                          decoration: BoxDecoration(color: AppColor.white, borderRadius: BorderRadius.circular(12)),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Xizmatlar',
-                                style: context.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              SizedBox(height: 18),
-                              Row(
-                                children: [
-                                  Text(
-                                    state.orderHistoryDetail.orderTitle,
-                                    style: context.textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 14,
-                                      color: AppColor.grey,
-                                    ),
-                                  ),
                                   Expanded(
-                                    child: Container(
-                                      margin: EdgeInsets.symmetric(horizontal: 8),
-                                      color: AppColor.lightBlue,
-                                      height: 1,
-                                    ),
-                                  ),
-                                  Text(
-                                    '\$${state.orderHistoryDetail.price}',
-                                    style: context.textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 16),
-                              ...List.generate(
-                                state.orderHistoryDetail.subOrders
-                                    .where((element) => element.status == 'accepted')
-                                    .length,
-                                (index) {
-                                  final subOrder = state.orderHistoryDetail.subOrders
-                                      .where((element) => element.status == 'accepted')
-                                      .toList()[index];
-                                  return Padding(
-                                    padding: EdgeInsets.only(bottom: index == 3 - 1 ? 0 : 12),
-                                    child: Row(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          subOrder.title,
-                                          style: context.textTheme.bodyMedium?.copyWith(
-                                            fontWeight: FontWeight.w400,
+                                          state.orderHistoryDetail.mechanicInfo.mechanicName,
+                                          style: context.textTheme.bodyMedium!.copyWith(
                                             fontSize: 14,
-                                            color: AppColor.grey,
+                                            fontWeight: FontWeight.w600,
                                           ),
                                         ),
-                                        Expanded(
-                                          child: Container(
-                                            margin: EdgeInsets.symmetric(horizontal: 8),
-                                            color: AppColor.lightBlue,
-                                            height: 1,
+                                        SizedBox(height: 4),
+                                        if (state.orderHistoryDetail.mechanicInfo.phoneNumber.isNotEmpty)
+                                          Text(
+                                            state.orderHistoryDetail.mechanicInfo.phoneNumber,
+                                            style: context.textTheme.bodySmall!.copyWith(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w400,
+                                              color: AppColor.grey,
+                                            ),
                                           ),
-                                        ),
-                                        Text(
-                                          '\$${subOrder.price}',
-                                          style: context.textTheme.bodyMedium?.copyWith(
-                                            fontWeight: FontWeight.w500,
-                                            fontSize: 14,
-                                          ),
-                                        ),
                                       ],
                                     ),
-                                  );
-                                },
-                              ),
-                              Container(
-                                margin: EdgeInsets.only(top: 8),
-                                padding: EdgeInsets.symmetric(horizontal: 11, vertical: 5),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  color: AppColor.darkBlue,
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      'Umumiy summa',
-                                      style: context.textTheme.bodyMedium?.copyWith(
-                                        fontWeight: FontWeight.w400,
-                                        fontSize: 14,
-                                        color: AppColor.blueMain,
+                                  ),
+                                  CommonScaleAnimation(
+                                    onTap: () {
+                                      final masterBloc = MasterBloc(
+                                        MasterRepositoryImpl(MasterRemoteDataSource()),
+                                        LocationService(),
+                                      );
+                                      showModalBottomSheet(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        builder: (context) => BlocProvider.value(
+                                          value: masterBloc,
+                                          child: MasterDetailSheet(id: state.orderHistoryDetail.mechanicInfo.mechanicId),
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        color: AppColor.lightBlue,
+                                      ),
+                                      child: Text(
+                                        'More',
+                                        style: context.textTheme.bodyMedium!.copyWith(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
                                     ),
-                                    Text(
-                                      '\$${state.orderHistoryDetail.totalPrice}',
-                                      style: context.textTheme.bodyMedium?.copyWith(
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 16,
-                                        color: AppColor.blueMain,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
                         ),
+                        // OrderInformationWidget(
+                        //   createdAt: MyFunctions.formatDateTime(state.orderHistoryDetail.acceptedAt),
+                        //   workDuration: state.orderHistoryDetail.completedTime.formattedTime,
+                        //   address: state.orderHistoryDetail.currentAddress.address,
+                        // ),
+
+                        ///
+                        SubOrdersCard(currentOrder: state.orderHistoryDetail.toCurrentOrderEntity()),
+                        // Container(
+                        //   margin: EdgeInsets.only(top: 8),
+                        //   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 18),
+                        //   decoration: BoxDecoration(color: AppColor.white, borderRadius: BorderRadius.circular(12)),
+                        //   child: Column(
+                        //     mainAxisSize: MainAxisSize.min,
+                        //     crossAxisAlignment: CrossAxisAlignment.start,
+                        //     children: [
+                        //       Text(
+                        //         'Xizmatlar',
+                        //         style: context.textTheme.bodyMedium?.copyWith(
+                        //           fontWeight: FontWeight.w500,
+                        //           fontSize: 16,
+                        //         ),
+                        //       ),
+                        //       SizedBox(height: 18),
+                        //       Row(
+                        //         children: [
+                        //           Text(
+                        //             state.orderHistoryDetail.orderTitle,
+                        //             style: context.textTheme.bodyMedium?.copyWith(
+                        //               fontWeight: FontWeight.w400,
+                        //               fontSize: 14,
+                        //               color: AppColor.grey,
+                        //             ),
+                        //           ),
+                        //           Expanded(
+                        //             child: Container(
+                        //               margin: EdgeInsets.symmetric(horizontal: 8),
+                        //               color: AppColor.lightBlue,
+                        //               height: 1,
+                        //             ),
+                        //           ),
+                        //           Text(
+                        //             '\$${state.orderHistoryDetail.price}',
+                        //             style: context.textTheme.bodyMedium?.copyWith(
+                        //               fontWeight: FontWeight.w500,
+                        //               fontSize: 14,
+                        //             ),
+                        //           ),
+                        //         ],
+                        //       ),
+                        //       SizedBox(height: 16),
+                        //       ...List.generate(
+                        //         state.orderHistoryDetail.subOrders
+                        //             .where((element) => element.status == 'accepted')
+                        //             .length,
+                        //         (index) {
+                        //           final subOrder = state.orderHistoryDetail.subOrders
+                        //               .where((element) => element.status == 'accepted')
+                        //               .toList()[index];
+                        //           return Padding(
+                        //             padding: EdgeInsets.only(bottom: index == 3 - 1 ? 0 : 12),
+                        //             child: Row(
+                        //               children: [
+                        //                 Text(
+                        //                   subOrder.title,
+                        //                   style: context.textTheme.bodyMedium?.copyWith(
+                        //                     fontWeight: FontWeight.w400,
+                        //                     fontSize: 14,
+                        //                     color: AppColor.grey,
+                        //                   ),
+                        //                 ),
+                        //                 Expanded(
+                        //                   child: Container(
+                        //                     margin: EdgeInsets.symmetric(horizontal: 8),
+                        //                     color: AppColor.lightBlue,
+                        //                     height: 1,
+                        //                   ),
+                        //                 ),
+                        //                 Text(
+                        //                   '\$${subOrder.price}',
+                        //                   style: context.textTheme.bodyMedium?.copyWith(
+                        //                     fontWeight: FontWeight.w500,
+                        //                     fontSize: 14,
+                        //                   ),
+                        //                 ),
+                        //               ],
+                        //             ),
+                        //           );
+                        //         },
+                        //       ),
+                        //       Container(
+                        //         margin: EdgeInsets.only(top: 8),
+                        //         padding: EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+                        //         decoration: BoxDecoration(
+                        //           borderRadius: BorderRadius.circular(12),
+                        //           color: AppColor.darkBlue,
+                        //         ),
+                        //         child: Row(
+                        //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        //           children: [
+                        //             Text(
+                        //               'Umumiy summa',
+                        //               style: context.textTheme.bodyMedium?.copyWith(
+                        //                 fontWeight: FontWeight.w400,
+                        //                 fontSize: 14,
+                        //                 color: AppColor.blueMain,
+                        //               ),
+                        //             ),
+                        //             Text(
+                        //               '\$${state.orderHistoryDetail.totalPrice}',
+                        //               style: context.textTheme.bodyMedium?.copyWith(
+                        //                 fontWeight: FontWeight.w500,
+                        //                 fontSize: 16,
+                        //                 color: AppColor.blueMain,
+                        //               ),
+                        //             ),
+                        //           ],
+                        //         ),
+                        //       ),
+                        //     ],
+                        //   ),
+                        // ),
                         SizedBox(height: 88),
                       ],
                     ),

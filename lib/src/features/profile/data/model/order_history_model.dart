@@ -27,20 +27,21 @@ class OrderHistoryModel extends OrderHistoryEntity {
   factory OrderHistoryModel.fromJson(Map<String, dynamic> json) {
     return OrderHistoryModel(
       id: json['order_id'] as int? ?? -1,
-      orderTitle: json['order_title'] as String? ?? '',
-      price: json['price'] as String? ?? '',
+      orderTitle: ((json['order'] as Map?)?['title'] as String?) ?? '',
+      price: ((json['order'] as Map?)?['price'] as double?)?.toString() ?? '',
       totalPrice: json['total_price'] as double? ?? 0,
       status: OrderStatusConverter().fromJson(json['status'] as String? ?? 'pending'),
       acceptedAt: json['accepted_at'] as String? ?? '',
       completedTime: WorkTimeEntityConverter().fromJson(json['completed_time'] ?? {}),
-      address: Address.fromJson(json['address']),
+      address: json['address'] as String? ?? '',
       currentAddress: Address.fromJson(json['current_address'] ?? {}),
       selectedMechanic: ProfileModel.fromJson(json['selected_mechanic'] ?? {}),
       subOrders: (json['sub_orders'] as List<dynamic>?)?.map((e) => SubOrderModel.fromJson(e)).toList() ?? [],
       createdAt: json['created_at'] as String? ?? '',
-
       mechanicInfo: ProfileModel.fromJson(json['mechanic_info'] ?? {}),
       map: MapEntity.fromJson(json['map'] ?? {}),
+
+      ///active gemini
     );
   }
 }
