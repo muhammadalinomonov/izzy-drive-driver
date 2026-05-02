@@ -26,8 +26,7 @@ import 'package:taxi_app/src/routes/pages.dart';
 ///   to search via `/drivers/typing/`, picks an address, returns to map mode.
 ///
 /// On "Davom ettirish" the selected address+coords are forwarded to the
-/// order-create flow via `context.push(Pages.chat, extra: {...})` (the
-/// dedicated wizard route lands in Phase 3).
+/// order-create wizard via `context.push(Pages.orderCreate, extra: {...})`.
 class LocationPickerScreen extends StatefulWidget {
   const LocationPickerScreen({super.key});
 
@@ -234,7 +233,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     final address = state.selectedAddress.isEmpty
         ? 'Tanlangan joy'
         : state.selectedAddress;
-    context.push(Pages.chat, extra: {
+    context.push(Pages.orderCreate, extra: {
       'address': address,
       'latitude': lat,
       'longitude': lng,

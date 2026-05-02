@@ -103,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         child: LastLocationWidget(
                                           address: addr.address,
                                           onTap: () {
-                                            context.push(Pages.chat, extra: {
+                                            context.push(Pages.orderCreate, extra: {
                                               'address': addr.address,
                                               'latitude': addr.latitude,
                                               'longitude': addr.longitude,
