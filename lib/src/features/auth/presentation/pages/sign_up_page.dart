@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/components/app_snack_bar.dart';
 import 'package:taxi_app/src/core/components/app_validators.dart';
@@ -8,12 +11,11 @@ import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/size_extension.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
+import 'package:taxi_app/src/features/auth/presentation/bloc/bloc/auth_bloc.dart';
 import 'package:taxi_app/src/features/auth/presentation/widgets/auth_input_widget.dart';
+import 'package:taxi_app/src/features/auth/presentation/widgets/otp_verification_sheet.dart';
 import 'package:taxi_app/src/features/auth/presentation/widgets/social_login_widget.dart';
 import 'package:taxi_app/src/routes/pages.dart';
-import 'package:taxi_app/src/features/auth/data/model/auth_model.dart';
-import 'package:taxi_app/src/features/auth/presentation/bloc/bloc/auth_bloc.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -27,6 +29,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final _emailController = TextEditingController();
   final _nameController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _otpSheetOpen = false;
 
   @override
   void dispose() {
@@ -36,13 +39,57 @@ class _SignUpPageState extends State<SignUpPage> {
     super.dispose();
   }
 
-  bool isButtonOnProgress = false;
+  Future<void> _openOtpSheet() async {
+    if (_otpSheetOpen) return;
+    _otpSheetOpen = true;
+    final result = await showOtpVerificationSheet(context);
+    _otpSheetOpen = false;
+    if (!mounted) return;
+    if (result == true) {
+      context.go(Pages.tackScreen);
+    }
+  }
+
+  void _onSocialSuccess() {
+    if (!mounted) return;
+    context.go(Pages.tackScreen);
+  }
+
+  void _onSocialError(String fallback) {
+    if (!mounted) return;
+    final state = context.read<AuthBloc>().state;
+    AppSnackBar.showError(
+      context,
+      (state.errorMessage?.isNotEmpty ?? false) ? state.errorMessage! : fallback,
+    );
+  }
+
+  void _onSubmit() {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    context.read<AuthBloc>().add(
+          RequestOtpEvent(
+            email: _emailController.text.trim(),
+            fullName: _nameController.text.trim(),
+            password: _passwordController.text.trim(),
+            onSuccess: _openOtpSheet,
+            onError: () {},
+          ),
+        );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) {},
+        listenWhen: (p, c) => p.requestOtpStatus != c.requestOtpStatus,
+        listener: (context, state) {
+          if (state.requestOtpStatus == AuthStatus.failure && !_otpSheetOpen) {
+            AppSnackBar.showError(
+              context,
+              state.errorMessage ?? 'Kod yuborib bo\'lmadi',
+            );
+          }
+        },
         child: GestureDetector(
           onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
           child: Stack(
@@ -87,15 +134,46 @@ class _SignUpPageState extends State<SignUpPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SocialLoginWidget(
-                        title: 'Google orqali davom ettirish',
-                        icon: AppIcons.google,
+                      BlocBuilder<AuthBloc, AuthState>(
+                        buildWhen: (p, c) => p.googleStatus != c.googleStatus,
+                        builder: (context, state) {
+                          return SocialLoginWidget(
+                            title: 'Google orqali davom ettirish',
+                            icon: AppIcons.google,
+                            isLoading: state.googleStatus == AuthStatus.loading,
+                            onTap: () => context.read<AuthBloc>().add(
+                                  GoogleSignInEvent(
+                                    onSuccess: _onSocialSuccess,
+                                    onError: () => _onSocialError(
+                                      'Google orqali kirib bo\'lmadi',
+                                    ),
+                                  ),
+                                ),
+                          );
+                        },
                       ),
-                      SizedBox(height: 18),
-                      SocialLoginWidget(
-                        title: 'Apple orqali davom ettirish',
-                        icon: AppIcons.apple,
-                      ),
+                      if (Platform.isIOS) ...[
+                        const SizedBox(height: 18),
+                        BlocBuilder<AuthBloc, AuthState>(
+                          buildWhen: (p, c) => p.appleStatus != c.appleStatus,
+                          builder: (context, state) {
+                            return SocialLoginWidget(
+                              title: 'Apple orqali davom ettirish',
+                              icon: AppIcons.apple,
+                              isLoading:
+                                  state.appleStatus == AuthStatus.loading,
+                              onTap: () => context.read<AuthBloc>().add(
+                                    AppleSignInEvent(
+                                      onSuccess: _onSocialSuccess,
+                                      onError: () => _onSocialError(
+                                        'Apple orqali kirib bo\'lmadi',
+                                      ),
+                                    ),
+                                  ),
+                            );
+                          },
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -111,10 +189,10 @@ class _SignUpPageState extends State<SignUpPage> {
                   height: double.infinity,
                   duration: const Duration(milliseconds: 300),
                   width: double.infinity,
-                  padding: EdgeInsets.only(left: 12, right: 12, top: 24),
+                  padding: const EdgeInsets.only(left: 12, right: 12, top: 24),
                   decoration: BoxDecoration(
                     color: AppColor.white,
-                    borderRadius: BorderRadius.only(
+                    borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(16),
                       topRight: Radius.circular(16),
                     ),
@@ -132,7 +210,7 @@ class _SignUpPageState extends State<SignUpPage> {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          SizedBox(height: 26),
+                          const SizedBox(height: 26),
                           AuthInputWidget(
                             textInputType: TextInputType.emailAddress,
                             hint: 'Emailni kiriting',
@@ -143,7 +221,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 24),
                             child: AuthInputWidget(
-                              textInputType: TextInputType.multiline,
+                              textInputType: TextInputType.text,
                               hint: 'Ismini kiriting',
                               label: 'Ism',
                               controller: _nameController,
@@ -158,43 +236,17 @@ class _SignUpPageState extends State<SignUpPage> {
                             validator: AppValidators.password,
                             obscureText: true,
                           ),
-                          SizedBox(height: 24),
-                          AppButton(
-                            isLoading: isButtonOnProgress,
-                            title: "Ro'yxatdan o'tish",
-                            onTap: () {
-                              if (_formKey.currentState?.validate() ?? false) {
-                                final deviceToken = 'qweerefdsfds232423';
-                                final authModel = AuthModel(
-                                  email: _emailController.text.trim(),
-                                  password: _passwordController.text.trim(),
-                                  fullName: _nameController.text.trim(),
-                                  deviceToken: deviceToken,
-                                );
-                                setState(() {
-                                  isButtonOnProgress = true;
-                                });
-                                context.read<AuthBloc>().add(
-                                  RegisterEvent(
-                                    authModel: authModel,
-                                    onError: () {
-                                      setState(() {
-                                        isButtonOnProgress = false;
-                                      });
-                                      AppSnackBar.showError(
-                                        context,
-                                        'Registration failed. Please try again.',
-                                      );
-                                    },
-                                    onSuccess: () {
-                                      setState(() {
-                                        isButtonOnProgress = false;
-                                      });
-                                      context.go(Pages.tackScreen);
-                                    },
-                                  ),
-                                );
-                              }
+                          const SizedBox(height: 24),
+                          BlocBuilder<AuthBloc, AuthState>(
+                            buildWhen: (p, c) =>
+                                p.requestOtpStatus != c.requestOtpStatus,
+                            builder: (context, state) {
+                              return AppButton(
+                                isLoading: state.requestOtpStatus ==
+                                    AuthStatus.loading,
+                                title: "Ro'yxatdan o'tish",
+                                onTap: _onSubmit,
+                              );
                             },
                           ),
                           Padding(

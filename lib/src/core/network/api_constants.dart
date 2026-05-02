@@ -1,6 +1,16 @@
 class ApiConstants {
   static final String register = "accounts/register/";
   static final String login = "accounts/login/";
+  static final String registerRequestOtp = "accounts/register/request-otp/";
+  static final String registerVerifyOtp = "accounts/register/verify-otp/";
+  static final String registerComplete = "accounts/register/complete/";
+  static final String registerGoogle = "accounts/register/google/";
+  static final String registerApple = "accounts/register/apple/";
+  static final String forgotRequestOtp = "accounts/forgot-password/request-otp/";
+  static final String forgotVerifyOtp = "accounts/forgot-password/verify-otp/";
+  static final String forgotReset = "accounts/forgot-password/reset/";
+  static final String logout = "accounts/logout/";
+  static final String deleteAccount = "accounts/delete-account/";
   static final String profileGet = 'drivers/get-me/';
   static final String getTrackMarks = "drivers/truckmarks/";
   static final String getTrackModel = "drivers/truckmodels/";

@@ -1,5 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/components/app_snack_bar.dart';
 import 'package:taxi_app/src/core/components/app_validators.dart';
@@ -8,13 +10,13 @@ import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/constants/color/app_images.dart';
 import 'package:taxi_app/src/core/extensions/size_extension.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
+import 'package:taxi_app/src/core/utils/notifications.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
+import 'package:taxi_app/src/features/auth/data/model/auth_model.dart';
+import 'package:taxi_app/src/features/auth/presentation/bloc/bloc/auth_bloc.dart';
 import 'package:taxi_app/src/features/auth/presentation/widgets/auth_input_widget.dart';
 import 'package:taxi_app/src/features/auth/presentation/widgets/social_login_widget.dart';
 import 'package:taxi_app/src/routes/pages.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:taxi_app/src/features/auth/data/model/auth_model.dart';
-import 'package:taxi_app/src/features/auth/presentation/bloc/bloc/auth_bloc.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -27,7 +29,22 @@ class _SignInPageState extends State<SignInPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool isButtonOnProgress = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _printFcmToken();
+  }
+
+  Future<void> _printFcmToken() async {
+    final token = await PushNotifications.getToken();
+    // ignore: avoid_print
+    print('==== FCM TOKEN (sign-in page) ====');
+    // ignore: avoid_print
+    print(token);
+    // ignore: avoid_print
+    print('==================================');
+  }
 
   @override
   void dispose() {
@@ -36,27 +53,52 @@ class _SignInPageState extends State<SignInPage> {
     super.dispose();
   }
 
+  void _onSocialSuccess() {
+    if (!mounted) return;
+    context.go(Pages.tackScreen);
+  }
+
+  void _onSocialError(String fallback) {
+    if (!mounted) return;
+    final state = context.read<AuthBloc>().state;
+    AppSnackBar.showError(
+      context,
+      (state.errorMessage?.isNotEmpty ?? false) ? state.errorMessage! : fallback,
+    );
+  }
+
+  Future<void> _onLogin() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    final fcmToken = await PushNotifications.getToken();
+    if (!mounted) return;
+    final authModel = AuthModel(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+      fullName: '',
+      deviceToken: fcmToken,
+    );
+    context.read<AuthBloc>().add(
+          LoginEvent(
+            authModel: authModel,
+            onSuccess: () {
+              if (!mounted) return;
+              context.go(Pages.tackScreen);
+            },
+            onError: () {},
+          ),
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: BlocListener<AuthBloc, AuthState>(
+        listenWhen: (p, c) => p.loginStatus != c.loginStatus,
         listener: (context, state) {
-          if (state.status == AuthStatus.loading) {
-            setState(() {
-              isButtonOnProgress = true;
-            });
-          } else if (state.status == AuthStatus.success) {
-            setState(() {
-              isButtonOnProgress = false;
-            });
-            context.go(Pages.tackScreen);
-          } else if (state.status == AuthStatus.failure) {
-            setState(() {
-              isButtonOnProgress = false;
-            });
+          if (state.loginStatus == AuthStatus.failure) {
             AppSnackBar.showError(
               context,
-              state.errorMessage ?? 'Login failed',
+              state.errorMessage ?? 'Tizimga kirib bo\'lmadi',
             );
           }
         },
@@ -64,35 +106,48 @@ class _SignInPageState extends State<SignInPage> {
           onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
           child: Stack(
             children: [
-              Column(children: [Image.asset(AppImages.loginbg)]),
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: context.h * 0.42,
+                child: Image.asset(
+                  AppImages.loginbg,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
+                ),
+              ),
               Positioned(
                 left: 0,
                 right: 0,
                 bottom: 0,
                 top: MediaQuery.of(context).viewInsets.bottom == 0
-                    ? context.h * 0.3
-                    : context.h * 0.2,
+                    ? context.h * 0.32
+                    : context.h * 0.18,
                 child: AnimatedContainer(
                   height: double.infinity,
                   duration: const Duration(milliseconds: 300),
                   width: double.infinity,
-                  padding: EdgeInsets.only(left: 12, right: 23, top: 24),
+                  padding: const EdgeInsets.fromLTRB(12, 20, 12, 0),
                   decoration: BoxDecoration(
                     color: AppColor.white,
                     boxShadow: [
                       BoxShadow(
-                        offset: Offset(0, -8),
-                        blurRadius: 40,
-                        spreadRadius: 2,
-                        color: AppColor.black.withAlpha(100),
+                        offset: const Offset(0, -4),
+                        blurRadius: 24,
+                        spreadRadius: 0,
+                        color: AppColor.black.withAlpha(30),
                       ),
                     ],
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      topRight: Radius.circular(16),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(18),
+                      topRight: Radius.circular(18),
                     ),
                   ),
                   child: SingleChildScrollView(
+                    padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).viewInsets.bottom + 12,
+                    ),
                     child: Form(
                       key: _formKey,
                       child: Column(
@@ -105,17 +160,51 @@ class _SignInPageState extends State<SignInPage> {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          SizedBox(height: 24),
-                          SocialLoginWidget(
-                            title: 'Google orqali davom ettirish',
-                            icon: AppIcons.google,
+                          const SizedBox(height: 18),
+                          BlocBuilder<AuthBloc, AuthState>(
+                            buildWhen: (p, c) =>
+                                p.googleStatus != c.googleStatus,
+                            builder: (context, state) {
+                              return SocialLoginWidget(
+                                title: 'Google orqali davom ettirish',
+                                icon: AppIcons.google,
+                                isLoading:
+                                    state.googleStatus == AuthStatus.loading,
+                                onTap: () => context.read<AuthBloc>().add(
+                                      GoogleSignInEvent(
+                                        onSuccess: _onSocialSuccess,
+                                        onError: () => _onSocialError(
+                                          'Google orqali kirib bo\'lmadi',
+                                        ),
+                                      ),
+                                    ),
+                              );
+                            },
                           ),
-                          SizedBox(height: 18),
-                          SocialLoginWidget(
-                            title: 'Apple orqali davom ettirish',
-                            icon: AppIcons.apple,
-                          ),
-                          SizedBox(height: 18),
+                          if (Platform.isIOS) ...[
+                            const SizedBox(height: 12),
+                            BlocBuilder<AuthBloc, AuthState>(
+                              buildWhen: (p, c) =>
+                                  p.appleStatus != c.appleStatus,
+                              builder: (context, state) {
+                                return SocialLoginWidget(
+                                  title: 'Apple orqali davom ettirish',
+                                  icon: AppIcons.apple,
+                                  isLoading:
+                                      state.appleStatus == AuthStatus.loading,
+                                  onTap: () => context.read<AuthBloc>().add(
+                                        AppleSignInEvent(
+                                          onSuccess: _onSocialSuccess,
+                                          onError: () => _onSocialError(
+                                            'Apple orqali kirib bo\'lmadi',
+                                          ),
+                                        ),
+                                      ),
+                                );
+                              },
+                            ),
+                          ],
+                          const SizedBox(height: 14),
                           Row(
                             children: [
                               Expanded(
@@ -138,14 +227,15 @@ class _SignInPageState extends State<SignInPage> {
                               ),
                             ],
                           ),
-                          SizedBox(height: 18),
+                          const SizedBox(height: 14),
                           AuthInputWidget(
                             hint: 'Mailni kiriting',
                             label: 'E-mail',
                             controller: _emailController,
                             validator: AppValidators.email,
+                            textInputType: TextInputType.emailAddress,
                           ),
-                          SizedBox(height: 18),
+                          const SizedBox(height: 12),
                           AuthInputWidget(
                             hint: 'Parol kiriting',
                             label: 'Parol',
@@ -154,42 +244,43 @@ class _SignInPageState extends State<SignInPage> {
                             validator: AppValidators.password,
                             obscureText: true,
                           ),
-                          SizedBox(height: 18),
-                          AppButton(
-                            title: 'Tizimga kirish',
-                            isLoading: isButtonOnProgress,
-                            onTap: () {
-                              if (_formKey.currentState?.validate() ?? false) {
-                                final deviceToken = 'qweerefdsfds232423';
-                                final authModel = AuthModel(
-                                  email: _emailController.text.trim(),
-                                  password: _passwordController.text.trim(),
-                                  fullName: '',
-                                  deviceToken: deviceToken,
-                                );
-                                context.read<AuthBloc>().add(
-                                  LoginEvent(
-                                    authModel: authModel,
-                                    onError: () {
-                                      setState(() {
-                                        isButtonOnProgress = false;
-                                      });
-                                    },
-                                    onSuccess: () {
-                                      setState(() {
-                                        isButtonOnProgress = false;
-                                      });
-                                      context.go(Pages.tackScreen);
-                                    },
-                                  ),
-                                );
-                              } else {
-                                print('validate error');
-                              }
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 4,
+                                ),
+                                minimumSize: Size.zero,
+                                tapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              onPressed: () =>
+                                  context.push(Pages.forgotPasswordEmail),
+                              child: Text(
+                                'Parolni unutdingizmi?',
+                                style: context.textS.titleSmall!.copyWith(
+                                  color: AppColor.kPrimaryColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          BlocBuilder<AuthBloc, AuthState>(
+                            buildWhen: (p, c) => p.loginStatus != c.loginStatus,
+                            builder: (context, state) {
+                              return AppButton(
+                                title: 'Tizimga kirish',
+                                isLoading:
+                                    state.loginStatus == AuthStatus.loading,
+                                onTap: _onLogin,
+                              );
                             },
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -201,6 +292,15 @@ class _SignInPageState extends State<SignInPage> {
                                   ),
                                 ),
                                 TextButton(
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 4,
+                                    ),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
                                   onPressed: () => context.push(Pages.signUp),
                                   child: Text(
                                     'Ro’xatdan o’tish',

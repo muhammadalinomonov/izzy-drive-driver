@@ -1,3 +1,4 @@
+import 'package:chucker_flutter/chucker_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/location_service.dart';
@@ -6,6 +7,9 @@ import 'package:taxi_app/src/core/service_locater.dart';
 import 'package:taxi_app/src/features/auth/data/repo/auth_repo_impl.dart';
 import 'package:taxi_app/src/features/auth/data/source/auth_data_source.dart';
 import 'package:taxi_app/src/features/auth/presentation/bloc/bloc/auth_bloc.dart';
+import 'package:taxi_app/src/features/auth/presentation/bloc/forgot_password_bloc/forgot_password_bloc.dart';
+import 'package:taxi_app/src/features/auth/presentation/pages/forgot_password_email_page.dart';
+import 'package:taxi_app/src/features/auth/presentation/pages/reset_password_page.dart';
 import 'package:taxi_app/src/features/auth/presentation/pages/sign_in_page.dart';
 import 'package:taxi_app/src/features/auth/presentation/pages/sign_up_page.dart';
 import 'package:taxi_app/src/features/chat/presentation/pages/chat_page.dart';
@@ -48,6 +52,7 @@ import '../features/map/data/source/map_data_source.dart';
 class Routes {
   static final GoRouter router = GoRouter(
     initialLocation: StorageRepository.getString('token').isNotEmpty ? Pages.main : Pages.signIn,
+    observers: [ChuckerFlutter.navigatorObserver],
     routes: [
       GoRoute(
         path: Pages.signIn,
@@ -110,6 +115,11 @@ class Routes {
                 create: (context) =>
                     MasterBloc(MasterRepositoryImpl(MasterRemoteDataSource()), serviceLocator<LocationService>()),
               ),
+              BlocProvider(
+                create: (_) => AuthBloc(
+                  authRepo: AuthRepoImpl(authDataSource: AuthDataSource()),
+                ),
+              ),
             ],
             child: MainScreen(),
           );
@@ -171,6 +181,31 @@ class Routes {
       ),
 
       GoRoute(path: Pages.finishedOrder, builder: (context, state) => const FinishedOrderScreen()),
+      GoRoute(
+        path: Pages.forgotPasswordEmail,
+        builder: (context, state) {
+          return BlocProvider(
+            create: (_) => ForgotPasswordBloc(
+              authRepo: AuthRepoImpl(authDataSource: AuthDataSource()),
+            ),
+            child: const ForgotPasswordEmailPage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: Pages.resetPassword,
+        builder: (context, state) {
+          final extra = (state.extra as Map?) ?? const {};
+          final resetToken = (extra['resetToken'] as String?) ?? '';
+          return BlocProvider(
+            create: (_) => ForgotPasswordBloc(
+              authRepo: AuthRepoImpl(authDataSource: AuthDataSource()),
+              seedResetToken: resetToken,
+            ),
+            child: const ResetPasswordPage(),
+          );
+        },
+      ),
     ],
   );
 }

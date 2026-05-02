@@ -16,4 +16,6 @@ class Pages {
   static const String ordersHistory = '/ordersHistory';
   static const String orderHistoryDetail = '/orderHistoryDetail';
   static const String searchLocation = '/searchLocation';
+  static const String forgotPasswordEmail = '/forgotPasswordEmail';
+  static const String resetPassword = '/resetPassword';
 }

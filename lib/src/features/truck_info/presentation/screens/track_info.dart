@@ -356,7 +356,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                                       context,
                                       'Your driver profile has been updated',
                                     );
-                                    context.push(Pages.main);
+                                    context.go(Pages.main);
                                   });
                                 },
                               ),

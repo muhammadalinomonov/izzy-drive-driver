@@ -1,8 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:taxi_app/src/core/components/app_snack_bar.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
-import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
 
 class SocialLoginWidget extends StatelessWidget {
@@ -11,30 +10,39 @@ class SocialLoginWidget extends StatelessWidget {
     super.key,
     required this.title,
     required this.icon,
+    this.onTap,
+    this.isLoading = false,
   });
 
   final String title;
   final String icon;
   final Size? size;
+  final VoidCallback? onTap;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () {
-        AppSnackBar.showWarning(context, 'Social auth will be available sooon');
-      },
+      onPressed: isLoading ? null : onTap,
       style: ElevatedButton.styleFrom(
         fixedSize: size,
         backgroundColor: AppColor.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        padding: EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         side: BorderSide(color: AppColor.grey.withAlpha(10), width: 2),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SvgPicture.asset(icon),
-          SizedBox(width: 12),
+          if (isLoading)
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CupertinoActivityIndicator(),
+            )
+          else
+            SvgPicture.asset(icon),
+          const SizedBox(width: 12),
           Text(title, style: context.textS.titleMedium),
         ],
       ),

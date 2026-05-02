@@ -1,8 +1,8 @@
 import 'dart:developer';
 
+import 'package:chucker_flutter/chucker_flutter.dart';
 import 'package:dio/dio.dart';
-import 'package:taxi_app/src/core/network/token_service.dart'; // Adjust import as needed
-import 'package:taxi_app/src/features/auth/data/repo/auth_repo_impl.dart'; // Adjust import as needed
+import 'package:taxi_app/src/core/network/token_service.dart';
 
 class DioSettings {
   static final DioSettings _instance = DioSettings._internal();
@@ -12,7 +12,7 @@ class DioSettings {
   DioSettings._internal() {
     dio = Dio(
       BaseOptions(
-        baseUrl: 'https://master-api.ataxi.uz/api/v1/',
+        baseUrl: 'https://api.izzydrive.com/api/v1/',
         headers: {'Content-Type': 'application/json', 'Accept-Language': 'en'},
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
@@ -85,5 +85,9 @@ class DioSettings {
       requestHeader: true,
       responseHeader: false,
     ));
+
+    
+      dio.interceptors.add(ChuckerDioInterceptor());
+    
   }
 }
