@@ -12,7 +12,6 @@ import 'package:taxi_app/src/features/auth/presentation/pages/forgot_password_em
 import 'package:taxi_app/src/features/auth/presentation/pages/reset_password_page.dart';
 import 'package:taxi_app/src/features/auth/presentation/pages/sign_in_page.dart';
 import 'package:taxi_app/src/features/auth/presentation/pages/sign_up_page.dart';
-import 'package:taxi_app/src/features/chat/presentation/pages/chat_page.dart';
 import 'package:taxi_app/src/features/choose_inivates/data/repo/active_order_repository_imp.dart';
 import 'package:taxi_app/src/features/choose_inivates/presentation/bloc/inivites_bloc.dart';
 import 'package:taxi_app/src/features/choose_inivates/presentation/bloc/proposal_bloc.dart';
@@ -23,6 +22,10 @@ import 'package:taxi_app/src/features/home/presentation/bloc/bloc/home_bloc.dart
 import 'package:taxi_app/src/features/home/presentation/screens/home_screen.dart';
 import 'package:taxi_app/src/features/home/presentation/screens/main_screen.dart';
 import 'package:taxi_app/src/features/map/presenation/pages/location_picker_screen.dart';
+import 'package:taxi_app/src/features/order_create/data/repo/order_create_repo_impl.dart';
+import 'package:taxi_app/src/features/order_create/data/source/order_create_data_source.dart';
+import 'package:taxi_app/src/features/order_create/presentation/bloc/order_create_bloc.dart';
+import 'package:taxi_app/src/features/order_create/presentation/pages/order_create_page.dart';
 import 'package:taxi_app/src/features/map/presenation/bloc/map_bloc.dart';
 import 'package:taxi_app/src/features/master/data/repository/master_repository_impl.dart';
 import 'package:taxi_app/src/features/master/data/source/master_remote_data_source.dart';
@@ -41,9 +44,6 @@ import 'package:taxi_app/src/features/truck_info/presentation/screens/track_info
 import 'package:taxi_app/src/features/worker_info/presentation/pages/worker_info_page.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 
-import '../features/chat/data/repo/chat_repo_imp.dart';
-import '../features/chat/data/source/chat_data_source.dart';
-import '../features/chat/presentation/bloc/chat_bloc.dart';
 import '../features/choose_inivates/data/source/active_order_source.dart';
 import '../features/map/data/repo/map_repo_imp.dart';
 import '../features/map/data/source/map_data_source.dart';
@@ -72,16 +72,18 @@ class Routes {
         },
       ),
       GoRoute(
-        path: Pages.chat,
+        path: Pages.orderCreate,
         builder: (context, state) {
           final extra = (state.extra as Map<String, dynamic>?) ?? const {};
           return BlocProvider(
-            create: (context) => ChatBloc(chatRepo: ChatRepoImpl(chatDataSource: ChatDataSource())),
-            child: ChatPage(
-              address: (extra['address'] as String?) ?? '',
-              latitude: (extra['latitude'] as num?)?.toDouble() ?? 0.0,
-              longitude: (extra['longitude'] as num?)?.toDouble() ?? 0.0,
-            ),
+            create: (_) => OrderCreateBloc(
+              repo: OrderCreateRepoImpl(dataSource: OrderCreateDataSource()),
+            )..add(OrderCreateInitialized(
+                address: (extra['address'] as String?) ?? '',
+                latitude: (extra['latitude'] as num?)?.toDouble() ?? 0.0,
+                longitude: (extra['longitude'] as num?)?.toDouble() ?? 0.0,
+              )),
+            child: const OrderCreatePage(),
           );
         },
       ),
