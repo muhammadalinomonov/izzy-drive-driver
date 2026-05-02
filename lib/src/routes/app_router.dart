@@ -22,9 +22,8 @@ import 'package:taxi_app/src/features/home/data/source/home_data_source.dart';
 import 'package:taxi_app/src/features/home/presentation/bloc/bloc/home_bloc.dart';
 import 'package:taxi_app/src/features/home/presentation/screens/home_screen.dart';
 import 'package:taxi_app/src/features/home/presentation/screens/main_screen.dart';
-import 'package:taxi_app/src/features/home/presentation/screens/search_location_screen.dart';
+import 'package:taxi_app/src/features/map/presenation/pages/location_picker_screen.dart';
 import 'package:taxi_app/src/features/map/presenation/bloc/map_bloc.dart';
-import 'package:taxi_app/src/features/map/presenation/pages/map_screen.dart';
 import 'package:taxi_app/src/features/master/data/repository/master_repository_impl.dart';
 import 'package:taxi_app/src/features/master/data/source/master_remote_data_source.dart';
 import 'package:taxi_app/src/features/master/presentation/bloc/master_bloc.dart';
@@ -97,7 +96,7 @@ class Routes {
         builder: (context, state) {
           return BlocProvider(
             create: (context) => MapBloc(mapRepo: MapRepoImpl(dataSource: MapDataSource())),
-            child: MapScreen(),
+            child: const LocationPickerScreen(),
           );
         },
       ),
@@ -180,7 +179,7 @@ class Routes {
         path: Pages.searchLocation,
         builder: (context, state) => BlocProvider(
           create: (context) => MapBloc(mapRepo: MapRepoImpl(dataSource: MapDataSource())),
-          child: SearchLocationScreen(),
+          child: const LocationPickerScreen(),
         ),
       ),
 

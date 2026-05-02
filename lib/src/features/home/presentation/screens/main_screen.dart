@@ -10,7 +10,6 @@ import 'package:taxi_app/src/features/home/presentation/screens/home_screen.dart
 import 'package:taxi_app/src/features/map/data/repo/map_repo_imp.dart';
 import 'package:taxi_app/src/features/map/data/source/map_data_source.dart';
 import 'package:taxi_app/src/features/map/presenation/bloc/map_bloc.dart';
-import 'package:taxi_app/src/features/map/presenation/pages/map_screen.dart';
 import 'package:taxi_app/src/features/master/presentation/screens/master_screen.dart';
 import 'package:taxi_app/src/features/profile/presentation/pages/profile_page.dart';
 import 'package:taxi_app/src/features/service/presentation/screens/service_screen.dart';

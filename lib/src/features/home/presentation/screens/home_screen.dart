@@ -14,9 +14,9 @@ import 'package:taxi_app/src/features/common/presentation/widgets/common_scalel_
 import 'package:taxi_app/src/features/home/presentation/bloc/bloc/home_bloc.dart';
 import 'package:taxi_app/src/features/home/presentation/widgets/active_order_widget.dart';
 import 'package:taxi_app/src/features/home/presentation/widgets/search_input.dart';
+import 'package:taxi_app/src/features/chat/data/model/report_response.dart';
 import 'package:taxi_app/src/features/order_proccess/domain/entities/current_order_entity.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bloc.dart';
-import 'package:taxi_app/src/features/profile/domain/entities/order_history_entity.dart';
 import 'package:taxi_app/src/features/profile/presentation/bloc/history/orders_history_bloc.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 
@@ -27,7 +27,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-List<Address> _dedupedRecents(List<OrderHistoryEntity> history) {
+List<Address> _dedupedRecents(List<CurrentOrderEntity> history) {
   final seen = <String>{};
   final result = <Address>[];
   for (final order in history) {
