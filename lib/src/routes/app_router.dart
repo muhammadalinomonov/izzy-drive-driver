@@ -164,7 +164,6 @@ class Routes {
       GoRoute(
         path: Pages.proccessOrder,
         builder: (context, state) => const OrderSingleScreen(),
-        // builder: (context, state) => const OrderProccessScreen(),
       ),
       GoRoute(path: Pages.orderInfo, builder: (context, state) => const OrderInfoScreen()),
       GoRoute(path: Pages.ordersHistory, builder: (context, state) => const OrdersHistoryScreen()),

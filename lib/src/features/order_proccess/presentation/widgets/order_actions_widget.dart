@@ -10,6 +10,32 @@ import 'package:url_launcher/url_launcher_string.dart';
 class OrderActionsWidget extends StatelessWidget {
   const OrderActionsWidget({super.key});
 
+  Future<void> _confirmCancel(BuildContext context) async {
+    final bloc = context.read<OrdersBloc>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Buyurtmani bekor qilish?'),
+        content: const Text('Buyurtmani bekor qilishni xohlaysizmi?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Yo\'q'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Ha, bekor qil'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    bloc.add(CancelOrderEvent());
+    if (!context.mounted) return;
+    context.go(Pages.main);
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<OrdersBloc, OrdersState>(
@@ -21,8 +47,10 @@ class OrderActionsWidget extends StatelessWidget {
               icon: AppIcons.call,
               text: 'Call',
               onTap: () async {
-                if (await canLaunchUrlString('tel:${state.currentOrder.selectedMechanic.phoneNumber}')) {
-                  await launchUrlString('tel:${state.currentOrder.selectedMechanic.phoneNumber}');
+                final phone = state.currentOrder.selectedMechanic.phoneNumber;
+                if (phone.isEmpty) return;
+                if (await canLaunchUrlString('tel:$phone')) {
+                  await launchUrlString('tel:$phone');
                 }
               },
             ),
@@ -34,13 +62,12 @@ class OrderActionsWidget extends StatelessWidget {
               },
             ),
             if (state.currentOrder.status.isPending ||
-                state.currentOrder.status.isAccepted && state.currentOrder.status.isArrived)
+                state.currentOrder.status.isAccepted ||
+                state.currentOrder.status.isArrived)
               OrderActionItem(
                 icon: AppIcons.x,
                 text: 'Cancel',
-                onTap: () {
-                  context.read<OrdersBloc>().add(CancelOrderEvent());
-                },
+                onTap: () => _confirmCancel(context),
               ),
           ],
         );

@@ -13,6 +13,7 @@ import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bl
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/beuty_widget.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/order_actions_widget.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/order_status_row.dart';
+import 'package:taxi_app/src/features/order_proccess/presentation/widgets/sub_order_proposal_sheet.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 
 class OrderSingleScreen extends StatefulWidget {
@@ -41,14 +42,55 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocConsumer<OrdersBloc, OrdersState>(
-        listenWhen: (previous, current) => previous.currentOrder != current.currentOrder,
-        listener: (context, state) {
-          if (state.currentOrder.status.isMechanicDone) {
-            context.pushReplacement(Pages.finishedOrder);
-          }
-        },
-        builder: (context, state) {
+      body: MultiBlocListener(
+        listeners: [
+          // Lifecycle events from WS — drive navigation/UI side effects.
+          BlocListener<OrdersBloc, OrdersState>(
+            listenWhen: (p, c) => p.lifecycleEvent != c.lifecycleEvent,
+            listener: (context, state) {
+              if (state.lifecycleEvent == OrderLifecycleEvent.completed) {
+                context.read<OrdersBloc>().add(ClearLifecycleEventEvent());
+                context.pushReplacement(Pages.finishedOrder);
+              }
+            },
+          ),
+          // Mechanic proposed extra work — show modal.
+          BlocListener<OrdersBloc, OrdersState>(
+            listenWhen: (p, c) => p.pendingSubOrder != c.pendingSubOrder,
+            listener: (context, state) {
+              final pending = state.pendingSubOrder;
+              if (pending != null) {
+                SubOrderProposalSheet.show(context, pending);
+              }
+            },
+          ),
+          // Mechanic live position from `new-mechanic-address` — recenter map.
+          BlocListener<OrdersBloc, OrdersState>(
+            listenWhen: (p, c) =>
+                p.mechanicLat != c.mechanicLat || p.mechanicLng != c.mechanicLng,
+            listener: (context, state) {
+              final lat = state.mechanicLat;
+              final lng = state.mechanicLng;
+              if (lat == null || lng == null || !_mapReady) return;
+              _updateMechanicMarker(lat, lng);
+            },
+          ),
+          // Cancellation — broadcast or self-cancel — pop back to main.
+          BlocListener<OrdersBloc, OrdersState>(
+            listenWhen: (p, c) => p is! OrderCanceled && c is OrderCanceled,
+            listener: (context, state) {
+              if (context.mounted) context.go(Pages.main);
+            },
+          ),
+        ],
+        child: BlocConsumer<OrdersBloc, OrdersState>(
+          listenWhen: (previous, current) => previous.currentOrder != current.currentOrder,
+          listener: (context, state) {
+            if (state.currentOrder.status.isMechanicDone) {
+              context.pushReplacement(Pages.finishedOrder);
+            }
+          },
+          builder: (context, state) {
           if (state.currentOrderStatus.isSuccess) {
             return Stack(
               children: [
@@ -132,10 +174,7 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> {
                             ),
                             const SizedBox(height: 16),
                             TextButton(
-                              onPressed: () {
-                                // context.read<OrdersBloc>().add(DisConnectFromWebSocketEvent());
-                                // Navigator.of(context).pop();
-                              },
+                              onPressed: () => _confirmCancel(context),
                               style: TextButton.styleFrom(
                                 foregroundColor: Colors.red,
                                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -264,7 +303,11 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> {
                       icon: const Icon(Icons.arrow_back, color: Colors.black),
                       onPressed: () {
                         context.read<OrdersBloc>().add(DisConnectFromWebSocketEvent());
-                        Navigator.of(context).pop();
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          context.go(Pages.main);
+                        }
                       },
                     ),
                   ),
@@ -279,8 +322,60 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> {
             return const Center(child: Text('No current order'));
           }
         },
+        ),
       ),
     );
+  }
+
+  Future<void> _confirmCancel(BuildContext context) async {
+    final bloc = context.read<OrdersBloc>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Buyurtmani bekor qilish?'),
+        content: const Text('Buyurtmani bekor qilishni xohlaysizmi?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Yo\'q'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Ha, bekor qil'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    bloc.add(CancelOrderEvent());
+    if (!mounted) return;
+    context.go(Pages.main);
+  }
+
+  /// Update mechanic marker at given lat/lng and recenter the camera.
+  /// Called from the `mechanicLat/Lng` BlocListener — driven by the
+  /// `new-mechanic-address` WS event for real-time tracking.
+  void _updateMechanicMarker(double lat, double lng) async {
+    if (_pointAnnotationManager == null) return;
+    try {
+      await _pointAnnotationManager!.deleteAll();
+      await _pointAnnotationManager!.create(
+        mapbox.PointAnnotationOptions(
+          geometry: mapbox.Point(coordinates: mapbox.Position(lng, lat)),
+          iconSize: 1.0,
+        ),
+      );
+      await _mapboxMap.flyTo(
+        mapbox.CameraOptions(
+          center: mapbox.Point(coordinates: mapbox.Position(lng, lat)),
+          zoom: 15.5,
+        ),
+        mapbox.MapAnimationOptions(duration: 800),
+      );
+    } catch (e) {
+      print('Error updating mechanic marker: $e');
+    }
   }
 
   void _onMapCreated(mapbox.MapboxMap mapboxMap) async {
