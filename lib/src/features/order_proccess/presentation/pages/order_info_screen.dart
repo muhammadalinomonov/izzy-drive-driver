@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bloc.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/order_action_item.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/order_info_card.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/sub_orders_card.dart';
+import 'package:taxi_app/src/routes/pages.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 class OrderInfoScreen extends StatefulWidget {
@@ -16,6 +18,31 @@ class OrderInfoScreen extends StatefulWidget {
 }
 
 class _OrderInfoScreenState extends State<OrderInfoScreen> {
+  Future<void> _confirmCancel(BuildContext context) async {
+    final bloc = context.read<OrdersBloc>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Buyurtmani bekor qilish?'),
+        content: const Text('Buyurtmani bekor qilishni xohlaysizmi? Bu amalni qaytarib bo\'lmaydi.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Yo\'q'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Ha, bekor qilish'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    bloc.add(CancelOrderEvent());
+    if (!mounted) return;
+    context.go(Pages.main);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,9 +69,14 @@ class _OrderInfoScreenState extends State<OrderInfoScreen> {
                   },
                 ),
                 if (state.currentOrder.status.isPending ||
-                    state.currentOrder.status.isAccepted && state.currentOrder.status.isArrived) ...[
+                    state.currentOrder.status.isAccepted ||
+                    state.currentOrder.status.isArrived) ...[
                   SizedBox(width: 32),
-                  OrderActionItem(icon: AppIcons.x, text: 'Cancel', onTap: () {}),
+                  OrderActionItem(
+                    icon: AppIcons.x,
+                    text: 'Cancel',
+                    onTap: () => _confirmCancel(context),
+                  ),
                 ],
               ],
             ),

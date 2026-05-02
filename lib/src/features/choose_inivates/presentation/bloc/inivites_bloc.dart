@@ -119,12 +119,15 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
       if (event == 'direct') {
         final data = json['data'] as Map<String, dynamic>?;
         if (data != null) {
-          final eventType = data['event'] as String?;
+          // Backend uses both `event` and `event-status`/`event_status` for inner key.
+          final eventType = (data['event'] ?? data['event-status'] ?? data['event_status']) as String?;
           if (eventType == 'new-proposal') {
             print('New proposal received: ${data['mechanic_name']}');
-            // Yangi taklif keldi
             final newProposal = _parseNewProposal(data);
             add(NewProposalReceivedEvent(newProposal));
+          } else if (eventType == 'update-order-price') {
+            print('Order price updated via WS — refreshing active order');
+            add(FetchActiveOrderEvent());
           }
         }
       }

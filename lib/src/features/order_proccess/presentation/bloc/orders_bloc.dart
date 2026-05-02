@@ -1,4 +1,3 @@
-// Updated File: orders_bloc.dart
 import 'dart:async';
 import 'dart:convert';
 
@@ -7,24 +6,24 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
-import 'package:taxi_app/src/features/order_proccess/data/model/cancel_order_response.dart';
+import 'package:taxi_app/src/features/order_proccess/data/model/sub_order_model.dart';
 import 'package:taxi_app/src/features/order_proccess/domain/entities/current_order_entity.dart';
 import 'package:taxi_app/src/features/order_proccess/domain/order_repo.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../../data/model/mechanic_arrived.dart';
-import '../../data/model/order_accepted.dart'; // New import
-import '../../data/order_proccess_source.dart';
+import '../../data/model/order_accepted.dart';
 
 part 'orders_event.dart';
 part 'orders_state.dart';
 
 class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
-  bool _isConnected = false;
+  final OrderRepository orderRepository;
 
+  bool _isConnected = false;
   WebSocketChannel? _channel;
 
-  OrdersBloc() : super(OrdersState()) {
+  OrdersBloc({required this.orderRepository}) : super(const OrdersState()) {
     on<ConnectToWebSocketEvent>(_onConnectWebSocket);
     on<DisConnectFromWebSocketEvent>(_onDisconnectFromWebSocket);
     on<CancelOrderEvent>(_onCancelOrder);
@@ -32,6 +31,15 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     on<ChangeSubOrderStatusEvent>(_onChangeSubOrderStatus);
     on<DoneCurrentOrderEvent>(_onDoneCurrentOrder);
     on<RateMasterEvent>(_onRateMaster);
+    on<ClearLifecycleEventEvent>(_onClearLifecycleEvent);
+    on<ClearPendingSubOrderEvent>(_onClearPendingSubOrder);
+  }
+
+  @override
+  Future<void> close() {
+    _channel?.sink.close();
+    _isConnected = false;
+    return super.close();
   }
 
   void _onConnectWebSocket(ConnectToWebSocketEvent event, Emitter<OrdersState> emit) async {
@@ -40,7 +48,6 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       if (_isConnected) {
         return;
       }
-
       final wsId = StorageRepository.getInt('ws_id');
       _channel = WebSocketChannel.connect(
         Uri.parse('wss://ws.quadrix.ai/ws?user_id=$wsId&tab_id=1&browser_id=browser_1'),
@@ -77,79 +84,147 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
 
   void _handleMessage(String message, Emitter<OrdersState> emit) {
     final json = jsonDecode(message) as Map<String, dynamic>;
-    var orderID = StorageRepository.getString("reportID");
     print("WebSocket Message: $message");
 
-    final event = json['event'] as String?;
-    if (event == 'direct') {
-      final data = json['data'] as Map<String, dynamic>?;
-      if (data != null) {
+    final eventType = json['event'] as String?;
+    if (eventType != 'direct') return;
+
+    final data = json['data'] as Map<String, dynamic>?;
+    if (data == null) return;
+
+    // Backend uses both `event-status` (hyphen) and `event_status` (underscore)
+    // inconsistently — read either to be defensive.
+    final eventStatus = (data['event-status'] ?? data['event_status']) as String?;
+
+    switch (eventStatus) {
+      case 'order-accepted-at-mechanic':
+        final orderAccepted = OrderAccepted.fromJson(data);
+        emit(state.copyWith(orderAccepted: orderAccepted));
         add(GetCurrentOrderEvent());
-        final eventStatus = data['event-status'] as String?;
-        if (eventStatus == 'mechanic-arrived') {
-          var mechanicArrived = MechanicArrived.fromJson(json);
-          print("Mechanic arrived: ${mechanicArrived.toString()}");
-          // Emit state if needed for mechanic arrived
-        } else if (eventStatus == 'order-accepted-at-mechanic') {
-          final orderAccepted = OrderAccepted.fromJson(data);
-          print("Order accepted: ${orderAccepted.toString()}");
-          emit(state.copyWith(orderAccepted: orderAccepted));
+        break;
+
+      case 'mechanic-arrived':
+        // Note: parser reads top-level `json`, not `data` — keep existing behavior.
+        final mechanicArrived = MechanicArrived.fromJson(json);
+        print("Mechanic arrived: ${mechanicArrived.toString()}");
+        emit(state.copyWith(lifecycleEvent: OrderLifecycleEvent.arrived));
+        add(GetCurrentOrderEvent());
+        break;
+
+      case 'mechanic-inprogress':
+        emit(state.copyWith(lifecycleEvent: OrderLifecycleEvent.inProgress));
+        add(GetCurrentOrderEvent());
+        break;
+
+      case 'mechanic-done':
+        add(GetCurrentOrderEvent());
+        break;
+
+      case 'order-completed':
+        emit(state.copyWith(lifecycleEvent: OrderLifecycleEvent.completed));
+        add(GetCurrentOrderEvent());
+        break;
+
+      case 'new-suborder':
+        // Mechanic proposed extra work; surface to driver via Phase 4 modal.
+        try {
+          final subOrder = SubOrderModel.fromJson(data);
+          emit(state.copyWith(pendingSubOrder: subOrder));
+        } catch (e) {
+          print('Failed to parse new-suborder: $e');
         }
-      }
+        break;
+
+      case 'suborder-accepted':
+      case 'suborder-cancelled':
+        // Driver's response was accepted; refresh order to show updated suborders/total.
+        add(GetCurrentOrderEvent());
+        break;
+
+      case 'update-order-price':
+        // Pre-proposal price edit; refresh current order if any.
+        add(GetCurrentOrderEvent());
+        break;
+
+      case 'new-mechanic-address':
+        // Real-time mechanic location update during accepted state.
+        // Phase 4 (tracking screen) consumes mechanicLat/Lng to redraw route.
+        final lat = (data['latitude'] as num?)?.toDouble();
+        final lng = (data['longitude'] as num?)?.toDouble();
+        if (lat != null && lng != null) {
+          emit(state.copyWith(mechanicLat: lat, mechanicLng: lng));
+        }
+        break;
+
+      case 'order-cancelled':
+      case 'selected-order-cancelled':
+        _channel?.sink.close();
+        _isConnected = false;
+        emit(const OrderCanceled());
+        break;
+
+      default:
+        print('Unhandled WS event-status: $eventStatus');
     }
   }
 
   void _onCancelOrder(CancelOrderEvent event, Emitter<OrdersState> emit) async {
-    var orderID = StorageRepository.getString("reportID");
-    var repo = OrderRepositoryImpl(orderProccessSource: OrderProccessSource());
-    var networkResponse = await repo.cancelOrder(orderID);
-    if (networkResponse.errorText.isEmpty) {
+    final response = await orderRepository.cancelOrder();
+    if (response.errorText.isEmpty) {
       print('Order cancelled successfully');
-      var cancelOrderResponse = CancelOrderResponse.fromJson(networkResponse.data);
       _channel?.sink.close();
       _isConnected = false;
-      emit(OrderCanceled(cancelOrderResponse: cancelOrderResponse));
+      emit(const OrderCanceled());
     } else {
-      print('Error cancelling order: ${networkResponse.errorText}');
+      print('Error cancelling order: ${response.errorText}');
     }
   }
 
   void _onGetCurrentOrder(GetCurrentOrderEvent event, Emitter<OrdersState> emit) async {
     emit(state.copyWith(currentOrderStatus: FormzSubmissionStatus.inProgress));
-    var repo = OrderRepositoryImpl(orderProccessSource: OrderProccessSource());
-    var networkResponse = await repo.getCurrentOrder();
-    if (networkResponse.errorText.isEmpty) {
+    final response = await orderRepository.getCurrentOrder();
+    if (response.errorText.isEmpty) {
       print('Current order fetched successfully');
-      var currentOrder = networkResponse.data;
-      emit(state.copyWith(currentOrder: currentOrder, currentOrderStatus: FormzSubmissionStatus.success));
+      emit(state.copyWith(
+        currentOrder: response.data,
+        currentOrderStatus: FormzSubmissionStatus.success,
+      ));
     } else {
       emit(state.copyWith(currentOrderStatus: FormzSubmissionStatus.failure));
-      print('Error fetching current order: ${networkResponse.errorText}');
+      print('Error fetching current order: ${response.errorText}');
     }
   }
 
   void _onChangeSubOrderStatus(ChangeSubOrderStatusEvent event, Emitter<OrdersState> emit) async {
-    var repo = OrderRepositoryImpl(orderProccessSource: OrderProccessSource());
-    await repo.changeSubOrderStatus(event.id, event.status);
-
+    await orderRepository.changeSubOrderStatus(event.id, event.status);
+    // Clear the pending suborder modal trigger.
+    emit(state.clearPendingSubOrder());
     add(GetCurrentOrderEvent());
   }
 
   void _onDoneCurrentOrder(DoneCurrentOrderEvent event, Emitter<OrdersState> emit) async {
-    var repo = OrderRepositoryImpl(orderProccessSource: OrderProccessSource());
     emit(state.copyWith(doneOrderStatus: FormzSubmissionStatus.inProgress));
-    var networkResponse = await repo.doneCurrentOrder();
-    if (networkResponse.errorText.isEmpty) {
-      emit(state.copyWith(doneOrderStatus: FormzSubmissionStatus.success, code: networkResponse.data));
-
-      event.onSuccess.call(networkResponse.data ?? 0);
+    final response = await orderRepository.doneCurrentOrder();
+    if (response.errorText.isEmpty) {
+      emit(state.copyWith(
+        doneOrderStatus: FormzSubmissionStatus.success,
+        code: response.data,
+      ));
+      event.onSuccess.call(response.data ?? 0);
     } else {
       emit(state.copyWith(doneOrderStatus: FormzSubmissionStatus.failure));
     }
   }
 
   void _onRateMaster(RateMasterEvent event, Emitter<OrdersState> emit) async {
-    var repo = OrderRepositoryImpl(orderProccessSource: OrderProccessSource());
-    await repo.rateMechanic(event.star, event.comment, event.mechanicId);
+    await orderRepository.rateMechanic(event.star, event.comment, event.mechanicId);
+  }
+
+  void _onClearLifecycleEvent(ClearLifecycleEventEvent event, Emitter<OrdersState> emit) {
+    emit(state.clearLifecycleEvent());
+  }
+
+  void _onClearPendingSubOrder(ClearPendingSubOrderEvent event, Emitter<OrdersState> emit) {
+    emit(state.clearPendingSubOrder());
   }
 }

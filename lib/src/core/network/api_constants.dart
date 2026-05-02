@@ -20,6 +20,7 @@ class ApiConstants {
   static final String getBanners = "accounts/banners/";
   static final String fetchQuestions = "accounts/questions-templates/";
   static final String fetchActiveOffers = 'drivers/active-order/';
+  static final String activeOrder = 'drivers/active-order/';
   static final String getInvites = "drivers/get-proposal/";
   static final String createReport = "drivers/create-report/";
   static final String getProposals = 'drivers/get-proposal/?proposal_id=';

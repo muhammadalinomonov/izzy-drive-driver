@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
-import 'package:taxi_app/src/features/home/presentation/screens/main_screen.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 
 import '../../data/model/order_accepted.dart';
@@ -400,9 +399,8 @@ class _OrderProccessScreenState extends State<OrderProccessScreen> with TickerPr
             TextButton(
               onPressed: () {
                 context.read<OrdersBloc>().add(CancelOrderEvent());
-                context.read<OrdersBloc>().add(DisConnectFromWebSocketEvent());
-
-                Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const MainScreen()));
+                Navigator.of(context).pop();
+                context.go(Pages.main);
               },
               style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: const Text('Ha, bekor qil'),

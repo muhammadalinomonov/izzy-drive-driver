@@ -8,7 +8,6 @@ import 'package:taxi_app/src/core/service_locater.dart';
 import 'package:taxi_app/src/features/order_proccess/data/model/current_order_model.dart';
 
 import '../../profile/data/model/profile_model.dart';
-import 'model/cancel_order_response.dart';
 
 class OrderProccessSource {
   OrderProccessSource();
@@ -41,26 +40,27 @@ class OrderProccessSource {
     }
   }
 
-  Future<NetworkResponse<CancelOrderResponse>> cancelOrder(String orderId) async {
+  Future<NetworkResponse<void>> cancelOrder() async {
     try {
       final token = StorageRepository.getString('token');
 
       final response = await client.post(
-        ApiConstants.cancelOrder,
-        data: {'order_id': orderId, 'status': 'cancel'},
+        ApiConstants.activeOrder,
+        data: {'action': 'cancel'},
         options: Options(
           headers: {'Authorization': "Bearer $token", 'Content-Type': 'application/x-www-form-urlencoded'},
         ),
       );
 
-      if (response.statusCode == 200) {
-        final cancelResponse = CancelOrderResponse.fromJson(response.data);
-        return NetworkResponse<CancelOrderResponse>(data: cancelResponse);
+      if (response.isSuccess) {
+        return NetworkResponse(data: null);
       } else {
-        return NetworkResponse<CancelOrderResponse>(errorText: 'Unexpected status code: ${response.statusCode}');
+        return NetworkResponse(errorText: response.data?['message'] ?? 'Unexpected status: ${response.statusCode}');
       }
+    } on DioException catch (e) {
+      return NetworkResponse(errorText: e.response?.data?['message']?.toString() ?? e.message ?? 'Cancel failed');
     } catch (e) {
-      return NetworkResponse<CancelOrderResponse>(errorText: e.toString());
+      return NetworkResponse(errorText: e.toString());
     }
   }
 

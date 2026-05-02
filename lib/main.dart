@@ -6,6 +6,8 @@ import 'package:taxi_app/firebase_options.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
 import 'package:taxi_app/src/core/theme/app_theme.dart';
 import 'package:taxi_app/src/core/utils/notifications.dart';
+import 'package:taxi_app/src/features/order_proccess/data/order_proccess_source.dart';
+import 'package:taxi_app/src/features/order_proccess/domain/order_repo.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bloc.dart';
 import 'package:taxi_app/src/features/profile/data/repository/profile_repository_impl.dart';
 import 'package:taxi_app/src/features/profile/data/source/profile_data_source.dart';
@@ -31,7 +33,11 @@ class TaxiApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider.value(value: OrdersBloc()),
+        BlocProvider(
+          create: (_) => OrdersBloc(
+            orderRepository: OrderRepositoryImpl(orderProccessSource: OrderProccessSource()),
+          ),
+        ),
         BlocProvider.value(value: ProfileBloc(ProfileRepositoryImpl(ProfileDataSource()))),
       ],
       child: MaterialApp.router(
