@@ -75,9 +75,14 @@ class Routes {
       GoRoute(
         path: Pages.chat,
         builder: (context, state) {
+          final extra = (state.extra as Map<String, dynamic>?) ?? const {};
           return BlocProvider(
             create: (context) => ChatBloc(chatRepo: ChatRepoImpl(chatDataSource: ChatDataSource())),
-            child: ChatPage(),
+            child: ChatPage(
+              address: (extra['address'] as String?) ?? '',
+              latitude: (extra['latitude'] as num?)?.toDouble() ?? 0.0,
+              longitude: (extra['longitude'] as num?)?.toDouble() ?? 0.0,
+            ),
           );
         },
       ),

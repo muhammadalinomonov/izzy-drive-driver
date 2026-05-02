@@ -17,7 +17,6 @@ import 'package:taxi_app/src/features/home/presentation/widgets/search_input.dar
 import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bloc.dart';
 import 'package:taxi_app/src/features/profile/presentation/bloc/history/orders_history_bloc.dart';
 import 'package:taxi_app/src/routes/pages.dart';
-import 'package:taxi_app/src/utils/local.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -78,17 +77,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                 SizedBox(height: 12),
                                 ...List.generate(
                                   state.ordersHistory.length > 2 ? 2 : state.ordersHistory.length,
-                                  (index) => LastLocationWidget(
-                                    address: state.ordersHistory[index].currentAddress.address,
-                                    onTap: () {
-                                      currentAddress = state.ordersHistory[index].currentAddress.address;
-                                      currentLocation = Position(
-                                        state.ordersHistory[index].currentAddress.latitude,
-                                        state.ordersHistory[index].currentAddress.longitude,
-                                      );
-                                      context.push(Pages.chat);
-                                    },
-                                  ),
+                                  (index) {
+                                    final addr = state.ordersHistory[index].currentAddress;
+                                    return LastLocationWidget(
+                                      address: addr.address,
+                                      onTap: () {
+                                        context.push(Pages.chat, extra: {
+                                          'address': addr.address,
+                                          'latitude': addr.latitude,
+                                          'longitude': addr.longitude,
+                                        });
+                                      },
+                                    );
+                                  },
                                 ),
                               ],
                             );

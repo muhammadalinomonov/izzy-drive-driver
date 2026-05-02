@@ -12,7 +12,6 @@ import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/chat/data/model/question_model.dart';
-import 'package:taxi_app/src/utils/local.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
@@ -28,7 +27,16 @@ import '../../model/chat_question_data.dart';
 import '../models/chat_model.dart';
 
 class ChatPage extends StatefulWidget {
-  const ChatPage({Key? key}) : super(key: key);
+  const ChatPage({
+    Key? key,
+    this.address = '',
+    this.latitude = 0.0,
+    this.longitude = 0.0,
+  }) : super(key: key);
+
+  final String address;
+  final double latitude;
+  final double longitude;
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -553,9 +561,9 @@ class _ChatPageState extends State<ChatPage>
                 SvgPicture.asset(AppIcons.location, width: 16, height: 16),
                 const SizedBox(width: 8),
                 Text(
-                  currentAddress.length > 35
-                      ? '${currentAddress.substring(0, 35)}…'
-                      : currentAddress,
+                  widget.address.length > 35
+                      ? '${widget.address.substring(0, 35)}…'
+                      : widget.address,
                   style: const TextStyle(
                     color: Colors.black,
                     fontSize: 14,
@@ -814,8 +822,8 @@ class _ChatPageState extends State<ChatPage>
                       voiceFile: File(_voiceFilePath!),
                       images: _submittedImages,
                       price: _submittedPrice ?? '',
-                      latitude: currentLocation.lat.toDouble(),
-                      longitude: currentLocation.lng.toDouble(),
+                      latitude: widget.latitude,
+                      longitude: widget.longitude,
                     );
                     context.read<ChatBloc>().add(
                       CreateReportEvent(
@@ -859,8 +867,8 @@ class _ChatPageState extends State<ChatPage>
                       text: _submittedTextOrVoice ?? '',
                       images: _submittedImages,
                       price: _submittedPrice ?? '',
-                      latitude: currentLocation.lat.toDouble(),
-                      longitude: currentLocation.lng.toDouble(),
+                      latitude: widget.latitude,
+                      longitude: widget.longitude,
                     );
                     context.read<ChatBloc>().add(
                       CreateReportEvent(

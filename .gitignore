@@ -46,6 +46,7 @@ app.*.map.json
 
 # iOS / Xcode generated
 **/ios/Pods/
+**/ios/Podfile.lock
 **/ios/.symlinks/
 **/ios/Flutter/App.framework
 **/ios/Flutter/Flutter.framework
@@ -57,6 +58,10 @@ app.*.map.json
 **/ios/Runner/GeneratedPluginRegistrant.m
 **/ios/**/xcuserdata/
 **/ios/**/DerivedData/
+**/ios/build/
+
+# macOS / Xcode generated
+**/macos/Podfile.lock
 
 # macOS generated
 **/macos/Flutter/GeneratedPluginRegistrant.swift

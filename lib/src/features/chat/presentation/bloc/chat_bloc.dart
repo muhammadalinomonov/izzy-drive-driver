@@ -6,7 +6,6 @@ import 'package:taxi_app/src/core/network/network_response.dart';
 import 'package:taxi_app/src/features/chat/data/model/question_model.dart';
 import 'package:taxi_app/src/features/chat/domain/repo/chat_repo.dart';
 import 'package:meta/meta.dart';
-import 'package:taxi_app/src/utils/local.dart';
 
 import '../../../../core/network/token_service.dart';
 import '../../data/model/report_model.dart';

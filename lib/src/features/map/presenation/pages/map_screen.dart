@@ -14,7 +14,6 @@ import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/features/map/data/model/nearby_masters_response.dart';
 import 'package:flutter/services.dart';
 import 'package:taxi_app/src/routes/pages.dart';
-import 'package:taxi_app/src/utils/local.dart';
 import '../bloc/map_bloc.dart';
 import '../widgets/search_location_bottomsheet.dart';
 
@@ -34,6 +33,7 @@ class _MapScreenState extends State<MapScreen> {
   mapbox.Position? _lastFetchedPosition; // Cache last fetched coordinates
   static const double _distanceThreshold = 100.0; // Meters
   mapbox.PointAnnotationManager? _annotationManager; // Add this line
+  String _selectedAddress = '';
 
   @override
   void initState() {
@@ -395,7 +395,7 @@ class _MapScreenState extends State<MapScreen> {
                           .data
                           .driverCurrentAddress
                           .address;
-                      currentAddress=address;
+                      _selectedAddress = address;
                     }
                     return Container(
                       padding: const EdgeInsets.symmetric(
@@ -492,11 +492,12 @@ class _MapScreenState extends State<MapScreen> {
                   child: MaterialButton(
                     onPressed: () {
                       if (selectedLocation != null) {
-                        print(
-                          'Davom etish: ${selectedLocation!.coordinates.lat}, ${selectedLocation!.coordinates.lng}',
-                        );
-                        currentLocation = selectedLocation!.coordinates;
-                        context.push(Pages.chat);
+                        final coords = selectedLocation!.coordinates;
+                        context.push(Pages.chat, extra: {
+                          'address': _selectedAddress,
+                          'latitude': coords.lat.toDouble(),
+                          'longitude': coords.lng.toDouble(),
+                        });
                       } else {
                         print('Joy tanlanmadi');
                       }
