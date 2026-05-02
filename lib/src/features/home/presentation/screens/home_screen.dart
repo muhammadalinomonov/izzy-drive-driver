@@ -14,7 +14,9 @@ import 'package:taxi_app/src/features/common/presentation/widgets/common_scalel_
 import 'package:taxi_app/src/features/home/presentation/bloc/bloc/home_bloc.dart';
 import 'package:taxi_app/src/features/home/presentation/widgets/active_order_widget.dart';
 import 'package:taxi_app/src/features/home/presentation/widgets/search_input.dart';
+import 'package:taxi_app/src/features/order_proccess/domain/entities/current_order_entity.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bloc.dart';
+import 'package:taxi_app/src/features/profile/domain/entities/order_history_entity.dart';
 import 'package:taxi_app/src/features/profile/presentation/bloc/history/orders_history_bloc.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 
@@ -23,6 +25,20 @@ class HomeScreen extends StatefulWidget {
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
+}
+
+List<Address> _dedupedRecents(List<OrderHistoryEntity> history) {
+  final seen = <String>{};
+  final result = <Address>[];
+  for (final order in history) {
+    final addr = order.currentAddress;
+    if (addr.address.isEmpty) continue;
+    if (seen.add(addr.address) && result.length < 2) {
+      result.add(addr);
+    }
+    if (result.length >= 2) break;
+  }
+  return result;
 }
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -52,74 +68,79 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           body: GestureDetector(
             onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: BlocBuilder<OrdersBloc, OrdersState>(
-                    builder: (context, state) {
-                      if (state.currentOrderStatus.isInProgress) {
-                        return Center(child: CircularProgressIndicator.adaptive());
-                      } else if ((state.currentOrderStatus.isSuccess && state.currentOrder.id == -1) ||
-                          state.currentOrderStatus.isFailure) {
-                        return BlocBuilder<OrdersHistoryBloc, OrdersHistoryState>(
-                          builder: (context, state) {
-                            return Column(
-                              children: [
-                                SearchInputWidget(
-                                  isReadOnly: true,
-                                  hint: 'Usta qayerga borsin ?',
-                                  textInputAction: TextInputAction.search,
-                                  onTap: () {
-                                    context.push(Pages.searchLocation);
-                                  },
-                                ),
-                                SizedBox(height: 12),
-                                ...List.generate(
-                                  state.ordersHistory.length > 2 ? 2 : state.ordersHistory.length,
-                                  (index) {
-                                    final addr = state.ordersHistory[index].currentAddress;
-                                    return LastLocationWidget(
-                                      address: addr.address,
-                                      onTap: () {
-                                        context.push(Pages.chat, extra: {
-                                          'address': addr.address,
-                                          'latitude': addr.latitude,
-                                          'longitude': addr.longitude,
-                                        });
-                                      },
-                                    );
-                                  },
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      } else if (state.currentOrderStatus.isSuccess) {
-                        return GestureDetector(
-                          onTap: () {
-                            if (state.currentOrder.status.isPending) {
-                              context.push(Pages.invatesPage);
-                            } else if (state.currentOrder.status.isMechanicDone) {
-                              context.push(Pages.finishedOrder);
-                            } else {
-                              context.push(Pages.proccessOrder);
-                            }
-                          },
-
-                          child: ActiveOrderWidget(orderId: state.currentOrder.id, status: state.currentOrder.status),
-                        );
-                      } else {
-                        return Center(child: Text('Xatolik yuz berdi', style: context.textS.bodyLarge));
-                      }
-                    },
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: BlocBuilder<OrdersBloc, OrdersState>(
+                      builder: (context, state) {
+                        if (state.currentOrderStatus.isInProgress) {
+                          return Center(child: CircularProgressIndicator.adaptive());
+                        } else if ((state.currentOrderStatus.isSuccess && state.currentOrder.id == -1) ||
+                            state.currentOrderStatus.isFailure) {
+                          return BlocBuilder<OrdersHistoryBloc, OrdersHistoryState>(
+                            builder: (context, state) {
+                              final recents = _dedupedRecents(state.ordersHistory);
+                              return Column(
+                                children: [
+                                  SearchInputWidget(
+                                    isReadOnly: true,
+                                    hint: 'Usta qayerga borsin ?',
+                                    textInputAction: TextInputAction.search,
+                                    onTap: () {
+                                      context.push(Pages.searchLocation);
+                                    },
+                                  ),
+                                  const SizedBox(height: 12),
+                                  if (recents.isEmpty)
+                                    _RecentEmptyState()
+                                  else
+                                    ...recents.map(
+                                      (addr) => Padding(
+                                        padding: const EdgeInsets.only(bottom: 8),
+                                        child: LastLocationWidget(
+                                          address: addr.address,
+                                          onTap: () {
+                                            context.push(Pages.chat, extra: {
+                                              'address': addr.address,
+                                              'latitude': addr.latitude,
+                                              'longitude': addr.longitude,
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              );
+                            },
+                          );
+                        } else if (state.currentOrderStatus.isSuccess) {
+                          return GestureDetector(
+                            onTap: () {
+                              if (state.currentOrder.status.isPending) {
+                                context.push(Pages.invatesPage);
+                              } else if (state.currentOrder.status.isMechanicDone) {
+                                context.push(Pages.finishedOrder);
+                              } else {
+                                context.push(Pages.proccessOrder);
+                              }
+                            },
+                            child: ActiveOrderWidget(orderId: state.currentOrder.id, status: state.currentOrder.status),
+                          );
+                        } else {
+                          return Center(child: Text('Xatolik yuz berdi', style: context.textS.bodyLarge));
+                        }
+                      },
+                    ),
                   ),
-                ),
-                SizedBox(height: 20),
-                OtherOpportunitiesWidget(),
-                SizedBox(height: 25),
-                BannerWidget(),
-              ],
+                  const SizedBox(height: 20),
+                  OtherOpportunitiesWidget(),
+                  const SizedBox(height: 25),
+                  BannerWidget(),
+                ],
+              ),
             ),
           ),
         ),
@@ -215,6 +236,32 @@ class BannerWidget extends StatelessWidget {
           );
         }
       },
+    );
+  }
+}
+
+class _RecentEmptyState extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: AppColor.lightBlue,
+      ),
+      child: Row(
+        children: [
+          SvgPicture.asset(AppIcons.pending),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Hali buyurtma tarixi yo\'q',
+              style: context.textS.bodyMedium?.copyWith(color: AppColor.grey),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
