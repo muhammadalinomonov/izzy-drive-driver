@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:taxi_app/src/core/utils/json_safe.dart';
 
 class ReviewModel extends Equatable {
   final int id;
@@ -24,13 +25,13 @@ class ReviewModel extends Equatable {
 
   factory ReviewModel.fromJson(Map<String, dynamic> json) {
     return ReviewModel(
-      id: json['id'] ?? -1,
-      driver: json['driver'] ?? -1,
-      driverName: json['driver_name'] ?? '',
-      comment: json['comment'] ?? '',
-      driverAvatar: json['driver_avatar'] ?? '',
-      stars: json['stars'] ?? 0,
-      createdAt: json['created_at'] ?? '',
+      id: toInt(json['id'], -1),
+      driver: toInt(json['driver'], -1),
+      driverName: toStr(json['driver_name']),
+      comment: toStr(json['comment']),
+      driverAvatar: toStr(json['driver_avatar']),
+      stars: toInt(json['stars']),
+      createdAt: toStr(json['created_at']),
     );
   }
 }

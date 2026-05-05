@@ -175,6 +175,12 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       _channel?.sink.close();
       _isConnected = false;
       emit(const OrderCanceled());
+      // Reset to a "no current order" state so the home card disappears
+      // immediately instead of showing a stale/error UI.
+      emit(const OrdersState(
+        currentOrderStatus: FormzSubmissionStatus.success,
+        currentOrder: CurrentOrderEntity(),
+      ));
     } else {
       print('Error cancelling order: ${response.errorText}');
     }

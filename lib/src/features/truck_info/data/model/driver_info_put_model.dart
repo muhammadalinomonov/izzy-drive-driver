@@ -1,3 +1,5 @@
+import 'package:taxi_app/src/core/utils/json_safe.dart';
+
 class DriverInfoPutModel {
   final String avatar;
   final String truckImage;
@@ -21,14 +23,14 @@ class DriverInfoPutModel {
 
   factory DriverInfoPutModel.fromJson(Map<String, dynamic> json) {
     return DriverInfoPutModel(
-      avatar: json['avatar'],
-      truckImage: json['truck_image'],
-      truckMark: json['truck_mark'],
-      truckModel: json['truck_model'],
-      truckYear: json['truck_year'],
-      phoneNumber: json['phone_number'],
-      licenseNumber: json['license_number'],
-      address: json['address'],
+      avatar: toStr(json['avatar']),
+      truckImage: toStr(json['truck_image']),
+      truckMark: toStr(json['truck_mark']),
+      truckModel: toStr(json['truck_model']),
+      truckYear: toStr(json['truck_year']),
+      phoneNumber: toStr(json['phone_number']),
+      licenseNumber: toStr(json['license_number']),
+      address: toStr(json['address']),
     );
   }
 

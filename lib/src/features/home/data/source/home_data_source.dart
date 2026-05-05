@@ -5,6 +5,7 @@ import 'package:taxi_app/src/core/network/dio_model.dart';
 import 'package:taxi_app/src/core/network/network_response.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
+import 'package:taxi_app/src/core/utils/json_safe.dart';
 
 class HomeDataSource {
   final client = serviceLocator.get<DioSettings>().dio;
@@ -21,7 +22,7 @@ class HomeDataSource {
     } on DioException catch (e) {
       print(e.response?.data);
       return NetworkResponse(
-        errorText: e.response?.data['message'] ?? 'Dio exception error',
+        errorText: dioErrorMessage(e.response?.data, 'Dio exception error'),
       );
     } catch (e) {
       return NetworkResponse(errorText: e.toString());
@@ -56,7 +57,7 @@ class HomeDataSource {
       print('Dio exception status code proposal: ${e.response?.statusCode}');
       print('Dio exception response body proposal: ${e.response?.data}');
       return NetworkResponse(
-        errorText: e.response?.data['message'] ?? 'Dio exception error',
+        errorText: dioErrorMessage(e.response?.data, 'Dio exception error'),
       );
     } catch (e) {
       return NetworkResponse(errorText: e.toString());
@@ -89,7 +90,7 @@ class HomeDataSource {
       print('Dio exception status code select: ${e.response?.statusCode}');
       print('Dio exception response body select: ${e.response?.data}');
       return NetworkResponse(
-        errorText: e.response?.data['message'] ?? 'Dio exception error',
+        errorText: dioErrorMessage(e.response?.data, 'Dio exception error'),
       );
     } catch (e) {
       return NetworkResponse(errorText: e.toString());

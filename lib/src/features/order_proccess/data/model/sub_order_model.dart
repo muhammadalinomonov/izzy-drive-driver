@@ -1,3 +1,4 @@
+import 'package:taxi_app/src/core/utils/json_safe.dart';
 import 'package:taxi_app/src/features/order_proccess/domain/entities/sub_order_entity.dart';
 
 class SubOrderModel extends SubOrderEntity {
@@ -5,11 +6,11 @@ class SubOrderModel extends SubOrderEntity {
 
   factory SubOrderModel.fromJson(Map<String, dynamic> json) {
     return SubOrderModel(
-      id: json['id'] as int? ?? -1,
-      title: json['title'] as String? ?? '',
-      status: json['status'] as String? ?? '',
-      createdAt: json['created_at'] as String? ?? '',
-      price: json['price'] as String? ?? '',
+      id: toInt(json['id'], -1),
+      title: toStr(json['title']),
+      status: toStr(json['status']),
+      createdAt: toStr(json['created_at']),
+      price: toStr(json['price']),
     );
   }
 }

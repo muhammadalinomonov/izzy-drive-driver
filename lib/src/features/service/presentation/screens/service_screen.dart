@@ -13,10 +13,10 @@ class ServiceScreen extends StatelessWidget {
         title: const Text('Services'),
         centerTitle: false,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none_rounded),
-            onPressed: () {},
-          ),
+          // IconButton(
+          //   icon: const Icon(Icons.notifications_none_rounded),
+          //   onPressed: () {},
+          // ),
         ],
       ),
       body: SingleChildScrollView(

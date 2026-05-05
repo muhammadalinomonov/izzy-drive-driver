@@ -1,5 +1,5 @@
 // File: proposal_model.dart
-import 'dart:convert';
+import 'package:taxi_app/src/core/utils/json_safe.dart';
 
 class Proposal {
   final OrderInfo orderInfo;
@@ -14,9 +14,9 @@ class Proposal {
 
   factory Proposal.fromJson(Map<String, dynamic> json) {
     return Proposal(
-      orderInfo: OrderInfo.fromJson(json['order_info'] ?? {}),
-      mechanicInfo: MechanicInfo.fromJson(json['mechanic_info'] ?? {}),
-      reviews: (json['reviews'] as List<dynamic>?)?.map((r) => Review.fromJson(r as Map<String, dynamic>)).toList() ?? [],
+      orderInfo: OrderInfo.fromJson(toMap(json['order_info'])),
+      mechanicInfo: MechanicInfo.fromJson(toMap(json['mechanic_info'])),
+      reviews: toList(json['reviews'], (r) => Review.fromJson(toMap(r))),
     );
   }
 }
@@ -40,12 +40,12 @@ class OrderInfo {
 
   factory OrderInfo.fromJson(Map<String, dynamic> json) {
     return OrderInfo(
-      orderTitle: json['order_title'] as String? ?? '',
-      orderAddress: json['order_address'] as String? ?? '',
-      orderPrice: (json['order_price'] as num?)?.toDouble() ?? 0.0,
-      distance: (json['distance'] as num?)?.toDouble() ?? 0.0,
-      proposalPrice: (json['proposal_price'] as num?)?.toDouble() ?? 0.0,
-      createdAt: json['created_at'] as String? ?? '',
+      orderTitle: toStr(json['order_title']),
+      orderAddress: toStr(json['order_address']),
+      orderPrice: toDouble(json['order_price']),
+      distance: toDouble(json['distance']),
+      proposalPrice: toDouble(json['proposal_price']),
+      createdAt: toStr(json['created_at']),
     );
   }
 }
@@ -73,14 +73,14 @@ class MechanicInfo {
 
   factory MechanicInfo.fromJson(Map<String, dynamic> json) {
     return MechanicInfo(
-      mechanicId: json['mechanic_id'] as int? ?? 0,
-      mechanicName: json['mechanic_name'] as String? ?? '',
-      shopAddress: json['shop_address'] as String? ?? '',
-      avatar: json['avatar'] as String? ?? '',
-      currentAddress: CurrentAddress.fromJson(json['current_address'] ?? {}),
-      allOrdersCount: json['all_orders_count'] as int? ?? 0,
-      successOrdersCount: json['success_orders_count'] as int? ?? 0,
-      performance: Performance.fromJson(json['performance'] ?? {}),
+      mechanicId: toInt(json['mechanic_id']),
+      mechanicName: toStr(json['mechanic_name']),
+      shopAddress: toStr(json['shop_address']),
+      avatar: toStr(json['avatar']),
+      currentAddress: CurrentAddress.fromJson(toMap(json['current_address'])),
+      allOrdersCount: toInt(json['all_orders_count']),
+      successOrdersCount: toInt(json['success_orders_count']),
+      performance: Performance.fromJson(toMap(json['performance'])),
     );
   }
 }
@@ -93,8 +93,8 @@ class CurrentAddress {
 
   factory CurrentAddress.fromJson(Map<String, dynamic> json) {
     return CurrentAddress(
-      latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
-      longitude: (json['longitute'] as num?)?.toDouble() ?? 0.0, // Handle typo
+      latitude: toDouble(json['latitude']),
+      longitude: toDouble(json['longitute']), // Handle typo
     );
   }
 }
@@ -107,8 +107,8 @@ class Performance {
 
   factory Performance.fromJson(Map<String, dynamic> json) {
     return Performance(
-      averageStars: (json['average_stars'] as num?)?.toDouble() ?? 0.0,
-      totalReviews: json['total_reviews'] as int? ?? 0,
+      averageStars: toDouble(json['average_stars']),
+      totalReviews: toInt(json['total_reviews']),
     );
   }
 }
@@ -134,13 +134,13 @@ class Review {
 
   factory Review.fromJson(Map<String, dynamic> json) {
     return Review(
-      id: json['id'] as int? ?? 0,
-      driver: json['driver'] as int? ?? 0,
-      driverName: json['driver_name'] as String? ?? '',
-      driverAvatar: json['driver_avatar'] as String?,
-      stars: json['stars'] as int? ?? 0,
-      comment: json['comment'] as String? ?? '',
-      createdAt: json['created_at'] as String? ?? '',
+      id: toInt(json['id']),
+      driver: toInt(json['driver']),
+      driverName: toStr(json['driver_name']),
+      driverAvatar: toStrNullable(json['driver_avatar']),
+      stars: toInt(json['stars']),
+      comment: toStr(json['comment']),
+      createdAt: toStr(json['created_at']),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:taxi_app/src/core/utils/json_safe.dart';
 import 'package:taxi_app/src/features/profile/domain/entities/output_entity.dart';
 
 class OutPutModel extends OutPutEntity {
@@ -5,12 +6,12 @@ class OutPutModel extends OutPutEntity {
 
   factory OutPutModel.fromJson(Map<String, dynamic> json) {
     return OutPutModel(
-      id: json['id'] ?? -1,
-      driver: json['driver'] ?? -1,
-      title: json['title'] ?? '',
-      amount: json['amount'] ?? '',
-      date: json['date'] ?? '',
-      createdAt: json['created_at'] ?? '',
+      id: toInt(json['id'], -1),
+      driver: toInt(json['driver'], -1),
+      title: toStr(json['title']),
+      amount: toStr(json['amount']),
+      date: toStr(json['date']),
+      createdAt: toStr(json['created_at']),
     );
   }
 }

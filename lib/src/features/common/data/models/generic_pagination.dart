@@ -1,3 +1,5 @@
+import 'package:taxi_app/src/core/utils/json_safe.dart';
+
 class GenericPagination<T> {
   final bool status;
   final String message;
@@ -19,13 +21,13 @@ class GenericPagination<T> {
 
   factory GenericPagination.fromJson(Map<String, dynamic> json, T Function(dynamic json) fromJsonT) {
     return GenericPagination<T>(
-      total: json['total'] as int? ?? 0,
-      next: json['next'] as String?,
-      previous: json['previous'] as String? ?? '',
-      status: json['status'] as bool,
-      message: json['message'] as String,
-      data: (json['data'] as List<dynamic>?)?.map((item) => fromJsonT(item)).toList(growable: false) ?? const [],
-      totalSum: (json['total_balance'] as num?)?.toDouble() ?? 0,
+      total: toInt(json['total']),
+      next: toStrNullable(json['next']),
+      previous: toStr(json['previous']),
+      status: toBool(json['status']),
+      message: toStr(json['message']),
+      data: toList(json['data'], (item) => fromJsonT(item)),
+      totalSum: toDouble(json['total_balance']),
     );
   }
 }

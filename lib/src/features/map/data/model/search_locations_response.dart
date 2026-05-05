@@ -1,3 +1,5 @@
+import 'package:taxi_app/src/core/utils/json_safe.dart';
+
 class NearbyLocationsResponse {
   final bool status;
   final String message;
@@ -11,11 +13,9 @@ class NearbyLocationsResponse {
 
   factory NearbyLocationsResponse.fromJson(Map<String, dynamic> json) {
     return NearbyLocationsResponse(
-      status: json['status'] as bool,
-      message: json['message'] as String,
-      data: (json['data'] as List<dynamic>?)
-          ?.map((item) => LocationData.fromJson(item as Map<String, dynamic>))
-          .toList() ?? [],
+      status: toBool(json['status']),
+      message: toStr(json['message']),
+      data: toList(json['data'], (e) => LocationData.fromJson(toMap(e))),
     );
   }
 }
@@ -33,9 +33,9 @@ class LocationData {
 
   factory LocationData.fromJson(Map<String, dynamic> json) {
     return LocationData(
-      formatted: json['formatted'] as String,
-      lat: (json['lat'] as num).toDouble(),
-      lon: (json['lon'] as num).toDouble(),
+      formatted: toStr(json['formatted']),
+      lat: toDouble(json['lat']),
+      lon: toDouble(json['lon']),
     );
   }
 }

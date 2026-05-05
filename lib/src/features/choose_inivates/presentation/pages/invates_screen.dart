@@ -43,19 +43,25 @@ class _InvatesScreenState extends State<InvatesScreen> {
     await Future.delayed(const Duration(milliseconds: 500));
   }
 
+  void _backToMain() {
+    context.read<InivitesBloc>().add(DisconnectFromWebSocketEvent());
+    context.go(Pages.main);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _backToMain();
+      },
+      child: Scaffold(
       backgroundColor: AppColor.greyBg,
       appBar: AppBar(
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            // WebSocket'dan uzilish
-            context.read<InivitesBloc>().add(DisconnectFromWebSocketEvent());
-            Navigator.pop(context);
-          },
+          onPressed: _backToMain,
         ),
       ),
       body: BlocBuilder<InivitesBloc, InivitesState>(
@@ -386,6 +392,7 @@ class _InvatesScreenState extends State<InvatesScreen> {
           }
         },
       ),
+    ),
     );
   }
 

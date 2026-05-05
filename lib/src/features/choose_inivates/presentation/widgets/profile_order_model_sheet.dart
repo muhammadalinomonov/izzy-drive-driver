@@ -151,10 +151,30 @@ void showOrderDetailBottomSheet(
                               const SizedBox(height: 18),
                               AppButton(
                                 title: 'Chaqirish',
-                                onTap: () {
+                                isLoading: state.status == ProposalStatus.loading,
+                                onTap: () async {
                                   proposalBloc.add(SelectProposalEvent(proposalId: int.parse(id)));
+                                  final completed = await proposalBloc.stream.firstWhere(
+                                    (s) => (s.status == ProposalStatus.loaded && s.route != null) ||
+                                        s.status == ProposalStatus.error,
+                                  );
+                                  if (completed.status == ProposalStatus.error) {
+                                    if (c.mounted) {
+                                      ScaffoldMessenger.of(c).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            completed.errorMessage ?? 'Ustani tanlashda xatolik',
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    return;
+                                  }
                                   invitesBloc.add(DisconnectFromWebSocketEvent());
-                                  onDoneTap(); // Navigate after selection
+                                  if (c.mounted && Navigator.of(c).canPop()) {
+                                    Navigator.of(c).pop();
+                                  }
+                                  onDoneTap();
                                 },
                               ),
                               const SizedBox(height: 10),

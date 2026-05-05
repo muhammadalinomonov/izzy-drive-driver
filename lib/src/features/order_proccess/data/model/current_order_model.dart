@@ -1,4 +1,5 @@
 import 'package:taxi_app/src/core/enums/order_enums.dart';
+import 'package:taxi_app/src/core/utils/json_safe.dart';
 import 'package:taxi_app/src/features/chat/data/model/report_response.dart';
 import 'package:taxi_app/src/features/order_proccess/data/model/sub_order_model.dart';
 import 'package:taxi_app/src/features/order_proccess/domain/entities/current_order_entity.dart';
@@ -26,20 +27,20 @@ class CurrentOrderModel extends CurrentOrderEntity {
 
   factory CurrentOrderModel.fromJson(Map<String, dynamic> json) {
     return CurrentOrderModel(
-      id: json['id'] as int? ?? -1,
-      orderTitle: json['order_title'] as String? ?? '',
-      price: json['price'] as String? ?? '',
-      totalPrice: json['total_price'] as String? ?? '',
-      status: OrderStatusConverter().fromJson(json['status'] as String? ?? 'pending'),
-      acceptedAt: json['accepted_at'] as String? ?? '',
-      completedAt: json['completed_at'] as String? ?? '',
-      currentAddress: Address.fromJson(json['current_address'] ?? {}),
-      selectedMechanic: ProfileModel.fromJson(json['selected_mechanic'] ?? {}),
-      subOrders: (json['sub_orders'] as List<dynamic>?)?.map((e) => SubOrderModel.fromJson(e)).toList() ?? [],
-      createdAt: json['created_at'] as String? ?? '',
-      workTime: WorkTimeEntityConverter().fromJson(json['work_time'] ?? {}),
-      mechanicInfo: ProfileModel.fromJson(json['mechanic_info'] ?? {}),
-      map: MapEntity.fromJson(json['map'] ?? {}),
+      id: toInt(json['id'], -1),
+      orderTitle: toStr(json['order_title']),
+      price: toStr(json['price']),
+      totalPrice: toStr(json['total_price']),
+      status: OrderStatusConverter().fromJson(toStr(json['status'], 'pending')),
+      acceptedAt: toStr(json['accepted_at']),
+      completedAt: toStr(json['completed_at']),
+      currentAddress: Address.fromJson(toMap(json['current_address'])),
+      selectedMechanic: ProfileModel.fromJson(toMap(json['selected_mechanic'])),
+      subOrders: toList(json['sub_orders'], (e) => SubOrderModel.fromJson(toMap(e))),
+      createdAt: toStr(json['created_at']),
+      workTime: WorkTimeEntityConverter().fromJson(toMap(json['work_time'])),
+      mechanicInfo: ProfileModel.fromJson(toMap(json['mechanic_info'])),
+      map: MapEntity.fromJson(toMap(json['map'])),
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:taxi_app/src/core/network/dio_model.dart';
 import 'package:taxi_app/src/core/network/network_response.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
+import 'package:taxi_app/src/core/utils/json_safe.dart';
 import 'package:taxi_app/src/features/order_proccess/data/model/current_order_model.dart';
 
 import '../../profile/data/model/profile_model.dart';
@@ -23,17 +24,17 @@ class OrderProccessSource {
       );
       if (response.isSuccess) {
         print('Profile fetched successfully: ${response.data}');
-        var profileModel = ProfileModel.fromJson(response.data['data']);
+        var profileModel = ProfileModel.fromJson(toMap(response.data['data']));
         StorageRepository.putInt("ws_id", profileModel.wsId);
-        return NetworkResponse(data: ProfileModel.fromJson(response.data['data']));
+        return NetworkResponse(data: profileModel);
       } else {
         print('Error fetching profile: ${response.data}');
-        return NetworkResponse(errorText: response.data['message'] ?? 'Something went wrong try again');
+        return NetworkResponse(errorText: dioErrorMessage(response.data, 'Something went wrong try again'));
       }
     } on DioException catch (e) {
       print('Dio exception fetching profile: ${e.response?.statusCode}');
       print('Dio exception response body: ${e.response?.data}');
-      return NetworkResponse(errorText: e.response?.data['message'] ?? 'Something went wrong');
+      return NetworkResponse(errorText: dioErrorMessage(e.response?.data, 'Something went wrong'));
     } catch (e) {
       print('Error fetching profile: $e');
       return NetworkResponse(errorText: 'Something went wrong');
@@ -55,10 +56,10 @@ class OrderProccessSource {
       if (response.isSuccess) {
         return NetworkResponse(data: null);
       } else {
-        return NetworkResponse(errorText: response.data?['message'] ?? 'Unexpected status: ${response.statusCode}');
+        return NetworkResponse(errorText: dioErrorMessage(response.data, 'Unexpected status: ${response.statusCode}'));
       }
     } on DioException catch (e) {
-      return NetworkResponse(errorText: e.response?.data?['message']?.toString() ?? e.message ?? 'Cancel failed');
+      return NetworkResponse(errorText: dioErrorMessage(e.response?.data, e.message ?? 'Cancel failed'));
     } catch (e) {
       return NetworkResponse(errorText: e.toString());
     }
@@ -77,7 +78,7 @@ class OrderProccessSource {
       );
 
       if (response.statusCode == 200) {
-        final currentOrder = CurrentOrderModel.fromJson(response.data['data']);
+        final currentOrder = CurrentOrderModel.fromJson(toMap(response.data['data']));
         return NetworkResponse<CurrentOrderModel>(data: currentOrder);
       } else {
         return NetworkResponse<CurrentOrderModel>(errorText: 'Unexpected status code: ${response.statusCode}');
@@ -116,9 +117,10 @@ class OrderProccessSource {
         ),
       );
       if (result.isSuccess) {
-        return NetworkResponse(data: result.data['data']['code']);
+        final dataMap = toMap(result.data['data']);
+        return NetworkResponse(data: toInt(dataMap['code']));
       } else {
-        return NetworkResponse(errorText: result.data['message'] ?? 'Something went wrong');
+        return NetworkResponse(errorText: dioErrorMessage(result.data, 'Something went wrong'));
       }
     } catch (e) {
       return NetworkResponse(errorText: e.toString());
@@ -139,7 +141,7 @@ class OrderProccessSource {
       if (result.isSuccess) {
         return NetworkResponse(data: null);
       } else {
-        return NetworkResponse(errorText: result.data['message'] ?? 'Something went wrong');
+        return NetworkResponse(errorText: dioErrorMessage(result.data, 'Something went wrong'));
       }
     } catch (e) {
       return NetworkResponse(errorText: e.toString());

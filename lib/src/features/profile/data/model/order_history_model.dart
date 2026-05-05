@@ -1,4 +1,5 @@
 import 'package:taxi_app/src/core/enums/order_enums.dart';
+import 'package:taxi_app/src/core/utils/json_safe.dart';
 import 'package:taxi_app/src/features/chat/data/model/report_response.dart';
 import 'package:taxi_app/src/features/order_proccess/data/model/sub_order_model.dart';
 import 'package:taxi_app/src/features/profile/data/model/profile_model.dart';
@@ -25,23 +26,22 @@ class OrderHistoryModel extends OrderHistoryEntity {
   });
 
   factory OrderHistoryModel.fromJson(Map<String, dynamic> json) {
+    final orderMap = toMap(json['order']);
     return OrderHistoryModel(
-      id: json['order_id'] as int? ?? -1,
-      orderTitle: ((json['order'] as Map?)?['title'] as String?) ?? '',
-      price: ((json['order'] as Map?)?['price'] as double?)?.toString() ?? '',
-      totalPrice: json['total_price'] as double? ?? 0,
-      status: OrderStatusConverter().fromJson(json['status'] as String? ?? 'pending'),
-      acceptedAt: json['accepted_at'] as String? ?? '',
-      completedTime: WorkTimeEntityConverter().fromJson(json['completed_time'] ?? {}),
-      address: json['address'] as String? ?? '',
-      currentAddress: Address.fromJson(json['current_address'] ?? {}),
-      selectedMechanic: ProfileModel.fromJson(json['selected_mechanic'] ?? {}),
-      subOrders: (json['sub_orders'] as List<dynamic>?)?.map((e) => SubOrderModel.fromJson(e)).toList() ?? [],
-      createdAt: json['created_at'] as String? ?? '',
-      mechanicInfo: ProfileModel.fromJson(json['mechanic_info'] ?? {}),
-      map: MapEntity.fromJson(json['map'] ?? {}),
-
-      ///active gemini
+      id: toInt(json['order_id'], -1),
+      orderTitle: toStr(orderMap['title']),
+      price: toDouble(orderMap['price']).toString(),
+      totalPrice: toDouble(json['total_price']),
+      status: OrderStatusConverter().fromJson(toStr(json['status'], 'pending')),
+      acceptedAt: toStr(json['accepted_at']),
+      completedTime: WorkTimeEntityConverter().fromJson(toMap(json['completed_time'])),
+      address: toStr(json['address']),
+      currentAddress: Address.fromJson(toMap(json['current_address'])),
+      selectedMechanic: ProfileModel.fromJson(toMap(json['selected_mechanic'])),
+      subOrders: toList(json['sub_orders'], (e) => SubOrderModel.fromJson(toMap(e))),
+      createdAt: toStr(json['created_at']),
+      mechanicInfo: ProfileModel.fromJson(toMap(json['mechanic_info'])),
+      map: MapEntity.fromJson(toMap(json['map'])),
     );
   }
 }

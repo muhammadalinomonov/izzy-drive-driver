@@ -1,3 +1,5 @@
+import 'package:taxi_app/src/core/utils/json_safe.dart';
+
 class ProfileResponse {
   final bool status;
   final String message;
@@ -11,9 +13,9 @@ class ProfileResponse {
 
   factory ProfileResponse.fromJson(Map<String, dynamic> json) {
     return ProfileResponse(
-      status: json['status'] ?? false,
-      message: json['message'] ?? '',
-      data: ProfileModel.fromJson(json['data'] ?? {}),
+      status: toBool(json['status']),
+      message: toStr(json['message']),
+      data: ProfileModel.fromJson(toMap(json['data'])),
     );
   }
 }
@@ -56,21 +58,21 @@ class ProfileModel {
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
     return ProfileModel(
-      email: json['email'] ?? '',
-      truckmodel: json['truck_model'] ?? '',
-      fullName: json['full_name'] ?? '',
-      mechanicName: json['mechanic_name'] ?? '',
-      mechanicId: json['mechanic_id'] ?? 0,
-      photo: json['photo'] ?? '',
-      truckImage: json['truck_image'] ?? '',
-      truckName: json['truck_mar'] ?? '',
-      truckYear: json['truck_year'] ?? '',
-      phoneNumber: json['phone_number'] ?? '',
-      licenseNumber: json['license_number'] ?? '',
-      deviceToken: json['device_token'] ?? '',
-      wsId: json['ws_id'] ?? 0,
-      driverId: json['driver_id'] ?? 0,
-      id: json['id']??0,
+      email: toStr(json['email']),
+      truckmodel: toStr(json['truck_model']),
+      fullName: toStr(json['full_name']),
+      mechanicName: toStr(json['mechanic_name']),
+      mechanicId: toInt(json['mechanic_id']),
+      photo: toStr(json['photo']),
+      truckImage: toStr(json['truck_image']),
+      truckName: toStr(json['truck_mar']),
+      truckYear: toStr(json['truck_year']),
+      phoneNumber: toStr(json['phone_number']),
+      licenseNumber: toStr(json['license_number']),
+      deviceToken: toStr(json['device_token']),
+      wsId: toInt(json['ws_id']),
+      driverId: toInt(json['driver_id']),
+      id: toInt(json['id']),
     );
   }
 }

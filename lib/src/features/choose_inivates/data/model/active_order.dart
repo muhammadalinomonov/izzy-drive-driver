@@ -1,3 +1,5 @@
+import 'package:taxi_app/src/core/utils/json_safe.dart';
+
 class OrderResponse {
   final bool status;
   final String message;
@@ -23,17 +25,15 @@ class OrderResponse {
 
   factory OrderResponse.fromJson(Map<String, dynamic> json) {
     return OrderResponse(
-      status: json['status'] as bool? ?? false,
-      message: json['message'] as String? ?? ' ',
-      total: json['total'] as int? ?? 0,
-      totalPages: json['total_pages'] as int? ?? 0,
-      currentPage: json['current_page'] as int? ?? 0,
+      status: toBool(json['status']),
+      message: toStr(json['message'], ' '),
+      total: toInt(json['total']),
+      totalPages: toInt(json['total_pages']),
+      currentPage: toInt(json['current_page']),
       next: json['next'],
       previous: json['previous'],
-      data: (json['data'] is List<dynamic> ? json['data'] as List<dynamic>? ?? [] : [])
-          .map((e) => OrderData.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      order: Order.fromJson(json['order'] as Map<String, dynamic>? ?? {}),
+      data: toList(json['data'], (e) => OrderData.fromJson(toMap(e))),
+      order: Order.fromJson(toMap(json['order'])),
     );
   }
 
@@ -91,17 +91,17 @@ class OrderData {
 
   factory OrderData.fromJson(Map<String, dynamic> json) {
     return OrderData(
-      id: json['id'] as int,
-      mechanicId: json['mechanic_id'] as int,
-      mechanicName: json['mechanic_name'] as String,
-      shopAddress: json['shop_address'] as String,
-      distance: _toDouble(json['distance']),
-      avatar: json['avatar'] as String?,
-      mechanicCurrentAddress: json['mechanic_current_address'] as String,
-      proposedPrice: _toDouble(json['proposed_price']),
-      createdAt: json['created_at'] as String,
-      balance: json['balance'] as String,
-      changePercent: _toDouble(json['change_percent']),
+      id: toInt(json['id']),
+      mechanicId: toInt(json['mechanic_id']),
+      mechanicName: toStr(json['mechanic_name']),
+      shopAddress: toStr(json['shop_address']),
+      distance: toDouble(json['distance']),
+      avatar: toStrNullable(json['avatar']),
+      mechanicCurrentAddress: toStr(json['mechanic_current_address']),
+      proposedPrice: toDouble(json['proposed_price']),
+      createdAt: toStr(json['created_at']),
+      balance: toStr(json['balance']),
+      changePercent: toDouble(json['change_percent']),
     );
   }
 }
@@ -127,13 +127,13 @@ class Order {
 
   factory Order.fromJson(Map<String, dynamic> json) {
     return Order(
-      id: json['id'] as int? ?? -1,
-      orderTitle: json['order_title'] as String? ?? '',
-      price: _toDouble(json['price'] ?? 0),
-      status: json['status'] as String? ?? '',
-      currentAddress: CurrentAddress.fromJson(json['current_address']??{}),
-      createdAt: json['created_at'] as String? ?? '',
-      totalPrice: _toDouble(json['total_price']??0),
+      id: toInt(json['id'], -1),
+      orderTitle: toStr(json['order_title']),
+      price: toDouble(json['price']),
+      status: toStr(json['status']),
+      currentAddress: CurrentAddress.fromJson(toMap(json['current_address'])),
+      createdAt: toStr(json['created_at']),
+      totalPrice: toDouble(json['total_price']),
     );
   }
 
@@ -160,17 +160,10 @@ class CurrentAddress {
 
   factory CurrentAddress.fromJson(Map<String, dynamic> json) {
     return CurrentAddress(
-      latitude: _toDouble(json['latitude']??0),
-      longitude: _toDouble(json['longitude']??0),
-      address: json['address'] as String? ?? '',
-      isStatic: json['is_static'] as bool? ?? false,
+      latitude: toDouble(json['latitude']),
+      longitude: toDouble(json['longitude']),
+      address: toStr(json['address']),
+      isStatic: toBool(json['is_static']),
     );
   }
-}
-
-/// Helper function to safely parse double from dynamic
-double _toDouble(dynamic value) {
-  if (value is num) return value.toDouble();
-  if (value is String) return double.tryParse(value) ?? 0.0;
-  return 0.0;
 }

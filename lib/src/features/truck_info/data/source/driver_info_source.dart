@@ -5,6 +5,7 @@ import 'package:taxi_app/src/core/network/dio_model.dart';
 import 'package:taxi_app/src/core/network/network_response.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
+import 'package:taxi_app/src/core/utils/json_safe.dart';
 import 'package:taxi_app/src/features/truck_info/data/model/driver_info_put_model.dart';
 import 'package:taxi_app/src/features/truck_info/domain/model/track_model.dart';
 
@@ -36,10 +37,7 @@ class DriverInfoSource {
       }
     } on DioException catch (e) {
       print('Dio exception ${e.response?.statusCode}');
-      return NetworkResponse(
-        errorText:
-            e.response?.data['message']['detail'] ?? 'Dio exception error',
-      );
+      return NetworkResponse(errorText: dioErrorMessage(e.response?.data, 'Dio exception error'));
     } catch (e) {
       return NetworkResponse(errorText: e.toString());
     }
@@ -72,9 +70,7 @@ class DriverInfoSource {
         return NetworkResponse(errorText: response.statusMessage ?? "");
       }
     } on DioException catch (e) {
-      return NetworkResponse(
-        errorText: e.response?.data['message'] ?? 'Dio exception error',
-      );
+      return NetworkResponse(errorText: dioErrorMessage(e.response?.data, 'Dio exception error'));
     } catch (e) {
       return NetworkResponse(errorText: e.toString());
     }
@@ -102,9 +98,7 @@ class DriverInfoSource {
         return NetworkResponse(errorText: response.statusMessage ?? "");
       }
     } on DioException catch (e) {
-      return NetworkResponse(
-        errorText: e.response?.data['message'] ?? 'Dio exception error',
-      );
+      return NetworkResponse(errorText: dioErrorMessage(e.response?.data, 'Dio exception error'));
     } catch (e) {
       return NetworkResponse(errorText: e.toString());
     }

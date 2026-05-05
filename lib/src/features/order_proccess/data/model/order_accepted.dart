@@ -1,5 +1,6 @@
 // File: lib/data/model/order_accepted.dart
 import 'package:equatable/equatable.dart';
+import 'package:taxi_app/src/core/utils/json_safe.dart';
 
 class OrderAccepted extends Equatable {
   final DateTime acceptedAt;
@@ -24,14 +25,14 @@ class OrderAccepted extends Equatable {
 
   factory OrderAccepted.fromJson(Map<String, dynamic> json) {
     return OrderAccepted(
-      acceptedAt: DateTime.parse(json['accepted_at'] as String),
-      eventStatus: json['event-status'] as String,
-      maps: Maps.fromJson(json['maps'] as Map<String, dynamic>),
-      mechanicId: json['mechanic_id'] as int,
-      mechanicPhone: json['mechanic_phone'] as String,
-      mechanicPhoto: json['mechanic_photo'] as String?,
-      orderId: json['order_id'] as int,
-      status: json['status'] as String,
+      acceptedAt: DateTime.tryParse(toStr(json['accepted_at'])) ?? DateTime.now(),
+      eventStatus: toStr(json['event-status']),
+      maps: Maps.fromJson(toMap(json['maps'])),
+      mechanicId: toInt(json['mechanic_id']),
+      mechanicPhone: toStr(json['mechanic_phone']),
+      mechanicPhoto: toStrNullable(json['mechanic_photo']),
+      orderId: toInt(json['order_id']),
+      status: toStr(json['status']),
     );
   }
 
@@ -65,13 +66,11 @@ class Maps extends Equatable {
 
   factory Maps.fromJson(Map<String, dynamic> json) {
     return Maps(
-      distanceKm: (json['distance_km'] as num).toDouble(),
-      durationMin: (json['duration_min'] as num).toDouble(),
-      endPoint: Point.fromJson(json['end_point'] as Map<String, dynamic>),
-      route: (json['route'] as List)
-          .map((point) => Point.fromJson(point as Map<String, dynamic>))
-          .toList(),
-      startPoint: Point.fromJson(json['start_point'] as Map<String, dynamic>),
+      distanceKm: toDouble(json['distance_km']),
+      durationMin: toDouble(json['duration_min']),
+      endPoint: Point.fromJson(toMap(json['end_point'])),
+      route: toList(json['route'], (e) => Point.fromJson(toMap(e))),
+      startPoint: Point.fromJson(toMap(json['start_point'])),
     );
   }
 
@@ -96,8 +95,8 @@ class Point extends Equatable {
 
   factory Point.fromJson(Map<String, dynamic> json) {
     return Point(
-      lat: (json['lat'] as num).toDouble(),
-      lng: (json['lng'] as num).toDouble(),
+      lat: toDouble(json['lat']),
+      lng: toDouble(json['lng']),
     );
   }
 

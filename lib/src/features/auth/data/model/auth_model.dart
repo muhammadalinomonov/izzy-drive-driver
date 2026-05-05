@@ -1,3 +1,5 @@
+import 'package:taxi_app/src/core/utils/json_safe.dart';
+
 class AuthModel {
   final String email;
   final String password;
@@ -24,10 +26,10 @@ class AuthModel {
 
   factory AuthModel.fromMap(Map<String, dynamic> map) {
     return AuthModel(
-      fullName: map['full_Name'] as String,
-      email: map['email'] as String,
-      password: map['password'] as String,
-      deviceToken: map['deviceToken'] as String,
+      fullName: toStr(map['full_Name']),
+      email: toStr(map['email']),
+      password: toStr(map['password']),
+      deviceToken: toStr(map['deviceToken']),
     );
   }
 }

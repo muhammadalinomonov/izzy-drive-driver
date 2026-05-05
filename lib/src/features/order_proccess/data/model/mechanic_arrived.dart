@@ -1,3 +1,5 @@
+import 'package:taxi_app/src/core/utils/json_safe.dart';
+
 class MechanicArrived {
   final String event;
   final DirectEventData data;
@@ -9,8 +11,8 @@ class MechanicArrived {
 
   factory MechanicArrived.fromJson(Map<String, dynamic> json) {
     return MechanicArrived(
-      event: json['event'] as String,
-      data: DirectEventData.fromJson(json['data'] as Map<String, dynamic>),
+      event: toStr(json['event']),
+      data: DirectEventData.fromJson(toMap(json['data'])),
     );
   }
 
@@ -33,8 +35,8 @@ class DirectEventData {
 
   factory DirectEventData.fromJson(Map<String, dynamic> json) {
     return DirectEventData(
-      eventStatus: json['event-status'] as String,
-      orderId: json['order_id'] as int,
+      eventStatus: toStr(json['event-status']),
+      orderId: toInt(json['order_id']),
     );
   }
 

@@ -63,12 +63,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
     }
     final dir = await getApplicationDocumentsDirectory();
     final path = '${dir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
-    await _recorder.start(
-      path: path,
-      encoder: AudioEncoder.aacLc,
-      bitRate: 128000,
-      samplingRate: 44100,
-    );
+    await _recorder.start(path: path, encoder: AudioEncoder.aacLc, bitRate: 128000, samplingRate: 44100);
     _activeRecordingPath = path;
     if (!mounted) return;
     context.read<OrderCreateBloc>().add(const AudioRecordingStarted());
@@ -136,10 +131,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
     }
     final picked = await _picker.pickMultiImage(imageQuality: 85, maxWidth: 1920);
     if (picked.isEmpty || !mounted) return;
-    final files = picked
-        .take(remaining)
-        .map((x) => File(x.path))
-        .toList(growable: false);
+    final files = picked.take(remaining).map((x) => File(x.path)).toList(growable: false);
     context.read<OrderCreateBloc>().add(PhotosAdded(files));
   }
 
@@ -147,16 +139,18 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
 
   void _onSubmit() {
     FocusScope.of(context).unfocus();
-    context.read<OrderCreateBloc>().add(OrderSubmitted(
-      onSuccess: (_) {
-        if (!mounted) return;
-        context.go(Pages.invatesPage);
-      },
-      onError: (msg) {
-        if (!mounted) return;
-        AppSnackBar.showError(context, msg);
-      },
-    ));
+    context.read<OrderCreateBloc>().add(
+      OrderSubmitted(
+        onSuccess: (_) {
+          if (!mounted) return;
+          context.go(Pages.invatesPage);
+        },
+        onError: (msg) {
+          if (!mounted) return;
+          AppSnackBar.showError(context, msg);
+        },
+      ),
+    );
   }
 
   void _showHelpSheet() {
@@ -175,8 +169,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<OrderCreateBloc, OrderCreateState>(
-      listenWhen: (p, c) =>
-          p.status != c.status && c.status == OrderCreateStatus.failure,
+      listenWhen: (p, c) => p.status != c.status && c.status == OrderCreateStatus.failure,
       listener: (context, state) {
         if (state.errorMessage.isNotEmpty) {
           AppSnackBar.showError(context, state.errorMessage);
@@ -198,10 +191,10 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
                         Text(
                           'Sizda qanday muammo?',
                           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: -0.3,
-                              ),
+                            fontSize: 24,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: -0.3,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         _HintBubble(onTap: _showHelpSheet),
@@ -210,17 +203,14 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
                           RecordedAudioPreview(
                             path: state.audioPath!,
                             duration: state.audioDuration,
-                            onClear: () => context
-                                .read<OrderCreateBloc>()
-                                .add(const AudioCleared()),
+                            onClear: () => context.read<OrderCreateBloc>().add(const AudioCleared()),
                           ),
                         if (state.audioPath != null) const SizedBox(height: 12),
                         TextField(
                           controller: _textController,
                           maxLines: 4,
                           minLines: 3,
-                          onChanged: (v) =>
-                              context.read<OrderCreateBloc>().add(DescriptionChanged(v)),
+                          onChanged: (v) => context.read<OrderCreateBloc>().add(DescriptionChanged(v)),
                           decoration: InputDecoration(
                             hintText: 'Muammoni yozing...',
                             filled: true,
@@ -240,29 +230,20 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        Text(
-                          'Rasm yoki video',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
+                        Text('Rasm yoki video', style: Theme.of(context).textTheme.titleMedium),
                         const SizedBox(height: 8),
                         PhotoGrid(
                           photos: state.photos,
                           maxCount: _maxPhotos,
                           onAdd: _pickPhotos,
-                          onRemove: (i) =>
-                              context.read<OrderCreateBloc>().add(PhotoRemoved(i)),
+                          onRemove: (i) => context.read<OrderCreateBloc>().add(PhotoRemoved(i)),
                         ),
                         const SizedBox(height: 20),
-                        Text(
-                          'Ushbu ish uchun nechpul bermoqchisiz?',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
+                        Text('Ushbu ish uchun nechpul bermoqchisiz?', style: Theme.of(context).textTheme.titleMedium),
                         const SizedBox(height: 8),
                         PriceInput(
                           controller: _priceController,
-                          onChanged: (raw) => context
-                              .read<OrderCreateBloc>()
-                              .add(PriceChanged(raw)),
+                          onChanged: (raw) => context.read<OrderCreateBloc>().add(PriceChanged(raw)),
                         ),
                       ],
                     ),
@@ -293,6 +274,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
 
 class _Header extends StatelessWidget {
   const _Header({required this.address, required this.onBack});
+
   final String address;
   final VoidCallback onBack;
 
@@ -302,11 +284,10 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
       child: Row(
         children: [
-          IconButton(
-            onPressed: onBack,
-            icon: SvgPicture.asset(AppIcons.back, width: 20, height: 20),
+          IconButton(onPressed: onBack, icon: SvgPicture.asset(AppIcons.back, width: 20, height: 20)),
+          Expanded(
+            child: Center(child: AddressChip(address: address)),
           ),
-          Expanded(child: Center(child: AddressChip(address: address))),
           const SizedBox(width: 40),
         ],
       ),
@@ -316,6 +297,7 @@ class _Header extends StatelessWidget {
 
 class _HintBubble extends StatelessWidget {
   const _HintBubble({required this.onTap});
+
   final VoidCallback onTap;
 
   @override
@@ -335,12 +317,7 @@ class _HintBubble extends StatelessWidget {
         ),
         child: const Text(
           'Muammoni yozing yoki ovozli habar orqali tushuntirib bering.',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 15,
-            height: 1.4,
-            letterSpacing: -0.3,
-          ),
+          style: TextStyle(color: Colors.black, fontSize: 15, height: 1.4, letterSpacing: -0.3),
         ),
       ),
     );
@@ -365,12 +342,7 @@ class _BottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-        12,
-        8,
-        12,
-        MediaQuery.paddingOf(context).bottom + 12,
-      ),
+      padding: EdgeInsets.fromLTRB(12, 8, 12, MediaQuery.paddingOf(context).bottom + 12),
       child: Row(
         children: [
           IconButton(
@@ -399,21 +371,20 @@ class _BottomBar extends StatelessWidget {
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                     )
-                  : const Text(
-                      'Yuborish',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
+                  : const Text('Yuborish', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             ),
           ),
           const SizedBox(width: 8),
           IconButton(
             onPressed: onMicPressed,
-            icon: SvgPicture.asset(AppIcons.microphone, width: 24, height: 24),
+            icon: SvgPicture.asset(
+              AppIcons.microphone,
+              width: 24,
+              height: 24,
+              colorFilter: ColorFilter.mode(AppColor.white, BlendMode.srcIn),
+            ),
             style: IconButton.styleFrom(
               backgroundColor: AppColor.kPrimaryColor,
               foregroundColor: Colors.white,

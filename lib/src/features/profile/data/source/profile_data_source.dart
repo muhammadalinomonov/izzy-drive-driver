@@ -5,6 +5,7 @@ import 'package:taxi_app/src/core/network/dio_model.dart';
 import 'package:taxi_app/src/core/network/network_response.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
+import 'package:taxi_app/src/core/utils/json_safe.dart';
 import 'package:taxi_app/src/features/common/data/models/generic_pagination.dart';
 import 'package:taxi_app/src/features/order_proccess/data/model/current_order_model.dart';
 import 'package:taxi_app/src/features/profile/data/model/order_history_model.dart';
@@ -26,15 +27,15 @@ class ProfileDataSource {
       );
       if (response.isSuccess) {
         print('Profile fetched successfully: ${response.data}');
-        return NetworkResponse(data: ProfileModel.fromJson(response.data['data']));
+        return NetworkResponse(data: ProfileModel.fromJson(toMap(response.data['data'])));
       } else {
         print('Error fetching profile: ${response.data}');
-        return NetworkResponse(errorText: response.data['message'] ?? 'Something went wrong try again');
+        return NetworkResponse(errorText: dioErrorMessage(response.data, 'Something went wrong try again'));
       }
     } on DioException catch (e) {
       print('Dio exception fetching profile: ${e.response?.statusCode}');
       print('Dio exception response body: ${e.response?.data}');
-      return NetworkResponse(errorText: e.response?.data['message'] ?? 'Something went wrong');
+      return NetworkResponse(errorText: dioErrorMessage(e.response?.data, 'Something went wrong'));
     } catch (e) {
       print('Error fetching profile: $e');
       return NetworkResponse(errorText: 'Something went wrong');
@@ -51,15 +52,15 @@ class ProfileDataSource {
 
       if (response.isSuccess) {
         print('Outputs fetched successfully: ${response.data}');
-        return GenericPagination<OutPutModel>.fromJson(response.data, (data) => OutPutModel.fromJson(data));
+        return GenericPagination<OutPutModel>.fromJson(toMap(response.data), (data) => OutPutModel.fromJson(toMap(data)));
       } else {
         print('Error fetching outputs: ${response.data}');
-        throw Exception(response.data['message'] ?? 'Something went wrong try again');
+        throw Exception(dioErrorMessage(response.data, 'Something went wrong try again'));
       }
     } on DioException catch (e) {
       print('Dio exception fetching outputs: ${e.response?.statusCode}');
       print('Dio exception response body: ${e.response?.data}');
-      throw Exception(e.response?.data['message'] ?? 'Something went wrong');
+      throw Exception(dioErrorMessage(e.response?.data, 'Something went wrong'));
     } catch (e) {
       print('Error fetching outputs: $e');
       throw Exception('Something went wrong');
@@ -76,15 +77,15 @@ class ProfileDataSource {
       );
       if (response.isSuccess) {
         print('Output created successfully: ${response.data}');
-        return NetworkResponse(data: OutPutModel.fromJson(response.data['data']));
+        return NetworkResponse(data: OutPutModel.fromJson(toMap(response.data['data'])));
       } else {
         print('Error creating output: ${response.data}');
-        return NetworkResponse(errorText: response.data['message'] ?? 'Something went wrong try again');
+        return NetworkResponse(errorText: dioErrorMessage(response.data, 'Something went wrong try again'));
       }
     } on DioException catch (e) {
       print('Dio exception creating output: ${e.response?.statusCode}');
       print('Dio exception response body: ${e.response?.data}');
-      return NetworkResponse(errorText: e.response?.data['message'] ?? 'Something went wrong');
+      return NetworkResponse(errorText: dioErrorMessage(e.response?.data, 'Something went wrong'));
     } catch (e) {
       print('Error creating output: $e');
       return NetworkResponse(errorText: 'Something went wrong');
@@ -104,14 +105,14 @@ class ProfileDataSource {
         return NetworkResponse(data: response.data);
       } else {
         print('Error updating password: ${response.data}');
-        return NetworkResponse(errorText: response.data['message']);
+        return NetworkResponse(errorText: dioErrorMessage(response.data, 'Something went wrong'));
       }
     } on DioException catch (e) {
       print('Dio exception updating password: ${e.response?.statusCode}');
 
       print('Dio exception response body: ${e.response?.data}');
 
-      return NetworkResponse(errorText: e.response?.data['message'] ?? 'Something went wrong');
+      return NetworkResponse(errorText: dioErrorMessage(e.response?.data, 'Something went wrong'));
     } catch (e) {
       print('Error updating password: $e');
       return NetworkResponse(errorText: 'Something went wrong');
@@ -128,15 +129,15 @@ class ProfileDataSource {
       );
       if (response.isSuccess) {
         print('Orders fetched successfully: ${response.data}');
-        return GenericPagination<CurrentOrderModel>.fromJson(response.data, (data) => CurrentOrderModel.fromJson(data));
+        return GenericPagination<CurrentOrderModel>.fromJson(toMap(response.data), (data) => CurrentOrderModel.fromJson(toMap(data)));
       } else {
         print('Error fetching orders: ${response.data}');
-        throw Exception(response.data['message'] ?? 'Something went wrong try again');
+        throw Exception(dioErrorMessage(response.data, 'Something went wrong try again'));
       }
     } on DioException catch (e) {
       print('Dio exception fetching orders: ${e.response?.statusCode}');
       print('Dio exception response body: ${e.response?.data}');
-      throw Exception(e.response?.data['message'] ?? 'Something went wrong');
+      throw Exception(dioErrorMessage(e.response?.data, 'Something went wrong'));
     } catch (e) {
       print('Error fetching orders: $e');
       throw Exception('Something went wrong');
@@ -153,15 +154,15 @@ class ProfileDataSource {
       );
       if (response.isSuccess) {
         print('Orders fetched successfully: ${response.data}');
-        return OrderHistoryModel.fromJson(response.data['data']);
+        return OrderHistoryModel.fromJson(toMap(response.data['data']));
       } else {
         print('Error fetching orders: ${response.data}');
-        throw Exception(response.data['message'] ?? 'Something went wrong try again');
+        throw Exception(dioErrorMessage(response.data, 'Something went wrong try again'));
       }
     } on DioException catch (e) {
       print('Dio exception fetching orders: ${e.response?.statusCode}');
       print('Dio exception response body: ${e.response?.data}');
-      throw Exception(e.response?.data['message'] ?? 'Something went wrong');
+      throw Exception(dioErrorMessage(e.response?.data, 'Something went wrong'));
     } catch (e) {
       print('Error fetching orders: $e');
       throw Exception('Something went wrong');

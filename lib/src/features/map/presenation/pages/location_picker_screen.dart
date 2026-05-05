@@ -35,7 +35,7 @@ class LocationPickerScreen extends StatefulWidget {
 }
 
 class _LocationPickerScreenState extends State<LocationPickerScreen> {
-  late mapbox.MapboxMap _map;
+  mapbox.MapboxMap? _map;
   mapbox.PointAnnotationManager? _annotationManager;
 
   mapbox.Position _currentPosition = mapbox.Position(69.2401, 41.2995); // Tashkent fallback
@@ -62,12 +62,27 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     super.dispose();
   }
 
-  Future<void> _initFromCurrentLocation() async {
+  Future<void> _initFromCurrentLocation({bool animate = false}) async {
     final pos = await _readGpsPosition();
     if (pos == null || !mounted) return;
     setState(() {
       _currentPosition = mapbox.Position(pos.longitude, pos.latitude);
     });
+    final map = _map;
+    if (map != null) {
+      final cameraOptions = mapbox.CameraOptions(
+        center: mapbox.Point(coordinates: _currentPosition),
+        zoom: 16.0,
+      );
+      if (animate) {
+        await map.flyTo(
+          cameraOptions,
+          mapbox.MapAnimationOptions(duration: 600),
+        );
+      } else {
+        await map.setCamera(cameraOptions);
+      }
+    }
     _maybeFetchMechanics(pos.latitude, pos.longitude, force: true);
   }
 
@@ -119,7 +134,9 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 400), () async {
       if (!mounted) return;
-      final cam = await _map.getCameraState();
+      final map = _map;
+      if (map == null) return;
+      final cam = await map.getCameraState();
       if (!mounted) return;
       setState(() => _isPanning = false);
       final lat = cam.center.coordinates.lat.toDouble();
@@ -173,7 +190,9 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   }
 
   Future<void> _drawMechanicMarkers(List<Mechanic> mechanics) async {
-    _annotationManager ??= await _map.annotations.createPointAnnotationManager();
+    final map = _map;
+    if (map == null) return;
+    _annotationManager ??= await map.annotations.createPointAnnotationManager();
     await _annotationManager!.deleteAll();
     for (final m in mechanics) {
       final png = await _composeMarkerPng(m.distance);
@@ -210,7 +229,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     setState(() {
       _currentPosition = mapbox.Position(loc.lon, loc.lat);
     });
-    _map.flyTo(
+    _map?.flyTo(
       mapbox.CameraOptions(
         center: mapbox.Point(coordinates: _currentPosition),
         zoom: 16.0,
@@ -222,7 +241,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   }
 
   void _useMyLocation() {
-    _initFromCurrentLocation();
+    _initFromCurrentLocation(animate: true);
     context.read<MapBloc>().add(PickerModeChangedEvent(PickerMode.map));
   }
 

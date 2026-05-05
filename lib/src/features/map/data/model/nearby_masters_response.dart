@@ -1,3 +1,5 @@
+import 'package:taxi_app/src/core/utils/json_safe.dart';
+
 class NearbyMastersResponse {
   final bool status;
   final String message;
@@ -7,9 +9,9 @@ class NearbyMastersResponse {
 
   factory NearbyMastersResponse.fromJson(Map<String, dynamic> json) {
     return NearbyMastersResponse(
-      status: json['status'] as bool,
-      message: json['message'] as String,
-      data: NearbyMastersData.fromJson(json['data'] as Map<String, dynamic>),
+      status: toBool(json['status']),
+      message: toStr(json['message']),
+      data: NearbyMastersData.fromJson(toMap(json['data'])),
     );
   }
 
@@ -24,8 +26,8 @@ class NearbyMastersData {
 
   factory NearbyMastersData.fromJson(Map<String, dynamic> json) {
     return NearbyMastersData(
-      driverCurrentAddress: DriverCurrentAddress.fromJson(json['driver_current_address'] as Map<String, dynamic>),
-      mechanics: (json['mechanics'] as List<dynamic>).map((e) => Mechanic.fromJson(e as Map<String, dynamic>)).toList(),
+      driverCurrentAddress: DriverCurrentAddress.fromJson(toMap(json['driver_current_address'])),
+      mechanics: toList(json['mechanics'], (e) => Mechanic.fromJson(toMap(e))),
     );
   }
 
@@ -44,17 +46,17 @@ class DriverCurrentAddress {
 
   factory DriverCurrentAddress.fromJson(Map<String, dynamic> json) {
     return DriverCurrentAddress(
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
-      address: json['address'] as String,
+      latitude: toDouble(json['latitude']),
+      longitude: toDouble(json['longitude']),
+      address: toStr(json['address']),
     );
   }
 
   factory DriverCurrentAddress.fromSearchApiJson(Map<String, dynamic> json) {
     return DriverCurrentAddress(
-      latitude: (json['lat'] as num?)?.toDouble() ?? 0,
-      longitude: (json['lon'] as num?)?.toDouble() ?? 0,
-      address: json['formatted'] as String? ?? '',
+      latitude: toDouble(json['lat']),
+      longitude: toDouble(json['lon']),
+      address: toStr(json['formatted']),
     );
   }
 
@@ -71,10 +73,10 @@ class Mechanic {
 
   factory Mechanic.fromJson(Map<String, dynamic> json) {
     return Mechanic(
-      id: json['id'] as int,
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
-      distance: (json['distance'] as num).toDouble(),
+      id: toInt(json['id']),
+      latitude: toDouble(json['latitude']),
+      longitude: toDouble(json['longitude']),
+      distance: toDouble(json['distance']),
     );
   }
 

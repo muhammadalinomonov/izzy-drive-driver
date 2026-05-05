@@ -76,10 +76,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: BlocBuilder<OrdersBloc, OrdersState>(
                       builder: (context, state) {
-                        if (state.currentOrderStatus.isInProgress) {
+                        if (state.currentOrderStatus.isInProgress ||
+                            state.currentOrderStatus.isInitial) {
                           return Center(child: CircularProgressIndicator.adaptive());
                         } else if ((state.currentOrderStatus.isSuccess && state.currentOrder.id == -1) ||
-                            state.currentOrderStatus.isFailure) {
+                            state.currentOrderStatus.isFailure ||
+                            state.currentOrderStatus.isCanceled) {
                           return BlocBuilder<OrdersHistoryBloc, OrdersHistoryState>(
                             builder: (context, state) {
                               final recents = _dedupedRecents(state.ordersHistory);
@@ -103,11 +105,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                         child: LastLocationWidget(
                                           address: addr.address,
                                           onTap: () {
-                                            context.push(Pages.orderCreate, extra: {
-                                              'address': addr.address,
-                                              'latitude': addr.latitude,
-                                              'longitude': addr.longitude,
-                                            });
+                                            context.push(
+                                              Pages.orderCreate,
+                                              extra: {
+                                                'address': addr.address,
+                                                'latitude': addr.latitude,
+                                                'longitude': addr.longitude,
+                                              },
+                                            );
                                           },
                                         ),
                                       ),
@@ -246,19 +251,13 @@ class _RecentEmptyState extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: AppColor.lightBlue,
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), color: AppColor.lightBlue),
       child: Row(
         children: [
           SvgPicture.asset(AppIcons.pending),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              'Hali buyurtma tarixi yo\'q',
-              style: context.textS.bodyMedium?.copyWith(color: AppColor.grey),
-            ),
+            child: Text('Hali buyurtma tarixi yo\'q', style: context.textS.bodyMedium?.copyWith(color: AppColor.grey)),
           ),
         ],
       ),

@@ -5,6 +5,7 @@ import 'package:taxi_app/src/core/network/dio_model.dart';
 import 'package:taxi_app/src/core/network/network_response.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
+import 'package:taxi_app/src/core/utils/json_safe.dart';
 import 'package:taxi_app/src/features/auth/data/model/auth_model.dart';
 import 'package:taxi_app/src/features/auth/data/model/request_otp_model.dart';
 
@@ -19,15 +20,8 @@ class AuthDataSource {
       );
 
       if (response.isSuccess) {
-        final responseData = response.data['data']['access'];
-        final responseID = response.data['data']['id'].toString();
+        _persistTokens(response.data);
         print('Success on register');
-        StorageRepository.putString('responseID', responseID.toString().toString());
-        StorageRepository.putString('token', responseData);
-        StorageRepository.putString(
-          'refresh',
-          response.data['data']['refresh'],
-        );
         return NetworkResponse(data: response.data);
       } else {
         print('Error on else ${response.statusMessage}');
@@ -35,9 +29,7 @@ class AuthDataSource {
       }
     } on DioException catch (e) {
       print('Error on catch ${e.response?.data}');
-      return NetworkResponse(
-        errorText: e.response?.data.runtimeType == String ? 'Server is down and not working' : e.response?.data['message'] ?? 'Dio exception error',
-      );
+      return NetworkResponse(errorText: _dioMessage(e));
     } catch (e) {
       print('Error on catchcatch ${e.toString()}');
       return NetworkResponse(errorText: e.toString());
@@ -54,27 +46,15 @@ class AuthDataSource {
       if (response.isSuccess) {
         print('Success on login');
         print(response.data);
-        final responseData = response.data['data']['access'];
-        final responseID = response.data['data']['id'].toString();
-        StorageRepository.putString('token', responseData);
-        StorageRepository.putString('responseID', responseID);
-        StorageRepository.putString(
-          'refresh',
-          response.data['data']['refresh'],
-        );
+        _persistTokens(response.data);
         return NetworkResponse(data: response.data);
       } else {
         print('Log in error ${response.data}');
-        return NetworkResponse(
-          errorText: response.data['non_field_errors'].toString(),
-        );
+        return NetworkResponse(errorText: dioErrorMessage(response.data, response.statusMessage ?? ''));
       }
     } on DioException catch (e) {
-      print('error on auth ${e.response?.data['message']}');
-      return NetworkResponse(
-        errorText:
-            e.response?.data['message'] ?? 'Dio exception error',
-      );
+      print('error on auth ${e.response?.data}');
+      return NetworkResponse(errorText: _dioMessage(e));
     } catch (e) {
       return NetworkResponse(errorText: e.toString());
     }
@@ -87,9 +67,7 @@ class AuthDataSource {
         data: {'email': email},
       );
       if (response.isSuccess) {
-        final model = RequestOtpModel.fromJson(
-          response.data['data'] as Map<String, dynamic>,
-        );
+        final model = RequestOtpModel.fromJson(toMap(response.data['data']));
         return NetworkResponse<RequestOtpModel>(data: model);
       }
       return NetworkResponse<RequestOtpModel>(
@@ -112,7 +90,7 @@ class AuthDataSource {
         data: {'email': email, 'otp': otp},
       );
       if (response.isSuccess) {
-        final token = response.data['data']?['verification_token'] as String?;
+        final token = toStrNullable(toMap(response.data['data'])['verification_token']);
         if (token == null || token.isEmpty) {
           return NetworkResponse<String>(errorText: 'verification_token bo\'sh');
         }
@@ -238,9 +216,7 @@ class AuthDataSource {
         data: {'email': email},
       );
       if (response.isSuccess) {
-        final model = RequestOtpModel.fromJson(
-          response.data['data'] as Map<String, dynamic>,
-        );
+        final model = RequestOtpModel.fromJson(toMap(response.data['data']));
         return NetworkResponse<RequestOtpModel>(data: model);
       }
       return NetworkResponse<RequestOtpModel>(
@@ -263,7 +239,7 @@ class AuthDataSource {
         data: {'email': email, 'otp': otp},
       );
       if (response.isSuccess) {
-        final token = response.data['data']?['reset_token'] as String?;
+        final token = toStrNullable(toMap(response.data['data'])['reset_token']);
         if (token == null || token.isEmpty) {
           return NetworkResponse<String>(errorText: 'reset_token bo\'sh');
         }
@@ -355,12 +331,13 @@ class AuthDataSource {
   }
 
   void _persistTokens(dynamic responseData) {
-    final access = responseData['data']?['access'];
-    final refresh = responseData['data']?['refresh'];
-    final id = responseData['data']?['id']?.toString();
-    if (access is String) StorageRepository.putString('token', access);
-    if (refresh is String) StorageRepository.putString('refresh', refresh);
-    if (id != null) StorageRepository.putString('responseID', id);
+    final dataMap = responseData is Map ? toMap(responseData['data']) : <String, dynamic>{};
+    final access = dataMap['access'];
+    final refresh = dataMap['refresh'];
+    final id = dataMap['id'];
+    if (access is String && access.isNotEmpty) StorageRepository.putString('token', access);
+    if (refresh is String && refresh.isNotEmpty) StorageRepository.putString('refresh', refresh);
+    if (id != null) StorageRepository.putString('responseID', id.toString());
   }
 
   String _dioMessage(DioException e) {

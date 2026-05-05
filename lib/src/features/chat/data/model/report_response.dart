@@ -1,5 +1,5 @@
 // File: lib/src/features/chat/data/model/report_response_model.dart
-import 'dart:io';
+import 'package:taxi_app/src/core/utils/json_safe.dart';
 
 class ReportResponse {
   final bool status;
@@ -9,16 +9,11 @@ class ReportResponse {
   ReportResponse({required this.status, required this.message, required this.data});
 
   factory ReportResponse.fromJson(Map<String, dynamic> json) {
-    try {
-      return ReportResponse(
-        status: json['status'] as bool,
-        message: json['message'] as String,
-        data: ReportData.fromJson(json['data'] as Map<String, dynamic>),
-      );
-    } catch (e) {
-      print('Error parsing ReportResponse: $e');
-      rethrow; // Xatni qayta chiqarish
-    }
+    return ReportResponse(
+      status: toBool(json['status']),
+      message: toStr(json['message']),
+      data: ReportData.fromJson(toMap(json['data'])),
+    );
   }
 }
 
@@ -31,9 +26,9 @@ class ReportData {
 
   factory ReportData.fromJson(Map<String, dynamic> json) {
     return ReportData(
-      report: Report.fromJson(json['report']),
-      orderId: json['order_id'],
-      orderStatus: json['order_status'],
+      report: Report.fromJson(toMap(json['report'])),
+      orderId: toInt(json['order_id']),
+      orderStatus: toStr(json['order_status']),
     );
   }
 }
@@ -61,14 +56,14 @@ class Report {
 
   factory Report.fromJson(Map<String, dynamic> json) {
     return Report(
-      id: json['id'] ?? 0,
-      sender: json['sender'],
-      text: json['text'],
+      id: toInt(json['id']),
+      sender: toInt(json['sender']),
+      text: toStr(json['text']),
       voiceFile: json['voice_file'],
-      images: json['images'],
-      price: json['price'],
-      createdAt: DateTime.parse(json['created_at']),
-      address: Address.fromJson(json['address']),
+      images: json['images'] is List ? List<dynamic>.from(json['images']) : <dynamic>[],
+      price: toStr(json['price']),
+      createdAt: DateTime.tryParse(toStr(json['created_at'])) ?? DateTime.now(),
+      address: Address.fromJson(toMap(json['address'])),
     );
   }
 }
@@ -83,10 +78,10 @@ class Address {
 
   factory Address.fromJson(Map<String, dynamic> json) {
     return Address(
-      latitude: json['latitude'] ?? 0,
-      longitude: json['longitude'] ?? 0,
-      address: json['address'] ?? '',
-      isStatic: json['is_static'] ?? false,
+      latitude: toDouble(json['latitude']),
+      longitude: toDouble(json['longitude']),
+      address: toStr(json['address']),
+      isStatic: toBool(json['is_static']),
     );
   }
 }

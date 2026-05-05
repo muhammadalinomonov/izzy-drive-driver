@@ -1,3 +1,4 @@
+import 'package:taxi_app/src/core/utils/json_safe.dart';
 import 'package:taxi_app/src/features/master/data/model/review_model.dart';
 
 class MasterModel {
@@ -35,20 +36,20 @@ class MasterModel {
 
   factory MasterModel.fromJson(Map<String, dynamic> json) {
     return MasterModel(
-      id: json['id'] as int? ?? 0,
-      fullName: json['full_name'] as String? ?? '',
-      photo: json['photo'] as String? ?? '',
-      rating: (json['rating'] as num?)?.toDouble() ?? 0,
-      status: json['status'] as String? ?? '',
-      experience: json['experience'] as int? ?? 0,
-      distanceKm: json['distance_km']?.toString() ?? '',
-      createdAt: json['created_at']?.toString() ?? '',
-      allOrdersCount: json['all_orders_count'] as int? ?? 0,
-      successOrdersCount: json['success_orders_count'] as int? ?? 0,
-      reviewCount: json['review_count'] as int? ?? 0,
-      review: json['review'] != null ? ReviewModel.fromJson(json['review'] as Map<String, dynamic>) : null,
-      allReviewsUrl: json['all_reviews_url']?.toString() ?? '',
-      distance: (json['distance'] as num?)?.toDouble() ?? 0,
+      id: toInt(json['id']),
+      fullName: toStr(json['full_name']),
+      photo: toStr(json['photo']),
+      rating: toDouble(json['rating']),
+      status: toStr(json['status']),
+      experience: toInt(json['experience']),
+      distanceKm: toStr(json['distance_km']),
+      createdAt: toStr(json['created_at']),
+      allOrdersCount: toInt(json['all_orders_count']),
+      successOrdersCount: toInt(json['success_orders_count']),
+      reviewCount: toInt(json['review_count']),
+      review: json['review'] != null ? ReviewModel.fromJson(toMap(json['review'])) : null,
+      allReviewsUrl: toStr(json['all_reviews_url']),
+      distance: toDouble(json['distance']),
     );
   }
 }
