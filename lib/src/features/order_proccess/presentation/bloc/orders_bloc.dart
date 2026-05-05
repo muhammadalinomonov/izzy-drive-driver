@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
+import 'package:taxi_app/src/core/constants/feature_flags.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
 import 'package:taxi_app/src/features/order_proccess/data/model/sub_order_model.dart';
 import 'package:taxi_app/src/features/order_proccess/domain/entities/current_order_entity.dart';
@@ -43,6 +44,10 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
   }
 
   void _onConnectWebSocket(ConnectToWebSocketEvent event, Emitter<OrdersState> emit) async {
+    if (!FeatureFlags.webSocketEnabled) {
+      print('WebSocket disabled by feature flag — skipping orders connect');
+      return;
+    }
     try {
       _channel?.sink.close();
       if (_isConnected) {
@@ -50,7 +55,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       }
       final wsId = StorageRepository.getInt('ws_id');
       _channel = WebSocketChannel.connect(
-        Uri.parse('wss://ws.quadrix.ai/ws?user_id=$wsId&tab_id=1&browser_id=browser_1'),
+        Uri.parse('wss://ws.quadrix.ai/ws?user_id=usta_client_$wsId&tab_id=1&browser_id=browser_1'),
       );
       _isConnected = true;
       print('WebSocket Connected');

@@ -215,7 +215,6 @@ class ProfileSection extends StatelessWidget {
               CircleAvatar(
                 backgroundColor: Colors.transparent,
                 radius: mq.size.width * 0.13,
-
                 backgroundImage: NetworkImage(mechanic.avatar),
               ),
               const SizedBox(height: 12),

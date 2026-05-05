@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,6 +8,7 @@ import 'package:otp_pin_field/otp_pin_field.dart';
 import 'package:taxi_app/src/core/components/app_snack_bar.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
+import 'package:taxi_app/src/core/localization/locale_keys.g.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/auth/presentation/bloc/bloc/auth_bloc.dart';
 import 'package:taxi_app/src/features/auth/presentation/bloc/forgot_password_bloc/forgot_password_bloc.dart';
@@ -138,7 +140,7 @@ class _ForgotPasswordOtpSheetState extends State<_ForgotPasswordOtpSheet> {
                     size: 56, color: AppColor.kPrimaryColor),
                 const SizedBox(height: 16),
                 Text(
-                  'Tasdiqlash kodini kiriting',
+                  LocaleKeys.auth_otp_enterCodeTitle.tr(),
                   style: context.textS.titleLarge!.copyWith(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -146,7 +148,7 @@ class _ForgotPasswordOtpSheetState extends State<_ForgotPasswordOtpSheet> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '$email manzilingizga yuborilgan 6 xonali kodni kiriting',
+                  LocaleKeys.auth_otp_sentTo.tr(namedArgs: {'email': email}),
                   textAlign: TextAlign.center,
                   style: context.textS.bodySmall!.copyWith(
                     color: AppColor.grey,
@@ -179,7 +181,7 @@ class _ForgotPasswordOtpSheetState extends State<_ForgotPasswordOtpSheet> {
                           ResendForgotOtpEvent(
                             onError: () => AppSnackBar.showError(
                               context,
-                              'Kodni qayta yuborib bo\'lmadi',
+                              LocaleKeys.auth_otp_resendFailed.tr(),
                             ),
                           ),
                         );
@@ -187,7 +189,7 @@ class _ForgotPasswordOtpSheetState extends State<_ForgotPasswordOtpSheet> {
                 ),
                 const SizedBox(height: 20),
                 AppButton(
-                  title: 'Tasdiqlash',
+                  title: LocaleKeys.auth_otp_confirm.tr(),
                   isLoading: isVerifying,
                   onTap: () {
                     if (_otp.length != 6 || isVerifying) return;
@@ -206,7 +208,7 @@ class _ForgotPasswordOtpSheetState extends State<_ForgotPasswordOtpSheet> {
                   onPressed:
                       isVerifying ? null : () => Navigator.of(context).pop(),
                   child: Text(
-                    'Bekor qilish',
+                    LocaleKeys.auth_otp_cancel.tr(),
                     style: context.textS.bodySmall!.copyWith(
                       color: AppColor.grey,
                       fontSize: 14,
@@ -240,7 +242,7 @@ class _ResendRow extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'Kod kelmadi? ',
+          LocaleKeys.auth_otp_didntReceive.tr(),
           style: context.textS.bodySmall!.copyWith(
             color: AppColor.grey,
             fontSize: 14,
@@ -256,7 +258,11 @@ class _ResendRow extends StatelessWidget {
           GestureDetector(
             onTap: canResend ? onResend : null,
             child: Text(
-              canResend ? 'Qayta yuborish' : 'Qayta yuborish (${secondsLeft}s)',
+              canResend
+                  ? LocaleKeys.auth_otp_resend.tr()
+                  : LocaleKeys.auth_otp_resendIn.tr(
+                      namedArgs: {'seconds': secondsLeft.toString()},
+                    ),
               style: context.textS.titleSmall!.copyWith(
                 color: canResend ? AppColor.kPrimaryColor : AppColor.grey,
                 fontWeight: FontWeight.w600,

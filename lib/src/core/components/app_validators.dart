@@ -1,55 +1,69 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:taxi_app/src/core/localization/locale_keys.g.dart';
+
 class AppValidators {
-  static String? required(String? value, {String fieldName = 'This field'}) {
+  static String _field(String? override) =>
+      override ?? LocaleKeys.validators_field.tr();
+
+  static String? required(String? value, {String? fieldName}) {
     if (value == null || value.trim().isEmpty) {
-      return '$fieldName is required';
+      return LocaleKeys.validators_required.tr(
+        namedArgs: {'field': _field(fieldName)},
+      );
     }
     return null;
   }
 
-  static String? email(String? value, {String fieldName = 'Email'}) {
+  static String? email(String? value, {String? fieldName}) {
+    final field = fieldName ?? LocaleKeys.validators_fieldEmail.tr();
     if (value == null || value.trim().isEmpty) {
-      return '$fieldName is required';
+      return LocaleKeys.validators_required.tr(namedArgs: {'field': field});
     }
     final emailRegex = RegExp(
       r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
     );
     if (!emailRegex.hasMatch(value.trim())) {
-      return 'Please enter a valid $fieldName';
+      return LocaleKeys.validators_invalid.tr(namedArgs: {'field': field});
     }
     return null;
   }
 
   static String? password(
     String? value, {
-    String fieldName = 'Password',
+    String? fieldName,
     int minLength = 6,
   }) {
+    final field = fieldName ?? LocaleKeys.validators_fieldPassword.tr();
     if (value == null || value.isEmpty) {
-      return '$fieldName is required';
+      return LocaleKeys.validators_required.tr(namedArgs: {'field': field});
     }
     if (value.length < minLength) {
-      return '$fieldName must be at least $minLength characters';
+      return LocaleKeys.validators_passwordTooShort.tr(
+        namedArgs: {'field': field, 'min': minLength.toString()},
+      );
     }
     return null;
   }
 
-  static String? phone(String? value, {String fieldName = 'Phone number'}) {
+  static String? phone(String? value, {String? fieldName}) {
+    final field = fieldName ?? LocaleKeys.validators_fieldPhone.tr();
     if (value == null || value.trim().isEmpty) {
-      return '$fieldName is required';
+      return LocaleKeys.validators_required.tr(namedArgs: {'field': field});
     }
     final phoneRegex = RegExp(r'^\+?[0-9]{7,15}$');
     if (!phoneRegex.hasMatch(value.trim())) {
-      return 'Please enter a valid $fieldName';
+      return LocaleKeys.validators_invalid.tr(namedArgs: {'field': field});
     }
     return null;
   }
 
-  static String? name(String? value, {String fieldName = 'Name'}) {
+  static String? name(String? value, {String? fieldName}) {
+    final field = fieldName ?? LocaleKeys.validators_fieldName.tr();
     if (value == null || value.trim().isEmpty) {
-      return '$fieldName is required';
+      return LocaleKeys.validators_required.tr(namedArgs: {'field': field});
     }
     if (value.trim().length < 2) {
-      return '$fieldName must be at least 2 characters';
+      return LocaleKeys.validators_nameTooShort.tr(namedArgs: {'field': field});
     }
     return null;
   }

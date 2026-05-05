@@ -2,6 +2,7 @@ import 'package:chucker_flutter/chucker_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/location_service.dart';
+import 'package:taxi_app/src/core/network/auth_session.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
 import 'package:taxi_app/src/features/auth/data/repo/auth_repo_impl.dart';
@@ -49,9 +50,23 @@ import '../features/map/data/repo/map_repo_imp.dart';
 import '../features/map/data/source/map_data_source.dart';
 
 class Routes {
+  static const Set<String> _authRoutes = {
+    Pages.signIn,
+    Pages.signUp,
+    Pages.forgotPasswordEmail,
+    Pages.resetPassword,
+  };
+
   static final GoRouter router = GoRouter(
     initialLocation: StorageRepository.getString('token').isNotEmpty ? Pages.main : Pages.signIn,
     observers: [ChuckerFlutter.navigatorObserver],
+    refreshListenable: AuthSession.tick,
+    redirect: (context, state) {
+      final loggedIn = AuthSession.isLoggedIn;
+      final atAuth = _authRoutes.contains(state.matchedLocation);
+      if (!loggedIn && !atAuth) return Pages.signIn;
+      return null;
+    },
     routes: [
       GoRoute(
         path: Pages.signIn,

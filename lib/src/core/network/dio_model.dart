@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:chucker_flutter/chucker_flutter.dart';
 import 'package:dio/dio.dart';
+import 'package:taxi_app/src/core/network/auth_session.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
 
 class DioSettings {
@@ -37,8 +38,7 @@ class DioSettings {
                   !error.requestOptions.path.contains('/accounts/refresh/')) {
             final refreshToken = StorageRepository.getString('refresh');
             if (refreshToken.isEmpty) {
-              await StorageRepository.deleteString('token');
-              await StorageRepository.deleteString('refresh');
+              await AuthSession.clear();
               return handler.reject(error);
             }
             try {
@@ -50,6 +50,7 @@ class DioSettings {
               final newRefreshToken = response.data['data']['refresh'];
               await StorageRepository.putString('token', newAccessToken);
               await StorageRepository.putString('refresh', newRefreshToken);
+              AuthSession.notifyAuthChanged();
 
               error.requestOptions.headers['Authorization'] =
                   'Bearer $newAccessToken';
@@ -68,8 +69,7 @@ class DioSettings {
               );
               return handler.resolve(cloneReq);
             } catch (e) {
-              await StorageRepository.deleteString('token');
-              await StorageRepository.deleteString('refresh');
+              await AuthSession.clear();
               return handler.reject(error);
             }
           }

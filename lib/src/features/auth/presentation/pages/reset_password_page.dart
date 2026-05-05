@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
@@ -7,6 +8,7 @@ import 'package:taxi_app/src/core/components/app_validators.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
+import 'package:taxi_app/src/core/localization/locale_keys.g.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/auth/presentation/bloc/bloc/auth_bloc.dart';
 import 'package:taxi_app/src/features/auth/presentation/bloc/forgot_password_bloc/forgot_password_bloc.dart';
@@ -37,7 +39,10 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     final pass = _passwordController.text;
     final confirm = _confirmController.text;
     if (pass != confirm) {
-      AppSnackBar.showError(context, 'Parollar mos kelmadi');
+      AppSnackBar.showError(
+        context,
+        LocaleKeys.auth_resetPassword_passwordMismatch.tr(),
+      );
       return;
     }
     context.read<ForgotPasswordBloc>().add(
@@ -46,7 +51,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
             onSuccess: () {
               AppSnackBar.showSuccess(
                 context,
-                'Parol yangilandi. Yangi parol bilan kiring',
+                LocaleKeys.auth_resetPassword_passwordUpdated.tr(),
               );
               context.go(Pages.signIn);
             },
@@ -65,7 +70,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
             AppSnackBar.showError(
               context,
               state.errorMessage.isEmpty
-                  ? 'Parolni yangilab bo\'lmadi'
+                  ? LocaleKeys.auth_resetPassword_updateFailed.tr()
                   : state.errorMessage,
             );
           }
@@ -87,14 +92,14 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Yangi parol',
+                      LocaleKeys.auth_resetPassword_title.tr(),
                       style: context.textS.headlineSmall!.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Yangi parolni kiriting va tasdiqlang',
+                      LocaleKeys.auth_resetPassword_subtitle.tr(),
                       style: context.textS.titleSmall!.copyWith(
                         color: AppColor.grey,
                         fontWeight: FontWeight.w400,
@@ -102,8 +107,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                     ),
                     const SizedBox(height: 32),
                     AuthInputWidget(
-                      hint: 'Yangi parolni kiriting',
-                      label: 'Yangi parol',
+                      hint: LocaleKeys.auth_resetPassword_newPasswordHint.tr(),
+                      label: LocaleKeys.auth_resetPassword_newPasswordLabel.tr(),
                       isPassword: true,
                       obscureText: true,
                       controller: _passwordController,
@@ -111,8 +116,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                     ),
                     const SizedBox(height: 24),
                     AuthInputWidget(
-                      hint: 'Parolni qaytadan kiriting',
-                      label: 'Parolni takrorlang',
+                      hint: LocaleKeys.auth_resetPassword_confirmPasswordHint.tr(),
+                      label: LocaleKeys.auth_resetPassword_confirmPasswordLabel.tr(),
                       isPassword: true,
                       obscureText: true,
                       controller: _confirmController,
@@ -123,7 +128,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                       buildWhen: (p, c) => p.resetStatus != c.resetStatus,
                       builder: (context, state) {
                         return AppButton(
-                          title: 'Saqlash',
+                          title: LocaleKeys.auth_resetPassword_save.tr(),
                           isLoading: state.resetStatus == AuthStatus.loading,
                           onTap: _onSubmit,
                         );

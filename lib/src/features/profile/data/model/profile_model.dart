@@ -34,12 +34,12 @@ class ProfileModel {
   final String licenseNumber;
   final String deviceToken;
   final String truckmodel;
-  final String truckName;
+  final String truckMark;
   final int wsId;
   final int driverId;
 
   const ProfileModel({
-     this.truckName = '',
+     this.truckMark = '',
      this.email = '',
      this.truckmodel = '',
      this.fullName = '',
@@ -65,7 +65,7 @@ class ProfileModel {
       mechanicId: toInt(json['mechanic_id']),
       photo: toStr(json['photo']),
       truckImage: toStr(json['truck_image']),
-      truckName: toStr(json['truck_mar']),
+      truckMark: toStr(json['truck_mark']),
       truckYear: toStr(json['truck_year']),
       phoneNumber: toStr(json['phone_number']),
       licenseNumber: toStr(json['license_number']),

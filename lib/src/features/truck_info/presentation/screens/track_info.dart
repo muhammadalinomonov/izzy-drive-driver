@@ -363,15 +363,6 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                             );
                           },
                         ),
-                        const SizedBox(height: 16),
-                        AppButton(
-                          backGroundColor: AppColor.lightBlue,
-                          textColor: AppColor.black,
-                          title: "O'tkazib yuborish",
-                          onTap: () {
-                            context.push(Pages.map);
-                          },
-                        ),
                         const SizedBox(height: 24),
                       ],
                     ),

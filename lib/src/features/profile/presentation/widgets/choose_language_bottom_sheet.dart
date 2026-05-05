@@ -1,7 +1,7 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
-import 'package:taxi_app/src/core/constants/store_keys.dart';
-import 'package:taxi_app/src/core/network/token_service.dart';
+import 'package:taxi_app/src/core/localization/locale_keys.g.dart';
 import 'package:taxi_app/src/core/utils/extensions.dart';
 import 'package:taxi_app/src/features/common/presentation/widgets/common_button.dart';
 import 'package:taxi_app/src/features/profile/presentation/widgets/language_item.dart';
@@ -14,14 +14,22 @@ class ChooseLanguageBottomSheet extends StatefulWidget {
 }
 
 class _ChooseLanguageBottomSheetState extends State<ChooseLanguageBottomSheet> {
-  late ValueNotifier<String> _selectedLanguage;
+  final ValueNotifier<String> _selectedLanguage = ValueNotifier('uz');
+  bool _initialized = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _selectedLanguage.value = context.locale.languageCode;
+      _initialized = true;
+    }
+  }
 
-    final languageCode = StorageRepository.getString(StoreKeys.language, defValue: 'en');
-    _selectedLanguage = ValueNotifier(languageCode);
+  @override
+  void dispose() {
+    _selectedLanguage.dispose();
+    super.dispose();
   }
 
   @override
@@ -51,7 +59,7 @@ class _ChooseLanguageBottomSheetState extends State<ChooseLanguageBottomSheet> {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Tilni o’zgartirish',
+                    LocaleKeys.language_title.tr(),
                     style: context.textTheme.headlineLarge!.copyWith(fontWeight: FontWeight.w600, fontSize: 20),
                   ),
                 ),
@@ -71,45 +79,31 @@ class _ChooseLanguageBottomSheetState extends State<ChooseLanguageBottomSheet> {
                 children: [
                   LanguageItem(
                     isSelected: value == 'uz',
-                    language: 'O’zbekcha',
-                    onTap: () {
-                      _selectedLanguage.value = 'uz';
-                    },
+                    language: LocaleKeys.language_uz.tr(),
+                    onTap: () => _selectedLanguage.value = 'uz',
                   ),
                   Divider(color: AppColor.lightBlue),
                   LanguageItem(
                     isSelected: value == 'ru',
-                    language: 'Русский',
-                    onTap: () {
-                      _selectedLanguage.value = 'ru';
-                    },
+                    language: LocaleKeys.language_ru.tr(),
+                    onTap: () => _selectedLanguage.value = 'ru',
                   ),
                   Divider(color: AppColor.lightBlue),
                   LanguageItem(
                     isSelected: value == 'en',
-                    language: 'English',
-                    onTap: () {
-                      _selectedLanguage.value = 'en';
-                    },
-                  ),
-                  Divider(color: AppColor.lightBlue),
-                  LanguageItem(
-                    isSelected: value == 'fr',
-                    language: 'French',
-                    onTap: () {
-                      _selectedLanguage.value = 'fr';
-                    },
+                    language: LocaleKeys.language_en.tr(),
+                    onTap: () => _selectedLanguage.value = 'en',
                   ),
                 ],
               ),
             ),
           ),
           CommonButton(
-            onTap: () {
-              StorageRepository.putString(StoreKeys.language, _selectedLanguage.value);
-              Navigator.of(context).pop();
+            onTap: () async {
+              await context.setLocale(Locale(_selectedLanguage.value));
+              if (context.mounted) Navigator.of(context).pop();
             },
-            text: 'Saqlash',
+            text: LocaleKeys.common_save.tr(),
             margin: EdgeInsets.only(top: 24, left: 12, right: 12),
           ),
         ],

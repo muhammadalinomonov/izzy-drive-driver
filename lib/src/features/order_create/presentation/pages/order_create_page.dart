@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:taxi_app/src/core/components/app_snack_bar.dart';
@@ -176,94 +177,96 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
         }
       },
       builder: (context, state) {
-        return Scaffold(
-          backgroundColor: Colors.white,
-          body: SafeArea(
-            child: Column(
-              children: [
-                _Header(address: state.address, onBack: () => context.pop()),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Sizda qanday muammo?',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        _HintBubble(onTap: _showHelpSheet),
-                        const SizedBox(height: 20),
-                        if (state.audioPath != null)
-                          RecordedAudioPreview(
-                            path: state.audioPath!,
-                            duration: state.audioDuration,
-                            onClear: () => context.read<OrderCreateBloc>().add(const AudioCleared()),
-                          ),
-                        if (state.audioPath != null) const SizedBox(height: 12),
-                        TextField(
-                          controller: _textController,
-                          maxLines: 4,
-                          minLines: 3,
-                          onChanged: (v) => context.read<OrderCreateBloc>().add(DescriptionChanged(v)),
-                          decoration: InputDecoration(
-                            hintText: 'Muammoni yozing...',
-                            filled: true,
-                            fillColor: AppColor.lightBlue,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: AppColor.kPrimaryColor),
+        return KeyboardDismisser(
+          child: Scaffold(
+            backgroundColor: Colors.white,
+            body: SafeArea(
+              child: Column(
+                children: [
+                  _Header(address: state.address, onBack: () => context.pop()),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Sizda qanday muammo?',
+                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: -0.3,
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                        Text('Rasm yoki video', style: Theme.of(context).textTheme.titleMedium),
-                        const SizedBox(height: 8),
-                        PhotoGrid(
-                          photos: state.photos,
-                          maxCount: _maxPhotos,
-                          onAdd: _pickPhotos,
-                          onRemove: (i) => context.read<OrderCreateBloc>().add(PhotoRemoved(i)),
-                        ),
-                        const SizedBox(height: 20),
-                        Text('Ushbu ish uchun nechpul bermoqchisiz?', style: Theme.of(context).textTheme.titleMedium),
-                        const SizedBox(height: 8),
-                        PriceInput(
-                          controller: _priceController,
-                          onChanged: (raw) => context.read<OrderCreateBloc>().add(PriceChanged(raw)),
-                        ),
-                      ],
+                          const SizedBox(height: 16),
+                          _HintBubble(onTap: _showHelpSheet),
+                          const SizedBox(height: 20),
+                          if (state.audioPath != null)
+                            RecordedAudioPreview(
+                              path: state.audioPath!,
+                              duration: state.audioDuration,
+                              onClear: () => context.read<OrderCreateBloc>().add(const AudioCleared()),
+                            ),
+                          if (state.audioPath != null) const SizedBox(height: 12),
+                          TextField(
+                            controller: _textController,
+                            maxLines: 4,
+                            minLines: 3,
+                            onChanged: (v) => context.read<OrderCreateBloc>().add(DescriptionChanged(v)),
+                            decoration: InputDecoration(
+                              hintText: 'Muammoni yozing...',
+                              filled: true,
+                              fillColor: AppColor.lightBlue,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: AppColor.kPrimaryColor),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text('Rasm yoki video', style: Theme.of(context).textTheme.titleMedium),
+                          const SizedBox(height: 8),
+                          PhotoGrid(
+                            photos: state.photos,
+                            maxCount: _maxPhotos,
+                            onAdd: _pickPhotos,
+                            onRemove: (i) => context.read<OrderCreateBloc>().add(PhotoRemoved(i)),
+                          ),
+                          const SizedBox(height: 20),
+                          Text('Ushbu ish uchun nechpul bermoqchisiz?', style: Theme.of(context).textTheme.titleMedium),
+                          const SizedBox(height: 8),
+                          PriceInput(
+                            controller: _priceController,
+                            onChanged: (raw) => context.read<OrderCreateBloc>().add(PriceChanged(raw)),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                if (state.isRecording)
-                  VoiceRecorderInProgress(
-                    elapsed: state.currentRecordingElapsed,
-                    onCancel: _cancelRecording,
-                    onStop: _stopRecording,
-                  )
-                else
-                  _BottomBar(
-                    canSubmit: state.canSubmit,
-                    isSubmitting: state.status == OrderCreateStatus.submitting,
-                    onMicPressed: _toggleRecording,
-                    onAttachPressed: _pickPhotos,
-                    onSubmit: _onSubmit,
-                  ),
-              ],
+                  if (state.isRecording)
+                    VoiceRecorderInProgress(
+                      elapsed: state.currentRecordingElapsed,
+                      onCancel: _cancelRecording,
+                      onStop: _stopRecording,
+                    )
+                  else
+                    _BottomBar(
+                      canSubmit: state.canSubmit,
+                      isSubmitting: state.status == OrderCreateStatus.submitting,
+                      onMicPressed: _toggleRecording,
+                      onAttachPressed: _pickPhotos,
+                      onSubmit: _onSubmit,
+                    ),
+                ],
+              ),
             ),
           ),
         );

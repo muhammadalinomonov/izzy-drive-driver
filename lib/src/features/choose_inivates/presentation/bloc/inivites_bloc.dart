@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:taxi_app/src/core/constants/feature_flags.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
 
 import '../../data/model/active_order.dart';
@@ -47,6 +48,10 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
 
   // WebSocket'ga ulanish
   void _onConnectWebSocket(ConnectToWebSocketEvent event, Emitter<InivitesState> emit) async {
+    if (!FeatureFlags.webSocketEnabled) {
+      print('WebSocket disabled by feature flag — skipping invites connect');
+      return;
+    }
     try {
       // Agar allaqachon ulangan bo'lsa, qaytaring
       if (_isConnected && _channel != null) {
@@ -65,10 +70,10 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
       }
 
       _channel = WebSocketChannel.connect(
-        Uri.parse('wss://ws.quadrix.ai/ws?user_id=$wsId&tab_id=1&browser_id=browser_1'),
+        Uri.parse('wss://ws.quadrix.ai/ws?user_id=usta_client_$wsId&tab_id=1&browser_id=browser_1'),
       );
       _isConnected = true;
-      print('WebSocket Connected for Invites with user_id: $wsId');
+      print('WebSocket Connected for Invites with usta_client=: $wsId');
 
       // Alohida funksiya sifatida chaqiring
       _startListening(emit);

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
@@ -10,6 +11,7 @@ import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/size_extension.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
+import 'package:taxi_app/src/core/localization/locale_keys.g.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/auth/presentation/bloc/bloc/auth_bloc.dart';
 import 'package:taxi_app/src/features/auth/presentation/widgets/auth_input_widget.dart';
@@ -86,7 +88,7 @@ class _SignUpPageState extends State<SignUpPage> {
           if (state.requestOtpStatus == AuthStatus.failure && !_otpSheetOpen) {
             AppSnackBar.showError(
               context,
-              state.errorMessage ?? 'Kod yuborib bo\'lmadi',
+              state.errorMessage ?? LocaleKeys.auth_signUp_otpRequestFailed.tr(),
             );
           }
         },
@@ -138,14 +140,14 @@ class _SignUpPageState extends State<SignUpPage> {
                         buildWhen: (p, c) => p.googleStatus != c.googleStatus,
                         builder: (context, state) {
                           return SocialLoginWidget(
-                            title: 'Google orqali davom ettirish',
+                            title: LocaleKeys.auth_signIn_googleContinue.tr(),
                             icon: AppIcons.google,
                             isLoading: state.googleStatus == AuthStatus.loading,
                             onTap: () => context.read<AuthBloc>().add(
                                   GoogleSignInEvent(
                                     onSuccess: _onSocialSuccess,
                                     onError: () => _onSocialError(
-                                      'Google orqali kirib bo\'lmadi',
+                                      LocaleKeys.auth_signIn_googleFailed.tr(),
                                     ),
                                   ),
                                 ),
@@ -158,7 +160,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           buildWhen: (p, c) => p.appleStatus != c.appleStatus,
                           builder: (context, state) {
                             return SocialLoginWidget(
-                              title: 'Apple orqali davom ettirish',
+                              title: LocaleKeys.auth_signIn_appleContinue.tr(),
                               icon: AppIcons.apple,
                               isLoading:
                                   state.appleStatus == AuthStatus.loading,
@@ -166,7 +168,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                     AppleSignInEvent(
                                       onSuccess: _onSocialSuccess,
                                       onError: () => _onSocialError(
-                                        'Apple orqali kirib bo\'lmadi',
+                                        LocaleKeys.auth_signIn_appleFailed.tr(),
                                       ),
                                     ),
                                   ),
@@ -205,7 +207,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Ro’yxatdan o’tish uchun ma’lumotlarni kiriting!',
+                            LocaleKeys.auth_signUp_title.tr(),
                             style: context.textS.headlineSmall!.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -213,8 +215,8 @@ class _SignUpPageState extends State<SignUpPage> {
                           const SizedBox(height: 26),
                           AuthInputWidget(
                             textInputType: TextInputType.emailAddress,
-                            hint: 'Emailni kiriting',
-                            label: 'E-mail',
+                            hint: LocaleKeys.auth_signUp_emailHint.tr(),
+                            label: LocaleKeys.auth_signUp_emailLabel.tr(),
                             controller: _emailController,
                             validator: AppValidators.email,
                           ),
@@ -222,15 +224,15 @@ class _SignUpPageState extends State<SignUpPage> {
                             padding: const EdgeInsets.symmetric(vertical: 24),
                             child: AuthInputWidget(
                               textInputType: TextInputType.text,
-                              hint: 'Ismini kiriting',
-                              label: 'Ism',
+                              hint: LocaleKeys.auth_signUp_nameHint.tr(),
+                              label: LocaleKeys.auth_signUp_nameLabel.tr(),
                               controller: _nameController,
                               validator: AppValidators.name,
                             ),
                           ),
                           AuthInputWidget(
-                            hint: '*********',
-                            label: 'Password',
+                            hint: LocaleKeys.auth_signUp_passwordHint.tr(),
+                            label: LocaleKeys.auth_signUp_passwordLabel.tr(),
                             isPassword: true,
                             controller: _passwordController,
                             validator: AppValidators.password,
@@ -244,7 +246,7 @@ class _SignUpPageState extends State<SignUpPage> {
                               return AppButton(
                                 isLoading: state.requestOtpStatus ==
                                     AuthStatus.loading,
-                                title: "Ro'yxatdan o'tish",
+                                title: LocaleKeys.auth_signUp_submit.tr(),
                                 onTap: _onSubmit,
                               );
                             },
@@ -255,7 +257,7 @@ class _SignUpPageState extends State<SignUpPage> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  "Ro'yxatdan o'tib bo'lganmisiz?",
+                                  LocaleKeys.auth_signUp_alreadyRegistered.tr(),
                                   style: context.textS.titleSmall!.copyWith(
                                     fontWeight: FontWeight.w400,
                                     color: AppColor.grey,
@@ -264,7 +266,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                 TextButton(
                                   onPressed: () => context.go(Pages.signIn),
                                   child: Text(
-                                    'Tizimga kirish',
+                                    LocaleKeys.auth_signUp_signInCta.tr(),
                                     style: context.textS.titleSmall!.copyWith(
                                       fontWeight: FontWeight.w600,
                                     ),

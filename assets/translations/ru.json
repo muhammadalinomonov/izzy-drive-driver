@@ -1,0 +1,128 @@
+{
+  "common": {
+    "ok": "Ок",
+    "cancel": "Отмена",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "back": "Назад",
+    "next": "Далее",
+    "done": "Готово",
+    "yes": "Да",
+    "no": "Нет",
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "retry": "Повторить",
+    "search": "Поиск",
+    "send": "Отправить",
+    "close": "Закрыть",
+    "confirm": "Подтвердить",
+    "skip": "Пропустить",
+    "continue": "Продолжить",
+    "noInternet": "Нет соединения с интернетом",
+    "somethingWentWrong": "Что-то пошло не так",
+    "tryAgain": "Попробуйте снова",
+    "empty": "Пусто",
+    "select": "Выбрать"
+  },
+  "language": {
+    "title": "Язык",
+    "uz": "Узбекский",
+    "ru": "Русский",
+    "en": "Английский"
+  },
+  "validators": {
+    "required": "{field} обязателен для заполнения",
+    "invalid": "{field} введён неверно",
+    "passwordTooShort": "{field} должен содержать не менее {min} символов",
+    "nameTooShort": "{field} должно содержать не менее 2 символов",
+    "field": "Это поле",
+    "fieldEmail": "Email",
+    "fieldPassword": "Пароль",
+    "fieldPhone": "Номер телефона",
+    "fieldName": "Имя"
+  },
+  "auth": {
+    "signIn": {
+      "title": "Войти в систему",
+      "googleContinue": "Продолжить через Google",
+      "appleContinue": "Продолжить через Apple",
+      "orWithEmail": "Или введите e-mail и пароль",
+      "emailHint": "Введите e-mail",
+      "emailLabel": "E-mail",
+      "passwordHint": "Введите пароль",
+      "passwordLabel": "Пароль",
+      "forgotPassword": "Забыли пароль?",
+      "notRegisteredYet": "Ещё не зарегистрированы?",
+      "registerCta": "Зарегистрироваться",
+      "loginFailed": "Не удалось войти в систему",
+      "googleFailed": "Не удалось войти через Google",
+      "appleFailed": "Не удалось войти через Apple"
+    },
+    "signUp": {
+      "title": "Введите данные для регистрации!",
+      "emailHint": "Введите e-mail",
+      "emailLabel": "E-mail",
+      "nameHint": "Введите имя",
+      "nameLabel": "Имя",
+      "passwordHint": "*********",
+      "passwordLabel": "Пароль",
+      "submit": "Зарегистрироваться",
+      "alreadyRegistered": "Уже зарегистрированы?",
+      "signInCta": "Войти в систему",
+      "otpRequestFailed": "Не удалось отправить код"
+    },
+    "forgotPassword": {
+      "title": "Восстановление пароля",
+      "subtitle": "На ваш e-mail будет отправлен код подтверждения",
+      "emailHint": "Введите e-mail",
+      "emailLabel": "E-mail",
+      "sendCode": "Отправить код",
+      "otpRequestFailed": "Не удалось отправить OTP"
+    },
+    "resetPassword": {
+      "title": "Новый пароль",
+      "subtitle": "Введите и подтвердите новый пароль",
+      "newPasswordHint": "Введите новый пароль",
+      "newPasswordLabel": "Новый пароль",
+      "confirmPasswordHint": "Введите пароль ещё раз",
+      "confirmPasswordLabel": "Повторите пароль",
+      "save": "Сохранить",
+      "passwordMismatch": "Пароли не совпадают",
+      "passwordUpdated": "Пароль обновлён. Войдите с новым паролем",
+      "updateFailed": "Не удалось обновить пароль"
+    },
+    "otp": {
+      "confirmAccountTitle": "Подтвердите аккаунт",
+      "enterCodeTitle": "Введите код подтверждения",
+      "sentTo": "Введите 6-значный код, отправленный на {email}",
+      "confirm": "Подтвердить",
+      "cancel": "Отмена",
+      "didntReceive": "Не пришёл код? ",
+      "resend": "Отправить ещё раз",
+      "resendIn": "Отправить ещё раз ({seconds}с)",
+      "resendFailed": "Не удалось повторно отправить код",
+      "verifyFailed": "Код не подтверждён"
+    },
+    "emailConfirmation": {
+      "title": "Подтвердите аккаунт",
+      "body": "Активируйте аккаунт через {email}!",
+      "understood": "Понятно"
+    },
+    "errors": {
+      "otpRequestFailed": "Не удалось отправить код",
+      "otpVerifyFailed": "OTP не подтверждён",
+      "registerFailed": "Не удалось зарегистрироваться",
+      "googleSignInFailed": "Не удалось войти через Google",
+      "appleSignInFailed": "Не удалось войти через Apple",
+      "passwordUpdateFailed": "Не удалось обновить пароль",
+      "logoutFailed": "Не удалось выйти из системы",
+      "accountDeleteFailed": "Не удалось удалить аккаунт",
+      "serverError": "Ошибка сервера",
+      "googleTokenEmpty": "Google идентификатор не найден",
+      "appleTokenEmpty": "Apple идентификатор не найден",
+      "verificationTokenEmpty": "Токен подтверждения не найден",
+      "resetTokenMissing": "Токен восстановления не найден, попробуйте снова"
+    }
+  }
+}

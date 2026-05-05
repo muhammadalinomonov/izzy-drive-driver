@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
@@ -7,6 +8,7 @@ import 'package:taxi_app/src/core/components/app_validators.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
+import 'package:taxi_app/src/core/localization/locale_keys.g.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/auth/presentation/bloc/bloc/auth_bloc.dart';
 import 'package:taxi_app/src/features/auth/presentation/bloc/forgot_password_bloc/forgot_password_bloc.dart';
@@ -66,7 +68,7 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
             AppSnackBar.showError(
               context,
               state.errorMessage.isEmpty
-                  ? 'OTP yuborib bo\'lmadi'
+                  ? LocaleKeys.auth_forgotPassword_otpRequestFailed.tr()
                   : state.errorMessage,
             );
           }
@@ -88,14 +90,14 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Parolni tiklash',
+                      LocaleKeys.auth_forgotPassword_title.tr(),
                       style: context.textS.headlineSmall!.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Email manzilingizga tasdiqlash kodi yuboriladi',
+                      LocaleKeys.auth_forgotPassword_subtitle.tr(),
                       style: context.textS.titleSmall!.copyWith(
                         color: AppColor.grey,
                         fontWeight: FontWeight.w400,
@@ -103,8 +105,8 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
                     ),
                     const SizedBox(height: 32),
                     AuthInputWidget(
-                      hint: 'Mailni kiriting',
-                      label: 'E-mail',
+                      hint: LocaleKeys.auth_forgotPassword_emailHint.tr(),
+                      label: LocaleKeys.auth_forgotPassword_emailLabel.tr(),
                       controller: _emailController,
                       validator: AppValidators.email,
                       textInputType: TextInputType.emailAddress,
@@ -115,7 +117,7 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
                           p.requestOtpStatus != c.requestOtpStatus,
                       builder: (context, state) {
                         return AppButton(
-                          title: 'Kod yuborish',
+                          title: LocaleKeys.auth_forgotPassword_sendCode.tr(),
                           isLoading:
                               state.requestOtpStatus == AuthStatus.loading,
                           onTap: _onSubmit,

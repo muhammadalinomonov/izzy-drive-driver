@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/components/app_snack_bar.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_images.dart';
+import 'package:taxi_app/src/core/constants/feature_flags.dart';
 import 'package:taxi_app/src/core/utils/extensions.dart';
 import 'package:taxi_app/src/features/auth/presentation/bloc/bloc/auth_bloc.dart';
 import 'package:taxi_app/src/features/profile/presentation/bloc/profile_bloc.dart';
@@ -121,6 +122,10 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         width: MediaQuery.sizeOf(context).width,
                         child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: EdgeInsets.only(
+                            bottom: MediaQuery.paddingOf(context).bottom + 16,
+                          ),
                           child: Column(
                             children: [
                               const SizedBox(height: 10),
@@ -149,7 +154,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  "${state.profile?.truckName ?? 'No Vehicle model'} ${state.profile?.truckmodel ?? ''}",
+                                                  "${state.profile?.truckMark} ${state.profile?.truckmodel ?? 'No Vehicle model'}",
                                                   style: const TextStyle(
                                                       fontSize: 16,
                                                       fontWeight:
@@ -324,6 +329,28 @@ class _ProfileMenu extends StatelessWidget {
         ),
         _ProfileMenuItem(
             icon: Icons.build_outlined, title: 'Usta bo’lish', onTap: () {}),
+        ValueListenableBuilder<bool>(
+          valueListenable: FeatureFlags.webSocketEnabledNotifier,
+          builder: (context, enabled, _) {
+            return SwitchListTile(
+              secondary: Icon(
+                enabled ? Icons.cloud_done_outlined : Icons.cloud_off_outlined,
+                color: Colors.black87,
+              ),
+              title: const Text('Real-time ulanish (WebSocket)'),
+              subtitle: Text(
+                enabled
+                    ? 'Yangi takliflar va holat darhol keladi'
+                    : 'Faqat REST orqali — qo‘lda yangilang',
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              value: enabled,
+              activeThumbColor: AppColor.kPrimaryColor,
+              onChanged: (v) => FeatureFlags.setWebSocketEnabled(v),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+            );
+          },
+        ),
         BlocBuilder<AuthBloc, AuthState>(
           buildWhen: (p, c) => p.logoutStatus != c.logoutStatus,
           builder: (context, state) {

@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:taxi_app/src/core/extensions/status_code_extension.dart';
+import 'package:taxi_app/src/core/localization/locale_keys.g.dart';
 import 'package:taxi_app/src/core/network/api_constants.dart';
 import 'package:taxi_app/src/core/network/dio_model.dart';
 import 'package:taxi_app/src/core/network/network_response.dart';
@@ -71,7 +73,7 @@ class AuthDataSource {
         return NetworkResponse<RequestOtpModel>(data: model);
       }
       return NetworkResponse<RequestOtpModel>(
-        errorText: response.statusMessage ?? 'OTP yuborib bo\'lmadi',
+        errorText: response.statusMessage ?? LocaleKeys.auth_errors_otpRequestFailed.tr(),
       );
     } on DioException catch (e) {
       return NetworkResponse<RequestOtpModel>(errorText: _dioMessage(e));
@@ -92,12 +94,12 @@ class AuthDataSource {
       if (response.isSuccess) {
         final token = toStrNullable(toMap(response.data['data'])['verification_token']);
         if (token == null || token.isEmpty) {
-          return NetworkResponse<String>(errorText: 'verification_token bo\'sh');
+          return NetworkResponse<String>(errorText: LocaleKeys.auth_errors_verificationTokenEmpty.tr());
         }
         return NetworkResponse<String>(data: token);
       }
       return NetworkResponse<String>(
-        errorText: response.statusMessage ?? 'OTP tasdiqlanmadi',
+        errorText: response.statusMessage ?? LocaleKeys.auth_errors_otpVerifyFailed.tr(),
       );
     } on DioException catch (e) {
       return NetworkResponse<String>(errorText: _dioMessage(e));
@@ -129,7 +131,7 @@ class AuthDataSource {
         return NetworkResponse(data: response.data);
       }
       return NetworkResponse(
-        errorText: response.statusMessage ?? 'Ro\'yxatdan o\'tib bo\'lmadi',
+        errorText: response.statusMessage ?? LocaleKeys.auth_errors_registerFailed.tr(),
       );
     } on DioException catch (e) {
       return NetworkResponse(errorText: _dioMessage(e));
@@ -157,7 +159,7 @@ class AuthDataSource {
         return NetworkResponse(data: response.data);
       }
       return NetworkResponse(
-        errorText: response.statusMessage ?? 'Google orqali kirib bo\'lmadi',
+        errorText: response.statusMessage ?? LocaleKeys.auth_errors_googleSignInFailed.tr(),
       );
     } on DioException catch (e) {
       return NetworkResponse(errorText: _dioMessage(e));
@@ -200,7 +202,7 @@ class AuthDataSource {
         return NetworkResponse(data: response.data);
       }
       return NetworkResponse(
-        errorText: response.statusMessage ?? 'Apple orqali kirib bo\'lmadi',
+        errorText: response.statusMessage ?? LocaleKeys.auth_errors_appleSignInFailed.tr(),
       );
     } on DioException catch (e) {
       return NetworkResponse(errorText: _dioMessage(e));
@@ -220,7 +222,7 @@ class AuthDataSource {
         return NetworkResponse<RequestOtpModel>(data: model);
       }
       return NetworkResponse<RequestOtpModel>(
-        errorText: response.statusMessage ?? 'OTP yuborib bo\'lmadi',
+        errorText: response.statusMessage ?? LocaleKeys.auth_errors_otpRequestFailed.tr(),
       );
     } on DioException catch (e) {
       return NetworkResponse<RequestOtpModel>(errorText: _dioMessage(e));
@@ -241,12 +243,12 @@ class AuthDataSource {
       if (response.isSuccess) {
         final token = toStrNullable(toMap(response.data['data'])['reset_token']);
         if (token == null || token.isEmpty) {
-          return NetworkResponse<String>(errorText: 'reset_token bo\'sh');
+          return NetworkResponse<String>(errorText: LocaleKeys.auth_errors_resetTokenMissing.tr());
         }
         return NetworkResponse<String>(data: token);
       }
       return NetworkResponse<String>(
-        errorText: response.statusMessage ?? 'OTP tasdiqlanmadi',
+        errorText: response.statusMessage ?? LocaleKeys.auth_errors_otpVerifyFailed.tr(),
       );
     } on DioException catch (e) {
       return NetworkResponse<String>(errorText: _dioMessage(e));
@@ -271,7 +273,7 @@ class AuthDataSource {
         return NetworkResponse(data: response.data);
       }
       return NetworkResponse(
-        errorText: response.statusMessage ?? 'Parolni yangilab bo\'lmadi',
+        errorText: response.statusMessage ?? LocaleKeys.auth_errors_passwordUpdateFailed.tr(),
       );
     } on DioException catch (e) {
       return NetworkResponse(errorText: _dioMessage(e));
@@ -292,7 +294,7 @@ class AuthDataSource {
         return NetworkResponse(data: response.data);
       }
       return NetworkResponse(
-        errorText: response.statusMessage ?? 'Tizimdan chiqib bo\'lmadi',
+        errorText: response.statusMessage ?? LocaleKeys.auth_errors_logoutFailed.tr(),
       );
     } on DioException catch (e) {
       _clearTokens();
@@ -315,7 +317,7 @@ class AuthDataSource {
         return NetworkResponse(data: response.data);
       }
       return NetworkResponse(
-        errorText: response.statusMessage ?? 'Akkauntni o\'chirib bo\'lmadi',
+        errorText: response.statusMessage ?? LocaleKeys.auth_errors_accountDeleteFailed.tr(),
       );
     } on DioException catch (e) {
       return NetworkResponse(errorText: _dioMessage(e));
@@ -347,6 +349,6 @@ class AuthDataSource {
       if (m is String && m.isNotEmpty) return m;
     }
     if (data is String && data.isNotEmpty) return data;
-    return e.message ?? 'Server xatosi';
+    return e.message ?? LocaleKeys.auth_errors_serverError.tr();
   }
 }

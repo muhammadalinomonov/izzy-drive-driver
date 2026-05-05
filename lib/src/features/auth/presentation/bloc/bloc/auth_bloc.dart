@@ -1,9 +1,11 @@
 import 'package:bloc/bloc.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:taxi_app/src/core/localization/locale_keys.g.dart';
 import 'package:taxi_app/src/core/utils/notifications.dart';
 import 'package:taxi_app/src/features/auth/data/model/auth_model.dart';
 import 'package:taxi_app/src/features/auth/domain/repo/auth_repo.dart';
@@ -114,7 +116,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       event.onError();
       emit(state.copyWith(
         googleStatus: AuthStatus.failure,
-        errorMessage: 'Google id_token bo\'sh',
+        errorMessage: LocaleKeys.auth_errors_googleTokenEmpty.tr(),
       ));
       return;
     }
@@ -175,7 +177,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       event.onError();
       emit(state.copyWith(
         appleStatus: AuthStatus.failure,
-        errorMessage: 'Apple identity_token bo\'sh',
+        errorMessage: LocaleKeys.auth_errors_appleTokenEmpty.tr(),
       ));
       return;
     }

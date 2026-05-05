@@ -1,0 +1,128 @@
+{
+  "common": {
+    "ok": "Ok",
+    "cancel": "Bekor qilish",
+    "save": "Saqlash",
+    "delete": "O'chirish",
+    "edit": "Tahrirlash",
+    "back": "Orqaga",
+    "next": "Keyingi",
+    "done": "Tayyor",
+    "yes": "Ha",
+    "no": "Yo'q",
+    "loading": "Yuklanmoqda...",
+    "error": "Xatolik",
+    "retry": "Qayta urinish",
+    "search": "Qidirish",
+    "send": "Yuborish",
+    "close": "Yopish",
+    "confirm": "Tasdiqlash",
+    "skip": "O'tkazib yuborish",
+    "continue": "Davom etish",
+    "noInternet": "Internet aloqasi yo'q",
+    "somethingWentWrong": "Nimadir xato ketdi",
+    "tryAgain": "Qayta urining",
+    "empty": "Bo'sh",
+    "select": "Tanlash"
+  },
+  "language": {
+    "title": "Til",
+    "uz": "O'zbekcha",
+    "ru": "Ruscha",
+    "en": "Inglizcha"
+  },
+  "validators": {
+    "required": "{field} kiritilishi shart",
+    "invalid": "{field} noto'g'ri kiritilgan",
+    "passwordTooShort": "{field} kamida {min} ta belgi bo'lishi kerak",
+    "nameTooShort": "{field} kamida 2 ta belgi bo'lishi kerak",
+    "field": "Bu maydon",
+    "fieldEmail": "Email",
+    "fieldPassword": "Parol",
+    "fieldPhone": "Telefon raqam",
+    "fieldName": "Ism"
+  },
+  "auth": {
+    "signIn": {
+      "title": "Tizimga kirish",
+      "googleContinue": "Google orqali davom ettirish",
+      "appleContinue": "Apple orqali davom ettirish",
+      "orWithEmail": "Yoki e-mail va parolni kiriting",
+      "emailHint": "Mailni kiriting",
+      "emailLabel": "E-mail",
+      "passwordHint": "Parol kiriting",
+      "passwordLabel": "Parol",
+      "forgotPassword": "Parolni unutdingizmi?",
+      "notRegisteredYet": "Ro'yxatdan o'tmaganmisiz?",
+      "registerCta": "Ro'xatdan o'tish",
+      "loginFailed": "Tizimga kirib bo'lmadi",
+      "googleFailed": "Google orqali kirib bo'lmadi",
+      "appleFailed": "Apple orqali kirib bo'lmadi"
+    },
+    "signUp": {
+      "title": "Ro'yxatdan o'tish uchun ma'lumotlarni kiriting!",
+      "emailHint": "Emailni kiriting",
+      "emailLabel": "E-mail",
+      "nameHint": "Ismini kiriting",
+      "nameLabel": "Ism",
+      "passwordHint": "*********",
+      "passwordLabel": "Parol",
+      "submit": "Ro'yxatdan o'tish",
+      "alreadyRegistered": "Ro'yxatdan o'tib bo'lganmisiz?",
+      "signInCta": "Tizimga kirish",
+      "otpRequestFailed": "Kod yuborib bo'lmadi"
+    },
+    "forgotPassword": {
+      "title": "Parolni tiklash",
+      "subtitle": "Email manzilingizga tasdiqlash kodi yuboriladi",
+      "emailHint": "Mailni kiriting",
+      "emailLabel": "E-mail",
+      "sendCode": "Kod yuborish",
+      "otpRequestFailed": "OTP yuborib bo'lmadi"
+    },
+    "resetPassword": {
+      "title": "Yangi parol",
+      "subtitle": "Yangi parolni kiriting va tasdiqlang",
+      "newPasswordHint": "Yangi parolni kiriting",
+      "newPasswordLabel": "Yangi parol",
+      "confirmPasswordHint": "Parolni qaytadan kiriting",
+      "confirmPasswordLabel": "Parolni takrorlang",
+      "save": "Saqlash",
+      "passwordMismatch": "Parollar mos kelmadi",
+      "passwordUpdated": "Parol yangilandi. Yangi parol bilan kiring",
+      "updateFailed": "Parolni yangilab bo'lmadi"
+    },
+    "otp": {
+      "confirmAccountTitle": "Akkauntni tasdiqlang",
+      "enterCodeTitle": "Tasdiqlash kodini kiriting",
+      "sentTo": "{email} manzilingizga yuborilgan 6 xonali kodni kiriting",
+      "confirm": "Tasdiqlash",
+      "cancel": "Bekor qilish",
+      "didntReceive": "Kod kelmadi? ",
+      "resend": "Qayta yuborish",
+      "resendIn": "Qayta yuborish ({seconds}s)",
+      "resendFailed": "Kodni qayta yuborib bo'lmadi",
+      "verifyFailed": "Kod tasdiqlanmadi"
+    },
+    "emailConfirmation": {
+      "title": "Akkuntni tasdiqlang",
+      "body": "{email} orqali akkauntingizni aktivlashtiring!",
+      "understood": "Tushunarli"
+    },
+    "errors": {
+      "otpRequestFailed": "Kod yuborib bo'lmadi",
+      "otpVerifyFailed": "OTP tasdiqlanmadi",
+      "registerFailed": "Ro'yxatdan o'tib bo'lmadi",
+      "googleSignInFailed": "Google orqali kirib bo'lmadi",
+      "appleSignInFailed": "Apple orqali kirib bo'lmadi",
+      "passwordUpdateFailed": "Parolni yangilab bo'lmadi",
+      "logoutFailed": "Tizimdan chiqib bo'lmadi",
+      "accountDeleteFailed": "Akkauntni o'chirib bo'lmadi",
+      "serverError": "Server xatosi",
+      "googleTokenEmpty": "Google identifikator topilmadi",
+      "appleTokenEmpty": "Apple identifikator topilmadi",
+      "verificationTokenEmpty": "Tasdiqlash tokeni topilmadi",
+      "resetTokenMissing": "Tiklash tokeni topilmadi, qaytadan urinib ko'ring"
+    }
+  }
+}

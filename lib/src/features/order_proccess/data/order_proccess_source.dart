@@ -25,7 +25,8 @@ class OrderProccessSource {
       if (response.isSuccess) {
         print('Profile fetched successfully: ${response.data}');
         var profileModel = ProfileModel.fromJson(toMap(response.data['data']));
-        StorageRepository.putInt("ws_id", profileModel.wsId);
+        final wsId = profileModel.wsId;
+        StorageRepository.putInt("ws_id", wsId);
         return NetworkResponse(data: profileModel);
       } else {
         print('Error fetching profile: ${response.data}');
