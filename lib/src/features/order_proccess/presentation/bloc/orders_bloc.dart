@@ -1,16 +1,14 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
-import 'package:taxi_app/src/core/constants/feature_flags.dart';
-import 'package:taxi_app/src/core/network/token_service.dart';
+import 'package:taxi_app/src/core/service_locater.dart';
+import 'package:taxi_app/src/core/services/websocket_service.dart';
 import 'package:taxi_app/src/features/order_proccess/data/model/sub_order_model.dart';
 import 'package:taxi_app/src/features/order_proccess/domain/entities/current_order_entity.dart';
 import 'package:taxi_app/src/features/order_proccess/domain/order_repo.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../../data/model/mechanic_arrived.dart';
 import '../../data/model/order_accepted.dart';
@@ -20,13 +18,13 @@ part 'orders_state.dart';
 
 class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
   final OrderRepository orderRepository;
-
-  bool _isConnected = false;
-  WebSocketChannel? _channel;
+  final WebSocketService _ws = serviceLocator<WebSocketService>();
+  StreamSubscription<Map<String, dynamic>>? _wsSub;
 
   OrdersBloc({required this.orderRepository}) : super(const OrdersState()) {
     on<ConnectToWebSocketEvent>(_onConnectWebSocket);
     on<DisConnectFromWebSocketEvent>(_onDisconnectFromWebSocket);
+    on<_WsMessageReceivedEvent>(_onWsMessage);
     on<CancelOrderEvent>(_onCancelOrder);
     on<GetCurrentOrderEvent>(_onGetCurrentOrder);
     on<ChangeSubOrderStatusEvent>(_onChangeSubOrderStatus);
@@ -38,65 +36,23 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
 
   @override
   Future<void> close() {
-    _channel?.sink.close();
-    _isConnected = false;
+    _wsSub?.cancel();
     return super.close();
   }
 
-  void _onConnectWebSocket(ConnectToWebSocketEvent event, Emitter<OrdersState> emit) async {
-    if (!FeatureFlags.webSocketEnabled) {
-      print('WebSocket disabled by feature flag — skipping orders connect');
-      return;
-    }
-    try {
-      _channel?.sink.close();
-      if (_isConnected) {
-        return;
-      }
-      final wsId = StorageRepository.getInt('ws_id');
-      _channel = WebSocketChannel.connect(
-        Uri.parse('wss://ws.quadrix.ai/ws?user_id=usta_client_$wsId&tab_id=1&browser_id=browser_1'),
-      );
-      _isConnected = true;
-      print('WebSocket Connected');
-      await _listenToWebSocket(emit);
-    } catch (e) {
-      print(e);
-    }
+  void _onConnectWebSocket(ConnectToWebSocketEvent event, Emitter<OrdersState> emit) {
+    _ws.connect();
+    _wsSub ??= _ws.stream.listen((data) => add(_WsMessageReceivedEvent(data)));
   }
 
   void _onDisconnectFromWebSocket(DisConnectFromWebSocketEvent event, Emitter<OrdersState> emit) {
-    _channel?.sink.close();
-    _isConnected = false;
+    _wsSub?.cancel();
+    _wsSub = null;
+    _ws.disconnect();
   }
 
-  Future<void> _listenToWebSocket(Emitter<OrdersState> emit) async {
-    if (_channel == null) {
-      return;
-    }
-    try {
-      await for (final message in _channel!.stream) {
-        _handleMessage(message, emit);
-      }
-    } catch (e) {
-      print("WebSocket Error: $e");
-      _isConnected = false;
-    } finally {
-      print("WebSocket Disconnected");
-      _isConnected = false;
-    }
-  }
-
-  void _handleMessage(String message, Emitter<OrdersState> emit) {
-    final json = jsonDecode(message) as Map<String, dynamic>;
-    print("WebSocket Message: $message");
-
-    final eventType = json['event'] as String?;
-    if (eventType != 'direct') return;
-
-    final data = json['data'] as Map<String, dynamic>?;
-    if (data == null) return;
-
+  void _onWsMessage(_WsMessageReceivedEvent event, Emitter<OrdersState> emit) {
+    final data = event.data;
     // Backend uses both `event-status` (hyphen) and `event_status` (underscore)
     // inconsistently — read either to be defensive.
     final eventStatus = (data['event-status'] ?? data['event_status']) as String?;
@@ -109,9 +65,8 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
         break;
 
       case 'mechanic-arrived':
-        // Note: parser reads top-level `json`, not `data` — keep existing behavior.
-        final mechanicArrived = MechanicArrived.fromJson(json);
-        print("Mechanic arrived: ${mechanicArrived.toString()}");
+        final mechanicArrived = MechanicArrived.fromJson(data);
+        debugPrint('Mechanic arrived: $mechanicArrived');
         emit(state.copyWith(lifecycleEvent: OrderLifecycleEvent.arrived));
         add(GetCurrentOrderEvent());
         break;
@@ -136,7 +91,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
           final subOrder = SubOrderModel.fromJson(data);
           emit(state.copyWith(pendingSubOrder: subOrder));
         } catch (e) {
-          print('Failed to parse new-suborder: $e');
+          debugPrint('Failed to parse new-suborder: $e');
         }
         break;
 
@@ -163,22 +118,19 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
 
       case 'order-cancelled':
       case 'selected-order-cancelled':
-        _channel?.sink.close();
-        _isConnected = false;
         emit(const OrderCanceled());
         break;
 
       default:
-        print('Unhandled WS event-status: $eventStatus');
+        // Ignore — InivitesBloc and others may handle this event.
+        break;
     }
   }
 
   void _onCancelOrder(CancelOrderEvent event, Emitter<OrdersState> emit) async {
     final response = await orderRepository.cancelOrder();
     if (response.errorText.isEmpty) {
-      print('Order cancelled successfully');
-      _channel?.sink.close();
-      _isConnected = false;
+      debugPrint('Order cancelled successfully');
       emit(const OrderCanceled());
       // Reset to a "no current order" state so the home card disappears
       // immediately instead of showing a stale/error UI.
@@ -187,7 +139,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
         currentOrder: CurrentOrderEntity(),
       ));
     } else {
-      print('Error cancelling order: ${response.errorText}');
+      debugPrint('Error cancelling order: ${response.errorText}');
     }
   }
 
@@ -195,14 +147,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     emit(state.copyWith(currentOrderStatus: FormzSubmissionStatus.inProgress));
     final response = await orderRepository.getCurrentOrder();
     if (response.errorText.isEmpty) {
-      print('Current order fetched successfully');
       emit(state.copyWith(
         currentOrder: response.data,
         currentOrderStatus: FormzSubmissionStatus.success,
       ));
     } else {
       emit(state.copyWith(currentOrderStatus: FormzSubmissionStatus.failure));
-      print('Error fetching current order: ${response.errorText}');
+      debugPrint('Error fetching current order: ${response.errorText}');
     }
   }
 

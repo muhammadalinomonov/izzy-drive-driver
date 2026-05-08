@@ -11,7 +11,7 @@ class AddressChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = address.isEmpty ? 'Joy tanlanmadi' : address;
+    final text = address.isEmpty ? 'No location selected' : address;
     final shown = text.length > 35 ? '${text.substring(0, 35)}…' : text;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),

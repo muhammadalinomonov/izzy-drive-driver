@@ -47,7 +47,7 @@ class BookingSuccessDialog extends StatelessWidget {
 
             // Title
             const Text(
-              'Yakunlash uchun ushbu\nQR codni kiriting',
+              'Enter this QR code\nto complete',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 18,

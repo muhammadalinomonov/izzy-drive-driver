@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
+import 'package:taxi_app/src/features/common/presentation/widgets/common_image.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bloc.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/order_action_item.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/order_info_card.dart';
@@ -23,16 +24,16 @@ class _OrderInfoScreenState extends State<OrderInfoScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Buyurtmani bekor qilish?'),
-        content: const Text('Buyurtmani bekor qilishni xohlaysizmi? Bu amalni qaytarib bo\'lmaydi.'),
+        title: const Text('Cancel order?'),
+        content: const Text('Are you sure you want to cancel the order? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Yo\'q'),
+            child: const Text('No'),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Ha, bekor qilish'),
+            child: const Text('Yes, cancel'),
           ),
         ],
       ),
@@ -128,13 +129,11 @@ class _OrderInfoScreenState extends State<OrderInfoScreen> {
                     SizedBox(height: 8),
                     Row(
                       children: [
-                        if (state.currentOrder.selectedMechanic.photo.isNotEmpty)
-                          Image.network(
-                            state.currentOrder.selectedMechanic.photo,
-                            width: 44,
-                            height: 44,
-                            errorBuilder: (context, error, stackTrace) => SizedBox(),
-                          ),
+                        AvatarImage(
+                          imageUrl: state.currentOrder.selectedMechanic.photo,
+                          size: 44,
+                        ),
+                        SizedBox(width: 8),
                         Text(
                           state.currentOrder.selectedMechanic.fullName,
                           style: Theme.of(

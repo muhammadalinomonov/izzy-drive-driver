@@ -250,7 +250,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     final lat = state.selectedLatitude ?? _currentPosition.lat.toDouble();
     final lng = state.selectedLongitude ?? _currentPosition.lng.toDouble();
     final address = state.selectedAddress.isEmpty
-        ? 'Tanlangan joy'
+        ? 'Selected place'
         : state.selectedAddress;
     context.push(Pages.orderCreate, extra: {
       'address': address,
@@ -479,7 +479,7 @@ class _MapModeSheet extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        address.isEmpty ? 'Joy tanlanmadi' : address,
+                        address.isEmpty ? 'No place selected' : address,
                         style: const TextStyle(
                           color: Colors.black,
                           fontSize: 14,
@@ -509,7 +509,7 @@ class _MapModeSheet extends StatelessWidget {
                 elevation: 0,
                 highlightElevation: 0,
                 child: const Text(
-                  'Davom ettirish',
+                  'Continue',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
@@ -587,7 +587,7 @@ class _ListModeSheet extends StatelessWidget {
                       controller: searchController,
                       onChanged: onSearchChanged,
                       decoration: InputDecoration(
-                        hintText: 'Manzilni kiriting',
+                        hintText: 'Enter address',
                         border: InputBorder.none,
                         icon: SvgPicture.asset(AppIcons.location, width: 18, height: 18),
                       ),
@@ -604,7 +604,7 @@ class _ListModeSheet extends StatelessWidget {
                           Icon(Icons.my_location, color: AppColor.blueMain),
                           const SizedBox(width: 12),
                           const Text(
-                            'Mening joylashuvim',
+                            'My location',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -636,7 +636,7 @@ class _ListModeSheet extends StatelessWidget {
                       elevation: 0,
                       highlightElevation: 0,
                       child: const Text(
-                        'Tanlash',
+                        'Choose',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                       ),
                     ),
@@ -671,7 +671,7 @@ class _SuggestionsList extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 24),
         child: Text(
-          'Manzilni kiriting yoki "Mening joylashuvim" ni tanlang',
+          'Enter an address or choose "My location"',
           textAlign: TextAlign.center,
           style: TextStyle(color: AppColor.grey, fontSize: 14),
         ),

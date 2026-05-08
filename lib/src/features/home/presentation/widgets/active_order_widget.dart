@@ -18,7 +18,7 @@ class ActiveOrderWidget extends StatelessWidget {
       children: [
         //number sign
         Text(
-          'Activ buyurtma N $orderId',
+          'Active order N $orderId',
           style: context.textTheme.bodyLarge!.copyWith(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         SizedBox(height: 8),

@@ -22,7 +22,7 @@ class SubOrdersCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Xizmatlar',
+            'Services',
             style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 16, fontWeight: FontWeight.w600),
           ),
           SubOrderItem(
@@ -52,7 +52,7 @@ class SubOrdersCard extends StatelessWidget {
             child: Row(
               children: [
                 Text(
-                  'Umumiy summa',
+                  'Total amount',
                   style: Theme.of(
                     context,
                   ).textTheme.bodyLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w400, color: AppColor.darkBlue),

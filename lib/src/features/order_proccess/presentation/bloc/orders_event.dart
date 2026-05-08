@@ -11,6 +11,11 @@ class ConnectToWebSocketEvent extends OrdersEvent {}
 
 class DisConnectFromWebSocketEvent extends OrdersEvent {}
 
+class _WsMessageReceivedEvent extends OrdersEvent {
+  final Map<String, dynamic> data;
+  _WsMessageReceivedEvent(this.data);
+}
+
 class GetCurrentOrderEvent extends OrdersEvent {}
 
 class ChangeSubOrderStatusEvent extends OrdersEvent {

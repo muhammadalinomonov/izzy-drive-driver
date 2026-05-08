@@ -50,7 +50,7 @@ class _CreateOutputSheetState extends State<CreateOutputSheet> {
                   date: date.toString(),
                   onSuccess: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Rasxod muvaffaqiyatli qo\'shildi'), backgroundColor: Colors.green),
+                      SnackBar(content: Text('Expense added successfully'), backgroundColor: Colors.green),
                     );
                     Navigator.of(context).pop();
                   },
@@ -62,11 +62,11 @@ class _CreateOutputSheetState extends State<CreateOutputSheet> {
                 ),
               );
             },
-            title: 'Rasxod qo’shish',
+            title: 'Add expense',
             children: [
               SizedBox(height: 12),
               Text(
-                'Rasxod nomi',
+                'Expense name',
                 style: context.textTheme.headlineLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w400),
               ),
               SizedBox(height: 8),
@@ -84,7 +84,7 @@ class _CreateOutputSheetState extends State<CreateOutputSheet> {
                     borderSide: BorderSide(color: AppColor.lightBlue),
                   ),
                   contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                  hintText: 'Rasxod nomini kiriting',
+                  hintText: 'Enter expense name',
                   hintStyle: context.textTheme.headlineLarge!.copyWith(
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
@@ -93,7 +93,7 @@ class _CreateOutputSheetState extends State<CreateOutputSheet> {
                 ),
               ),
               SizedBox(height: 24),
-              Text('Sana', style: context.textTheme.headlineLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w400)),
+              Text('Date', style: context.textTheme.headlineLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w400)),
               SizedBox(height: 8),
               Container(
                 height: 48,
@@ -104,7 +104,7 @@ class _CreateOutputSheetState extends State<CreateOutputSheet> {
                     Text(
                       selectedDate != null
                           ? MyFunctions.formatDateTime(selectedDate.toString(), format: 'dd.MM.yyyy')
-                          : 'Sana tanlash',
+                          : 'Select date',
                       style: context.textTheme.headlineLarge!.copyWith(
                         fontSize: 16,
                         fontWeight: FontWeight.w400,
@@ -133,7 +133,7 @@ class _CreateOutputSheetState extends State<CreateOutputSheet> {
               ),
               SizedBox(height: 24),
               Text(
-                'Miqdor',
+                'Amount',
                 style: context.textTheme.headlineLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w400),
               ),
               SizedBox(height: 8),
@@ -152,7 +152,7 @@ class _CreateOutputSheetState extends State<CreateOutputSheet> {
                     borderSide: BorderSide(color: AppColor.lightBlue),
                   ),
                   contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                  hintText: 'Miqdor kiriting',
+                  hintText: 'Enter amount',
                   hintStyle: context.textTheme.headlineLarge!.copyWith(
                     fontSize: 16,
                     fontWeight: FontWeight.w400,

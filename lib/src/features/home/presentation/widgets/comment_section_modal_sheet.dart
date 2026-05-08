@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/choose_inivates/presentation/widgets/profile_order_model_sheet.dart';
+import 'package:taxi_app/src/features/common/presentation/widgets/common_image.dart';
 
 void showCommentSectionModalSheet(BuildContext context) {
   bool showAllComments = false;
@@ -86,7 +87,7 @@ void showCommentSectionModalSheet(BuildContext context) {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'IZOH VA BAHOLAR',
+                              'COMMENTS AND RATINGS',
                               style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(
                                     color: AppColor.darkGrey,
@@ -177,10 +178,7 @@ class _CommentCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            CircleAvatar(
-              radius: 20,
-              backgroundImage: NetworkImage(comment.avatarUrl),
-            ),
+            AvatarImage(imageUrl: comment.avatarUrl, size: 40),
             SizedBox(width: 10),
             Text(
               comment.name,

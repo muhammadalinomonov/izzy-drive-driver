@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/location_service.dart';
+import 'package:taxi_app/src/core/service_locater.dart';
+import 'package:taxi_app/src/core/services/websocket_service.dart';
+import 'package:taxi_app/src/features/common/presentation/widgets/common_image.dart';
 import 'package:taxi_app/src/features/master/data/repository/master_repository_impl.dart';
 import 'package:taxi_app/src/features/master/data/source/master_remote_data_source.dart';
 import 'package:taxi_app/src/features/master/presentation/bloc/master_bloc.dart';
@@ -23,7 +26,10 @@ class OrderSingleScreen extends StatefulWidget {
   State<OrderSingleScreen> createState() => _OrderSingleScreenState();
 }
 
-class _OrderSingleScreenState extends State<OrderSingleScreen> {
+class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindingObserver {
+  static const _resumeDebounce = Duration(seconds: 10);
+  DateTime? _lastResumeRefresh;
+
   late mapbox.MapboxMap _mapboxMap;
   mapbox.PolylineAnnotationManager? _polylineAnnotationManager;
   mapbox.PointAnnotationManager? _pointAnnotationManager;
@@ -34,9 +40,31 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     context.read<OrdersBloc>()
       ..add(GetCurrentOrderEvent())
       ..add(ConnectToWebSocketEvent());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    final now = DateTime.now();
+    if (_lastResumeRefresh != null && now.difference(_lastResumeRefresh!) < _resumeDebounce) {
+      return;
+    }
+    _lastResumeRefresh = now;
+    // Force a fresh socket — iOS often suspends the WS during background
+    // without firing onDone, so the cached _isConnected can be a lie.
+    serviceLocator<WebSocketService>().reconnect();
+    if (!mounted) return;
+    context.read<OrdersBloc>().add(GetCurrentOrderEvent());
   }
 
   @override
@@ -157,7 +185,7 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'Usta buyurtma qabul qilishi kutilmoqda...',
+                              'Waiting for the master to accept the order...',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.black87,
@@ -168,7 +196,7 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Odatda haydovchi 1 daqiqa ichida topiladi (30 soniya)',
+                              'A driver is usually found within 1 minute (30 seconds)',
                               textAlign: TextAlign.center,
                               style: TextStyle(color: Colors.grey[600], fontSize: 14, fontWeight: FontWeight.w400),
                             ),
@@ -181,7 +209,7 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> {
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                               ),
                               child: const Text(
-                                'Bekor qilish',
+                                'Cancel',
                                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                               ),
                             ),
@@ -234,13 +262,11 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 14),
                             child: Row(
                               children: [
-                                if (state.currentOrder.selectedMechanic.photo.isNotEmpty)
-                                  Image.network(
-                                    state.currentOrder.selectedMechanic.photo,
-                                    width: 44,
-                                    height: 44,
-                                    errorBuilder: (context, error, stackTrace) => SizedBox(),
-                                  ),
+                                AvatarImage(
+                                  imageUrl: state.currentOrder.selectedMechanic.photo,
+                                  size: 44,
+                                ),
+                                SizedBox(width: 8),
                                 Text(
                                   state.currentOrder.selectedMechanic.fullName,
                                   style: Theme.of(
@@ -332,17 +358,17 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Buyurtmani bekor qilish?'),
-        content: const Text('Buyurtmani bekor qilishni xohlaysizmi?'),
+        title: const Text('Cancel order?'),
+        content: const Text('Are you sure you want to cancel the order?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Yo\'q'),
+            child: const Text('No'),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Ha, bekor qil'),
+            child: const Text('Yes, cancel'),
           ),
         ],
       ),

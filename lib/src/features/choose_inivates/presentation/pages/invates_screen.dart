@@ -1,9 +1,12 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
+import 'package:taxi_app/src/core/service_locater.dart';
+import 'package:taxi_app/src/core/services/websocket_service.dart';
 import 'package:taxi_app/src/features/choose_inivates/presentation/widgets/profile_order_model_sheet.dart';
 import 'package:taxi_app/src/features/common/presentation/widgets/common_scalel_animation.dart';
 import 'package:taxi_app/src/routes/pages.dart';
@@ -18,22 +21,42 @@ class InvatesScreen extends StatefulWidget {
   State<InvatesScreen> createState() => _InvatesScreenState();
 }
 
-class _InvatesScreenState extends State<InvatesScreen> {
+class _InvatesScreenState extends State<InvatesScreen> with WidgetsBindingObserver {
+  static const _resumeDebounce = Duration(seconds: 10);
+  DateTime? _lastResumeRefresh;
+
   late InivitesBloc inivitesBloc;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Dastlab ma'lumotlarni yuklash
     inivitesBloc = context.read<InivitesBloc>()..add(FetchActiveOrderEvent());
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     // WebSocket'dan uzilish
     inivitesBloc.add(DisconnectFromWebSocketEvent());
     print('WebSocket disconnected');
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    final now = DateTime.now();
+    if (_lastResumeRefresh != null && now.difference(_lastResumeRefresh!) < _resumeDebounce) {
+      return;
+    }
+    _lastResumeRefresh = now;
+    // Force a fresh socket — iOS often suspends the WS during background
+    // without firing onDone, so the cached _isConnected can be a lie.
+    serviceLocator<WebSocketService>().reconnect();
+    if (!mounted) return;
+    context.read<InivitesBloc>().add(FetchActiveOrderEvent());
   }
 
   // Function to handle the refresh action
@@ -148,9 +171,9 @@ class _InvatesScreenState extends State<InvatesScreen> {
                           child: Row(
                             children: [
                               const SizedBox(width: 12),
-                              const Text(
-                                'Taklif summasi',
-                                style: TextStyle(
+                              Text(
+                                'Offer amount'.tr(),
+                                style: const TextStyle(
                                   color: Colors.black,
                                   fontSize: 15,
                                   fontFamily: 'Inter',
@@ -246,7 +269,7 @@ class _InvatesScreenState extends State<InvatesScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Takliflar: ${offers.length}',
+                              '${'Offers'.tr()}: ${offers.length}',
                               style: const TextStyle(
                                 color: Colors.black,
                                 fontSize: 18,
@@ -271,9 +294,9 @@ class _InvatesScreenState extends State<InvatesScreen> {
                                     decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
                                   ),
                                   const SizedBox(width: 4),
-                                  const Text(
-                                    'Real-time',
-                                    style: TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.w500),
+                                  Text(
+                                    'Real-time'.tr(),
+                                    style: const TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.w500),
                                   ),
                                 ],
                               ),
@@ -290,7 +313,7 @@ class _InvatesScreenState extends State<InvatesScreen> {
                                       Icon(Icons.hourglass_empty, size: 50, color: Colors.grey[400]),
                                       const SizedBox(height: 16),
                                       Text(
-                                        'Takliflar kutilmoqda...',
+                                        'Waiting for offers...'.tr(),
                                         style: TextStyle(
                                           color: Colors.grey[600],
                                           fontSize: 16,
@@ -299,7 +322,7 @@ class _InvatesScreenState extends State<InvatesScreen> {
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
-                                        'Ustalar sizning buyurtmangizni ko\'rib chiqishmoqda',
+                                        'Mechanics are reviewing your order'.tr(),
                                         style: TextStyle(color: Colors.grey[500], fontSize: 14),
                                         textAlign: TextAlign.center,
                                       ),
@@ -318,7 +341,7 @@ class _InvatesScreenState extends State<InvatesScreen> {
                                   final changeColor = balanceColor['text']!;
                                   final changeBackgroundColor = balanceColor['background']!;
                                   final balanceText = offer.balance.toLowerCase() == 'equal'
-                                      ? 'TENG'
+                                      ? 'EQUAL'
                                       : offer.balance.toUpperCase();
                                   return AnimatedContainer(
                                     duration: const Duration(milliseconds: 300),
@@ -354,12 +377,12 @@ class _InvatesScreenState extends State<InvatesScreen> {
                   Icon(Icons.error_outline, size: 60, color: Colors.red[300]),
                   const SizedBox(height: 16),
                   Text(
-                    'Xatolik yuz berdi',
+                    'An error occurred'.tr(),
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey[700]),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Error: ${state.message}',
+                    '${'Error'.tr()}: ${state.message}',
                     style: TextStyle(color: Colors.grey[600], fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
@@ -369,9 +392,9 @@ class _InvatesScreenState extends State<InvatesScreen> {
                     color: const Color(0xFF0866FF),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
                     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                    child: const Text(
-                      'Qayta urinish',
-                      style: TextStyle(
+                    child: Text(
+                      'Try again'.tr(),
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
                         fontFamily: 'Inter',
@@ -383,10 +406,14 @@ class _InvatesScreenState extends State<InvatesScreen> {
               ),
             );
           } else {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [CircularProgressIndicator(), SizedBox(height: 16), Text('Ma\'lumotlar yuklanmoqda...')],
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text('Loading data...'.tr()),
+                ],
               ),
             );
           }
@@ -563,9 +590,9 @@ class _InvatesScreenState extends State<InvatesScreen> {
                     side: const BorderSide(width: 1, color: Color(0xFFE2E7EB)),
                     borderRadius: BorderRadius.circular(50),
                   ),
-                  child: const Text(
-                    'Tanlash',
-                    style: TextStyle(
+                  child: Text(
+                    'Choose'.tr(),
+                    style: const TextStyle(
                       color: Color(0xFF0866FF),
                       fontSize: 14,
                       fontFamily: 'Inter',
@@ -599,16 +626,16 @@ class _InvatesScreenState extends State<InvatesScreen> {
       final difference = now.difference(dateTime);
 
       if (difference.inSeconds < 60) {
-        return 'Hozir';
+        return 'Now'.tr();
       } else if (difference.inMinutes < 60) {
-        return '${difference.inMinutes} daqiqa oldin';
+        return '${difference.inMinutes} ${'minutes ago'.tr()}';
       } else if (difference.inHours < 24) {
-        return '${difference.inHours} soat oldin';
+        return '${difference.inHours} ${'hours ago'.tr()}';
       } else {
-        return '${difference.inDays} kun oldin';
+        return '${difference.inDays} ${'days ago'.tr()}';
       }
     } catch (e) {
-      return 'Noma\'lum vaqt';
+      return 'Unknown time'.tr();
     }
   }
 }

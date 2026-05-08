@@ -38,7 +38,7 @@ class RecordedAudioPreview extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Ovozli xabar — $_label',
+              'Voice message — $_label',
               style: const TextStyle(
                 fontWeight: FontWeight.w500,
                 fontSize: 14,
@@ -48,7 +48,7 @@ class RecordedAudioPreview extends StatelessWidget {
           IconButton(
             onPressed: onClear,
             icon: SvgPicture.asset(AppIcons.x, width: 16, height: 16),
-            tooltip: 'O\'chirish',
+            tooltip: 'Delete',
           ),
         ],
       ),

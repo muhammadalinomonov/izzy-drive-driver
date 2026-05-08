@@ -23,22 +23,22 @@ class OrderInformationWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Buyurtma ma’lumotlari',
+            'Order details',
             style: context.textTheme.bodyMedium!.copyWith(fontSize: 16, fontWeight: FontWeight.w600),
           ),
           SizedBox(height: 12),
-          InfoItem(title: 'Buyurtma berildi', info: createdAt),
+          InfoItem(title: 'Order placed', info: createdAt),
           Divider(height: 25, thickness: 1, color: AppColor.grey),
-          InfoItem(title: 'Sarflangan vaqt', info: workDuration),
+          InfoItem(title: 'Time spent', info: workDuration),
           Divider(height: 25, thickness: 1, color: AppColor.grey),
-          InfoItem(title: 'Qayerga', info: address),
+          InfoItem(title: 'Destination', info: address),
           Divider(height: 25, thickness: 1, color: AppColor.grey),
           Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'To’lov turi',
+                'Payment type',
                 style: context.textTheme.bodySmall!.copyWith(
                   fontSize: 12,
                   color: AppColor.grey2,

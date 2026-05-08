@@ -60,7 +60,7 @@ class VoiceRecorderInProgress extends StatelessWidget {
             IconButton(
               onPressed: onCancel,
               icon: SvgPicture.asset(AppIcons.x, width: 20, height: 20),
-              tooltip: 'Bekor qilish',
+              tooltip: 'Cancel',
             ),
             const SizedBox(width: 4),
             IconButton(
@@ -76,7 +76,7 @@ class VoiceRecorderInProgress extends StatelessWidget {
                 shape: const CircleBorder(),
                 padding: const EdgeInsets.all(10),
               ),
-              tooltip: 'To\'xtatish',
+              tooltip: 'Stop',
             ),
           ],
         ),

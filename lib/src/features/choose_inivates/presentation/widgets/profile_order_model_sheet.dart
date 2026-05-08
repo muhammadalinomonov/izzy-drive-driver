@@ -8,6 +8,7 @@ import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/choose_inivates/presentation/bloc/inivites_bloc.dart';
+import 'package:taxi_app/src/features/common/presentation/widgets/common_image.dart';
 import 'package:taxi_app/src/features/choose_inivates/presentation/bloc/proposal_bloc.dart';
 import 'package:taxi_app/src/features/choose_inivates/presentation/bloc/proposal_state.dart';
 
@@ -150,7 +151,7 @@ void showOrderDetailBottomSheet(
                               const _OffersRow(),
                               const SizedBox(height: 18),
                               AppButton(
-                                title: 'Chaqirish',
+                                title: 'Call',
                                 isLoading: state.status == ProposalStatus.loading,
                                 onTap: () async {
                                   proposalBloc.add(SelectProposalEvent(proposalId: int.parse(id)));
@@ -163,7 +164,7 @@ void showOrderDetailBottomSheet(
                                       ScaffoldMessenger.of(c).showSnackBar(
                                         SnackBar(
                                           content: Text(
-                                            completed.errorMessage ?? 'Ustani tanlashda xatolik',
+                                            completed.errorMessage ?? 'Failed to select master',
                                           ),
                                         ),
                                       );
@@ -212,10 +213,9 @@ class ProfileSection extends StatelessWidget {
           final mechanic = state.proposal!.mechanicInfo;
           return Column(
             children: [
-              CircleAvatar(
-                backgroundColor: Colors.transparent,
-                radius: mq.size.width * 0.13,
-                backgroundImage: NetworkImage(mechanic.avatar),
+              AvatarImage(
+                imageUrl: mechanic.avatar,
+                size: mq.size.width * 0.26,
               ),
               const SizedBox(height: 12),
               Text(
@@ -322,12 +322,12 @@ class _OrderInfoSection extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Muammo', style: labelStyle),
+                Text('Issue', style: labelStyle),
                 Text(order.orderTitle, style: valueStyle),
                 const SizedBox(height: 8),
-                Text('Qayerga', style: labelStyle),
+                Text('Where to', style: labelStyle),
                 Text(order.orderAddress, style: valueStyle),
-                Text('${order.distance} km uzoqlikda', style: labelStyle),
+                Text('${order.distance} km away', style: labelStyle),
               ],
             ),
           );
@@ -439,7 +439,7 @@ class _OffersRow extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text('Sizning taklifingiz', style: labelStyle),
+                      Text('Your offer', style: labelStyle),
                       const SizedBox(height: 4),
                       Text('${order.orderPrice} \$', style: valueStyle),
                     ],
@@ -450,7 +450,7 @@ class _OffersRow extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text('Ustani taklifi', style: labelStyle),
+                      Text("Master's offer", style: labelStyle),
                       const SizedBox(height: 4),
                       Text(
                         '${order.proposalPrice} \$',

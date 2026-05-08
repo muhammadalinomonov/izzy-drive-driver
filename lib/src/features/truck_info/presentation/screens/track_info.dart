@@ -120,7 +120,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                       children: [
                         const SizedBox(height: 8),
                         const Text(
-                          "Truck ma'lumotlari",
+                          "Truck information",
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
@@ -128,7 +128,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                         ),
                         const SizedBox(height: 12),
                         const Text(
-                          "Truck ma'lumotlarini kirgizib qo'yishingizni tavsiya qilamiz! Bu sizni hisob-kitob olib yurishingizni yordam beradi!",
+                          "We recommend filling in your truck information — it will help you keep track of your records!",
                           style: TextStyle(fontSize: 16, color: Colors.black54),
                         ),
                       ],
@@ -152,7 +152,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                       children: [
                         const SizedBox(height: 28),
                         const Text(
-                          "Truck rasmi",
+                          "Truck photo",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -183,7 +183,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                                 ),
                                 const SizedBox(height: 12),
                                 const Text(
-                                  "Rasm qo'shish uchun bosing",
+                                  "Tap to add a photo",
                                   style: TextStyle(
                                     fontSize: 16,
                                     color: Colors.black45,
@@ -195,7 +195,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                         ),
                         const SizedBox(height: 24),
                         const Text(
-                          "Truck markasi",
+                          "Truck make",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -248,7 +248,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                         ),
                         const SizedBox(height: 20),
                         const Text(
-                          "Truck modeli",
+                          "Truck model",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -290,8 +290,8 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                         ),
                         const SizedBox(height: 20),
                         AuthInputWidget(
-                          hint: 'Kiriting',
-                          label: 'Ishlab chiqarilgan sana',
+                          hint: 'Enter',
+                          label: 'Production year',
                           textInputType: TextInputType.number,
                           controller: _yearController,
                         ),
@@ -318,7 +318,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                         const SizedBox(height: 32),
                         AppButton(
                           isLoading: isCreatingProccess,
-                          title: "Ro'yxatdan o'tish",
+                          title: "Sign up",
                           onTap: () {
                             isCreatingProccess = true;
                             setState(() {});
@@ -422,7 +422,7 @@ class TruckDropDownWidget extends StatelessWidget {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
-          hint: hint ?? const Text("Tanlang"),
+          hint: hint ?? const Text("Select"),
           items: items,
           onChanged: onChanged,
           isExpanded: isExpanded,

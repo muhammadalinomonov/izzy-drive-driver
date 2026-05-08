@@ -50,23 +50,23 @@ enum OrderStatus {
   String get orderDescription {
     switch (this) {
       case OrderStatus.pending:
-        return "Yangi buyurtma muaffaqiyatli yaratildi. Ustalar uni qabul qilishlari kutilmoqda.";
+        return "New order created successfully. Waiting for masters to accept it.";
       case OrderStatus.mechanicSelected:
-        return 'Usta buyurtma qabul qilishi kutilmoqda...';
+        return 'Waiting for the master to accept the order...';
       case OrderStatus.accepted:
-        return 'Usta buyurtmani qabul qildi, va siz tomon harakatlanmoqda!';
+        return 'The master accepted the order and is on the way to you!';
       case OrderStatus.arrived:
         //write in uzbek
-        return 'Usta sizning manzilingizga yetib keldi. Tez orada ish boshlanadi.';
+        return 'The master has arrived at your location. Work will start shortly.';
       case OrderStatus.inProgress:
         //write in uzbek
-        return 'Sizning buyurtmangiz ustida ish olib borilmoqda.';
+        return 'Your order is being worked on.';
       case OrderStatus.completed:
-        return 'Sizning buyurtmangiz muvaffaqiyatli yakunlandi.';
+        return 'Your order has been completed successfully.';
       case OrderStatus.canceled:
-        return 'Sizning buyurtmangiz bekor qilindi.';
+        return 'Your order was cancelled.';
       case OrderStatus.mechanicDone:
-        return 'Usta ishni yakunladi, to\'lovni amalga oshiring.';
+        return 'The master finished the work, please proceed with payment.';
     }
   }
 }

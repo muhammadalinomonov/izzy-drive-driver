@@ -27,9 +27,11 @@ void main(List<String> args) async {
   ChuckerFlutter.showNotification = false;
   runApp(
     EasyLocalization(
-      supportedLocales: const [Locale('uz'), Locale('ru'), Locale('en')],
+      supportedLocales: const [Locale('en')],
       path: 'assets/translations',
       fallbackLocale: const Locale('en'),
+      startLocale: const Locale('en'),
+      saveLocale: false,
       child: const TaxiApp(),
     ),
   );

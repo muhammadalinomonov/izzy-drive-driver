@@ -32,7 +32,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
   static const Duration _minAudio = Duration(seconds: 1);
   static const int _maxPhotos = 5;
 
-  final _recorder = Record();
+  final _recorder = AudioRecorder();
   final _picker = ImagePicker();
   final _textController = TextEditingController();
   final _priceController = TextEditingController();
@@ -59,12 +59,15 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
     final hasPermission = await _recorder.hasPermission();
     if (!hasPermission) {
       if (!mounted) return;
-      AppSnackBar.showError(context, 'Mikrofon ruxsat berilmadi');
+      AppSnackBar.showError(context, 'Microphone permission denied');
       return;
     }
     final dir = await getApplicationDocumentsDirectory();
     final path = '${dir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
-    await _recorder.start(path: path, encoder: AudioEncoder.aacLc, bitRate: 128000, samplingRate: 44100);
+    await _recorder.start(
+      const RecordConfig(encoder: AudioEncoder.aacLc, bitRate: 128000, sampleRate: 44100),
+      path: path,
+    );
     _activeRecordingPath = path;
     if (!mounted) return;
     context.read<OrderCreateBloc>().add(const AudioRecordingStarted());
@@ -101,7 +104,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
         } catch (_) {}
       }
       if (!mounted) return;
-      AppSnackBar.showError(context, 'Yozuv juda qisqa');
+      AppSnackBar.showError(context, 'Recording too short');
       return;
     }
     bloc.add(AudioRecordingStopped(path));
@@ -127,7 +130,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
     final state = context.read<OrderCreateBloc>().state;
     final remaining = _maxPhotos - state.photos.length;
     if (remaining <= 0) {
-      AppSnackBar.showError(context, 'Maksimum $_maxPhotos rasm');
+      AppSnackBar.showError(context, 'Maximum $_maxPhotos photos');
       return;
     }
     final picked = await _picker.pickMultiImage(imageQuality: 85, maxWidth: 1920);
@@ -160,7 +163,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
       builder: (_) => Padding(
         padding: const EdgeInsets.all(20),
         child: Text(
-          'Muammoni yozing yoki ovozli habar orqali tushuntirib bering. Rasm yoki video qo\'shsangiz, ish narxini ham kiriting.',
+          'Describe the issue or explain it with a voice message. If you add a photo or video, also enter the price for the work.',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
       ),
@@ -191,7 +194,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Sizda qanday muammo?',
+                            'What is your problem?',
                             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                               fontSize: 24,
                               fontWeight: FontWeight.w500,
@@ -214,7 +217,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
                             minLines: 3,
                             onChanged: (v) => context.read<OrderCreateBloc>().add(DescriptionChanged(v)),
                             decoration: InputDecoration(
-                              hintText: 'Muammoni yozing...',
+                              hintText: 'Describe the issue...',
                               filled: true,
                               fillColor: AppColor.lightBlue,
                               border: OutlineInputBorder(
@@ -232,7 +235,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          Text('Rasm yoki video', style: Theme.of(context).textTheme.titleMedium),
+                          Text('Photo or video', style: Theme.of(context).textTheme.titleMedium),
                           const SizedBox(height: 8),
                           PhotoGrid(
                             photos: state.photos,
@@ -241,7 +244,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
                             onRemove: (i) => context.read<OrderCreateBloc>().add(PhotoRemoved(i)),
                           ),
                           const SizedBox(height: 20),
-                          Text('Ushbu ish uchun nechpul bermoqchisiz?', style: Theme.of(context).textTheme.titleMedium),
+                          Text('How much do you want to pay for this work?', style: Theme.of(context).textTheme.titleMedium),
                           const SizedBox(height: 8),
                           PriceInput(
                             controller: _priceController,
@@ -319,7 +322,7 @@ class _HintBubble extends StatelessWidget {
           ),
         ),
         child: const Text(
-          'Muammoni yozing yoki ovozli habar orqali tushuntirib bering.',
+          'Describe the issue or explain it with a voice message.',
           style: TextStyle(color: Colors.black, fontSize: 15, height: 1.4, letterSpacing: -0.3),
         ),
       ),
@@ -376,7 +379,7 @@ class _BottomBar extends StatelessWidget {
                       width: 20,
                       child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                     )
-                  : const Text('Yuborish', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  : const Text('Send', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             ),
           ),
           const SizedBox(width: 8),

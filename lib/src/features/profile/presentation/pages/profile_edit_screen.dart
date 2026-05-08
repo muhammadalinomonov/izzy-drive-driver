@@ -35,6 +35,15 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   }
 
   @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _newPasswordController.dispose();
+    _newConfirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColor.white,
@@ -47,7 +56,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         builder: (context, state) {
           return CommonButton(
             isLoading: state.updatePasswordStatus.isInProgress,
-            text: 'Saqlash',
+            text: 'Save',
             onTap: () {
               context.read<ProfileBloc>().add(
                 UpdatePasswordEvent(
@@ -57,7 +66,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                     //show pop up success message
                     ScaffoldMessenger.of(
                       context,
-                    ).showSnackBar(SnackBar(content: Text('Parol muvaffaqiyatli o’zgartirildi')));
+                    ).showSnackBar(SnackBar(content: Text('Password changed successfully')));
                     setState(() {
                       canEditPassword = false;
                     });
@@ -83,7 +92,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Mening ma’lumotlarim',
+                    'My information',
                     style: context.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w600, fontSize: 20),
                   ),
                   SizedBox(height: 24),
@@ -96,7 +105,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   SizedBox(height: 24),
                   AuthInputWidget(
                     hint: '',
-                    label: 'Ism',
+                    label: 'Name',
                     readOnly: true,
                     controller: TextEditingController(text: state.profile?.fullName),
                   ),
@@ -105,7 +114,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Parolni o’zgartirish',
+                        'Change password',
                         style: context.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w500, fontSize: 16),
                       ),
                       CupertinoSwitch(
@@ -127,8 +136,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       children: [
                         AuthInputWidget(
                           readOnly: !canEditPassword,
-                          hint: 'Parol kiriting',
-                          label: 'Eski parol',
+                          hint: 'Enter password',
+                          label: 'Old password',
                           isPassword: true,
                           controller: _passwordController,
                           validator: AppValidators.password,
@@ -137,8 +146,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                         SizedBox(height: 24),
                         AuthInputWidget(
                           readOnly: !canEditPassword,
-                          hint: 'Parol kiriting',
-                          label: 'Yangi parol',
+                          hint: 'Enter password',
+                          label: 'New password',
                           isPassword: true,
                           controller: _newPasswordController,
                           validator: AppValidators.password,
@@ -147,8 +156,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                         SizedBox(height: 24),
                         AuthInputWidget(
                           readOnly: !canEditPassword,
-                          hint: 'Parol kiriting',
-                          label: 'Yangi parol',
+                          hint: 'Enter password',
+                          label: 'Confirm new password',
                           isPassword: true,
                           controller: _newConfirmPasswordController,
                           validator: AppValidators.password,

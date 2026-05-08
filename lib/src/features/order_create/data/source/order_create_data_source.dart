@@ -45,7 +45,7 @@ class OrderCreateDataSource {
     } on DioException catch (e) {
       final data = e.response?.data;
       final msg = data is Map ? data['message']?.toString() : null;
-      return NetworkResponse(errorText: msg ?? e.message ?? 'Order yuborib bo\'lmadi');
+      return NetworkResponse(errorText: msg ?? e.message ?? 'Could not send order');
     } catch (e) {
       return NetworkResponse(errorText: e.toString());
     }

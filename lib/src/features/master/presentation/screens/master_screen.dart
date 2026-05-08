@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:taxi_app/src/features/master/data/model/master_model.dart';
@@ -30,9 +31,9 @@ class _MasterScreenState extends State<MasterScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
-          'Masters',
-          style: TextStyle(fontSize: 28, fontWeight: FontWeight.w600, color: Colors.black),
+        title: Text(
+          'Masters'.tr(),
+          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w600, color: Colors.black),
         ),
         // actions: [
         //   IconButton(
@@ -57,7 +58,7 @@ class _MasterScreenState extends State<MasterScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          state.currentAddress ?? 'No location found',
+                          state.currentAddress ?? 'No location found'.tr(),
                           style: const TextStyle(fontSize: 16, color: Colors.black),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -74,20 +75,51 @@ class _MasterScreenState extends State<MasterScreen> {
                   if (state.status == MasterStatus.loading) {
                     return const Center(child: CircularProgressIndicator.adaptive());
                   } else if (state.status == MasterStatus.success) {
-                    return GridView.builder(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                        mainAxisExtent: 280,
-                      ),
-                      itemCount: state.masters.length,
-                      itemBuilder: (context, index) {
-                        return _MasterCard(master: state.masters[index]);
+                    if (state.masters.isEmpty) {
+                      return RefreshIndicator.adaptive(
+                        onRefresh: () async {
+                          context.read<MasterBloc>().add(MasterFetch());
+                        },
+                        child: ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: const [
+                            SizedBox(height: 120),
+                            _MastersEmptyState(),
+                          ],
+                        ),
+                      );
+                    }
+                    return RefreshIndicator.adaptive(
+                      onRefresh: () async {
+                        context.read<MasterBloc>().add(MasterFetch());
                       },
+                      child: GridView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          mainAxisExtent: 280,
+                        ),
+                        itemCount: state.masters.length,
+                        itemBuilder: (context, index) {
+                          return _MasterCard(master: state.masters[index]);
+                        },
+                      ),
                     );
                   } else if (state.status == MasterStatus.failure) {
-                    return Center(child: Text(state.error ?? 'Something went wrong'));
+                    return RefreshIndicator.adaptive(
+                      onRefresh: () async {
+                        context.read<MasterBloc>().add(MasterFetch());
+                      },
+                      child: ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          const SizedBox(height: 80),
+                          _MastersErrorState(message: state.error),
+                        ],
+                      ),
+                    );
                   } else {
                     return const SizedBox.shrink();
                   }
@@ -149,7 +181,7 @@ class _MasterCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          const Text('Mechanic', style: TextStyle(fontSize: 16, color: Colors.grey)),
+          Text('Mechanic'.tr(), style: const TextStyle(fontSize: 16, color: Colors.grey)),
           const SizedBox(height: 4),
           Text(
             master.fullName ?? '',
@@ -181,10 +213,83 @@ class _MasterCard extends StatelessWidget {
                 side: const BorderSide(color: Color(0xFFBFC8D2), width: 1.5),
                 padding: const EdgeInsets.symmetric(vertical: 10),
               ),
-              child: const Text(
-                'More',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.black),
+              child: Text(
+                'More'.tr(),
+                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.black),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MastersEmptyState extends StatelessWidget {
+  const _MastersEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.engineering_outlined, size: 60, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          Text(
+            'No masters found'.tr(),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey[700]),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              'There are no masters available near you right now. Pull down to refresh.'.tr(),
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MastersErrorState extends StatelessWidget {
+  const _MastersErrorState({this.message});
+
+  final String? message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 60, color: Colors.red[300]),
+          const SizedBox(height: 16),
+          Text(
+            'An error occurred'.tr(),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey[700]),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              message?.isNotEmpty == true ? message! : 'Something went wrong. Pull down to try again.'.tr(),
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 24),
+          MaterialButton(
+            onPressed: () => context.read<MasterBloc>().add(MasterFetch()),
+            color: const Color(0xFF0866FF),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+            child: Text(
+              'Try again'.tr(),
+              style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
             ),
           ),
         ],

@@ -5,6 +5,7 @@ import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
+import 'package:taxi_app/src/features/common/presentation/widgets/common_image.dart';
 import 'package:taxi_app/src/features/home/presentation/widgets/comment_section_modal_sheet.dart';
 import 'package:taxi_app/src/features/choose_inivates/presentation/widgets/profile_order_model_sheet.dart';
 import 'package:taxi_app/src/routes/pages.dart';
@@ -23,7 +24,7 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
   int _selectedRating = 1;
   int? _pickRate;
 
-  final List<String> _ratingTitles = ["Yaxshi", "A'lo", "Yomon", "Izoh yozish"];
+  final List<String> _ratingTitles = ["Good", "Excellent", "Bad", "Write a comment"];
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +84,7 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                     ),
                                     const SizedBox(height: 20),
                                     Text(
-                                      'Muvaffaqiyatli yakunlandi!',
+                                      'Successfully completed!',
                                       style: context.textS.titleLarge?.copyWith(
                                         fontWeight: FontWeight.bold,
                                         color: Colors.black,
@@ -92,7 +93,7 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                     ),
                                     const SizedBox(height: 12),
                                     Text(
-                                      'Iltimos, ustani baholang, bu bizni yanada yaxshiroq bo’lishimizga yordam beradi!',
+                                      'Please rate the master — it helps us improve!',
                                       style: context.textS.bodyMedium?.copyWith(
                                         color: AppColor.grey,
                                       ),
@@ -115,7 +116,7 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                 child: Column(
                                   children: [
                                     Text(
-                                      'Baholang',
+                                      'Rate',
                                       style: context.textS.titleMedium?.copyWith(
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -187,7 +188,7 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                       TextField(
                                         maxLines: 5,
                                         decoration: InputDecoration(
-                                          hintText: 'Izohingizni kiriting...',
+                                          hintText: 'Enter your comment...',
                                           filled: true,
                                           fillColor: AppColor.lightBlue,
                                           border: OutlineInputBorder(
@@ -227,13 +228,13 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                     children: [
                                       TextSpan(
                                         text:
-                                            'Usta ishni boshladi, tahminiy ish vaqti',
+                                            'The master has started, estimated time',
                                         style: context.textS.titleLarge?.copyWith(
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                       TextSpan(
-                                        text: ' 40 daqiqa',
+                                        text: ' 40 minutes',
                                         style: context.textS.titleLarge?.copyWith(
                                           fontWeight: FontWeight.w600,
                                           color: AppColor.kPrimaryColor,
@@ -267,11 +268,9 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                       const SizedBox(height: 12.5),
                                       Row(
                                         children: [
-                                          CircleAvatar(
-                                            backgroundImage: NetworkImage(
-                                              worker.avatarUrl,
-                                            ),
-                                            radius: 24,
+                                          AvatarImage(
+                                            imageUrl: worker.avatarUrl,
+                                            size: 48,
                                           ),
                                           const SizedBox(width: 12),
                                           Column(
@@ -325,7 +324,7 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Buyurtma ma’lumotlari',
+                                        'Order details',
                                         style: context.textS.titleMedium
                                             ?.copyWith(
                                               fontWeight: FontWeight.bold,
@@ -333,7 +332,7 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
-                                        'Buyurtma berildi',
+                                        'Order placed',
                                         style: context.textS.bodySmall?.copyWith(
                                           color: AppColor.grey,
                                         ),
@@ -346,7 +345,7 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                       ),
                                       const SizedBox(height: 24),
                                       Text(
-                                        'Qayerga',
+                                        'Where to',
                                         style: context.textS.bodySmall?.copyWith(
                                           color: AppColor.grey,
                                         ),
@@ -371,7 +370,7 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Xizmatlar',
+                                        'Services',
                                         style: context.textS.bodyLarge?.copyWith(
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -380,7 +379,7 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                       Row(
                                         children: [
                                           Text(
-                                            'Balonni yamash',
+                                            'Tire patch',
                                             style: context.textS.bodyMedium
                                                 ?.copyWith(color: AppColor.grey),
                                           ),
@@ -399,7 +398,7 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                       Row(
                                         children: [
                                           Text(
-                                            'Kolodkani almashtirish',
+                                            'Brake pad replacement',
                                             style: context.textS.bodyMedium
                                                 ?.copyWith(color: AppColor.grey),
                                           ),
@@ -442,7 +441,7 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                               Row(
                                                 children: [
                                                   Text(
-                                                    'Benzonasosni almashtirish',
+                                                    'Fuel pump replacement',
                                                     style:
                                                         context.textS.bodyMedium,
                                                   ),
@@ -508,7 +507,7 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                         child: Row(
                                           children: [
                                             Text(
-                                              'Umumiy summa',
+                                              'Total amount',
                                               style: context.textS.titleSmall
                                                   ?.copyWith(
                                                     color: AppColor.darkBlue,

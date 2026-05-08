@@ -67,7 +67,7 @@ class _OutputsScreenState extends State<OutputsScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Qilingan rasxodlar',
+                                'Expenses',
                                 style: context.textTheme.headlineLarge!.copyWith(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w500,
@@ -86,7 +86,7 @@ class _OutputsScreenState extends State<OutputsScreen> {
                                     );
                                   },
                                   child: Text(
-                                    'Rasxod qo’shish',
+                                    'Add expense',
                                     style: context.textTheme.headlineLarge!.copyWith(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w600,
@@ -124,7 +124,7 @@ class _OutputsScreenState extends State<OutputsScreen> {
                             child: Row(
                               children: [
                                 Text(
-                                  'Umumiy rasxodlar',
+                                  'Total expenses',
                                   style: context.textTheme.headlineLarge!.copyWith(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w400,

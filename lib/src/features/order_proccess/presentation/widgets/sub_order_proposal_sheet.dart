@@ -57,7 +57,7 @@ class SubOrderProposalSheet extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            'Yangi qo\'shimcha ish taklifi',
+            'New extra work proposal',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -75,7 +75,7 @@ class SubOrderProposalSheet extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  subOrder.title ?? 'Qo\'shimcha ish',
+                  subOrder.title ?? 'Extra work',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
@@ -85,11 +85,11 @@ class SubOrderProposalSheet extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      'Narxi: ',
+                      'Price: ',
                       style: TextStyle(color: AppColor.grey, fontSize: 14),
                     ),
                     Text(
-                      '${subOrder.price ?? "—"} so\'m',
+                      '${subOrder.price ?? "—"} \$',
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
@@ -114,7 +114,7 @@ class SubOrderProposalSheet extends StatelessWidget {
                     ),
                   ),
                   child: const Text(
-                    'Rad etish',
+                    'Reject',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                   ),
                 ),
@@ -132,7 +132,7 @@ class SubOrderProposalSheet extends StatelessWidget {
                     ),
                   ),
                   child: const Text(
-                    'Qabul qilish',
+                    'Accept',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),

@@ -48,7 +48,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
         floatingActionButton: widget.fromHistory
             ? null
             : CommonButton(
-                text: 'Asosiyga qaytish',
+                text: 'Back to home',
                 margin: EdgeInsets.symmetric(horizontal: 12),
                 onTap: () {
                   Navigator.pop(context);
@@ -95,7 +95,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Buyurtma ma’lumotlari',
+                                'Order details',
                                 style: context.textTheme.bodyMedium!.copyWith(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -103,7 +103,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                               ),
                               SizedBox(height: 12),
                               Text(
-                                'Buyurtma berildi',
+                                'Order placed',
                                 style: context.textTheme.bodyMedium!.copyWith(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w400,
@@ -119,7 +119,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                               ),
                               Divider(height: 25, thickness: 1, color: AppColor.lightGrey),
                               Text(
-                                'Sarflangan vaqt',
+                                'Time spent',
                                 style: context.textTheme.bodyMedium!.copyWith(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w400,
@@ -139,7 +139,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                               ),
                               Divider(height: 25, thickness: 1, color: AppColor.lightGrey),
                               Text(
-                                'Qayerga',
+                                'Destination',
                                 style: context.textTheme.bodyMedium!.copyWith(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w400,
@@ -155,7 +155,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                               ),
                               Divider(height: 25, thickness: 1, color: AppColor.lightGrey),
                               Text(
-                                'To’lov turi',
+                                'Payment type',
                                 style: context.textTheme.bodyMedium!.copyWith(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w400,
@@ -163,7 +163,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                                 ),
                               ),
                               Text(
-                                'Naqt pul',
+                                'Cash',
                                 style: context.textTheme.bodyMedium!.copyWith(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,

@@ -1,4 +1,5 @@
 import 'package:card_swiper/card_swiper.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
@@ -60,9 +61,8 @@ class _HomeScreenState extends State<HomeScreen> {
       child: BlocProvider.value(
         value: historyBloc,
         child: Scaffold(
-          resizeToAvoidBottomInset: false,
           appBar: AppBar(
-            title: Text('Asosiy', style: context.textS.titleLarge?.copyWith(fontSize: 20)),
+            title: Text('Home'.tr(), style: context.textS.titleLarge?.copyWith(fontSize: 20)),
             centerTitle: false,
             // actions: [IconButton(onPressed: () {}, icon: SvgPicture.asset(AppIcons.bell))],
           ),
@@ -89,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 children: [
                                   SearchInputWidget(
                                     isReadOnly: true,
-                                    hint: 'Usta qayerga borsin ?',
+                                    hint: 'Where should the master come?'.tr(),
                                     textInputAction: TextInputAction.search,
                                     onTap: () {
                                       context.push(Pages.searchLocation);
@@ -135,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: ActiveOrderWidget(orderId: state.currentOrder.id, status: state.currentOrder.status),
                           );
                         } else {
-                          return Center(child: Text('Xatolik yuz berdi', style: context.textS.bodyLarge));
+                          return Center(child: Text('An error occurred'.tr(), style: context.textS.bodyLarge));
                         }
                       },
                     ),
@@ -257,7 +257,7 @@ class _RecentEmptyState extends StatelessWidget {
           SvgPicture.asset(AppIcons.pending),
           const SizedBox(width: 10),
           Expanded(
-            child: Text('Hali buyurtma tarixi yo\'q', style: context.textS.bodyMedium?.copyWith(color: AppColor.grey)),
+            child: Text('No order history yet'.tr(), style: context.textS.bodyMedium?.copyWith(color: AppColor.grey)),
           ),
         ],
       ),
@@ -311,30 +311,30 @@ class OtherOpportunitiesWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Boshqa imkoniyatlar',
+            'Other opportunities'.tr(),
             style: context.textS.titleLarge?.copyWith(fontSize: 22, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 12),
           Row(
             children: [
-              _OpportunityCard(icon: 'assets/images/food.png', label: 'Food', soon: true),
+              _OpportunityCard(icon: 'assets/images/food.png', label: 'Food'.tr(), soon: true),
               SizedBox(width: 8),
-              _OpportunityCard(icon: 'assets/images/deliver.png', label: 'Yetkazish', soon: true),
+              _OpportunityCard(icon: 'assets/images/deliver.png', label: 'Delivery'.tr(), soon: true),
               SizedBox(width: 8),
-              _OpportunityCard(icon: 'assets/images/grocery.png', label: 'Grocery', soon: true),
+              _OpportunityCard(icon: 'assets/images/grocery.png', label: 'Grocery'.tr(), soon: true),
             ],
           ),
           SizedBox(height: 8),
           Row(
             children: [
-              _OpportunityCard(icon: 'assets/images/activities.png', label: 'Activities', soon: true, isLarge: true),
+              _OpportunityCard(icon: 'assets/images/activities.png', label: 'Activities'.tr(), soon: true, isLarge: true),
               SizedBox(width: 8),
               Expanded(
                 child: Column(
                   children: [
-                    _GymCard(image: 'assets/images/gym.png', name: 'Gym 1.8 elite', distance: '1.8 km'),
+                    _GymCard(image: 'assets/images/gym.png', name: 'Gym 1.8 elite'.tr(), distance: '1.8 km'),
                     SizedBox(height: 8),
-                    _GymCard(image: 'assets/images/cardio.png', name: 'Cardio Elite', distance: '1.8 km'),
+                    _GymCard(image: 'assets/images/cardio.png', name: 'Cardio Elite'.tr(), distance: '1.8 km'),
                   ],
                 ),
               ),
@@ -383,7 +383,7 @@ class _OpportunityCard extends StatelessWidget {
                     color: Colors.blue[200],
                     borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomLeft: Radius.circular(12)),
                   ),
-                  child: Text('SOON', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                  child: Text('SOON'.tr(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                 ),
               ),
           ],

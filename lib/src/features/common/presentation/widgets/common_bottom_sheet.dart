@@ -73,7 +73,7 @@ class CommonBottomSheet extends StatelessWidget {
               onSave();
               Navigator.of(context).pop();
             },
-            text: buttonText ?? 'Saqlash',
+            text: buttonText ?? 'Save',
             margin: EdgeInsets.only(
               top: 24,
               left: 12,

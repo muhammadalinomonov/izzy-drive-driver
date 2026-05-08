@@ -15,17 +15,17 @@ class OrderActionsWidget extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Buyurtmani bekor qilish?'),
-        content: const Text('Buyurtmani bekor qilishni xohlaysizmi?'),
+        title: const Text('Cancel order?'),
+        content: const Text('Are you sure you want to cancel the order?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Yo\'q'),
+            child: const Text('No'),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Ha, bekor qil'),
+            child: const Text('Yes, cancel'),
           ),
         ],
       ),

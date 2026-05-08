@@ -10,7 +10,6 @@ import 'package:taxi_app/src/core/utils/extensions.dart';
 import 'package:taxi_app/src/features/auth/presentation/bloc/bloc/auth_bloc.dart';
 import 'package:taxi_app/src/features/profile/presentation/bloc/profile_bloc.dart';
 import 'package:taxi_app/src/features/profile/presentation/pages/outputs_screen.dart';
-import 'package:taxi_app/src/features/profile/presentation/widgets/choose_language_bottom_sheet.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -43,7 +42,7 @@ class _ProfilePageState extends State<ProfilePage> {
           if (state.deleteAccountStatus == AuthStatus.failure) {
             AppSnackBar.showError(
               context,
-              state.errorMessage ?? 'Akkauntni o\'chirib bo\'lmadi',
+              state.errorMessage ?? 'Could not delete account',
             );
           }
         },
@@ -235,7 +234,7 @@ class _ProfileMenu extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogCtx).pop(false),
-              child: const Text('Bekor qilish'),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () => Navigator.of(dialogCtx).pop(true),
@@ -254,9 +253,9 @@ class _ProfileMenu extends StatelessWidget {
   void _onLogout(BuildContext context) async {
     final ok = await _confirm(
       context,
-      title: 'Tizimdan chiqish',
-      message: 'Akkauntdan chiqishni xohlaysizmi?',
-      confirmText: 'Chiqish',
+      title: 'Log out',
+      message: 'Do you want to log out of your account?',
+      confirmText: 'Sign out',
     );
     if (!ok || !context.mounted) return;
     context.read<AuthBloc>().add(
@@ -273,10 +272,10 @@ class _ProfileMenu extends StatelessWidget {
   void _onDeleteAccount(BuildContext context) async {
     final ok = await _confirm(
       context,
-      title: 'Akkauntni o\'chirish',
+      title: 'Delete account',
       message:
-          'Akkauntni o\'chirish qaytarib bo\'lmaydi. Davom etishni xohlaysizmi?',
-      confirmText: 'O\'chirish',
+          'Deleting your account cannot be undone. Do you want to continue?',
+      confirmText: 'Delete',
       confirmColor: AppColor.red,
     );
     if (!ok || !context.mounted) return;
@@ -284,7 +283,7 @@ class _ProfileMenu extends StatelessWidget {
           DeleteAccountEvent(
             onSuccess: () {
               if (!context.mounted) return;
-              AppSnackBar.showSuccess(context, 'Akkaunt o\'chirildi');
+              AppSnackBar.showSuccess(context, 'Account deleted');
               context.go(Pages.signIn);
             },
             onError: () {},
@@ -298,37 +297,24 @@ class _ProfileMenu extends StatelessWidget {
       children: [
         _ProfileMenuItem(
           icon: Icons.person_outline,
-          title: 'Mening ma’lumotlarim',
+          title: 'My information',
           onTap: () {
             context.push(Pages.editProfile);
           },
         ),
         _ProfileMenuItem(
           icon: Icons.history,
-          title: 'Buyurtmalar tarixi',
+          title: 'Order history',
           onTap: () {
             context.push(Pages.ordersHistory);
           },
         ),
         _ProfileMenuItem(
             icon: Icons.star_border,
-            title: 'Ilovamizni baholang',
+            title: 'Rate our app',
             onTap: () {}),
         _ProfileMenuItem(
-          icon: Icons.language,
-          title: 'Til',
-          trailing: const Text('O’zbekcha',
-              style: TextStyle(color: Colors.grey)),
-          onTap: () {
-            showModalBottomSheet(
-              context: context,
-              backgroundColor: Colors.transparent,
-              builder: (context) => const ChooseLanguageBottomSheet(),
-            );
-          },
-        ),
-        _ProfileMenuItem(
-            icon: Icons.build_outlined, title: 'Usta bo’lish', onTap: () {}),
+            icon: Icons.build_outlined, title: 'Become a master', onTap: () {}),
         ValueListenableBuilder<bool>(
           valueListenable: FeatureFlags.webSocketEnabledNotifier,
           builder: (context, enabled, _) {
@@ -337,11 +323,11 @@ class _ProfileMenu extends StatelessWidget {
                 enabled ? Icons.cloud_done_outlined : Icons.cloud_off_outlined,
                 color: Colors.black87,
               ),
-              title: const Text('Real-time ulanish (WebSocket)'),
+              title: const Text('Real-time connection (WebSocket)'),
               subtitle: Text(
                 enabled
-                    ? 'Yangi takliflar va holat darhol keladi'
-                    : 'Faqat REST orqali — qo‘lda yangilang',
+                    ? 'New offers and status updates arrive instantly'
+                    : 'REST only — refresh manually',
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
               value: enabled,
@@ -356,7 +342,7 @@ class _ProfileMenu extends StatelessWidget {
           builder: (context, state) {
             return _ProfileMenuItem(
               icon: Icons.logout,
-              title: 'Tizimdan chiqish',
+              title: 'Log out',
               trailing: state.logoutStatus == AuthStatus.loading
                   ? const SizedBox(
                       width: 18,
@@ -375,7 +361,7 @@ class _ProfileMenu extends StatelessWidget {
               icon: Icons.delete_outline,
               iconColor: AppColor.red,
               titleColor: AppColor.red,
-              title: 'Akkauntni o\'chirish',
+              title: 'Delete account',
               trailing: state.deleteAccountStatus == AuthStatus.loading
                   ? const SizedBox(
                       width: 18,

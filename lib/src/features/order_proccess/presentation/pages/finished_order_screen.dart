@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
@@ -5,6 +6,7 @@ import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/utils/extensions.dart';
+import 'package:taxi_app/src/features/common/presentation/widgets/common_image.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bloc.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/order_info_card.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/qr_code_dialog.dart';
@@ -21,7 +23,7 @@ class _FinishedOrderScreenState extends State<FinishedOrderScreen> {
   TextEditingController commentController = TextEditingController();
   int selectedStar = 5;
 
-  final List<String> comments = ['Yaxshi', 'Alo', 'Yomon'];
+  final List<String> comments = ['Good'.tr(), 'Excellent'.tr(), 'Bad'.tr()];
   String? selectedComment = '';
 
   @override
@@ -30,6 +32,12 @@ class _FinishedOrderScreenState extends State<FinishedOrderScreen> {
 
     context.read<OrdersBloc>().add(ConnectToWebSocketEvent());
     selectedComment = comments[0];
+  }
+
+  @override
+  void dispose() {
+    commentController.dispose();
+    super.dispose();
   }
 
   @override
@@ -69,7 +77,7 @@ class _FinishedOrderScreenState extends State<FinishedOrderScreen> {
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(50), color: AppColor.blueMain),
             padding: EdgeInsets.symmetric(vertical: 13),
             child: Text(
-              'Yakunlash',
+              'Complete'.tr(),
               style: context.textTheme.bodyLarge!.copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -99,12 +107,12 @@ class _FinishedOrderScreenState extends State<FinishedOrderScreen> {
                         SvgPicture.asset(AppIcons.check, width: 50, height: 50),
                         SizedBox(height: 18),
                         Text(
-                          'Muvaffaqiyatli yakunlandi!',
+                          'Successfully completed!'.tr(),
                           style: context.textTheme.bodyMedium!.copyWith(fontSize: 20, fontWeight: FontWeight.w600),
                         ),
                         SizedBox(height: 12),
                         Text(
-                          'Iltimos, ustani baholang, bu bizni yanada yaxshiroq bo’lishimizga yordam beradi!',
+                          'Please rate the master, this helps us improve!'.tr(),
                           style: context.textTheme.bodySmall!.copyWith(
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
@@ -124,7 +132,7 @@ class _FinishedOrderScreenState extends State<FinishedOrderScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Baholang',
+                          'Rate'.tr(),
                           style: context.textTheme.bodyMedium!.copyWith(fontSize: 16, fontWeight: FontWeight.w600),
                         ),
                         SizedBox(height: 8),
@@ -204,7 +212,7 @@ class _FinishedOrderScreenState extends State<FinishedOrderScreen> {
                                     borderRadius: BorderRadius.circular(50),
                                   ),
                                   child: Text(
-                                    'Izoh qoldirish',
+                                    'Leave a comment'.tr(),
                                     style: context.textTheme.bodyLarge!.copyWith(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
@@ -223,7 +231,7 @@ class _FinishedOrderScreenState extends State<FinishedOrderScreen> {
                             controller: commentController,
                             onChanged: (value) {},
                             decoration: InputDecoration(
-                              hintText: 'Izoh qoldirish',
+                              hintText: 'Leave a comment'.tr(),
                               hintStyle: context.textTheme.bodyLarge!.copyWith(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w400,
@@ -251,13 +259,11 @@ class _FinishedOrderScreenState extends State<FinishedOrderScreen> {
                         SizedBox(height: 18),
                         Row(
                           children: [
-                            if (state.currentOrder.selectedMechanic.photo.isNotEmpty)
-                              Image.network(
-                                state.currentOrder.selectedMechanic.photo,
-                                width: 44,
-                                height: 44,
-                                errorBuilder: (context, error, stackTrace) => SizedBox(),
-                              ),
+                            AvatarImage(
+                              imageUrl: state.currentOrder.selectedMechanic.photo,
+                              size: 44,
+                            ),
+                            SizedBox(width: 8),
                             Text(
                               state.currentOrder.selectedMechanic.fullName,
                               style: Theme.of(
@@ -272,7 +278,7 @@ class _FinishedOrderScreenState extends State<FinishedOrderScreen> {
                                 color: AppColor.lightBlue,
                               ),
                               child: Text(
-                                'More',
+                                'More'.tr(),
                                 style: Theme.of(
                                   context,
                                 ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w500, fontSize: 13),

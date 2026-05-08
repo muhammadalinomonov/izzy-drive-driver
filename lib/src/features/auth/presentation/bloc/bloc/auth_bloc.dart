@@ -6,6 +6,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:taxi_app/src/core/localization/locale_keys.g.dart';
+import 'package:taxi_app/src/core/service_locater.dart';
+import 'package:taxi_app/src/core/services/websocket_service.dart';
 import 'package:taxi_app/src/core/utils/notifications.dart';
 import 'package:taxi_app/src/features/auth/data/model/auth_model.dart';
 import 'package:taxi_app/src/features/auth/domain/repo/auth_repo.dart';
@@ -32,6 +34,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(state.copyWith(logoutStatus: AuthStatus.loading, errorMessage: ''));
     final response = await authRepo.logout();
     // Always treat as success client-side: tokens are cleared either way.
+    serviceLocator<WebSocketService>().disconnect();
     event.onSuccess();
     emit(state.copyWith(
       logoutStatus: AuthStatus.success,
@@ -49,6 +52,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     ));
     final response = await authRepo.deleteAccount();
     if (response.errorText.isEmpty) {
+      serviceLocator<WebSocketService>().disconnect();
       event.onSuccess();
       emit(state.copyWith(deleteAccountStatus: AuthStatus.success));
     } else {

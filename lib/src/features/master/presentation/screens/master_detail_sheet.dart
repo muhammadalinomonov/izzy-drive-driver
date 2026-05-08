@@ -152,7 +152,7 @@ class _MasterDetailSheetState extends State<MasterDetailSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Izoh va baholar'.toUpperCase(),
+                          'Reviews and ratings'.toUpperCase(),
                           style: context.textTheme.bodyLarge!.copyWith(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,

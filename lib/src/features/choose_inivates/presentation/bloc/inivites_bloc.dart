@@ -1,9 +1,10 @@
-import 'dart:convert';
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
+import 'package:flutter/foundation.dart';
 import 'package:meta/meta.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:taxi_app/src/core/constants/feature_flags.dart';
-import 'package:taxi_app/src/core/network/token_service.dart';
+import 'package:taxi_app/src/core/service_locater.dart';
+import 'package:taxi_app/src/core/services/websocket_service.dart';
 
 import '../../data/model/active_order.dart';
 import '../../domain/active_order_repository.dart';
@@ -14,8 +15,8 @@ part 'inivites_state.dart';
 
 class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
   final ActiveOrderRepository activeOrderRepository;
-  WebSocketChannel? _channel;
-  bool _isConnected = false;
+  final WebSocketService _ws = serviceLocator<WebSocketService>();
+  StreamSubscription<Map<String, dynamic>>? _wsSub;
 
   InivitesBloc({required this.activeOrderRepository}) : super(InivitesInitial()) {
     on<FetchActiveOrderEvent>(_onFetchActiveOrder);
@@ -23,6 +24,7 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
     on<DisconnectFromWebSocketEvent>(_onDisconnectFromWebSocket);
     on<NewProposalReceivedEvent>(_onNewProposalReceived);
     on<UpdateOrderPriceEvent>(_onUpdateOrderPrice);
+    on<_WsMessageReceivedEvent>(_onWsMessage);
   }
 
   // Dastlabki takliflarni yuklash
@@ -34,10 +36,8 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
         final orderResponse = response.data as OrderResponse;
         emit(InivitesLoaded(orderResponse));
 
-        // Ma'lumotlar yuklangandan so'ng WebSocket'ga ulaning
-        if (!_isConnected) {
-          add(ConnectToWebSocketEvent());
-        }
+        // Subscribe to the shared WebSocket once data is ready.
+        add(ConnectToWebSocketEvent());
       } else {
         emit(InivitesError(response.errorText ?? 'Unknown error'));
       }
@@ -46,98 +46,30 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
     }
   }
 
-  // WebSocket'ga ulanish
-  void _onConnectWebSocket(ConnectToWebSocketEvent event, Emitter<InivitesState> emit) async {
-    if (!FeatureFlags.webSocketEnabled) {
-      print('WebSocket disabled by feature flag — skipping invites connect');
-      return;
-    }
-    try {
-      // Agar allaqachon ulangan bo'lsa, qaytaring
-      if (_isConnected && _channel != null) {
-        print('WebSocket already connected');
-        return;
-      }
-
-      // Avvalgi ulanishni yoping
-      await _channel?.sink.close();
-      _isConnected = false;
-
-      final wsId = StorageRepository.getInt('ws_id');
-      if (wsId == null) {
-        print('ws_id not found');
-        return;
-      }
-
-      _channel = WebSocketChannel.connect(
-        Uri.parse('wss://ws.quadrix.ai/ws?user_id=usta_client_$wsId&tab_id=1&browser_id=browser_1'),
-      );
-      _isConnected = true;
-      print('WebSocket Connected for Invites with usta_client=: $wsId');
-
-      // Alohida funksiya sifatida chaqiring
-      _startListening(emit);
-    } catch (e) {
-      print('WebSocket connection error: $e');
-      _isConnected = false;
-    }
+  // Subscribe to the shared WS service. The actual socket is owned by
+  // [WebSocketService] — we only attach a listener.
+  void _onConnectWebSocket(ConnectToWebSocketEvent event, Emitter<InivitesState> emit) {
+    _ws.connect();
+    _wsSub ??= _ws.stream.listen((data) => add(_WsMessageReceivedEvent(data)));
   }
 
-  // WebSocket'dan uzilish
-  void _onDisconnectFromWebSocket(DisconnectFromWebSocketEvent event, Emitter<InivitesState> emit) async {
-    try {
-      await _channel?.sink.close();
-      _channel = null;
-      _isConnected = false;
-      print('WebSocket Disconnected for Invites');
-    } catch (e) {
-      print('Error disconnecting WebSocket: $e');
-    }
+  void _onDisconnectFromWebSocket(DisconnectFromWebSocketEvent event, Emitter<InivitesState> emit) {
+    _wsSub?.cancel();
+    _wsSub = null;
+    // Do not call _ws.disconnect() — other blocs may still need the socket.
   }
 
-  // WebSocket xabarlarini tinglashni boshlash
-  void _startListening(Emitter<InivitesState> emit) {
-    if (_channel == null) return;
-
-    _channel!.stream.listen(
-      (message) {
-        _handleWebSocketMessage(message, emit);
-      },
-      onError: (error) {
-        print("WebSocket Error: $error");
-        _isConnected = false;
-      },
-      onDone: () {
-        print("WebSocket Connection Closed");
-        _isConnected = false;
-      },
-    );
-  }
-
-  // WebSocket xabarlarini qayta ishlash
-  void _handleWebSocketMessage(String message, Emitter<InivitesState> emit) {
-    try {
-      final json = jsonDecode(message) as Map<String, dynamic>;
-      print("WebSocket Message: $message");
-
-      final event = json['event'] as String?;
-      if (event == 'direct') {
-        final data = json['data'] as Map<String, dynamic>?;
-        if (data != null) {
-          // Backend uses both `event` and `event-status`/`event_status` for inner key.
-          final eventType = (data['event'] ?? data['event-status'] ?? data['event_status']) as String?;
-          if (eventType == 'new-proposal') {
-            print('New proposal received: ${data['mechanic_name']}');
-            final newProposal = _parseNewProposal(data);
-            add(NewProposalReceivedEvent(newProposal));
-          } else if (eventType == 'update-order-price') {
-            print('Order price updated via WS — refreshing active order');
-            add(FetchActiveOrderEvent());
-          }
-        }
-      }
-    } catch (e) {
-      print("Error parsing WebSocket message: $e");
+  void _onWsMessage(_WsMessageReceivedEvent event, Emitter<InivitesState> emit) {
+    final data = event.data;
+    // Backend may use either `event` or `event-status`/`event_status` for the inner key.
+    final eventType = (data['event'] ?? data['event-status'] ?? data['event_status']) as String?;
+    if (eventType == 'new-proposal') {
+      debugPrint('New proposal received: ${data['mechanic_name']}');
+      final newProposal = _parseNewProposal(data);
+      add(NewProposalReceivedEvent(newProposal));
+    } else if (eventType == 'update-order-price') {
+      debugPrint('Order price updated via WS — refreshing active order');
+      add(FetchActiveOrderEvent());
     }
   }
 
@@ -162,8 +94,6 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
   void _onNewProposalReceived(NewProposalReceivedEvent event, Emitter<InivitesState> emit) {
     final currentState = state;
     if (currentState is InivitesLoaded) {
-      print('Adding new proposal to list: ${event.newProposal.mechanicName}');
-
       // Mavjud takliflarga yangi taklifni qo'shish
       final updatedOffers = List<OrderData>.from(currentState.orderResponse.data);
 
@@ -172,11 +102,9 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
       if (existingIndex != -1) {
         // Mavjud taklifni yangilash
         updatedOffers[existingIndex] = event.newProposal;
-        print('Updated existing proposal');
       } else {
         // Yangi taklifni boshiga qo'shish (eng yangisi yuqorida bo'lishi uchun)
         updatedOffers.insert(0, event.newProposal);
-        print('Added new proposal to list. Total offers: ${updatedOffers.length}');
       }
 
       // Yangilangan ma'lumotlar bilan yangi OrderResponse yaratish
@@ -191,8 +119,6 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
       );
 
       emit(InivitesLoaded(updatedOrderResponse));
-    } else {
-      print('Current state is not InvitesLoaded, cannot add proposal');
     }
   }
 
@@ -208,11 +134,7 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
             order: order.order.copyWith(price: event.price, totalPrice: event.price),
           );
           emit(InivitesLoaded(newOrder));
-
-          // Ma'lumotlar yuklangandan so'ng WebSocket'ga ulaning
-          if (!_isConnected) {
-            add(ConnectToWebSocketEvent());
-          }
+          add(ConnectToWebSocketEvent());
         } else {
           emit(InivitesError(response.errorText ?? 'Unknown error'));
         }
@@ -223,10 +145,8 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
   }
 
   @override
-  Future<void> close() async {
-    await _channel?.sink.close();
-    _channel = null;
-    _isConnected = false;
+  Future<void> close() {
+    _wsSub?.cancel();
     return super.close();
   }
 }

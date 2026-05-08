@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:formz/formz.dart';
 import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
+import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/utils/extensions.dart';
 import 'package:taxi_app/src/core/utils/my_functions.dart';
 import 'package:taxi_app/src/features/common/presentation/widgets/paginator.dart';
@@ -46,7 +48,7 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Buyurtmalar tarixi',
+                    'Order history',
                     style: context.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w600, fontSize: 20),
                   ),
                   SizedBox(height: 24),
@@ -62,6 +64,7 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen> {
                       },
                       itemCount: state.ordersHistory.length,
                       separator: (context, index) => SizedBox(height: 8),
+                      emptyWidget: _OrdersHistoryEmptyState(),
                       itemBuilder: (context, index) {
                         final item = state.ordersHistory[index];
                         return GestureDetector(
@@ -82,6 +85,29 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen> {
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+class _OrdersHistoryEmptyState extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), color: AppColor.lightBlue),
+      child: Row(
+        children: [
+          SvgPicture.asset(AppIcons.pending),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'No order history yet',
+              style: context.textTheme.bodyMedium?.copyWith(color: AppColor.grey),
+            ),
+          ),
+        ],
       ),
     );
   }

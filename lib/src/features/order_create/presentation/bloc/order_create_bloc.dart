@@ -117,9 +117,9 @@ class OrderCreateBloc extends Bloc<OrderCreateEvent, OrderCreateState> {
     if (!state.canSubmit) {
       emit(state.copyWith(
         status: OrderCreateStatus.failure,
-        errorMessage: 'Iltimos, muammo va narxni kiriting',
+        errorMessage: 'Please enter the issue and price',
       ));
-      event.onError('Iltimos, muammo va narxni kiriting');
+      event.onError('Please enter the issue and price');
       return;
     }
     emit(state.copyWith(status: OrderCreateStatus.submitting, errorMessage: ''));
