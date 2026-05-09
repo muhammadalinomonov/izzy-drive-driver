@@ -68,9 +68,17 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           body: GestureDetector(
             onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 24),
-              child: Column(
+            child: RefreshIndicator.adaptive(
+              onRefresh: () async {
+                historyBloc.add(GetOrdersHistoryEvent());
+                context.read<OrdersBloc>().add(GetCurrentOrderEvent());
+                BlocProvider.of<HomeBloc>(context).add(GetBannersEvent());
+                await Future.delayed(const Duration(milliseconds: 400));
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 24),
+                child: Column(
                 children: [
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -146,6 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   BannerWidget(),
                 ],
               ),
+            ),
             ),
           ),
         ),

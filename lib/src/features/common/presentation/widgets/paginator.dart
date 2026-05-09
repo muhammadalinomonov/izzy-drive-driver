@@ -67,6 +67,7 @@ class Paginator extends StatelessWidget {
           onRefresh: onRefresh ?? () async {},
           child: ListView.separated(
             padding: padding,
+            physics: const AlwaysScrollableScrollPhysics(),
             itemBuilder: (context, index) {
               if (index == itemCount && hasMoreReach) {
                 onLoadMore.call();
