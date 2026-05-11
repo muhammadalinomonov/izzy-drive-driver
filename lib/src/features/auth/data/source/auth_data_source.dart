@@ -112,6 +112,7 @@ class AuthDataSource {
     required String verificationToken,
     required String password,
     required String fullName,
+    required String phoneNumber,
     required String fcmToken,
   }) async {
     try {
@@ -121,6 +122,7 @@ class AuthDataSource {
           'verification_token': verificationToken,
           'password': password,
           'full_name': fullName,
+          'phone_number': phoneNumber,
           'is_driver': true,
           'is_mechanic': false,
           'device_token': fcmToken,

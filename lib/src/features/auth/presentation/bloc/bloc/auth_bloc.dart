@@ -216,6 +216,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       email: event.email,
       fullName: event.fullName,
       password: event.password,
+      phoneNumber: event.phoneNumber,
       errorMessage: '',
       errorCode: null,
     ));
@@ -290,6 +291,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       verificationToken: verifyResponse.data!,
       password: state.password,
       fullName: state.fullName,
+      phoneNumber: state.phoneNumber,
       fcmToken: await PushNotifications.getToken(),
     );
     if (completeResponse.errorText.isEmpty) {
@@ -314,6 +316,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       email: '',
       fullName: '',
       password: '',
+      phoneNumber: '',
       expiresIn: 0,
       resendAfter: 0,
       errorMessage: '',

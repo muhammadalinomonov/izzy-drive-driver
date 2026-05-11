@@ -13,6 +13,7 @@ import 'package:taxi_app/src/features/auth/presentation/pages/forgot_password_em
 import 'package:taxi_app/src/features/auth/presentation/pages/reset_password_page.dart';
 import 'package:taxi_app/src/features/auth/presentation/pages/sign_in_page.dart';
 import 'package:taxi_app/src/features/auth/presentation/pages/sign_up_page.dart';
+import 'package:taxi_app/src/features/common/presentation/pages/splash_screen.dart';
 import 'package:taxi_app/src/features/choose_inivates/data/repo/active_order_repository_imp.dart';
 import 'package:taxi_app/src/features/choose_inivates/presentation/bloc/inivites_bloc.dart';
 import 'package:taxi_app/src/features/choose_inivates/presentation/bloc/proposal_bloc.dart';
@@ -58,16 +59,21 @@ class Routes {
   };
 
   static final GoRouter router = GoRouter(
-    initialLocation: StorageRepository.getString('token').isNotEmpty ? Pages.main : Pages.signIn,
+    initialLocation: Pages.splash,
     observers: [ChuckerFlutter.navigatorObserver],
     refreshListenable: AuthSession.tick,
     redirect: (context, state) {
+      if (state.matchedLocation == Pages.splash) return null;
       final loggedIn = AuthSession.isLoggedIn;
       final atAuth = _authRoutes.contains(state.matchedLocation);
       if (!loggedIn && !atAuth) return Pages.signIn;
       return null;
     },
     routes: [
+      GoRoute(
+        path: Pages.splash,
+        builder: (context, state) => const SplashScreen(),
+      ),
       GoRoute(
         path: Pages.signIn,
         builder: (context, state) {

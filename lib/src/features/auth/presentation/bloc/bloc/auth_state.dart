@@ -13,6 +13,7 @@ class AuthState extends Equatable {
   final String email;
   final String fullName;
   final String password;
+  final String phoneNumber;
   final int resendAfter;
   final int expiresIn;
   final String? errorMessage;
@@ -29,6 +30,7 @@ class AuthState extends Equatable {
     this.email = '',
     this.fullName = '',
     this.password = '',
+    this.phoneNumber = '',
     this.resendAfter = 0,
     this.expiresIn = 0,
     this.errorMessage,
@@ -48,6 +50,7 @@ class AuthState extends Equatable {
     String? email,
     String? fullName,
     String? password,
+    String? phoneNumber,
     int? resendAfter,
     int? expiresIn,
     String? errorMessage,
@@ -64,6 +67,7 @@ class AuthState extends Equatable {
       email: email ?? this.email,
       fullName: fullName ?? this.fullName,
       password: password ?? this.password,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
       resendAfter: resendAfter ?? this.resendAfter,
       expiresIn: expiresIn ?? this.expiresIn,
       errorMessage: errorMessage ?? this.errorMessage,
@@ -83,6 +87,7 @@ class AuthState extends Equatable {
         email,
         fullName,
         password,
+        phoneNumber,
         resendAfter,
         expiresIn,
         errorMessage,

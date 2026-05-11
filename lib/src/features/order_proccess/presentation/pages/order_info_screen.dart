@@ -3,7 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
+import 'package:taxi_app/src/core/location_service.dart';
 import 'package:taxi_app/src/features/common/presentation/widgets/common_image.dart';
+import 'package:taxi_app/src/features/master/data/repository/master_repository_impl.dart';
+import 'package:taxi_app/src/features/master/data/source/master_remote_data_source.dart';
+import 'package:taxi_app/src/features/master/presentation/bloc/master_bloc.dart';
+import 'package:taxi_app/src/features/master/presentation/screens/master_detail_sheet.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bloc.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/order_action_item.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/order_info_card.dart';
@@ -64,8 +69,21 @@ class _OrderInfoScreenState extends State<OrderInfoScreen> {
                   icon: AppIcons.call,
                   text: 'Call',
                   onTap: () async {
-                    if (await canLaunchUrlString('tel:${state.currentOrder.selectedMechanic.phoneNumber}')) {
-                      await launchUrlString('tel:${state.currentOrder.selectedMechanic.phoneNumber}');
+                    final phone = state.currentOrder.selectedMechanic.phoneNumber;
+                    if (phone.isEmpty) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Mechanic phone is not available')),
+                        );
+                      }
+                      return;
+                    }
+                    if (await canLaunchUrlString('tel:$phone')) {
+                      await launchUrlString('tel:$phone');
+                    } else if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Could not open dialer')),
+                      );
                     }
                   },
                 ),
@@ -141,14 +159,32 @@ class _OrderInfoScreenState extends State<OrderInfoScreen> {
                           ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w600, fontSize: 14),
                         ),
                         Spacer(),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(50), color: AppColor.lightBlue),
-                          child: Text(
-                            'More',
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w500, fontSize: 13),
+                        GestureDetector(
+                          onTap: () {
+                            final bloc = MasterBloc(
+                              MasterRepositoryImpl(MasterRemoteDataSource()),
+                              LocationService(),
+                            );
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              builder: (ctx) => BlocProvider.value(
+                                value: bloc,
+                                child: MasterDetailSheet(
+                                  id: state.currentOrder.selectedMechanic.id,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(50), color: AppColor.lightBlue),
+                            child: Text(
+                              'More',
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w500, fontSize: 13),
+                            ),
                           ),
                         ),
                       ],

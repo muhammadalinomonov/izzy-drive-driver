@@ -1,139 +1,156 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:taxi_app/src/core/constants/color/app_color.dart';
 
+/// History/preview map showing a static route between two points with markers.
+///
+/// - [fromPoint] : mechanic / start location (Mapbox Point with longitude/latitude)
+/// - [toPoint]   : order / destination
+/// - [routePoints]: optional polyline coordinates as [longitude, latitude] pairs.
+///   Empty list → only markers and the camera framing them.
 class OrderMapWidget extends StatefulWidget {
   const OrderMapWidget({
     super.key,
     required this.fromPoint,
     required this.toPoint,
     required this.routePoints,
+    this.bottomInset = 24,
+    this.maxZoom,
   });
 
   final Point fromPoint;
   final Point toPoint;
   final List<List<double>> routePoints;
+  final double bottomInset;
+  final double? maxZoom;
 
   @override
-  _OrderMapWidgetState createState() => _OrderMapWidgetState();
+  State<OrderMapWidget> createState() => _OrderMapWidgetState();
 }
 
 class _OrderMapWidgetState extends State<OrderMapWidget> {
-  MapboxMap? mapboxMap;
-  PointAnnotationManager? pointAnnotationManager;
-  PolylineAnnotationManager? polylineAnnotationManager;
+  MapboxMap? _mapboxMap;
+  PointAnnotationManager? _pointAnnotationManager;
+  PolylineAnnotationManager? _polylineAnnotationManager;
 
-  // Sizning koordinatalaringiz - bu yerga o'zgartiring
-  late Point pointA ; // Boshlanish nuqtasi
-  late Point pointB ; // Tugash nuqtasi
+  Uint8List? _fromMarker;
+  Uint8List? _toMarker;
 
-  // Route koordinatalari - sizning tayyor route koordinatalaringiz
-  late List<List<double>> routeCoordinates;
+  late final MbxEdgeInsets _padding = MbxEdgeInsets(
+    top: 60,
+    left: 40,
+    bottom: widget.bottomInset,
+    right: 40,
+  );
 
-  @override
-  void initState() {
-    super.initState();
+  void _onMapCreated(MapboxMap map) async {
+    _mapboxMap = map;
+    try {
+      _polylineAnnotationManager = await map.annotations.createPolylineAnnotationManager();
+      _pointAnnotationManager = await map.annotations.createPointAnnotationManager();
 
-    pointA = widget.fromPoint;
-    pointB = widget.toPoint;
-    routeCoordinates = widget.routePoints;
-  }
+      _fromMarker = (await rootBundle.load('assets/images/from_marker.png')).buffer.asUint8List();
+      _toMarker = (await rootBundle.load('assets/images/to_marker.png')).buffer.asUint8List();
 
-  void _onMapCreated(MapboxMap mapboxMap) async {
-    this.mapboxMap = mapboxMap;
-    await _initializeManagers();
-    await _drawRoute();
-    await _addMarkers();
-    _fitMapToRoute();
-  }
-
-  Future<void> _initializeManagers() async {
-    pointAnnotationManager = await mapboxMap!.annotations.createPointAnnotationManager();
-    polylineAnnotationManager = await mapboxMap!.annotations.createPolylineAnnotationManager();
+      await _drawRoute();
+      await _fitBounds();
+    } catch (e) {
+      debugPrint('OrderMapWidget: $e');
+    }
   }
 
   Future<void> _drawRoute() async {
-    final List<Position> routePositions = routeCoordinates.map((coord) => Position(coord[0], coord[1])).toList();
+    if (_polylineAnnotationManager == null || _pointAnnotationManager == null) return;
 
-    await polylineAnnotationManager!.create(
-      PolylineAnnotationOptions(
-        geometry: LineString(coordinates: routePositions),
-        lineColor: Colors.blue.value,
-        lineWidth: 4.0,
-      ),
-    );
-  }
+    if (widget.routePoints.length >= 2) {
+      final positions = widget.routePoints.map((p) => Position(p[0], p[1])).toList();
+      await _polylineAnnotationManager!.create(
+        PolylineAnnotationOptions(
+          geometry: LineString(coordinates: positions),
+          lineColor: 0xFF2563EB,
+          lineWidth: 4.0,
+        ),
+      );
+    }
 
-  Future<Uint8List> _loadAssetImage(String assetPath) async {
-    final ByteData data = await rootBundle.load(assetPath);
-    return data.buffer.asUint8List();
-  }
-
-  Future<void> _addMarkers() async {
-    // A markeri (qora doira, oq A harfi)
-    await pointAnnotationManager!.create(
+    await _pointAnnotationManager!.create(
       PointAnnotationOptions(
-        geometry: pointA,
-        image: await _loadAssetImage('assets/images/from_marker.png'),
-
-        // iconImage: await _createMarkerA(),
-        iconSize: 1.0,
+        geometry: widget.fromPoint,
+        image: _fromMarker,
+        iconSize: 0.4,
       ),
     );
-
-    // B markeri (ko'k doira, oq marker icon)
-    await pointAnnotationManager!.create(
+    await _pointAnnotationManager!.create(
       PointAnnotationOptions(
-        geometry: pointB,
-        image: await _loadAssetImage('assets/images/to_marker.png'),
-        iconSize: 1.0,
+        geometry: widget.toPoint,
+        image: _toMarker,
+        iconSize: 1.4,
       ),
     );
   }
 
-  void _fitMapToRoute() async{
-    // double minLat = routeCoordinates.map((e) => e[1]).reduce((a, b) => a < b ? a : b);
-    // double maxLat = routeCoordinates.map((e) => e[1]).reduce((a, b) => a > b ? a : b);
-    // double minLng = routeCoordinates.map((e) => e[0]).reduce((a, b) => a < b ? a : b);
-    // double maxLng = routeCoordinates.map((e) => e[0]).reduce((a, b) => a > b ? a : b);
-    //
-    // final centerLat = (minLat + maxLat) / 2;
-    // final centerLng = (minLng + maxLng) / 2;
+  Future<void> _fitBounds() async {
+    if (_mapboxMap == null) return;
+    final fromLng = widget.fromPoint.coordinates.lng.toDouble();
+    final fromLat = widget.fromPoint.coordinates.lat.toDouble();
+    final toLng = widget.toPoint.coordinates.lng.toDouble();
+    final toLat = widget.toPoint.coordinates.lat.toDouble();
 
-
-    final padding = EdgeInsets.all(50.0);
-
-    // Camera bounds o'rnatish
     final bounds = CoordinateBounds(
-      southwest: pointA,
-      northeast: pointB, infiniteBounds: false,
+      southwest: Point(coordinates: Position(min(fromLng, toLng), min(fromLat, toLat))),
+      northeast: Point(coordinates: Position(max(fromLng, toLng), max(fromLat, toLat))),
+      infiniteBounds: false,
     );
 
-    final cameraOptions =  CameraBoundsOptions(
-        bounds: bounds,
-        maxZoom: 14.0, // maksimal zoom
-        minZoom: 8.0,  // minimal zoom
-
+    final camera = await _mapboxMap!.cameraForCoordinateBounds(
+      bounds,
+      _padding,
+      null,
+      null,
+      widget.maxZoom,
+      null,
     );
-    mapboxMap?.setBounds(cameraOptions);
-    // mapboxMap?.setCamera(
-    //   CameraOptions(
-    //     center: Point(coordinates: Position(centerLng, centerLat)),
-    //     zoom: 4.0,
-    //     padding: MbxEdgeInsets(top: 50, left: 50, right: 50, bottom: 50),
-    //   ),
-    // );
+    await _mapboxMap!.setCamera(camera);
   }
 
   @override
   Widget build(BuildContext context) {
-    return MapWidget(
-      cameraOptions: CameraOptions(
-        center: Point(coordinates: Position(-90.0, 40.0)),
-        zoom: 3.0,
-      ),
-      styleUri: MapboxStyles.MAPBOX_STREETS,
-      onMapCreated: _onMapCreated,
+    return Stack(
+      children: [
+        MapWidget(
+          key: const ValueKey('orderHistoryMap'),
+          styleUri: MapboxStyles.MAPBOX_STREETS,
+          cameraOptions: CameraOptions(
+            center: widget.fromPoint,
+            zoom: 13.0,
+          ),
+          onMapCreated: _onMapCreated,
+        ),
+        // Top fade so the back-button stays readable
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 90,
+          child: IgnorePointer(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    AppColor.white.withValues(alpha: 0.7),
+                    AppColor.white.withValues(alpha: 0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -10,7 +10,13 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final HomeRepository _repository;
   HomeBloc(this._repository) : super(HomeState(status: HomeStatus.initial)) {
     on<GetBannersEvent>((event, emit) async {
-      emit(HomeState(status: HomeStatus.loading));
+      // Stale-while-revalidate: on silent refresh (pull-to-refresh) keep the
+      // existing banners visible while we re-fetch in the background so the
+      // carousel doesn't blink into a shimmer.
+      final hasData = state.banners.isNotEmpty;
+      if (!(event.silent && hasData)) {
+        emit(HomeState(status: HomeStatus.loading));
+      }
       await OrderProccessSource().getMe();
       final result = await _repository.getBanners();
       if (result.errorText.isEmpty) {

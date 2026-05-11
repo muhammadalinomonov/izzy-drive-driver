@@ -8,6 +8,7 @@ import 'package:taxi_app/src/features/common/presentation/widgets/common_button.
 import 'package:taxi_app/src/features/common/presentation/widgets/common_image.dart';
 import 'package:taxi_app/src/features/master/presentation/bloc/master_bloc.dart';
 import 'package:taxi_app/src/features/master/presentation/widgets/review_item.dart';
+import 'package:taxi_app/src/features/profile/presentation/widgets/map_widget.dart';
 
 class MasterDetailSheet extends StatefulWidget {
   const MasterDetailSheet({super.key, required this.id});
@@ -37,6 +38,9 @@ class _MasterDetailSheetState extends State<MasterDetailSheet> {
       ),
       child: BlocBuilder<MasterBloc, MasterState>(
         builder: (context, state) {
+          final map = state.masterDetail.map;
+          final hasMap = map.startPoint.lat != 0 || map.endPoint.lat != 0;
+
           return Column(
             children: [
               Container(
@@ -54,7 +58,7 @@ class _MasterDetailSheetState extends State<MasterDetailSheet> {
                       width: 50,
                       decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: AppColor.grey2),
                     ),
-                    SizedBox(height: 34),
+                    SizedBox(height: 22),
                     Container(
                       height: 87,
                       width: 87,
@@ -82,65 +86,66 @@ class _MasterDetailSheetState extends State<MasterDetailSheet> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'All orders',
-                              style: context.textTheme.bodyMedium!.copyWith(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w400,
-                                color: AppColor.darkGrey,
-                              ),
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              state.masterDetail.allOrdersCount.toString(),
-                              style: context.textTheme.bodyLarge!.copyWith(fontSize: 22, fontWeight: FontWeight.w500),
-                            ),
-                          ],
+                        _StatColumn(
+                          label: 'All orders',
+                          value: state.masterDetail.allOrdersCount.toString(),
                         ),
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Success',
-                              style: context.textTheme.bodyMedium!.copyWith(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w400,
-                                color: AppColor.darkGrey,
-                              ),
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              state.masterDetail.successOrdersCount.toString(),
-                              style: context.textTheme.bodyLarge!.copyWith(fontSize: 22, fontWeight: FontWeight.w500),
-                            ),
-                          ],
+                        _StatColumn(
+                          label: 'Success',
+                          value: state.masterDetail.successOrdersCount.toString(),
                         ),
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Rating',
-                              style: context.textTheme.bodyMedium!.copyWith(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w400,
-                                color: AppColor.darkGrey,
-                              ),
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              state.masterDetail.rating.toString(),
-                              style: context.textTheme.bodyLarge!.copyWith(fontSize: 22, fontWeight: FontWeight.w500),
-                            ),
-                          ],
+                        _StatColumn(
+                          label: 'Rating',
+                          value: state.masterDetail.rating?.toStringAsFixed(1) ?? '0.0',
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
+              if (hasMap)
+                Container(
+                  margin: const EdgeInsets.only(top: 8),
+                  height: 200,
+                  width: context.sizeOf.width,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: OrderMapWidget(
+                      fromPoint: map.startPoint.toPoint(),
+                      toPoint: map.endPoint.toPoint(),
+                      routePoints: map.route.map((e) => [e.lng, e.lat]).toList(),
+                      bottomInset: 24,
+                      maxZoom: 13.5,
+                    ),
+                  ),
+                ),
+              if (hasMap)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Row(
+                    children: [
+                      Icon(Icons.directions, size: 18, color: AppColor.grey),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${map.distanceKm.toStringAsFixed(1)} km',
+                        style: context.textTheme.bodyMedium!.copyWith(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Icon(Icons.schedule, size: 18, color: AppColor.grey),
+                      const SizedBox(width: 6),
+                      Text(
+                        '~${map.durationMin.ceil()} min',
+                        style: context.textTheme.bodyMedium!.copyWith(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               if (state.masterReviewStatus.isSuccess && state.masterReviews.isNotEmpty)
                 Expanded(
                   child: Container(
@@ -195,6 +200,34 @@ class _MasterDetailSheetState extends State<MasterDetailSheet> {
           );
         },
       ),
+    );
+  }
+}
+
+class _StatColumn extends StatelessWidget {
+  const _StatColumn({required this.label, required this.value});
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: context.textTheme.bodyMedium!.copyWith(
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            color: AppColor.darkGrey,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: context.textTheme.bodyLarge!.copyWith(fontSize: 22, fontWeight: FontWeight.w500),
+        ),
+      ],
     );
   }
 }

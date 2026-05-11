@@ -1,11 +1,9 @@
 // File: profile_order_model_sheet.dart
 // ! Responsive Order Detail Bottom Sheet
-import 'dart:io';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
-import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/choose_inivates/presentation/bloc/inivites_bloc.dart';
 import 'package:taxi_app/src/features/common/presentation/widgets/common_image.dart';
@@ -129,10 +127,10 @@ void showOrderDetailBottomSheet(
                             borderRadius: BorderRadius.circular(16),
                             color: AppColor.white,
                           ),
-                          child: const Column(
+                          child: Column(
                             children: [
-                              _SectionTitle('PAYMENT INFORMATION'),
-                              _PaymentOptionsSection(),
+                              const _SectionTitle('PAYMENT INFORMATION'),
+                              _CashPaymentRow(),
                             ],
                           ),
                         ),
@@ -338,77 +336,23 @@ class _OrderInfoSection extends StatelessWidget {
   }
 }
 
-class _PaymentOptionsSection extends StatefulWidget {
-  const _PaymentOptionsSection();
-
-  @override
-  State<_PaymentOptionsSection> createState() => _PaymentOptionsSectionState();
-}
-
-class _PaymentOptionsSectionState extends State<_PaymentOptionsSection> {
-  bool isApple = Platform.isIOS;
-
+class _CashPaymentRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _PaymentOptionTile(
-          icon: AppIcons.apple,
-          label: 'Apple Pay',
-          selected: isApple,
-          onTap: () => setState(() => isApple = true),
-        ),
-        Divider(
-          endIndent: 10,
-          indent: 10,
-          color: AppColor.lightGrey,
-          height: 0.1,
-        ),
-        _PaymentOptionTile(
-          icon: AppIcons.google,
-          label: 'Google Pay',
-          selected: !isApple,
-          onTap: () => setState(() => isApple = false),
-        ),
-      ],
-    );
-  }
-}
-
-class _PaymentOptionTile extends StatelessWidget {
-  final String icon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _PaymentOptionTile({
-    required this.icon,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return StatefulBuilder(
-      builder: (context, setState) {
-        return ListTile(
-          leading: SvgPicture.asset(icon),
-          title: Text(label),
-          trailing: Transform.scale(
-            scale: 1.3,
-            child: Checkbox(
-              side: const BorderSide(width: 0.5),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              value: selected,
-              onChanged: (bool? value) {},
-            ),
+    return ListTile(
+      leading: Icon(Icons.payments_outlined, color: AppColor.kPrimaryColor),
+      title: Text('Cash'.tr()),
+      trailing: Transform.scale(
+        scale: 1.3,
+        child: Checkbox(
+          side: const BorderSide(width: 0.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-          onTap: onTap,
-        );
-      },
+          value: true,
+          onChanged: (bool? value) {},
+        ),
+      ),
     );
   }
 }

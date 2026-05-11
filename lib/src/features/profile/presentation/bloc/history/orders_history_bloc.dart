@@ -21,7 +21,13 @@ class OrdersHistoryBloc extends Bloc<OrdersHistoryEvent, OrdersHistoryState> {
   }
 
   Future<void> _onGetOrdersHistoryEvent(GetOrdersHistoryEvent event, Emitter<OrdersHistoryState> emit) async {
-    emit(state.copyWith(ordersHistoryStatus: FormzSubmissionStatus.inProgress));
+    // Stale-while-revalidate: keep the existing list visible on silent refresh
+    // (pull-to-refresh has its own spinner UI) instead of swapping in the
+    // central CircularProgressIndicator over the whole screen.
+    final hasData = state.ordersHistory.isNotEmpty;
+    if (!(event.silent && hasData)) {
+      emit(state.copyWith(ordersHistoryStatus: FormzSubmissionStatus.inProgress));
+    }
 
     final result = await _profileRepository.getOrdersHistory();
 

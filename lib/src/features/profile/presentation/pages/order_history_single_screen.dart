@@ -16,7 +16,6 @@ import 'package:taxi_app/src/features/master/presentation/screens/master_detail_
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/sub_orders_card.dart';
 import 'package:taxi_app/src/features/profile/presentation/bloc/history/orders_history_bloc.dart';
 import 'package:taxi_app/src/features/profile/presentation/widgets/map_widget.dart';
-import 'package:taxi_app/src/features/profile/presentation/widgets/order_information_widget.dart';
 
 class OrderHistorySingleScreen extends StatefulWidget {
   const OrderHistorySingleScreen({super.key, required this.orderId, this.fromHistory = true});
@@ -64,7 +63,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                     child: OrderMapWidget(
                       fromPoint: state.orderHistoryDetail.map.startPoint.toPoint(),
                       toPoint: state.orderHistoryDetail.map.endPoint.toPoint(),
-                      routePoints: state.orderHistoryDetail.map.route.map((e) => [e.lat, e.lng]).toList(),
+                      routePoints: state.orderHistoryDetail.map.route.map((e) => [e.lng, e.lat]).toList(),
                     ),
                   );
                 }

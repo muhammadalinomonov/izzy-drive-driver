@@ -144,7 +144,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
   }
 
   void _onGetCurrentOrder(GetCurrentOrderEvent event, Emitter<OrdersState> emit) async {
-    emit(state.copyWith(currentOrderStatus: FormzSubmissionStatus.inProgress));
+    // Stale-while-revalidate: on silent refreshes (lifecycle resume, WS reconnect)
+    // we already have order data on screen, so skip the `inProgress` flash and
+    // just swap in fresh data when it arrives.
+    final hasData = state.currentOrder.id != -1;
+    if (!(event.silent && hasData)) {
+      emit(state.copyWith(currentOrderStatus: FormzSubmissionStatus.inProgress));
+    }
     final response = await orderRepository.getCurrentOrder();
     if (response.errorText.isEmpty) {
       emit(state.copyWith(

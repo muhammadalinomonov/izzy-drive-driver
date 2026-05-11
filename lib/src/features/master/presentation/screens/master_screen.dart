@@ -1,14 +1,15 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:taxi_app/src/core/constants/color/app_color.dart';
+import 'package:taxi_app/src/core/constants/color/app_icons.dart';
+import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
+import 'package:taxi_app/src/features/common/presentation/widgets/common_image.dart';
 import 'package:taxi_app/src/features/master/data/model/master_model.dart';
 import 'package:taxi_app/src/features/master/presentation/bloc/master_bloc.dart';
 import 'package:taxi_app/src/features/master/presentation/screens/master_detail_sheet.dart';
-
-// ! Master get qilish uchun api -> drivers/masters-view/?driver_lat=40.391284&driver_long=71.793271
-// ! More tugmani bosa detailed ob keladi drivers/mechanic-view/?mechanic_id=5&driver_lat=40.391284&driver_long=71.793271
-
-// ! {{url}}/api/v1/drivers/masters-view/?driver_lat=40.391284&driver_long=71.793271&page_size=5
 
 class MasterScreen extends StatefulWidget {
   const MasterScreen({super.key});
@@ -21,59 +22,52 @@ class _MasterScreenState extends State<MasterScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    BlocProvider.of<MasterBloc>(context).add(MasterFetch());
+    // `didChangeDependencies` can fire multiple times (locale/theme changes,
+    // bottom-tab re-activation); we want a silent refresh on those re-fires.
+    // The first invocation has no master data yet, so the bloc still emits
+    // `loading` to render the initial shimmer.
+    BlocProvider.of<MasterBloc>(context).add(MasterFetch(silent: true));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FB),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         title: Text(
           'Masters'.tr(),
-          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w600, color: Colors.black),
+          style: context.textS.titleLarge?.copyWith(fontSize: 20, fontWeight: FontWeight.w500),
         ),
-        // actions: [
-        //   IconButton(
-        //     icon: const Icon(Icons.notifications_none, color: Colors.black),
-        //     onPressed: () {},
-        //   ),
-        // ],
+        centerTitle: false,
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: SvgPicture.asset(AppIcons.bell, width: 24, height: 24),
+          ),
+          const SizedBox(width: 4),
+        ],
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             BlocBuilder<MasterBloc, MasterState>(
-              builder: (context, state) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(color: const Color(0xFFEFF2F5), borderRadius: BorderRadius.circular(24)),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.location_on, size: 20, color: Colors.black),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          state.currentAddress ?? 'No location found'.tr(),
-                          style: const TextStyle(fontSize: 16, color: Colors.black),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+              buildWhen: (p, c) => p.currentAddress != c.currentAddress,
+              builder: (context, state) => _AddressPill(
+                address: state.currentAddress ?? 'No location found'.tr(),
+              ),
             ),
             const SizedBox(height: 16),
             Expanded(
               child: BlocBuilder<MasterBloc, MasterState>(
                 builder: (context, state) {
                   if (state.status == MasterStatus.loading) {
-                    return const Center(child: CircularProgressIndicator.adaptive());
+                    return const _MastersGridSkeleton();
                   } else if (state.status == MasterStatus.success) {
                     if (state.masters.isEmpty) {
                       return RefreshIndicator.adaptive(
@@ -91,15 +85,18 @@ class _MasterScreenState extends State<MasterScreen> {
                     }
                     return RefreshIndicator.adaptive(
                       onRefresh: () async {
-                        context.read<MasterBloc>().add(MasterFetch());
+                        // Pull-to-refresh: keep the existing grid visible while
+                        // the user sees the platform refresh spinner.
+                        context.read<MasterBloc>().add(MasterFetch(silent: true));
                       },
                       child: GridView.builder(
                         physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 16),
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          mainAxisExtent: 280,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          mainAxisExtent: 190,
                         ),
                         itemCount: state.masters.length,
                         itemBuilder: (context, index) {
@@ -110,7 +107,9 @@ class _MasterScreenState extends State<MasterScreen> {
                   } else if (state.status == MasterStatus.failure) {
                     return RefreshIndicator.adaptive(
                       onRefresh: () async {
-                        context.read<MasterBloc>().add(MasterFetch());
+                        // Pull-to-refresh: keep the existing grid visible while
+                        // the user sees the platform refresh spinner.
+                        context.read<MasterBloc>().add(MasterFetch(silent: true));
                       },
                       child: ListView(
                         physics: const AlwaysScrollableScrollPhysics(),
@@ -133,93 +132,186 @@ class _MasterScreenState extends State<MasterScreen> {
   }
 }
 
-class _MasterCard extends StatelessWidget {
-  final MasterModel master;
-
-  const _MasterCard({required this.master});
+class _AddressPill extends StatelessWidget {
+  const _AddressPill({required this.address});
+  final String address;
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
+      height: 28,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      alignment: Alignment.centerLeft,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2))],
+        color: AppColor.lightBlue,
+        borderRadius: BorderRadius.circular(50),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
+      child: Row(
         children: [
-          Stack(
-            alignment: Alignment.topCenter,
-            children: [
-              const CircleAvatar(
-                radius: 32,
-                backgroundImage: AssetImage('assets/images/activities.png'), // Placeholder
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 4, offset: const Offset(0, 2)),
-                    ],
-                  ),
-                  child: Row(
-                    children: const [
-                      Icon(Icons.star, color: Colors.amber, size: 16),
-                      SizedBox(width: 2),
-                      Text('4', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+          SvgPicture.asset(AppIcons.location, width: 16, height: 16),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              address,
+              style: const TextStyle(fontSize: 12, color: Colors.black, fontWeight: FontWeight.w500),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-          const SizedBox(height: 8),
-          Text('Mechanic'.tr(), style: const TextStyle(fontSize: 16, color: Colors.grey)),
-          const SizedBox(height: 4),
+        ],
+      ),
+    );
+  }
+}
+
+class _MasterCard extends StatelessWidget {
+  final MasterModel master;
+  const _MasterCard({required this.master});
+
+  @override
+  Widget build(BuildContext context) {
+    final ratingValue = master.rating;
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColor.lightBlue,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      child: Column(
+        children: [
+          SizedBox(
+            width: 60,
+            height: 47,
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.topCenter,
+              children: [
+                AvatarImage(
+                  imageUrl: master.photo ?? '',
+                  size: 44,
+                ),
+                if (ratingValue != null)
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      width: 28,
+                      height: 14,
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(50),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.12),
+                            blurRadius: 12,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SvgPicture.asset(AppIcons.star, width: 9, height: 9),
+                          const SizedBox(width: 2),
+                          Text(
+                            ratingValue.toStringAsFixed(0),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Mechanic'.tr(),
+            style: TextStyle(fontSize: 12, color: AppColor.grey),
+          ),
+          const SizedBox(height: 6),
           Text(
             master.fullName ?? '',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black),
             textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 4),
-          Text(master.fullName ?? '', style: const TextStyle(fontSize: 15, color: Colors.grey)),
+          const SizedBox(height: 6),
+          Text(
+            master.experience != null
+                ? '${master.experience} ${"years experience".tr()}'
+                : '',
+            style: TextStyle(fontSize: 12, color: AppColor.grey),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           const Spacer(),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: () {
-                final bloc = context.read<MasterBloc>();
-                showModalBottomSheet(
-                  context: context,
-                  backgroundColor: Colors.transparent,
-                  isScrollControlled: true,
-                  builder: (context) {
-                    return BlocProvider.value(
-                      value: bloc,
-                      child: MasterDetailSheet(id: master.id ?? 0),
-                    );
-                  },
-                );
-              },
-              style: OutlinedButton.styleFrom(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                side: const BorderSide(color: Color(0xFFBFC8D2), width: 1.5),
-                padding: const EdgeInsets.symmetric(vertical: 10),
+          GestureDetector(
+            onTap: () {
+              final bloc = context.read<MasterBloc>();
+              showModalBottomSheet(
+                context: context,
+                backgroundColor: Colors.transparent,
+                isScrollControlled: true,
+                builder: (ctx) {
+                  return BlocProvider.value(
+                    value: bloc,
+                    child: MasterDetailSheet(id: master.id ?? 0),
+                  );
+                },
+              );
+            },
+            child: Container(
+              width: double.infinity,
+              height: 36,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(50),
               ),
               child: Text(
                 'More'.tr(),
-                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Colors.black),
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _MastersGridSkeleton extends StatelessWidget {
+  const _MastersGridSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: const Color(0xFFEFF3F6),
+      highlightColor: const Color(0xFFF7F9FB),
+      period: const Duration(milliseconds: 1400),
+      child: GridView.builder(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(bottom: 16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          mainAxisExtent: 190,
+        ),
+        itemCount: 6,
+        itemBuilder: (_, __) => Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFEFF3F6),
+            borderRadius: BorderRadius.circular(24),
+          ),
+        ),
       ),
     );
   }
@@ -234,18 +326,18 @@ class _MastersEmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.engineering_outlined, size: 60, color: Colors.grey[400]),
+          Icon(Icons.engineering_outlined, size: 60, color: AppColor.grey),
           const SizedBox(height: 16),
           Text(
             'No masters found'.tr(),
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey[700]),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black),
           ),
           const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Text(
               'There are no masters available near you right now. Pull down to refresh.'.tr(),
-              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              style: TextStyle(color: AppColor.grey, fontSize: 14),
               textAlign: TextAlign.center,
             ),
           ),
@@ -257,7 +349,6 @@ class _MastersEmptyState extends StatelessWidget {
 
 class _MastersErrorState extends StatelessWidget {
   const _MastersErrorState({this.message});
-
   final String? message;
 
   @override
@@ -270,21 +361,21 @@ class _MastersErrorState extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'An error occurred'.tr(),
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey[700]),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black),
           ),
           const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Text(
               message?.isNotEmpty == true ? message! : 'Something went wrong. Pull down to try again.'.tr(),
-              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              style: TextStyle(color: AppColor.grey, fontSize: 14),
               textAlign: TextAlign.center,
             ),
           ),
           const SizedBox(height: 24),
           MaterialButton(
             onPressed: () => context.read<MasterBloc>().add(MasterFetch()),
-            color: const Color(0xFF0866FF),
+            color: AppColor.blueMain,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
             child: Text(

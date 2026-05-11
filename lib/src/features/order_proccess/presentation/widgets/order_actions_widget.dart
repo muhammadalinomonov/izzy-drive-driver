@@ -48,9 +48,20 @@ class OrderActionsWidget extends StatelessWidget {
               text: 'Call',
               onTap: () async {
                 final phone = state.currentOrder.selectedMechanic.phoneNumber;
-                if (phone.isEmpty) return;
+                if (phone.isEmpty) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Mechanic phone is not available')),
+                    );
+                  }
+                  return;
+                }
                 if (await canLaunchUrlString('tel:$phone')) {
                   await launchUrlString('tel:$phone');
+                } else if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Could not open dialer')),
+                  );
                 }
               },
             ),

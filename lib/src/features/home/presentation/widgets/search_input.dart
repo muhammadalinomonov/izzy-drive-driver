@@ -87,14 +87,14 @@ class _SearchInputWidgetState extends State<SearchInputWidget> with SingleTicker
         fillColor: AppColor.lightBlue,
         filled: true,
         labelStyle: TextStyle(color: AppColor.grey),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(50), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(50), borderSide: BorderSide.none),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(50),
           borderSide: BorderSide(color: AppColor.red),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(50),
           borderSide: BorderSide(color: AppColor.kPrimaryColor),
         ),
         suffixIcon: widget.isPassword

@@ -95,278 +95,284 @@ class _InvatesScreenState extends State<InvatesScreen> with WidgetsBindingObserv
             final orderResponse = state.orderResponse;
             final order = orderResponse.order;
             final offers = orderResponse.data;
-            return SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: AppColor.white,
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(20),
-                        bottomRight: Radius.circular(20),
+            return RefreshIndicator.adaptive(
+              onRefresh: () async {
+                _onRefresh.call();
+              },
+              child: SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: AppColor.white,
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(20),
+                          bottomRight: Radius.circular(20),
+                        ),
                       ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 10),
-                        Text(
-                          _formatTimeAgo(order.createdAt),
-                          style: const TextStyle(
-                            color: Color(0xFF43484B),
-                            fontSize: 13,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                            letterSpacing: -0.30,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          order.orderTitle,
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 23,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: -0.30,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            SvgPicture.asset(width: 20, height: 20, AppIcons.location),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 25.0),
-                                child: Text(
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  order.currentAddress.address,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    color: Color(0xFF6B7073),
-                                    fontSize: 15,
-                                    fontFamily: 'Inter',
-                                    fontWeight: FontWeight.w500,
-                                    letterSpacing: -0.30,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 8.5),
-                          decoration: ShapeDecoration(
-                            shape: RoundedRectangleBorder(
-                              side: const BorderSide(width: 1, color: Color(0xFFE2E7EB)),
-                              borderRadius: BorderRadius.circular(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 10),
+                          Text(
+                            _formatTimeAgo(order.createdAt),
+                            style: const TextStyle(
+                              color: Color(0xFF43484B),
+                              fontSize: 13,
+                              fontFamily: 'Inter',
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: -0.30,
                             ),
                           ),
-                          child: Row(
+                          const SizedBox(height: 6),
+                          Text(
+                            order.orderTitle,
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 23,
+                              fontFamily: 'Inter',
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: -0.30,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
                             children: [
-                              const SizedBox(width: 12),
-                              Text(
-                                'Offer amount'.tr(),
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 15,
-                                  fontFamily: 'Inter',
-                                  fontWeight: FontWeight.w500,
-                                  height: 1.20,
-                                  letterSpacing: -0.30,
-                                ),
-                              ),
-                              const Spacer(),
-                              Container(
-                                padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 13),
-                                decoration: ShapeDecoration(
-                                  color: const Color(0xFFEFF2F5),
-                                  shape: RoundedRectangleBorder(
-                                    side: const BorderSide(width: 1, color: Color(0xFFE2E7EB)),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                                child: Center(
+                              SvgPicture.asset(width: 20, height: 20, AppIcons.location),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 25.0),
                                   child: Text(
-                                    '\$${order.totalPrice.toStringAsFixed(0)}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    order.currentAddress.address,
+                                    textAlign: TextAlign.center,
                                     style: const TextStyle(
-                                      color: Colors.black,
+                                      color: Color(0xFF6B7073),
                                       fontSize: 15,
                                       fontFamily: 'Inter',
                                       fontWeight: FontWeight.w500,
-                                      height: 1.40,
                                       letterSpacing: -0.30,
                                     ),
                                   ),
                                 ),
                               ),
-                              if (offers.isEmpty) ...[
-                                const SizedBox(width: 10),
-                                CommonScaleAnimation(
-                                  onTap: () {
-                                    if (order.price > 1) {
-                                      context.read<InivitesBloc>().add(UpdateOrderPriceEvent(price: order.price - 1));
-                                    }
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.all(3),
-                                    width: 35,
-                                    height: 35,
-                                    decoration: ShapeDecoration(
-                                      color: const Color(0x19FB0000),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                    ),
-                                    child: SvgPicture.asset(AppIcons.down),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                CommonScaleAnimation(
-                                  onTap: () {
-                                    context.read<InivitesBloc>().add(UpdateOrderPriceEvent(price: order.price + 1));
-                                  },
-                                  child: Container(
-                                    width: 38,
-                                    padding: const EdgeInsets.all(3),
-                                    height: 38,
-                                    decoration: ShapeDecoration(
-                                      color: const Color(0x1904A516),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                    ),
-                                    child: SvgPicture.asset(AppIcons.up),
-                                  ),
-                                ),
-                              ],
-                              const SizedBox(width: 12),
                             ],
                           ),
-                        ),
-                        const SizedBox(height: 15),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    decoration: BoxDecoration(
-                      color: AppColor.white,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(20),
-                        topRight: Radius.circular(20),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 18),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '${'Offers'.tr()}: ${offers.length}',
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontSize: 18,
-                                fontFamily: 'Inter',
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: -0.30,
-                              ),
-                            ),
-                            // Real-time indicator
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.green[100],
+                          const SizedBox(height: 20),
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8.5),
+                            decoration: ShapeDecoration(
+                              shape: RoundedRectangleBorder(
+                                side: const BorderSide(width: 1, color: Color(0xFFE2E7EB)),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'Real-time'.tr(),
-                                    style: const TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.w500),
-                                  ),
-                                ],
-                              ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 15),
-                        offers.isEmpty
-                            ? Center(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 50),
-                                  child: Column(
-                                    children: [
-                                      Icon(Icons.hourglass_empty, size: 50, color: Colors.grey[400]),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        'Waiting for offers...'.tr(),
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        'Mechanics are reviewing your order'.tr(),
-                                        style: TextStyle(color: Colors.grey[500], fontSize: 14),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ],
+                            child: Row(
+                              children: [
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Offer amount'.tr(),
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 15,
+                                    fontFamily: 'Inter',
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.20,
+                                    letterSpacing: -0.30,
                                   ),
                                 ),
-                              )
-                            : ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: offers.length,
-                                itemBuilder: (context, index) {
-                                  final offer = offers[index];
-                                  final percentageChange = offer.changePercent;
-                                  final balanceColor = _getBalanceColors(offer.balance);
-                                  final changeColor = balanceColor['text']!;
-                                  final changeBackgroundColor = balanceColor['background']!;
-                                  final balanceText = offer.balance.toLowerCase() == 'equal'
-                                      ? 'EQUAL'
-                                      : offer.balance.toUpperCase();
-                                  return AnimatedContainer(
-                                    duration: const Duration(milliseconds: 300),
-                                    child: _buildOfferItem(
-                                      context: context,
-                                      offer: offer,
-                                      percentageChange: percentageChange,
-                                      changeColor: changeColor,
-                                      changeBackgroundColor: changeBackgroundColor,
-                                      changeText: percentageChange >= 0
-                                          ? '↑${percentageChange.toStringAsFixed(1)}%'
-                                          : '↓${percentageChange.abs().toStringAsFixed(1)}%',
-                                      balanceColor: balanceColor['background']!,
-                                      balanceTextColor: balanceColor['text']!,
-                                      balanceText: balanceText,
-                                      isNew: index == 0 && offers.length > 1, // Eng birinchi taklif yangi
+                                const Spacer(),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 13),
+                                  decoration: ShapeDecoration(
+                                    color: const Color(0xFFEFF2F5),
+                                    shape: RoundedRectangleBorder(
+                                      side: const BorderSide(width: 1, color: Color(0xFFE2E7EB)),
+                                      borderRadius: BorderRadius.circular(10),
                                     ),
-                                  );
-                                },
-                              ),
-                        const SizedBox(height: 20),
-                      ],
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      '\$${order.totalPrice.toStringAsFixed(0)}',
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 15,
+                                        fontFamily: 'Inter',
+                                        fontWeight: FontWeight.w500,
+                                        height: 1.40,
+                                        letterSpacing: -0.30,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (offers.isEmpty) ...[
+                                  const SizedBox(width: 10),
+                                  CommonScaleAnimation(
+                                    onTap: () {
+                                      if (order.price > 1) {
+                                        context.read<InivitesBloc>().add(UpdateOrderPriceEvent(price: order.price - 1));
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(3),
+                                      width: 35,
+                                      height: 35,
+                                      decoration: ShapeDecoration(
+                                        color: const Color(0x19FB0000),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                      ),
+                                      child: SvgPicture.asset(AppIcons.down),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  CommonScaleAnimation(
+                                    onTap: () {
+                                      context.read<InivitesBloc>().add(UpdateOrderPriceEvent(price: order.price + 1));
+                                    },
+                                    child: Container(
+                                      width: 38,
+                                      padding: const EdgeInsets.all(3),
+                                      height: 38,
+                                      decoration: ShapeDecoration(
+                                        color: const Color(0x1904A516),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                      ),
+                                      child: SvgPicture.asset(AppIcons.up),
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(width: 12),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 15),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 15),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      decoration: BoxDecoration(
+                        color: AppColor.white,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 18),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${'Offers'.tr()}: ${offers.length}',
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 18,
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: -0.30,
+                                ),
+                              ),
+                              // Real-time indicator
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.green[100],
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 6,
+                                      height: 6,
+                                      decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Real-time'.tr(),
+                                      style: const TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.w500),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 15),
+                          offers.isEmpty
+                              ? Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 50),
+                                    child: Column(
+                                      children: [
+                                        Icon(Icons.hourglass_empty, size: 50, color: Colors.grey[400]),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          'Waiting for offers...'.tr(),
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Mechanics are reviewing your order'.tr(),
+                                          style: TextStyle(color: Colors.grey[500], fontSize: 14),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              : ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: offers.length,
+                                  itemBuilder: (context, index) {
+                                    final offer = offers[index];
+                                    final percentageChange = offer.changePercent;
+                                    final balanceColor = _getBalanceColors(offer.balance);
+                                    final changeColor = balanceColor['text']!;
+                                    final changeBackgroundColor = balanceColor['background']!;
+                                    final balanceText = offer.balance.toLowerCase() == 'equal'
+                                        ? 'EQUAL'
+                                        : offer.balance.toUpperCase();
+                                    return AnimatedContainer(
+                                      duration: const Duration(milliseconds: 300),
+                                      child: _buildOfferItem(
+                                        context: context,
+                                        offer: offer,
+                                        percentageChange: percentageChange,
+                                        changeColor: changeColor,
+                                        changeBackgroundColor: changeBackgroundColor,
+                                        changeText: percentageChange >= 0
+                                            ? '↑${percentageChange.toStringAsFixed(1)}%'
+                                            : '↓${percentageChange.abs().toStringAsFixed(1)}%',
+                                        balanceColor: balanceColor['background']!,
+                                        balanceTextColor: balanceColor['text']!,
+                                        balanceText: balanceText,
+                                        isNew: index == 0 && offers.length > 1, // Eng birinchi taklif yangi
+                                      ),
+                                    );
+                                  },
+                                ),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           } else if (state is InivitesError) {

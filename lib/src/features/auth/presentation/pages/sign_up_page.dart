@@ -31,6 +31,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final _emailController = TextEditingController();
   final _nameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _phoneController = TextEditingController();
   bool _otpSheetOpen = false;
 
   @override
@@ -38,6 +39,7 @@ class _SignUpPageState extends State<SignUpPage> {
     _emailController.dispose();
     _nameController.dispose();
     _passwordController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -73,6 +75,7 @@ class _SignUpPageState extends State<SignUpPage> {
             email: _emailController.text.trim(),
             fullName: _nameController.text.trim(),
             password: _passwordController.text.trim(),
+            phoneNumber: _phoneController.text.trim(),
             onSuccess: _openOtpSheet,
             onError: () {},
           ),
@@ -230,6 +233,20 @@ class _SignUpPageState extends State<SignUpPage> {
                               validator: AppValidators.name,
                             ),
                           ),
+                          AuthInputWidget(
+                            textInputType: TextInputType.phone,
+                            hint: '+998 90 123 45 67',
+                            label: 'Phone number',
+                            controller: _phoneController,
+                            validator: (value) {
+                              final v = (value ?? '').trim();
+                              if (v.isEmpty) return 'Phone number is required';
+                              final digits = v.replaceAll(RegExp(r'\D'), '');
+                              if (digits.length < 9) return 'Enter a valid phone number';
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 24),
                           AuthInputWidget(
                             hint: LocaleKeys.auth_signUp_passwordHint.tr(),
                             label: LocaleKeys.auth_signUp_passwordLabel.tr(),

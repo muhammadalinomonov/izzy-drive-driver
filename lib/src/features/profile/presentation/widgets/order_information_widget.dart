@@ -1,7 +1,6 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
-import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/utils/extensions.dart';
 import 'package:taxi_app/src/features/profile/presentation/widgets/info_item.dart';
 
@@ -48,10 +47,10 @@ class OrderInformationWidget extends StatelessWidget {
               SizedBox(height: 4),
               Row(
                 children: [
-                  SvgPicture.asset(AppIcons.apple, width: 20),
+                  Icon(Icons.payments_outlined, size: 20, color: AppColor.kPrimaryColor),
                   SizedBox(width: 4),
                   Text(
-                    'Apple Pay',
+                    'Cash'.tr(),
                     style: context.textTheme.bodySmall!.copyWith(fontSize: 14, fontWeight: FontWeight.w500),
                   ),
                   Spacer(),

@@ -59,7 +59,12 @@ class MasterFetch extends MasterEvent {
   final double? long;
   final int pageSize;
 
-  MasterFetch({this.lat, this.long, this.pageSize = 5});
+  /// When true, skip emitting `loading` if we already have a master list —
+  /// used by pull-to-refresh and lifecycle redispatch so the grid doesn't
+  /// flash into a shimmer over already-rendered cards.
+  final bool silent;
+
+  MasterFetch({this.lat, this.long, this.pageSize = 5, this.silent = false});
 }
 
 class GetMasterDetail extends MasterEvent {
@@ -80,7 +85,13 @@ class MasterBloc extends Bloc<MasterEvent, MasterState> {
 
   MasterBloc(this.repository, this.locationService) : super(MasterState()) {
     on<MasterFetch>((event, emit) async {
-      emit(state.copyWith(status: MasterStatus.loading));
+      // Stale-while-revalidate: keep the existing master grid on screen on
+      // silent refresh (pull-to-refresh, lifecycle redispatch) so we don't
+      // collapse into a shimmer over the cards the user is already looking at.
+      final hasData = state.masters.isNotEmpty;
+      if (!(event.silent && hasData)) {
+        emit(state.copyWith(status: MasterStatus.loading));
+      }
       double? lat = event.lat;
       double? long = event.long;
       String? address;

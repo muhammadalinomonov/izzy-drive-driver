@@ -16,7 +16,14 @@ class _WsMessageReceivedEvent extends OrdersEvent {
   _WsMessageReceivedEvent(this.data);
 }
 
-class GetCurrentOrderEvent extends OrdersEvent {}
+class GetCurrentOrderEvent extends OrdersEvent {
+  /// When true, skip emitting `inProgress` if we already have order data —
+  /// used for lifecycle resume / WS reconnect refresh so the UI doesn't
+  /// flash a shimmer over already-rendered content.
+  final bool silent;
+
+  GetCurrentOrderEvent({this.silent = false});
+}
 
 class ChangeSubOrderStatusEvent extends OrdersEvent {
   final int id;

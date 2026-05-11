@@ -22,7 +22,7 @@ class OrderActionItem extends StatelessWidget {
             width: 48,
             decoration: BoxDecoration(shape: BoxShape.circle, color: AppColor.lightBlue),
             alignment: Alignment.center,
-            child: SvgPicture.asset(icon, width: 24, height: 24),
+            child: Center(child: SvgPicture.asset(icon, width: 20, height: 20)),
           ),
         ),
         SizedBox(height: 8),

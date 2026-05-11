@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
@@ -11,6 +12,7 @@ import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bl
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/order_info_card.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/qr_code_dialog.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/sub_orders_card.dart';
+import 'package:taxi_app/src/routes/pages.dart';
 
 class FinishedOrderScreen extends StatefulWidget {
   const FinishedOrderScreen({super.key});
@@ -88,7 +90,18 @@ class _FinishedOrderScreenState extends State<FinishedOrderScreen> {
           ),
         ),
         backgroundColor: AppColor.lightBlue,
-        body: BlocBuilder<OrdersBloc, OrdersState>(
+        body: BlocListener<OrdersBloc, OrdersState>(
+          listenWhen: (p, c) =>
+              p.lifecycleEvent != c.lifecycleEvent &&
+              c.lifecycleEvent == OrderLifecycleEvent.completed,
+          listener: (context, state) {
+            // Mechanic entered the code on their side → close any open dialog
+            // and return to home.
+            context.read<OrdersBloc>().add(ClearLifecycleEventEvent());
+            Navigator.of(context, rootNavigator: true).popUntil((r) => r.isFirst);
+            context.go(Pages.main);
+          },
+          child: BlocBuilder<OrdersBloc, OrdersState>(
           builder: (context, state) {
             return SingleChildScrollView(
               child: Column(
@@ -204,7 +217,7 @@ class _FinishedOrderScreenState extends State<FinishedOrderScreen> {
                                 });
                               },
                               child: Padding(
-                                padding: EdgeInsets.only(right: 0),
+                                padding: EdgeInsets.only(right: 0, top: 4),
                                 child: Container(
                                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                   decoration: BoxDecoration(
@@ -297,6 +310,7 @@ class _FinishedOrderScreenState extends State<FinishedOrderScreen> {
               ),
             );
           },
+          ),
         ),
       ),
     );

@@ -61,7 +61,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     // Force a fresh socket — iOS often suspends the WS during background
     // without firing onDone, so the cached _isConnected can be a lie.
     serviceLocator<WebSocketService>().reconnect();
-    context.read<OrdersBloc>().add(GetCurrentOrderEvent());
+    // Silent refresh: avoid flashing the shimmer over the active-order card
+    // that's already on screen when the user returns to the app.
+    context.read<OrdersBloc>().add(GetCurrentOrderEvent(silent: true));
   }
 
   final List<Map> _bottomIcons = [

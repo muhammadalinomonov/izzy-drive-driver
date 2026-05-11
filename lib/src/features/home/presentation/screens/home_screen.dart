@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:card_swiper/card_swiper.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -6,8 +8,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:formz/formz.dart';
 import 'package:go_router/go_router.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
-import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
@@ -62,17 +64,26 @@ class _HomeScreenState extends State<HomeScreen> {
         value: historyBloc,
         child: Scaffold(
           appBar: AppBar(
-            title: Text('Home'.tr(), style: context.textS.titleLarge?.copyWith(fontSize: 20)),
+            title: Text(
+              'Home'.tr(),
+              style: context.textS.titleLarge?.copyWith(fontSize: 20, fontWeight: FontWeight.w500),
+            ),
             centerTitle: false,
-            // actions: [IconButton(onPressed: () {}, icon: SvgPicture.asset(AppIcons.bell))],
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.transparent,
           ),
           body: GestureDetector(
             onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
             child: RefreshIndicator.adaptive(
               onRefresh: () async {
-                historyBloc.add(GetOrdersHistoryEvent());
-                context.read<OrdersBloc>().add(GetCurrentOrderEvent());
-                BlocProvider.of<HomeBloc>(context).add(GetBannersEvent());
+                // Pull-to-refresh: the RefreshIndicator spinner is the user-visible
+                // progress affordance — keep stale data on screen instead of
+                // collapsing into per-section shimmers underneath it.
+                historyBloc.add(GetOrdersHistoryEvent(silent: true));
+                context.read<OrdersBloc>().add(GetCurrentOrderEvent(silent: true));
+                BlocProvider.of<HomeBloc>(context).add(GetBannersEvent(silent: true));
                 await Future.delayed(const Duration(milliseconds: 400));
               },
               child: SingleChildScrollView(
@@ -86,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       builder: (context, state) {
                         if (state.currentOrderStatus.isInProgress ||
                             state.currentOrderStatus.isInitial) {
-                          return Center(child: CircularProgressIndicator.adaptive());
+                          return const _HomeTopSkeleton();
                         } else if ((state.currentOrderStatus.isSuccess && state.currentOrder.id == -1) ||
                             state.currentOrderStatus.isFailure ||
                             state.currentOrderStatus.isCanceled) {
@@ -163,6 +174,31 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+Future<void> _openBannerRouter(BuildContext context, String router) async {
+  if (router.isEmpty) return;
+  Uri? uri;
+  try {
+    uri = Uri.parse(router);
+  } catch (_) {
+    uri = null;
+  }
+  if (uri == null || (!uri.hasScheme)) {
+    // Treat as plain URL without scheme — fall back to https
+    try {
+      uri = Uri.parse('https://$router');
+    } catch (_) {
+      return;
+    }
+  }
+  if (await canLaunchUrl(uri)) {
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  } else if (context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Could not open link')),
+    );
+  }
+}
+
 class BannerWidget extends StatelessWidget {
   const BannerWidget({super.key});
 
@@ -171,18 +207,25 @@ class BannerWidget extends StatelessWidget {
     return BlocBuilder<HomeBloc, HomeState>(
       builder: (context, state) {
         if (state.status == HomeStatus.loading) {
-          return Shimmer.fromColors(
-            baseColor: Colors.grey[300]!,
-            highlightColor: Colors.grey[100]!,
-            child: Container(
-              width: 340,
-              height: 140,
-              decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(16)),
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Shimmer.fromColors(
+              baseColor: const Color(0xFFEFF3F6),
+              highlightColor: const Color(0xFFF7F9FB),
+              period: const Duration(milliseconds: 1400),
+              child: Container(
+                width: double.infinity,
+                height: 137,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF3F6),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
             ),
           );
         } else if (state.status == HomeStatus.error) {
           return SizedBox(
-            height: 140,
+            height: 137,
             child: Swiper(
               itemBuilder: (BuildContext context, int index) {
                 return Padding(
@@ -206,38 +249,47 @@ class BannerWidget extends StatelessWidget {
           );
         } else {
           return SizedBox(
-            height: 140,
+            height: 137,
             child: Swiper(
               itemBuilder: (BuildContext context, int index) {
+                final banner = state.banners[index];
+                final router = (banner['router'] as String?)?.trim() ?? '';
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.network(
-                      state.banners[index]['image'],
-                      fit: BoxFit.cover,
-                      width: 340,
-                      errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
-                        return Container(
-                          width: 340,
-                          height: 140,
-                          color: Colors.grey[300],
-                          child: Center(child: Icon(Icons.error)),
-                        );
-                      },
-                      loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Shimmer.fromColors(
-                          baseColor: Colors.grey[300]!,
-                          highlightColor: Colors.grey[100]!,
-                          child: Container(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => _openBannerRouter(context, router),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.network(
+                        banner['image'],
+                        fit: BoxFit.cover,
+                        width: 340,
+                        errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
+                          return Container(
                             width: 340,
                             height: 140,
-                            decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(16)),
+                            color: Colors.grey[300],
                             child: Center(child: Icon(Icons.error)),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                        loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Shimmer.fromColors(
+                            baseColor: const Color(0xFFEFF3F6),
+                            highlightColor: const Color(0xFFF7F9FB),
+                            period: const Duration(milliseconds: 1400),
+                            child: Container(
+                              width: double.infinity,
+                              height: 137,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEFF3F6),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
                 );
@@ -274,6 +326,46 @@ class _RecentEmptyState extends StatelessWidget {
   }
 }
 
+class _HomeTopSkeleton extends StatelessWidget {
+  const _HomeTopSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: const Color(0xFFEFF3F6),
+      highlightColor: const Color(0xFFF7F9FB),
+      period: const Duration(milliseconds: 1400),
+      child: Column(
+        children: [
+          _SkeletonBox(height: 50, radius: 50),
+          const SizedBox(height: 12),
+          _SkeletonBox(height: 54, radius: 12),
+          const SizedBox(height: 8),
+          _SkeletonBox(height: 54, radius: 12),
+        ],
+      ),
+    );
+  }
+}
+
+class _SkeletonBox extends StatelessWidget {
+  const _SkeletonBox({required this.height, this.radius = 12});
+  final double height;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: height,
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF3F6),
+        borderRadius: BorderRadius.circular(radius),
+      ),
+    );
+  }
+}
+
 class LastLocationWidget extends StatelessWidget {
   const LastLocationWidget({super.key, required this.address, required this.onTap});
 
@@ -282,25 +374,56 @@ class LastLocationWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final commaIdx = address.indexOf(',');
+    final title = commaIdx > 0 ? address.substring(0, commaIdx).trim() : address.trim();
+    final subtitle = commaIdx > 0 ? address.substring(commaIdx + 1).trim() : '';
+
     return CommonScaleAnimation(
-      // behavior: HitTestBehavior.opaque,
-      onTap: () => onTap.call(), //context.push(Pages.map),
+      onTap: onTap,
       child: Container(
         width: double.infinity,
-        height: 55,
-        alignment: Alignment.center,
-        padding: EdgeInsets.symmetric(horizontal: 19, vertical: 8),
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColor.grey, width: 0.5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColor.grey2, width: 1),
+          color: Colors.white,
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            SvgPicture.asset(AppIcons.pending),
-            SizedBox(width: 10),
-            Expanded(child: Text(address)),
+            Container(
+              width: 38,
+              height: 38,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: SvgPicture.asset(AppIcons.pending, width: 20, height: 20),
+            ),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontSize: 14, color: Colors.black),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (subtitle.isNotEmpty) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      style: TextStyle(fontSize: 12, color: AppColor.grey),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -321,33 +444,43 @@ class OtherOpportunitiesWidget extends StatelessWidget {
         children: [
           Text(
             'Other opportunities'.tr(),
-            style: context.textS.titleLarge?.copyWith(fontSize: 22, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.black),
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 16),
           Row(
             children: [
               _OpportunityCard(icon: 'assets/images/food.png', label: 'Food'.tr(), soon: true),
-              SizedBox(width: 8),
+              const SizedBox(width: 12),
               _OpportunityCard(icon: 'assets/images/deliver.png', label: 'Delivery'.tr(), soon: true),
-              SizedBox(width: 8),
+              const SizedBox(width: 12),
               _OpportunityCard(icon: 'assets/images/grocery.png', label: 'Grocery'.tr(), soon: true),
             ],
           ),
-          SizedBox(height: 8),
-          Row(
-            children: [
-              _OpportunityCard(icon: 'assets/images/activities.png', label: 'Activities'.tr(), soon: true, isLarge: true),
-              SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  children: [
-                    _GymCard(image: 'assets/images/gym.png', name: 'Gym 1.8 elite'.tr(), distance: '1.8 km'),
-                    SizedBox(height: 8),
-                    _GymCard(image: 'assets/images/cardio.png', name: 'Cardio Elite'.tr(), distance: '1.8 km'),
-                  ],
+          const SizedBox(height: 12),
+          IntrinsicHeight(
+            child: Row(
+              children: [
+                Expanded(
+                  child: _OpportunityCard(
+                    icon: 'assets/images/activities.png',
+                    label: 'Activities'.tr(),
+                    soon: true,
+                    isLarge: true,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _GymCard(image: 'assets/images/gym.png', name: 'Gym 1.8 elite'.tr(), distance: '1.8 km'),
+                      _GymCard(image: 'assets/images/cardio.png', name: 'Cardio Elite'.tr(), distance: '1.8 km'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -366,36 +499,58 @@ class _OpportunityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Container(
-        height: isLarge ? 100 : 80,
-        decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(20)),
-        child: Stack(
-          children: [
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Use Image.asset for local images
-                  Image.asset(icon, width: isLarge ? 48 : 36, height: isLarge ? 48 : 36),
-                  SizedBox(height: 8),
-                  Text(label, style: context.textS.labelLarge),
-                ],
-              ),
-            ),
-            if (soon)
-              Positioned(
-                top: 0,
-                right: 0,
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.blue[200],
-                    borderRadius: BorderRadius.only(topRight: Radius.circular(20), bottomLeft: Radius.circular(12)),
-                  ),
-                  child: Text('SOON'.tr(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          height: isLarge ? 112 : 78,
+          color: AppColor.lightBlue,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      icon,
+                      width: isLarge ? 60 : 40,
+                      height: isLarge ? 50 : 32,
+                      fit: BoxFit.contain,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      label,
+                      style: const TextStyle(fontSize: 12, color: Colors.black),
+                    ),
+                  ],
                 ),
               ),
-          ],
+              if (soon)
+                Positioned(
+                  top: 6,
+                  right: -22,
+                  child: Transform.rotate(
+                    angle: 45 * math.pi / 180,
+                    alignment: Alignment.center,
+                    child: Container(
+                      width: 80,
+                      height: 18,
+                      alignment: Alignment.center,
+                      color: const Color(0xFF7BA2B9),
+                      child: Text(
+                        'SOON'.tr(),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -411,30 +566,33 @@ class _GymCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 48,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 4, offset: Offset(0, 2))],
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.asset(image, width: 48, height: 48, fit: BoxFit.cover),
-          ),
-          SizedBox(width: 8),
-          Column(
+    return Row(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Image.asset(image, width: 60, height: 50, fit: BoxFit.cover),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(name, style: context.textS.labelLarge),
-              Text(distance, style: context.textS.labelMedium),
+              Text(
+                name,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.black),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                distance,
+                style: TextStyle(fontSize: 11, color: AppColor.grey),
+              ),
             ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:taxi_app/src/core/utils/json_safe.dart';
 import 'package:taxi_app/src/features/master/data/model/review_model.dart';
+import 'package:taxi_app/src/features/profile/domain/entities/map_entity.dart';
 
 class MasterModel {
   final int? id;
@@ -16,6 +17,9 @@ class MasterModel {
   final ReviewModel? review;
   final String allReviewsUrl;
   final double distance;
+  final double latitude;
+  final double longitude;
+  final MapEntity map;
 
   const MasterModel({
     this.id,
@@ -32,6 +36,9 @@ class MasterModel {
     this.review,
     this.allReviewsUrl = '',
     this.distance = 0,
+    this.latitude = 0,
+    this.longitude = 0,
+    this.map = const MapEntity(),
   });
 
   factory MasterModel.fromJson(Map<String, dynamic> json) {
@@ -50,6 +57,9 @@ class MasterModel {
       review: json['review'] != null ? ReviewModel.fromJson(toMap(json['review'])) : null,
       allReviewsUrl: toStr(json['all_reviews_url']),
       distance: toDouble(json['distance']),
+      latitude: toDouble(json['latitude']),
+      longitude: toDouble(json['longitude']),
+      map: json['map'] != null ? MapEntity.fromJson(toMap(json['map'])) : const MapEntity(),
     );
   }
 }
