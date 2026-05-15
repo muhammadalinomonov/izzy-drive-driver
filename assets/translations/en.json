@@ -124,5 +124,33 @@
       "verificationTokenEmpty": "Verification token not found",
       "resetTokenMissing": "Reset token missing, please try again"
     }
-  }
+  },
+  "phoneVerify": {
+    "entry": {
+      "lastStep": "Last step",
+      "title": "Write your phone number",
+      "next": "Next",
+      "invalidPhone": "Please enter a valid phone number",
+      "searchCountry": "Search country"
+    },
+    "otp": {
+      "title": "Verify phone number",
+      "subtitle": "A 6-digit code has been sent to {phone}. Enter this code to confirm.",
+      "writeCode": "Write code",
+      "didntReceive": "Didn't receive the code?",
+      "resend": "Resend code",
+      "incorrect": "The code entered is incorrect or has expired",
+      "confirm": "Confirm",
+      "verifyFailed": "Code verification failed",
+      "resendFailed": "Failed to resend the code",
+      "sendFailed": "Failed to send the code",
+      "tooManyAttempts": "Too many attempts, request a new code"
+    }
+  },
+  "Estimated work time": "Estimated work time",
+  "Work time": "Work time",
+  "Your order is being worked on.": "Your order is being worked on.",
+  "Arrival time": "Arrival time",
+  "Distance": "Distance",
+  "More": "More"
 }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/network/auth_session.dart';
+import 'package:taxi_app/src/core/service_locater.dart';
+import 'package:taxi_app/src/core/services/connectivity_service.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -45,7 +47,13 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     Future.delayed(const Duration(milliseconds: 1600), _navigate);
   }
 
-  void _navigate() {
+  Future<void> _navigate() async {
+    if (!mounted) return;
+    final connectivity = serviceLocator<ConnectivityService>();
+    if (!connectivity.isOnline) {
+      await connectivity.waitUntilOnline();
+      await Future.delayed(const Duration(milliseconds: 300));
+    }
     if (!mounted) return;
     final dest = AuthSession.isLoggedIn ? Pages.main : Pages.signIn;
     context.go(dest);

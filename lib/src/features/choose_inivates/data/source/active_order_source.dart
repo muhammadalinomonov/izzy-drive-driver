@@ -38,6 +38,25 @@ class ActiveOrderSource {
     }
   }
 
+  Future<NetworkResponse<void>> cancelOrder() async {
+    try {
+      var token = StorageRepository.getString("token");
+      final response = await client.post(
+        ApiConstants.activeOrder,
+        data: {'action': 'cancel'},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      if (response.isSuccess) {
+        return NetworkResponse(data: null);
+      }
+      return NetworkResponse(errorText: response.statusMessage ?? 'Cancel failed');
+    } on DioException catch (e) {
+      return NetworkResponse(errorText: e.response?.data?.toString() ?? e.message ?? 'Cancel failed');
+    } catch (e) {
+      return NetworkResponse(errorText: e.toString());
+    }
+  }
+
   Future<NetworkResponse> updateOrderPrice(double orderPrice) async {
     try {
       var token = StorageRepository.getString("token");

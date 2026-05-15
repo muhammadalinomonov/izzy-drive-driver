@@ -4,9 +4,13 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:taxi_app/firebase_options.dart';
+import 'package:taxi_app/src/core/network/token_service.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
+import 'package:taxi_app/src/core/services/connectivity_service.dart';
 import 'package:taxi_app/src/core/theme/app_theme.dart';
 import 'package:taxi_app/src/core/utils/notifications.dart';
+import 'package:taxi_app/src/features/common/presentation/cubits/connectivity/connectivity_cubit.dart';
+import 'package:taxi_app/src/features/common/presentation/widgets/no_internet_bottom_sheet.dart';
 import 'package:taxi_app/src/features/order_proccess/data/order_proccess_source.dart';
 import 'package:taxi_app/src/features/order_proccess/domain/order_repo.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bloc.dart';
@@ -37,13 +41,47 @@ void main(List<String> args) async {
   );
 }
 
-class TaxiApp extends StatelessWidget {
+class TaxiApp extends StatefulWidget {
   const TaxiApp({super.key});
+
+  @override
+  State<TaxiApp> createState() => _TaxiAppState();
+}
+
+class _TaxiAppState extends State<TaxiApp> {
+  bool _isSheetShowing = false;
+  bool _initialConnectivityChecked = false;
+
+
+  @override
+  void initState() {
+    super.initState();
+
+    // StorageRepository.deleteString('token');
+    // StorageRepository.deleteString('refresh');
+  }
+  void _maybeShowSheet() {
+    if (_isSheetShowing) return;
+    // MaterialApp.router's builder context lives ABOVE the Navigator
+    // created by the routerDelegate, so showModalBottomSheet there
+    // crashes with "Navigator operation requested with a context that
+    // does not include a Navigator". GoRouter exposes the root
+    // navigator key — its currentContext IS the Navigator's context.
+    final navCtx = Routes.router.routerDelegate.navigatorKey.currentContext;
+    if (navCtx == null) return;
+    _isSheetShowing = true;
+    NoInternetBottomSheet.show(navCtx).whenComplete(() {
+      _isSheetShowing = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider<ConnectivityCubit>(
+          create: (_) => ConnectivityCubit(serviceLocator<ConnectivityService>()),
+        ),
         BlocProvider(
           create: (_) => OrdersBloc(
             orderRepository: OrderRepositoryImpl(orderProccessSource: OrderProccessSource()),
@@ -60,10 +98,33 @@ class TaxiApp extends StatelessWidget {
         supportedLocales: context.supportedLocales,
         locale: context.locale,
         builder: (context, child) {
-          return GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onLongPress: () => ChuckerFlutter.showChuckerScreen(),
-            child: child,
+          // BlocListener only fires on subsequent emissions, not on the
+          // initial state. If the app boots already offline, the cubit
+          // starts in `disconnected` and the listener stays silent — so
+          // we run a one-shot post-frame check that opens the sheet
+          // when the very first known status is offline.
+          if (!_initialConnectivityChecked) {
+            _initialConnectivityChecked = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              final cubit = context.read<ConnectivityCubit>();
+              if (cubit.state.isDisconnected) {
+                _maybeShowSheet();
+              }
+            });
+          }
+          return BlocListener<ConnectivityCubit, ConnectivityState>(
+            listenWhen: (p, c) => p.status != c.status,
+            listener: (context, state) {
+              if (state.isDisconnected) {
+                _maybeShowSheet();
+              }
+            },
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onLongPress: () => ChuckerFlutter.showChuckerScreen(),
+              child: child,
+            ),
           );
         },
       ),

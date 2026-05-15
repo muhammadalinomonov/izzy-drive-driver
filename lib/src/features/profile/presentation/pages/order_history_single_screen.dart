@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
@@ -64,6 +65,11 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                       fromPoint: state.orderHistoryDetail.map.startPoint.toPoint(),
                       toPoint: state.orderHistoryDetail.map.endPoint.toPoint(),
                       routePoints: state.orderHistoryDetail.map.route.map((e) => [e.lng, e.lat]).toList(),
+                      // The order-details card overlays the lower ~90px
+                      // of the map (content scrolls in below the 269-px
+                      // top spacer). Reserve that as fit-bounds padding
+                      // so markers don't end up under the card.
+                      bottomInset: 110,
                     ),
                   );
                 }
@@ -136,6 +142,25 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
+                              if (state.orderHistoryDetail.workTimeEstimateMin != null &&
+                                  state.orderHistoryDetail.workTimeEstimateMin! > 0) ...[
+                                Divider(height: 25, thickness: 1, color: AppColor.lightGrey),
+                                Text(
+                                  'Estimated work time'.tr(),
+                                  style: context.textTheme.bodyMedium!.copyWith(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: AppColor.grey,
+                                  ),
+                                ),
+                                Text(
+                                  '~${state.orderHistoryDetail.workTimeEstimateMin} min',
+                                  style: context.textTheme.bodyMedium!.copyWith(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                               Divider(height: 25, thickness: 1, color: AppColor.lightGrey),
                               Text(
                                 'Destination',

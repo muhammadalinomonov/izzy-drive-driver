@@ -140,6 +140,28 @@ class CodegenLoader extends AssetLoader{
       "verificationTokenEmpty": "Токен подтверждения не найден",
       "resetTokenMissing": "Токен восстановления не найден, попробуйте снова"
     }
+  },
+  "phoneVerify": {
+    "entry": {
+      "lastStep": "Последний шаг",
+      "title": "Введите номер телефона",
+      "next": "Далее",
+      "invalidPhone": "Введите корректный номер телефона",
+      "searchCountry": "Поиск страны"
+    },
+    "otp": {
+      "title": "Подтвердите номер телефона",
+      "subtitle": "6-значный код отправлен на номер {phone}. Введите его для подтверждения.",
+      "writeCode": "Введите код",
+      "didntReceive": "Код не пришёл?",
+      "resend": "Отправить снова",
+      "incorrect": "Введённый код неверный или устарел",
+      "confirm": "Подтвердить",
+      "verifyFailed": "Код не подтверждён",
+      "resendFailed": "Не удалось отправить код повторно",
+      "sendFailed": "Не удалось отправить код",
+      "tooManyAttempts": "Слишком много попыток, запросите новый код"
+    }
   }
 };
 static const Map<String,dynamic> _en = {
@@ -268,6 +290,28 @@ static const Map<String,dynamic> _en = {
       "verificationTokenEmpty": "Verification token not found",
       "resetTokenMissing": "Reset token missing, please try again"
     }
+  },
+  "phoneVerify": {
+    "entry": {
+      "lastStep": "Last step",
+      "title": "Write your phone number",
+      "next": "Next",
+      "invalidPhone": "Please enter a valid phone number",
+      "searchCountry": "Search country"
+    },
+    "otp": {
+      "title": "Verify phone number",
+      "subtitle": "A 6-digit code has been sent to {phone}. Enter this code to confirm.",
+      "writeCode": "Write code",
+      "didntReceive": "Didn't receive the code?",
+      "resend": "Resend code",
+      "incorrect": "The code entered is incorrect or has expired",
+      "confirm": "Confirm",
+      "verifyFailed": "Code verification failed",
+      "resendFailed": "Failed to resend the code",
+      "sendFailed": "Failed to send the code",
+      "tooManyAttempts": "Too many attempts, request a new code"
+    }
   }
 };
 static const Map<String,dynamic> _uz = {
@@ -395,6 +439,28 @@ static const Map<String,dynamic> _uz = {
       "appleTokenEmpty": "Apple identifikator topilmadi",
       "verificationTokenEmpty": "Tasdiqlash tokeni topilmadi",
       "resetTokenMissing": "Tiklash tokeni topilmadi, qaytadan urinib ko'ring"
+    }
+  },
+  "phoneVerify": {
+    "entry": {
+      "lastStep": "Oxirgi qadam",
+      "title": "Telefon raqamingizni kiriting",
+      "next": "Keyingi",
+      "invalidPhone": "Telefon raqamini to'g'ri kiriting",
+      "searchCountry": "Davlatni qidirish"
+    },
+    "otp": {
+      "title": "Telefon raqamini tasdiqlang",
+      "subtitle": "{phone} raqamiga 6 xonali kod yuborildi. Tasdiqlash uchun kiriting.",
+      "writeCode": "Kodni kiriting",
+      "didntReceive": "Kod kelmadi?",
+      "resend": "Qayta yuborish",
+      "incorrect": "Kiritilgan kod xato yoki muddati tugagan",
+      "confirm": "Tasdiqlash",
+      "verifyFailed": "Kod tasdiqlanmadi",
+      "resendFailed": "Kodni qayta yuborib bo'lmadi",
+      "sendFailed": "Kod yuborib bo'lmadi",
+      "tooManyAttempts": "Urinishlar soni tugadi, qayta kod so'rang"
     }
   }
 };

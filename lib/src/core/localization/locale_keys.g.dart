@@ -118,5 +118,24 @@ abstract class  LocaleKeys {
   static const auth_errors_resetTokenMissing = 'auth.errors.resetTokenMissing';
   static const auth_errors = 'auth.errors';
   static const auth = 'auth';
+  static const phoneVerify_entry_lastStep = 'phoneVerify.entry.lastStep';
+  static const phoneVerify_entry_title = 'phoneVerify.entry.title';
+  static const phoneVerify_entry_next = 'phoneVerify.entry.next';
+  static const phoneVerify_entry_invalidPhone = 'phoneVerify.entry.invalidPhone';
+  static const phoneVerify_entry_searchCountry = 'phoneVerify.entry.searchCountry';
+  static const phoneVerify_entry = 'phoneVerify.entry';
+  static const phoneVerify_otp_title = 'phoneVerify.otp.title';
+  static const phoneVerify_otp_subtitle = 'phoneVerify.otp.subtitle';
+  static const phoneVerify_otp_writeCode = 'phoneVerify.otp.writeCode';
+  static const phoneVerify_otp_didntReceive = 'phoneVerify.otp.didntReceive';
+  static const phoneVerify_otp_resend = 'phoneVerify.otp.resend';
+  static const phoneVerify_otp_incorrect = 'phoneVerify.otp.incorrect';
+  static const phoneVerify_otp_confirm = 'phoneVerify.otp.confirm';
+  static const phoneVerify_otp_verifyFailed = 'phoneVerify.otp.verifyFailed';
+  static const phoneVerify_otp_resendFailed = 'phoneVerify.otp.resendFailed';
+  static const phoneVerify_otp_sendFailed = 'phoneVerify.otp.sendFailed';
+  static const phoneVerify_otp_tooManyAttempts = 'phoneVerify.otp.tooManyAttempts';
+  static const phoneVerify_otp = 'phoneVerify.otp';
+  static const phoneVerify = 'phoneVerify';
 
 }

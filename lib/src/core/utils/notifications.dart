@@ -1,9 +1,15 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:taxi_app/src/core/network/api_constants.dart';
+import 'package:taxi_app/src/core/network/dio_model.dart';
+import 'package:taxi_app/src/core/network/token_service.dart';
 
 class PushNotifications {
   static bool _initialized = false;
+  static StreamSubscription<String>? _tokenRefreshSub;
 
   static Future<void> initFCM() async {
     if (_initialized) return;
@@ -27,6 +33,16 @@ class PushNotifications {
       print('📲 Notification tapped: data=${message.data}');
       // TODO(notif-router): port NotificationRouter from mechanic-app and
       // dispatch into Routes.router from here.
+    });
+
+    // FCM token rotation — har qachon yangi token kelganda backendga
+    // jo'natamiz. Tokensiz onda backend eski qiymatga push uradi va hech
+    // narsa yetib bormaydi.
+    _tokenRefreshSub?.cancel();
+    _tokenRefreshSub =
+        FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+      print('🔄 FCM token refreshed: ${newToken.substring(0, 12)}…');
+      registerDeviceWithBackend(token: newToken);
     });
 
     // Fire-and-forget: getInitialMessage() can block on iOS cold start when
@@ -77,6 +93,58 @@ class PushNotifications {
     } catch (e) {
       print('Error fetching FCM token: $e');
       return '';
+    }
+  }
+
+  /// Hozirgi qurilmani backend'da ro'yxatga oladi. Token berilmasa
+  /// `getToken()`dan oladi. Auth bo'lmagan holatda (refresh token bo'sh)
+  /// jim o'tadi — login keyin yana chaqiriladi.
+  ///
+  /// Main screen ochilganda va `onTokenRefresh` ishlaganda chaqiriladi.
+  /// Multi-device push pipeline `UserDevice` jadvalida tokenlarni saqlaydi,
+  /// shuning uchun bir user'ning bir nechta qurilmasiga push borishi mumkin.
+  static Future<void> registerDeviceWithBackend({String? token}) async {
+    try {
+      if (StorageRepository.getString('refresh').isEmpty) {
+        // Auth qilinmagan — keyinroq main screen'da qayta chaqirish kerak.
+        return;
+      }
+      final fcmToken = (token ?? await getToken()).trim();
+      if (fcmToken.isEmpty) return;
+
+      final platform = Platform.isIOS
+          ? 'ios'
+          : Platform.isAndroid
+              ? 'android'
+              : 'web';
+
+      final dio = DioSettings().dio;
+      final response = await dio.post(
+        ApiConstants.devicesRegister,
+        data: {'token': fcmToken, 'platform': platform},
+      );
+      print('📡 devices/register/ → ${response.statusCode}');
+    } on DioException catch (e) {
+      print('⚠️ devices/register/ failed: ${e.response?.statusCode} ${e.message}');
+    } catch (e) {
+      print('⚠️ devices/register/ unexpected error: $e');
+    }
+  }
+
+  /// Logout vaqtida hozirgi qurilmani backend'dan o'chiradi. Boshqa
+  /// qurilmalardagi sessiyalar va push'lar ishlayveradi.
+  static Future<void> unregisterDeviceFromBackend({String? token}) async {
+    try {
+      if (StorageRepository.getString('refresh').isEmpty) return;
+      final fcmToken = (token ?? await getToken()).trim();
+      if (fcmToken.isEmpty) return;
+      final dio = DioSettings().dio;
+      await dio.delete(
+        ApiConstants.devicesRegister,
+        data: {'token': fcmToken},
+      );
+    } catch (e) {
+      print('⚠️ devices/register/ unregister failed: $e');
     }
   }
 

@@ -21,6 +21,8 @@ class UpdateOrderPriceEvent extends InivitesEvent {
   UpdateOrderPriceEvent({required this.price});
 }
 
+class CancelActiveOrderEvent extends InivitesEvent {}
+
 class _WsMessageReceivedEvent extends InivitesEvent {
   final Map<String, dynamic> data;
   _WsMessageReceivedEvent(this.data);

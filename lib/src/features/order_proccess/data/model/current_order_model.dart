@@ -23,6 +23,7 @@ class CurrentOrderModel extends CurrentOrderEntity {
     super.workTime,
     super.mechanicInfo,
     super.map,
+    super.workTimeEstimateMin,
   });
 
   factory CurrentOrderModel.fromJson(Map<String, dynamic> json) {
@@ -41,6 +42,7 @@ class CurrentOrderModel extends CurrentOrderEntity {
       workTime: WorkTimeEntityConverter().fromJson(toMap(json['work_time'])),
       mechanicInfo: ProfileModel.fromJson(toMap(json['mechanic_info'])),
       map: MapEntity.fromJson(toMap(json['map'])),
+      workTimeEstimateMin: (json['work_time_estimate_min'] as num?)?.toInt(),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:taxi_app/src/core/network/dio_model.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
 import 'package:taxi_app/src/core/location_service.dart';
+import 'package:taxi_app/src/core/services/connectivity_service.dart';
 import 'package:taxi_app/src/core/services/websocket_service.dart';
 
 import '../features/order_proccess/data/order_proccess_source.dart';
@@ -12,6 +13,9 @@ final serviceLocator = GetIt.I;
 
 Future<void> setupLocator() async {
   await StorageRepository.getInstance();
+  final connectivityService = ConnectivityService();
+  await connectivityService.init();
+  serviceLocator.registerLazySingleton<ConnectivityService>(() => connectivityService);
   serviceLocator.registerLazySingleton(DioSettings.new);
   serviceLocator.registerLazySingleton(LocationService.new);
   serviceLocator.registerLazySingleton(WebSocketService.new);

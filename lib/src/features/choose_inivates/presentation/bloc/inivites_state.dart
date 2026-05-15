@@ -18,3 +18,7 @@ final String message;
 
 InivitesError(this.message);
 }
+
+/// Emitted after the driver successfully cancels the pending order.
+/// The page listens for this and navigates back to the main screen.
+final class InivitesCancelled extends InivitesState {}

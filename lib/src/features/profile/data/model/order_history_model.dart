@@ -23,6 +23,7 @@ class OrderHistoryModel extends OrderHistoryEntity {
     super.mechanicInfo,
     super.map,
     super.address,
+    super.workTimeEstimateMin,
   });
 
   factory OrderHistoryModel.fromJson(Map<String, dynamic> json) {
@@ -42,6 +43,8 @@ class OrderHistoryModel extends OrderHistoryEntity {
       createdAt: toStr(json['created_at']),
       mechanicInfo: ProfileModel.fromJson(toMap(json['mechanic_info'])),
       map: MapEntity.fromJson(toMap(json['map'])),
+      workTimeEstimateMin: (json['work_time_estimate_min'] as num?)?.toInt() ??
+          (toMap(json['order'])['work_time_estimate_min'] as num?)?.toInt(),
     );
   }
 }

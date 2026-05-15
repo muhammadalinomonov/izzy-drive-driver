@@ -19,4 +19,5 @@ class Pages {
   static const String searchLocation = '/searchLocation';
   static const String forgotPasswordEmail = '/forgotPasswordEmail';
   static const String resetPassword = '/resetPassword';
+  static const String phoneOtp = '/phoneOtp';
 }

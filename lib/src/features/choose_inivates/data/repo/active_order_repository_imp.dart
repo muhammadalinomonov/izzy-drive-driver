@@ -14,4 +14,7 @@ class ActiveOrderRepositoryImpl extends ActiveOrderRepository {
   Future<NetworkResponse> updateOrderPrice(double price) {
     return activeOrderSource.updateOrderPrice(price);
   }
+
+  @override
+  Future<NetworkResponse<void>> cancelOrder() => activeOrderSource.cancelOrder();
 }

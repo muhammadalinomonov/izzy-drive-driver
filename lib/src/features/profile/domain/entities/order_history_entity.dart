@@ -26,6 +26,7 @@ class OrderHistoryEntity extends Equatable {
   final ProfileModel mechanicInfo;
   final MapEntity map;
   final String address;
+  final int? workTimeEstimateMin;
 
   const OrderHistoryEntity({
     this.id = -1,
@@ -42,6 +43,7 @@ class OrderHistoryEntity extends Equatable {
     this.mechanicInfo = const ProfileModel(),
     this.map = const MapEntity(),
     this.address = '',
+    this.workTimeEstimateMin,
   });
 
   @override
@@ -60,6 +62,7 @@ class OrderHistoryEntity extends Equatable {
     mechanicInfo,
     map,
     address,
+    workTimeEstimateMin,
   ];
 
   CurrentOrderEntity toCurrentOrderEntity(){
@@ -68,6 +71,7 @@ class OrderHistoryEntity extends Equatable {
       price: price,
       subOrders: subOrders,
       totalPrice: totalPrice.toString(),
+      workTimeEstimateMin: workTimeEstimateMin,
     );
   }
 }

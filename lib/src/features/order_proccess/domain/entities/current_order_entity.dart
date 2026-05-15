@@ -24,6 +24,7 @@ class CurrentOrderEntity extends Equatable {
   final WorkTimeEntity workTime;
   final ProfileModel mechanicInfo;
   final MapEntity map;
+  final int? workTimeEstimateMin;
 
   const CurrentOrderEntity({
     this.id = -1,
@@ -40,6 +41,7 @@ class CurrentOrderEntity extends Equatable {
     this.workTime = const WorkTimeEntity(),
     this.mechanicInfo = const ProfileModel(),
     this.map = const MapEntity(),
+    this.workTimeEstimateMin,
   });
 
   @override
@@ -58,5 +60,6 @@ class CurrentOrderEntity extends Equatable {
     workTime,
     mechanicInfo,
     map,
+    workTimeEstimateMin,
   ];
 }

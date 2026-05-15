@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
@@ -31,7 +32,7 @@ class InProgressSheet extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
-              'Your order is being worked on.',
+              'Your order is being worked on.'.tr(),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                 fontSize: 20,
@@ -62,10 +63,10 @@ class InProgressSheet extends StatelessWidget {
 class _WorkTimeRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return BlocSelector<OrdersBloc, OrdersState, double>(
-      selector: (state) => state.currentOrder.map.durationMin,
-      builder: (context, durationMin) {
-        final label = durationMin > 0 ? '~${durationMin.toInt()} min' : '—';
+    return BlocSelector<OrdersBloc, OrdersState, int?>(
+      selector: (state) => state.currentOrder.workTimeEstimateMin,
+      builder: (context, minutes) {
+        final label = (minutes != null && minutes > 0) ? '~$minutes min' : '—';
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
@@ -74,7 +75,7 @@ class _WorkTimeRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Estimated work time',
+                    'Estimated work time'.tr(),
                     style: TextStyle(color: AppColor.grey, fontSize: 12),
                   ),
                   const SizedBox(height: 2),
@@ -146,7 +147,7 @@ class _MechanicInfoRow extends StatelessWidget {
                     color: AppColor.lightBlue,
                   ),
                   child: Text(
-                    'More',
+                    'More'.tr(),
                     style: Theme.of(context)
                         .textTheme
                         .bodyLarge!

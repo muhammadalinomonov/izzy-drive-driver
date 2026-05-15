@@ -124,5 +124,33 @@
       "verificationTokenEmpty": "Tasdiqlash tokeni topilmadi",
       "resetTokenMissing": "Tiklash tokeni topilmadi, qaytadan urinib ko'ring"
     }
-  }
+  },
+  "phoneVerify": {
+    "entry": {
+      "lastStep": "Oxirgi qadam",
+      "title": "Telefon raqamingizni kiriting",
+      "next": "Keyingi",
+      "invalidPhone": "Telefon raqamini to'g'ri kiriting",
+      "searchCountry": "Davlatni qidirish"
+    },
+    "otp": {
+      "title": "Telefon raqamini tasdiqlang",
+      "subtitle": "{phone} raqamiga 6 xonali kod yuborildi. Tasdiqlash uchun kiriting.",
+      "writeCode": "Kodni kiriting",
+      "didntReceive": "Kod kelmadi?",
+      "resend": "Qayta yuborish",
+      "incorrect": "Kiritilgan kod xato yoki muddati tugagan",
+      "confirm": "Tasdiqlash",
+      "verifyFailed": "Kod tasdiqlanmadi",
+      "resendFailed": "Kodni qayta yuborib bo'lmadi",
+      "sendFailed": "Kod yuborib bo'lmadi",
+      "tooManyAttempts": "Urinishlar soni tugadi, qayta kod so'rang"
+    }
+  },
+  "Estimated work time": "Taxminiy ish vaqti",
+  "Work time": "Ish vaqti",
+  "Your order is being worked on.": "Buyurtmangiz ustida ishlanmoqda.",
+  "Arrival time": "Yetib kelish vaqti",
+  "Distance": "Masofa",
+  "More": "Batafsil"
 }

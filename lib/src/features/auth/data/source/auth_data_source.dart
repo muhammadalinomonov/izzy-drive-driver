@@ -112,7 +112,6 @@ class AuthDataSource {
     required String verificationToken,
     required String password,
     required String fullName,
-    required String phoneNumber,
     required String fcmToken,
   }) async {
     try {
@@ -122,7 +121,6 @@ class AuthDataSource {
           'verification_token': verificationToken,
           'password': password,
           'full_name': fullName,
-          'phone_number': phoneNumber,
           'is_driver': true,
           'is_mechanic': false,
           'device_token': fcmToken,
@@ -342,6 +340,11 @@ class AuthDataSource {
     if (access is String && access.isNotEmpty) StorageRepository.putString('token', access);
     if (refresh is String && refresh.isNotEmpty) StorageRepository.putString('refresh', refresh);
     if (id != null) StorageRepository.putString('responseID', id.toString());
+    // Har bir yangi login — phone_verified cache'ni tozalaymiz. MainScreen
+    // get-me orqali yangi user uchun haqiqiy holatni qaytadan aniqlaydi.
+    // Token refresh (dio interceptor ichida) _persistTokens'ni chaqirmaydi,
+    // shuning uchun mavjud sessiya buzilmaydi.
+    StorageRepository.deleteBool('phone_verified');
   }
 
   String _dioMessage(DioException e) {

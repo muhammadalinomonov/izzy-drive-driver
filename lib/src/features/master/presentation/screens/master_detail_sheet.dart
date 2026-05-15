@@ -8,7 +8,6 @@ import 'package:taxi_app/src/features/common/presentation/widgets/common_button.
 import 'package:taxi_app/src/features/common/presentation/widgets/common_image.dart';
 import 'package:taxi_app/src/features/master/presentation/bloc/master_bloc.dart';
 import 'package:taxi_app/src/features/master/presentation/widgets/review_item.dart';
-import 'package:taxi_app/src/features/profile/presentation/widgets/map_widget.dart';
 
 class MasterDetailSheet extends StatefulWidget {
   const MasterDetailSheet({super.key, required this.id});
@@ -38,9 +37,6 @@ class _MasterDetailSheetState extends State<MasterDetailSheet> {
       ),
       child: BlocBuilder<MasterBloc, MasterState>(
         builder: (context, state) {
-          final map = state.masterDetail.map;
-          final hasMap = map.startPoint.lat != 0 || map.endPoint.lat != 0;
-
           return Column(
             children: [
               Container(
@@ -103,49 +99,6 @@ class _MasterDetailSheetState extends State<MasterDetailSheet> {
                   ],
                 ),
               ),
-              if (hasMap)
-                Container(
-                  margin: const EdgeInsets.only(top: 8),
-                  height: 200,
-                  width: context.sizeOf.width,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: OrderMapWidget(
-                      fromPoint: map.startPoint.toPoint(),
-                      toPoint: map.endPoint.toPoint(),
-                      routePoints: map.route.map((e) => [e.lng, e.lat]).toList(),
-                      bottomInset: 24,
-                      maxZoom: 13.5,
-                    ),
-                  ),
-                ),
-              if (hasMap)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  child: Row(
-                    children: [
-                      Icon(Icons.directions, size: 18, color: AppColor.grey),
-                      const SizedBox(width: 6),
-                      Text(
-                        '${map.distanceKm.toStringAsFixed(1)} km',
-                        style: context.textTheme.bodyMedium!.copyWith(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Icon(Icons.schedule, size: 18, color: AppColor.grey),
-                      const SizedBox(width: 6),
-                      Text(
-                        '~${map.durationMin.ceil()} min',
-                        style: context.textTheme.bodyMedium!.copyWith(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               if (state.masterReviewStatus.isSuccess && state.masterReviews.isNotEmpty)
                 Expanded(
                   child: Container(

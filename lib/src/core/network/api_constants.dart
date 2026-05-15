@@ -37,4 +37,7 @@ class ApiConstants {
   static final String updatePassword = "accounts/update-password/";
   static final String ordersHistory = "drivers/order-history/";
   static final String ordersHistoryDetail = "drivers/order-history-detail/";
+  static final String devicesRegister = "accounts/devices/register/";
+  static final String phoneRequestOtp = "accounts/phone/request-otp/";
+  static final String phoneVerifyOtp = "accounts/phone/verify-otp/";
 }

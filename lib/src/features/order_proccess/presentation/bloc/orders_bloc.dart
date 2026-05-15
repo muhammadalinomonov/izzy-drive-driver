@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
+import 'package:taxi_app/src/core/services/connectivity_service.dart';
 import 'package:taxi_app/src/core/services/websocket_service.dart';
 import 'package:taxi_app/src/features/order_proccess/data/model/sub_order_model.dart';
 import 'package:taxi_app/src/features/order_proccess/domain/entities/current_order_entity.dart';
@@ -20,6 +21,8 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
   final OrderRepository orderRepository;
   final WebSocketService _ws = serviceLocator<WebSocketService>();
   StreamSubscription<Map<String, dynamic>>? _wsSub;
+  StreamSubscription<bool>? _connectivitySub;
+  bool _shouldBeConnected = false;
 
   OrdersBloc({required this.orderRepository}) : super(const OrdersState()) {
     on<ConnectToWebSocketEvent>(_onConnectWebSocket);
@@ -32,23 +35,37 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     on<RateMasterEvent>(_onRateMaster);
     on<ClearLifecycleEventEvent>(_onClearLifecycleEvent);
     on<ClearPendingSubOrderEvent>(_onClearPendingSubOrder);
+    on<ResetCurrentOrderEvent>((event, emit) => emit(const OrderCanceled()));
+
+    _connectivitySub = serviceLocator<ConnectivityService>().onlineStream.listen((online) {
+      if (online && _shouldBeConnected) {
+        // The WS may still report _isConnected=true because onError/onDone
+        // hadn't fired yet; force a clean reconnect through the bloc so
+        // the subscription stays wired correctly.
+        add(DisConnectFromWebSocketEvent());
+        add(ConnectToWebSocketEvent());
+      }
+    });
   }
 
   @override
   Future<void> close() {
     _wsSub?.cancel();
+    _connectivitySub?.cancel();
     return super.close();
   }
 
   void _onConnectWebSocket(ConnectToWebSocketEvent event, Emitter<OrdersState> emit) {
     _ws.connect();
     _wsSub ??= _ws.stream.listen((data) => add(_WsMessageReceivedEvent(data)));
+    _shouldBeConnected = true;
   }
 
   void _onDisconnectFromWebSocket(DisConnectFromWebSocketEvent event, Emitter<OrdersState> emit) {
     _wsSub?.cancel();
     _wsSub = null;
     _ws.disconnect();
+    _shouldBeConnected = false;
   }
 
   void _onWsMessage(_WsMessageReceivedEvent event, Emitter<OrdersState> emit) {
@@ -131,13 +148,10 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final response = await orderRepository.cancelOrder();
     if (response.errorText.isEmpty) {
       debugPrint('Order cancelled successfully');
+      // OrderCanceled endi success + id=-1 holatini olib keladi — home
+      // darrov recents ko'rinishiga o'tadi, ortiqcha ikkinchi emit kerak
+      // emas.
       emit(const OrderCanceled());
-      // Reset to a "no current order" state so the home card disappears
-      // immediately instead of showing a stale/error UI.
-      emit(const OrdersState(
-        currentOrderStatus: FormzSubmissionStatus.success,
-        currentOrder: CurrentOrderEntity(),
-      ));
     } else {
       debugPrint('Error cancelling order: ${response.errorText}');
     }

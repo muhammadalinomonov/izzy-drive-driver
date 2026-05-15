@@ -7,4 +7,6 @@ abstract class ActiveOrderRepository {
 Future<NetworkResponse> fetchActiveOrder();
 
 Future<NetworkResponse> updateOrderPrice(double price);
+
+Future<NetworkResponse<void>> cancelOrder();
 }

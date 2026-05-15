@@ -15,7 +15,6 @@ abstract class AuthRepo {
     required String verificationToken,
     required String password,
     required String fullName,
-    required String phoneNumber,
     required String fcmToken,
   });
 

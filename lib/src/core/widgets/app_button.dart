@@ -41,7 +41,13 @@ class AppButton extends StatelessWidget {
         elevation: 0, // Flat look, remove if you want shadow
       ),
       child: isLoading
-          ? Center(child: CupertinoActivityIndicator(color: AppColor.white))
+          // SizedBox kerak — aks holda Center cheksiz joyni egallab, tugmani
+          // butun bo'sh joyga kengaytirib yuboradi (ayniqsa FAB slotida).
+          ? SizedBox(
+              width: 20,
+              height: 20,
+              child: CupertinoActivityIndicator(color: AppColor.white),
+            )
           : Text(
               title,
               style: context.textS.titleMedium!.copyWith(

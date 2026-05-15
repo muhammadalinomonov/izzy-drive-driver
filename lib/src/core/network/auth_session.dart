@@ -12,11 +12,15 @@ class AuthSession {
   static bool get isLoggedIn =>
       StorageRepository.getString('token').isNotEmpty;
 
+  static bool get isPhoneVerified =>
+      StorageRepository.getBool('phone_verified');
+
   // Call after the dio interceptor (or auth bloc) clears tokens. Triggers
   // router redirect: any non-auth route bounces to signIn.
   static Future<void> clear() async {
     await StorageRepository.deleteString('token');
     await StorageRepository.deleteString('refresh');
+    await StorageRepository.deleteBool('phone_verified');
     tick.value++;
   }
 

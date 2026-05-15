@@ -9,6 +9,7 @@ import 'package:taxi_app/src/core/service_locater.dart';
 import 'package:taxi_app/src/core/services/websocket_service.dart';
 import 'package:taxi_app/src/features/choose_inivates/presentation/widgets/profile_order_model_sheet.dart';
 import 'package:taxi_app/src/features/common/presentation/widgets/common_scalel_animation.dart';
+import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bloc.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 
 import '../../data/model/active_order.dart';
@@ -71,6 +72,31 @@ class _InvatesScreenState extends State<InvatesScreen> with WidgetsBindingObserv
     context.go(Pages.main);
   }
 
+  Future<void> _confirmCancel() async {
+    final bloc = context.read<InivitesBloc>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('Cancel order?'.tr()),
+        content: Text('Are you sure you want to cancel the order?'.tr()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text('No'.tr()),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text('Yes, cancel'.tr()),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      bloc.add(CancelActiveOrderEvent());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -86,8 +112,32 @@ class _InvatesScreenState extends State<InvatesScreen> with WidgetsBindingObserv
           icon: const Icon(Icons.arrow_back),
           onPressed: _backToMain,
         ),
+        actions: [
+          TextButton(
+            onPressed: _confirmCancel,
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text('Cancel'.tr()),
+          ),
+        ],
       ),
-      body: BlocBuilder<InivitesBloc, InivitesState>(
+      body: BlocConsumer<InivitesBloc, InivitesState>(
+        listenWhen: (prev, curr) => curr is InivitesCancelled || curr is InivitesError,
+        listener: (context, state) {
+          if (state is InivitesCancelled) {
+            // Cancel API faqat shu bloc orqali chaqiriladi — OrdersBloc
+            // shu paytda eski "active" state'da qotirib qoladi. WS dan
+            // `order-cancelled` event har doim yetib bormasligi mumkin
+            // (broadcast vs targeted), shu sababli aniq signal yuboramiz.
+            context.read<OrdersBloc>().add(ResetCurrentOrderEvent());
+            context.go(Pages.main);
+            return;
+          }
+          if (state is InivitesError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+          }
+        },
         builder: (context, state) {
           if (state is InivitesLoading) {
             return const Center(child: CircularProgressIndicator.adaptive());
@@ -270,43 +320,15 @@ class _InvatesScreenState extends State<InvatesScreen> with WidgetsBindingObserv
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 18),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '${'Offers'.tr()}: ${offers.length}',
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 18,
-                                  fontFamily: 'Inter',
-                                  fontWeight: FontWeight.w500,
-                                  letterSpacing: -0.30,
-                                ),
-                              ),
-                              // Real-time indicator
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.green[100],
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(
-                                      width: 6,
-                                      height: 6,
-                                      decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      'Real-time'.tr(),
-                                      style: const TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.w500),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                          Text(
+                            '${'Offers'.tr()}: ${offers.length}',
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 18,
+                              fontFamily: 'Inter',
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: -0.30,
+                            ),
                           ),
                           const SizedBox(height: 15),
                           offers.isEmpty
@@ -571,6 +593,31 @@ class _InvatesScreenState extends State<InvatesScreen> with WidgetsBindingObserv
                         style: TextStyle(color: changeColor, fontSize: 11.5, fontWeight: FontWeight.w500),
                       ),
                     ),
+                    if (offer.workTimeEstimateMin != null && offer.workTimeEstimateMin! > 0) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFF2F5),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.schedule, size: 11, color: Color(0xFF43484B)),
+                            const SizedBox(width: 3),
+                            Text(
+                              '~${offer.workTimeEstimateMin} min',
+                              style: const TextStyle(
+                                color: Color(0xFF43484B),
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     const Spacer(),
                     Text(
                       _formatTimeAgo(offer.createdAt),

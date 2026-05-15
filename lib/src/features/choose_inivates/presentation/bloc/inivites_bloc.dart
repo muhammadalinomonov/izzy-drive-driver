@@ -24,7 +24,25 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
     on<DisconnectFromWebSocketEvent>(_onDisconnectFromWebSocket);
     on<NewProposalReceivedEvent>(_onNewProposalReceived);
     on<UpdateOrderPriceEvent>(_onUpdateOrderPrice);
+    on<CancelActiveOrderEvent>(_onCancelActiveOrder);
     on<_WsMessageReceivedEvent>(_onWsMessage);
+  }
+
+  Future<void> _onCancelActiveOrder(CancelActiveOrderEvent event, Emitter<InivitesState> emit) async {
+    final previous = state;
+    emit(InivitesLoading());
+    final response = await activeOrderRepository.cancelOrder();
+    if (response.errorText.isEmpty) {
+      add(DisconnectFromWebSocketEvent());
+      emit(InivitesCancelled());
+    } else {
+      // Restore the previous state so the offers list and proposal
+      // stream stay intact — only surface the error.
+      if (previous is InivitesLoaded) {
+        emit(previous);
+      }
+      emit(InivitesError(response.errorText));
+    }
   }
 
   // Dastlabki takliflarni yuklash
@@ -87,6 +105,7 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
       avatar: data['avatar'],
       createdAt: data['created_at'] ?? DateTime.now().toIso8601String(),
       mechanicCurrentAddress: data['mechanic_current_address'] ?? '',
+      workTimeEstimateMin: (data['work_time_estimate_min'] as num?)?.toInt(),
     );
   }
 

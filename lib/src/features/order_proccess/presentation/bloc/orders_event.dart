@@ -49,3 +49,8 @@ class RateMasterEvent extends OrdersEvent {
 class ClearLifecycleEventEvent extends OrdersEvent {}
 
 class ClearPendingSubOrderEvent extends OrdersEvent {}
+
+/// Boshqa joydan (masalan `InivitesBloc.cancelOrder` API chaqirilgandan
+/// keyin) `OrdersBloc.state.currentOrder`'ni clear qilish uchun. API
+/// qaytadan chaqirilmaydi — bu signal-only event.
+class ResetCurrentOrderEvent extends OrdersEvent {}

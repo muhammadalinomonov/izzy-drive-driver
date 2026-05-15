@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
@@ -30,6 +31,7 @@ class TrackingSheet extends StatelessWidget {
           Container(height: 4, width: 42, color: AppColor.grey2),
           const SizedBox(height: 20),
           _EtaRow(),
+          const _WorkTimeEstimateRow(),
           const SizedBox(height: 16),
           Divider(height: 1, indent: 14, endIndent: 14, color: AppColor.grey2, thickness: 1),
           const SizedBox(height: 16),
@@ -73,7 +75,7 @@ class _EtaRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Arrival time',
+                    'Arrival time'.tr(),
                     style: TextStyle(color: AppColor.grey, fontSize: 12),
                   ),
                   const SizedBox(height: 2),
@@ -88,7 +90,7 @@ class _EtaRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    'Distance',
+                    'Distance'.tr(),
                     style: TextStyle(color: AppColor.grey, fontSize: 12),
                   ),
                   const SizedBox(height: 2),
@@ -97,6 +99,38 @@ class _EtaRow extends StatelessWidget {
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                 ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _WorkTimeEstimateRow extends StatelessWidget {
+  const _WorkTimeEstimateRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocSelector<OrdersBloc, OrdersState, int?>(
+      selector: (state) => state.currentOrder.workTimeEstimateMin,
+      builder: (context, minutes) {
+        if (minutes == null || minutes <= 0) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+          child: Row(
+            children: [
+              Icon(Icons.handyman_outlined, size: 16, color: AppColor.grey),
+              const SizedBox(width: 6),
+              Text(
+                'Estimated work time'.tr(),
+                style: TextStyle(color: AppColor.grey, fontSize: 12),
+              ),
+              const Spacer(),
+              Text(
+                '~$minutes min',
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -160,7 +194,7 @@ class _MechanicInfoRow extends StatelessWidget {
                     color: AppColor.lightBlue,
                   ),
                   child: Text(
-                    'More',
+                    'More'.tr(),
                     style: Theme.of(context)
                         .textTheme
                         .bodyLarge!

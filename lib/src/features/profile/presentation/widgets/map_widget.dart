@@ -80,7 +80,7 @@ class _OrderMapWidgetState extends State<OrderMapWidget> {
       PointAnnotationOptions(
         geometry: widget.fromPoint,
         image: _fromMarker,
-        iconSize: 0.4,
+        iconSize: 1.2,
       ),
     );
     await _pointAnnotationManager!.create(

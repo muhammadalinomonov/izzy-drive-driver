@@ -28,6 +28,10 @@ import 'package:taxi_app/src/features/order_create/data/repo/order_create_repo_i
 import 'package:taxi_app/src/features/order_create/data/source/order_create_data_source.dart';
 import 'package:taxi_app/src/features/order_create/presentation/bloc/order_create_bloc.dart';
 import 'package:taxi_app/src/features/order_create/presentation/pages/order_create_page.dart';
+import 'package:taxi_app/src/features/phone_verify/data/repo/phone_verify_repo_impl.dart';
+import 'package:taxi_app/src/features/phone_verify/data/source/phone_verify_data_source.dart';
+import 'package:taxi_app/src/features/phone_verify/presentation/bloc/phone_verify_bloc.dart';
+import 'package:taxi_app/src/features/phone_verify/presentation/pages/phone_otp_page.dart';
 import 'package:taxi_app/src/features/map/presenation/bloc/map_bloc.dart';
 import 'package:taxi_app/src/features/master/data/repository/master_repository_impl.dart';
 import 'package:taxi_app/src/features/master/data/source/master_remote_data_source.dart';
@@ -57,6 +61,17 @@ class Routes {
     Pages.forgotPasswordEmail,
     Pages.resetPassword,
   };
+
+  // PhoneVerifyBloc — entry sheet va OTP page o'rtasida bo'lishish uchun
+  // singleton. Sheet showPhoneVerifySheet() ichida BlocProvider.value bilan
+  // ulanadi; OTP page route'da xuddi shu instance'ga ulanadi.
+  static PhoneVerifyBloc? _phoneVerifyBloc;
+
+  static PhoneVerifyBloc resolvePhoneVerifyBloc() {
+    return _phoneVerifyBloc ??= PhoneVerifyBloc(
+      repo: PhoneVerifyRepoImpl(dataSource: PhoneVerifyDataSource()),
+    );
+  }
 
   static final GoRouter router = GoRouter(
     initialLocation: Pages.splash,
@@ -231,6 +246,13 @@ class Routes {
             child: const ResetPasswordPage(),
           );
         },
+      ),
+      GoRoute(
+        path: Pages.phoneOtp,
+        builder: (context, state) => BlocProvider.value(
+          value: resolvePhoneVerifyBloc(),
+          child: const PhoneOtpPage(),
+        ),
       ),
     ],
   );

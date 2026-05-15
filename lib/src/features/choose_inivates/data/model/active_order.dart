@@ -74,6 +74,7 @@ class OrderData {
   final String createdAt;
   final String balance;
   final double changePercent;
+  final int? workTimeEstimateMin;
 
   OrderData({
     required this.id,
@@ -87,6 +88,7 @@ class OrderData {
     required this.createdAt,
     required this.balance,
     required this.changePercent,
+    this.workTimeEstimateMin,
   });
 
   factory OrderData.fromJson(Map<String, dynamic> json) {
@@ -102,6 +104,7 @@ class OrderData {
       createdAt: toStr(json['created_at']),
       balance: toStr(json['balance']),
       changePercent: toDouble(json['change_percent']),
+      workTimeEstimateMin: (json['work_time_estimate_min'] as num?)?.toInt(),
     );
   }
 }
