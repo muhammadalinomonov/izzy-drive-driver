@@ -1,7 +1,7 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/network/auth_session.dart';
@@ -19,6 +19,7 @@ import 'package:taxi_app/src/features/profile/data/source/profile_data_source.da
 import 'package:taxi_app/src/features/profile/presentation/pages/profile_page.dart';
 import 'package:taxi_app/src/features/service/presentation/screens/service_screen.dart';
 import 'package:taxi_app/src/routes/app_router.dart';
+import 'package:taxi_app/src/routes/pages.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -59,9 +60,44 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     // bilan push yuboradi.
     PushNotifications.registerDeviceWithBackend();
     _phoneVerifyBloc = Routes.resolvePhoneVerifyBloc();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _maybeShowPhoneVerifySheet();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final redirected = await _maybeRedirectToTruckInfo();
+      if (!redirected) {
+        _maybeShowPhoneVerifySheet();
+      }
+      _handlePendingNotificationDeepLink();
     });
+  }
+
+  /// Cold-start yoki background tap orqali kelgan notification ID bo'lsa,
+  /// /notifications page'ni ochib qo'yamiz. Detail emas list — chunki
+  /// foydalanuvchi keyingi notificatsiyalarni ham ko'rishi mumkin.
+  void _handlePendingNotificationDeepLink() {
+    final pendingId = PushNotifications.pendingDeepLinkNotificationId;
+    if (pendingId == null) return;
+    PushNotifications.pendingDeepLinkNotificationId = null;
+    if (!mounted) return;
+    context.push(Pages.notifications);
+  }
+
+  /// Yangi user social-auth orqali kirgan bo'lsa yoki avval tackScreen'gacha
+  /// yetmasdan chiqib ketgan bo'lsa, fura malumotlari hali to'ldirilmagan.
+  /// Profile'dan truck_mark/truck_model tortib olib, bo'sh bo'lsa user'ni
+  /// tackScreen'ga jo'natamiz. Returns true if redirected.
+  Future<bool> _maybeRedirectToTruckInfo() async {
+    final response = await ProfileDataSource().fetchProfile();
+    if (!mounted) return false;
+    if (response.errorText.isNotEmpty || response.data is! ProfileModel) {
+      // Fetch xato bersa — gate'ni ochiq qoldiramiz. Onki keyingi navigatsiyada
+      // baribir token bilan tekshiriladi.
+      return false;
+    }
+    final profile = response.data as ProfileModel;
+    final truckFilled = profile.truckMark.trim().isNotEmpty &&
+        profile.truckmodel.trim().isNotEmpty;
+    if (truckFilled) return false;
+    context.go(Pages.tackScreen);
+    return true;
   }
 
   Future<void> _maybeShowPhoneVerifySheet() async {
@@ -94,20 +130,20 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     };
     AuthSession.tick.addListener(_phoneSessionListener!);
     if (!context.mounted) return;
-    showPhoneVerifySheet(context, bloc: _phoneVerifyBloc).whenComplete(() {
-      if (_phoneSessionListener != null) {
-        AuthSession.tick.removeListener(_phoneSessionListener!);
-        _phoneSessionListener = null;
-      }
-      // Agar foydalanuvchi qandaydir tarzda sheet'ni yopib qo'ysa-yu, lekin
-      // hali ham phone verify qilinmagan bo'lsa — qayta ochib qo'yamiz.
-      if (mounted && !AuthSession.isPhoneVerified) {
-        _phoneSheetShown = false;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _maybeShowPhoneVerifySheet();
-        });
-      }
-    });
+    // showPhoneVerifySheet(context, bloc: _phoneVerifyBloc).whenComplete(() {
+    //   if (_phoneSessionListener != null) {
+    //     AuthSession.tick.removeListener(_phoneSessionListener!);
+    //     _phoneSessionListener = null;
+    //   }
+    //   // Agar foydalanuvchi qandaydir tarzda sheet'ni yopib qo'ysa-yu, lekin
+    //   // hali ham phone verify qilinmagan bo'lsa — qayta ochib qo'yamiz.
+    //   if (mounted && !AuthSession.isPhoneVerified) {
+    //     _phoneSheetShown = false;
+    //     WidgetsBinding.instance.addPostFrameCallback((_) {
+    //       _maybeShowPhoneVerifySheet();
+    //     });
+    //   }
+    // });
   }
 
   @override
@@ -139,30 +175,26 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     PushNotifications.registerDeviceWithBackend();
   }
 
-  final List<Map> _bottomIcons = [
-    {"icon": AppIcons.home, "title": "Home"},
-    {"icon": AppIcons.services, "title": "Services"},
-    {"icon": AppIcons.masters, "title": "Masters"},
-    {"icon": AppIcons.profile, "title": "Profile"},
+  static const List<_NavItemData> _navItems = [
+    _NavItemData(icon: AppIcons.home, label: 'Home'),
+    _NavItemData(icon: AppIcons.services, label: 'Services'),
+    _NavItemData(icon: AppIcons.masters, label: 'Masters'),
+    _NavItemData(icon: AppIcons.profile, label: 'Profile'),
   ];
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoTabScaffold(
-      tabBar: CupertinoTabBar(
-        items: _bottomIcons
-            .map(
-              (item) => BottomNavigationBarItem(
-                icon: SvgPicture.asset(
-                  item['icon'],
-                  color: _initialIndex == _bottomIcons.indexOf(item)
-                      ? AppColor.kPrimaryColor
-                      : AppColor.grey,
-                ),
-                label: item['title'],
-              ),
-            )
-            .toList(),
+    return Scaffold(
+      backgroundColor: AppColor.white,
+      // IndexedStack keeps every tab alive — switching tabs preserves their
+      // state (scroll position, blocs, etc.), matching the previous
+      // CupertinoTabScaffold behavior.
+      body: IndexedStack(
+        index: _initialIndex,
+        children: _pages,
+      ),
+      bottomNavigationBar: _AppBottomNav(
+        items: _navItems,
         currentIndex: _initialIndex,
         onTap: (index) {
           setState(() {
@@ -170,17 +202,91 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           });
         },
       ),
-      tabBuilder: (context, index) {
-        // CupertinoTabScaffold lays content under the tab bar by
-        // default (translucent-bar pattern from iOS). Our bar is
-        // opaque, so the lower strip of each page was being hidden
-        // behind it. Reserve that space explicitly.
-        final tabBarHeight = 50.0 + MediaQuery.viewPaddingOf(context).bottom;
-        return Padding(
-          padding: EdgeInsets.only(bottom: tabBarHeight),
-          child: _pages[index],
-        );
-      },
+    );
+  }
+}
+
+class _NavItemData {
+  const _NavItemData({required this.icon, required this.label});
+  final String icon;
+  final String label;
+}
+
+class _AppBottomNav extends StatelessWidget {
+  const _AppBottomNav({
+    required this.items,
+    required this.currentIndex,
+    required this.onTap,
+  });
+
+  final List<_NavItemData> items;
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColor.white,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(12),
+          topRight: Radius.circular(12),
+        ),
+        boxShadow: [
+          BoxShadow(
+            offset: const Offset(0, -4),
+            blurRadius: 18,
+            color: Colors.black.withAlpha(20),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            children: List.generate(items.length, (i) {
+              final item = items[i];
+              final isActive = i == currentIndex;
+              return Expanded(
+                child: InkWell(
+                  onTap: () => onTap(i),
+                  splashFactory: NoSplash.splashFactory,
+                  highlightColor: Colors.transparent,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SvgPicture.asset(
+                        item.icon,
+                        width: 20,
+                        height: 20,
+                        colorFilter: ColorFilter.mode(
+                          isActive ? AppColor.kPrimaryColor : AppColor.grey,
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        item.label,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight:
+                              isActive ? FontWeight.w600 : FontWeight.w400,
+                          color: isActive
+                              ? AppColor.black
+                              : const Color(0xFF6B7073),
+                          letterSpacing: 0,
+                          height: 1.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -81,7 +81,15 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final viewInsetsBottom = mediaQuery.viewInsets.bottom;
+    final keyboardOpen = viewInsetsBottom > 0;
+    final cardTop = keyboardOpen
+        ? mediaQuery.padding.top + 16
+        : context.h * 0.30;
+
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: BlocListener<AuthBloc, AuthState>(
         listenWhen: (p, c) => p.requestOtpStatus != c.requestOtpStatus,
         listener: (context, state) {
@@ -155,7 +163,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         },
                       ),
                       if (Platform.isIOS) ...[
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 8),
                         BlocBuilder<AuthBloc, AuthState>(
                           buildWhen: (p, c) => p.appleStatus != c.appleStatus,
                           builder: (context, state) {
@@ -180,18 +188,16 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                 ),
               ),
-              Positioned(
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOutCubic,
                 left: 0,
                 right: 0,
                 bottom: 0,
-                top: MediaQuery.of(context).viewInsets.bottom == 0
-                    ? context.h * 0.3
-                    : context.h * 0.2,
-                child: AnimatedContainer(
-                  height: double.infinity,
-                  duration: const Duration(milliseconds: 300),
+                top: cardTop,
+                child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.only(left: 12, right: 12, top: 24),
+                  padding: const EdgeInsets.only(left: 12, right: 12),
                   decoration: BoxDecoration(
                     color: AppColor.white,
                     borderRadius: const BorderRadius.only(
@@ -200,6 +206,10 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                   ),
                   child: SingleChildScrollView(
+                    padding: EdgeInsets.only(
+                      top: 20,
+                      bottom: viewInsetsBottom + 12,
+                    ),
                     child: Form(
                       key: _formKey,
                       child: Column(
@@ -212,24 +222,25 @@ class _SignUpPageState extends State<SignUpPage> {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const SizedBox(height: 26),
+                          const SizedBox(height: 12),
                           AuthInputWidget(
                             textInputType: TextInputType.emailAddress,
+                            textInputAction: TextInputAction.next,
                             hint: LocaleKeys.auth_signUp_emailHint.tr(),
                             label: LocaleKeys.auth_signUp_emailLabel.tr(),
                             controller: _emailController,
                             validator: AppValidators.email,
                           ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 24),
-                            child: AuthInputWidget(
-                              textInputType: TextInputType.text,
-                              hint: LocaleKeys.auth_signUp_nameHint.tr(),
-                              label: LocaleKeys.auth_signUp_nameLabel.tr(),
-                              controller: _nameController,
-                              validator: AppValidators.name,
-                            ),
+                          const SizedBox(height: 8),
+                          AuthInputWidget(
+                            textInputType: TextInputType.text,
+                            textInputAction: TextInputAction.next,
+                            hint: LocaleKeys.auth_signUp_nameHint.tr(),
+                            label: LocaleKeys.auth_signUp_nameLabel.tr(),
+                            controller: _nameController,
+                            validator: AppValidators.name,
                           ),
+                          const SizedBox(height: 8),
                           AuthInputWidget(
                             hint: LocaleKeys.auth_signUp_passwordHint.tr(),
                             label: LocaleKeys.auth_signUp_passwordLabel.tr(),
@@ -237,8 +248,10 @@ class _SignUpPageState extends State<SignUpPage> {
                             controller: _passwordController,
                             validator: AppValidators.password,
                             obscureText: true,
+                            textInputAction: TextInputAction.done,
+                            onFieldSubmitted: (_) => _onSubmit(),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 8),
                           BlocBuilder<AuthBloc, AuthState>(
                             buildWhen: (p, c) =>
                                 p.requestOtpStatus != c.requestOtpStatus,
@@ -252,7 +265,7 @@ class _SignUpPageState extends State<SignUpPage> {
                             },
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            padding: const EdgeInsets.symmetric(vertical: 6),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -264,11 +277,21 @@ class _SignUpPageState extends State<SignUpPage> {
                                   ),
                                 ),
                                 TextButton(
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 4,
+                                    ),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
                                   onPressed: () => context.go(Pages.signIn),
                                   child: Text(
                                     LocaleKeys.auth_signUp_signInCta.tr(),
                                     style: context.textS.titleSmall!.copyWith(
                                       fontWeight: FontWeight.w600,
+                                      color: AppColor.kPrimaryColor,
                                     ),
                                   ),
                                 ),

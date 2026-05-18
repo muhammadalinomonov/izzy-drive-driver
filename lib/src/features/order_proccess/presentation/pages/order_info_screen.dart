@@ -149,6 +149,7 @@ class _OrderInfoScreenState extends State<OrderInfoScreen> {
                       children: [
                         AvatarImage(
                           imageUrl: state.currentOrder.selectedMechanic.photo,
+                          name: state.currentOrder.selectedMechanic.fullName,
                           size: 44,
                         ),
                         SizedBox(width: 8),

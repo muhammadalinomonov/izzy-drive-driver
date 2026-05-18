@@ -7,11 +7,48 @@ import 'package:taxi_app/src/core/network/token_service.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
 import 'package:taxi_app/src/features/order_create/data/model/order_create_request_model.dart';
 import 'package:taxi_app/src/features/order_create/data/model/order_create_response_model.dart';
+import 'package:taxi_app/src/features/order_create/data/model/question_template_model.dart';
 
 class OrderCreateDataSource {
   OrderCreateDataSource();
 
   final _client = serviceLocator.get<DioSettings>().dio;
+
+  Future<NetworkResponse<List<QuestionTemplate>>> fetchQuestions() async {
+    try {
+      final token = StorageRepository.getString('token');
+      final response = await _client.get(
+        ApiConstants.fetchQuestions,
+        options: Options(
+          headers: {if (token.isNotEmpty) 'Authorization': 'Bearer $token'},
+        ),
+      );
+      if (response.isSuccess) {
+        final raw = response.data;
+        // CustomResponse.ok wraps the payload as { status, message, data: [...] }.
+        // Fall back to the top-level list if a different shape is returned.
+        final List list = (raw is Map && raw['data'] is List)
+            ? raw['data'] as List
+            : raw is List
+                ? raw
+                : const [];
+        final items = list
+            .whereType<Map<String, dynamic>>()
+            .map(QuestionTemplate.fromJson)
+            .where((q) => q.type != QuestionType.unknown)
+            .toList()
+          ..sort((a, b) => a.order.compareTo(b.order));
+        return NetworkResponse(data: items);
+      }
+      return NetworkResponse(
+        errorText: 'Unexpected status: ${response.statusCode}',
+      );
+    } on DioException catch (e) {
+      return NetworkResponse(errorText: e.message ?? 'Could not load questions');
+    } catch (e) {
+      return NetworkResponse(errorText: e.toString());
+    }
+  }
 
   Future<NetworkResponse<OrderCreateResponseModel>> createOrder(
     OrderCreateRequestModel request,

@@ -215,17 +215,10 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                               SizedBox(height: 12),
                               Row(
                                 children: [
-                                  Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: BoxDecoration(shape: BoxShape.circle, color: AppColor.lightBlue),
-                                    child: CommonNetworkImage(
-                                      imageUrl: state.orderHistoryDetail.selectedMechanic.photo,
-                                      width: 44,
-                                      height: 44,
-                                      radius: 22,
-                                      fit: BoxFit.cover,
-                                    ),
+                                  AvatarImage(
+                                    imageUrl: state.orderHistoryDetail.selectedMechanic.photo,
+                                    name: state.orderHistoryDetail.selectedMechanic.fullName,
+                                    size: 44,
                                   ),
                                   SizedBox(width: 12),
                                   Expanded(

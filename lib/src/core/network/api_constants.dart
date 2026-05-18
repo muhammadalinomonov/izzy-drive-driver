@@ -12,6 +12,7 @@ class ApiConstants {
   static final String logout = "accounts/logout/";
   static final String deleteAccount = "accounts/delete-account/";
   static final String profileGet = 'drivers/get-me/';
+  static final String avatarUpload = 'drivers/avatar/';
   static final String getTrackMarks = "drivers/truckmarks/";
   static final String getTrackModel = "drivers/truckmodels/";
   static final String driverInfo = "drivers/driverprofile/";
@@ -40,4 +41,9 @@ class ApiConstants {
   static final String devicesRegister = "accounts/devices/register/";
   static final String phoneRequestOtp = "accounts/phone/request-otp/";
   static final String phoneVerifyOtp = "accounts/phone/verify-otp/";
+  static final String notifications = "accounts/notifications/";
+  static final String notificationsUnreadCount = "accounts/notifications/unread-count/";
+  static final String notificationsReadAll = "accounts/notifications/read-all/";
+  static String notificationDetail(int id) => "accounts/notifications/$id/";
+  static String notificationMarkRead(int id) => "accounts/notifications/$id/read/";
 }

@@ -152,5 +152,12 @@
   "Your order is being worked on.": "Над вашим заказом работают.",
   "Arrival time": "Время прибытия",
   "Distance": "Расстояние",
-  "More": "Подробнее"
+  "More": "Подробнее",
+  "notifications": {
+    "title": "Уведомления",
+    "detailTitle": "Уведомление",
+    "emptyTitle": "Пока нет уведомлений",
+    "emptySubtitle": "Новости и сообщения будут отображаться здесь",
+    "markAllRead": "Отметить все прочитанным"
+  }
 }

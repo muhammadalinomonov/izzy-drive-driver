@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:taxi_app/src/core/extensions/status_code_extension.dart';
 import 'package:taxi_app/src/core/network/api_constants.dart';
@@ -17,6 +19,44 @@ class ProfileDataSource {
   ProfileDataSource();
 
   final client = serviceLocator.get<DioSettings>().dio;
+
+  /// Uploads the avatar file as multipart form-data to
+  /// `POST drivers/avatar/`. Backend returns
+  ///   `{ status: true, message, data: { avatar: "https://..." } }`.
+  /// On success, returns the absolute URL string inside `NetworkResponse.data`.
+  Future<NetworkResponse<String>> uploadAvatar(File file) async {
+    try {
+      final form = FormData.fromMap({});
+      form.files.add(
+        MapEntry('avatar', await MultipartFile.fromFile(file.path)),
+      );
+      final response = await client.post(
+        ApiConstants.avatarUpload,
+        data: form,
+      );
+      if (response.isSuccess) {
+        final data = toMap(response.data['data']);
+        final avatarUrl = toStr(data['avatar']);
+        return NetworkResponse<String>(data: avatarUrl);
+      } else {
+        return NetworkResponse<String>(
+          errorText: dioErrorMessage(
+            response.data,
+            'Something went wrong try again',
+          ),
+        );
+      }
+    } on DioException catch (e) {
+      print('Dio exception uploading avatar: ${e.response?.statusCode}');
+      print('Dio exception response body: ${e.response?.data}');
+      return NetworkResponse<String>(
+        errorText: dioErrorMessage(e.response?.data, 'Something went wrong'),
+      );
+    } catch (e) {
+      print('Error uploading avatar: $e');
+      return NetworkResponse<String>(errorText: 'Something went wrong');
+    }
+  }
 
   Future<NetworkResponse> fetchProfile() async {
     try {

@@ -23,8 +23,9 @@ class OrdersHistoryBloc extends Bloc<OrdersHistoryEvent, OrdersHistoryState> {
   Future<void> _onGetOrdersHistoryEvent(GetOrdersHistoryEvent event, Emitter<OrdersHistoryState> emit) async {
     // Stale-while-revalidate: keep the existing list visible on silent refresh
     // (pull-to-refresh has its own spinner UI) instead of swapping in the
-    // central CircularProgressIndicator over the whole screen.
-    final hasData = state.ordersHistory.isNotEmpty;
+    // central CircularProgressIndicator over the whole screen. Bo'sh history
+    // ham success holat — "data yo'q" deb qaramaymiz, aks holda skeleton flash.
+    final hasData = state.ordersHistoryStatus.isSuccess;
     if (!(event.silent && hasData)) {
       emit(state.copyWith(ordersHistoryStatus: FormzSubmissionStatus.inProgress));
     }

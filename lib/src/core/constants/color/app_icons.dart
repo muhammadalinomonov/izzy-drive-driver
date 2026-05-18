@@ -36,5 +36,9 @@ class AppIcons {
   static const String check = 'assets/icons/check.svg';
   static const String star = 'assets/icons/star.svg';
 
-
+  // Profile menu icons
+  static const String memberList = 'assets/icons/member_list_1.svg';
+  static const String timePast = 'assets/icons/time_past_1.svg';
+  static const String frame = 'assets/icons/frame.svg';
+  static const String tools = 'assets/icons/tools.svg';
 }

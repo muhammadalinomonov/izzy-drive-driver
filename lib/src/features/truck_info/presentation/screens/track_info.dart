@@ -1,12 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:taxi_app/src/core/components/app_snack_bar.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/auth/presentation/widgets/auth_input_widget.dart';
 import 'package:taxi_app/src/features/truck_info/data/model/driver_info_put_model.dart';
-import 'package:taxi_app/src/features/truck_info/data/source/driver_info_source.dart';
 import 'package:taxi_app/src/features/truck_info/domain/model/track_model.dart';
 import 'package:taxi_app/src/features/truck_info/presentation/bloc/bloc/track_info_bloc.dart';
 import 'package:taxi_app/src/routes/pages.dart';
@@ -45,11 +47,6 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
         address = _addressController.text;
       });
     });
-    _phoneController.addListener(() {
-      setState(() {
-        phoneNumber = _phoneController.text;
-      });
-    });
     _licenseController.addListener(() {
       setState(() {
         licenseNumber = _licenseController.text;
@@ -61,20 +58,35 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
   TruckModel? pickedTruckModel;
   String? productionYear;
   String? address;
-  String? phoneNumber;
   String? licenseNumber;
+  File? _truckImageFile;
+  final ImagePicker _imagePicker = ImagePicker();
   final TextEditingController _yearController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _licenseController = TextEditingController();
 
   bool isCreatingProccess = false;
+
+  Future<void> _pickTruckImage() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    try {
+      final picked = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+        maxWidth: 1920,
+      );
+      if (picked == null || !mounted) return;
+      setState(() => _truckImageFile = File(picked.path));
+    } catch (e) {
+      if (!mounted) return;
+      AppSnackBar.showError(context, 'Rasm tanlashda xato: $e');
+    }
+  }
 
   @override
   void dispose() {
     _yearController.dispose();
     _addressController.dispose();
-    _phoneController.dispose();
     _licenseController.dispose();
     super.dispose();
   }
@@ -83,7 +95,10 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Stack(
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Stack(
         children: [
           SizedBox(
             height: double.infinity,
@@ -170,27 +185,60 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                             ),
                             borderRadius: BorderRadius.circular(16),
                           ),
+                          clipBehavior: Clip.antiAlias,
                           child: InkWell(
-                            onTap: () {},
+                            onTap: _pickTruckImage,
                             borderRadius: BorderRadius.circular(16),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.add_photo_alternate_outlined,
-                                  size: 48,
-                                  color: Colors.blue.shade700,
-                                ),
-                                const SizedBox(height: 12),
-                                const Text(
-                                  "Tap to add a photo",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.black45,
+                            child: _truckImageFile != null
+                                ? Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      Image.file(
+                                        _truckImageFile!,
+                                        fit: BoxFit.cover,
+                                      ),
+                                      Positioned(
+                                        top: 8,
+                                        right: 8,
+                                        child: Material(
+                                          color: Colors.black54,
+                                          shape: const CircleBorder(),
+                                          child: InkWell(
+                                            customBorder: const CircleBorder(),
+                                            onTap: () => setState(
+                                              () => _truckImageFile = null,
+                                            ),
+                                            child: const Padding(
+                                              padding: EdgeInsets.all(6),
+                                              child: Icon(
+                                                Icons.close,
+                                                size: 18,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.add_photo_alternate_outlined,
+                                        size: 48,
+                                        color: Colors.blue.shade700,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      const Text(
+                                        "Tap to add a photo",
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.black45,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
-                            ),
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -293,26 +341,21 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                           hint: 'Enter',
                           label: 'Production year',
                           textInputType: TextInputType.number,
+                          textInputAction: TextInputAction.next,
                           controller: _yearController,
-                        ),
-                        const SizedBox(height: 20),
-                        AuthInputWidget(
-                          hint: 'Phone number',
-                          label: 'Enter your phone number',
-                          controller: _phoneController,
-                          textInputType: TextInputType.phone,
                         ),
                         const SizedBox(height: 20),
                         AuthInputWidget(
                           hint: 'Address',
                           label: 'Address',
+                          textInputAction: TextInputAction.next,
                           controller: _addressController,
                         ),
                         const SizedBox(height: 20),
                         AuthInputWidget(
                           hint: 'License number',
                           label: 'License number',
-
+                          textInputAction: TextInputAction.done,
                           controller: _licenseController,
                         ),
                         const SizedBox(height: 32),
@@ -325,6 +368,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                             context.read<TrackInfoBloc>().add(
                               PutDriverInfoEvent(
                                 data: DriverInfoPutModel(
+                                  truckImageFile: _truckImageFile,
                                   avatar: '',
                                   truckImage: '',
                                   truckMark:
@@ -332,7 +376,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                                   truckModel:
                                       pickedTruckModel?.id.toString() ?? '',
                                   truckYear: productionYear ?? '',
-                                  phoneNumber: phoneNumber ?? '',
+                                  phoneNumber: '',
                                   licenseNumber: licenseNumber ?? '',
                                   address: address ?? '',
                                 ),
@@ -372,6 +416,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
             ),
           ),
         ],
+        ),
       ),
     );
   }

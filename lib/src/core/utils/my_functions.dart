@@ -40,4 +40,50 @@ class MyFunctions {
       return '${minutes}m';
     }
   }
+
+  /// Sana stringini "dd.MM.yyyy (N days ago)" ko'rinishida qaytaradi.
+  /// "today" / "yesterday" uchun maxsus shakl. Parse xatolik bersa
+  /// — original stringni qaytaradi.
+  static String formatDateWithRelative(String dateTimeStr) {
+    try {
+      final dt = DateTime.parse(dateTimeStr).toLocal();
+      final today = DateTime.now();
+      final base = '${dt.day.toString().padLeft(2, '0')}.'
+          '${dt.month.toString().padLeft(2, '0')}.${dt.year}';
+      final days = DateTime(today.year, today.month, today.day)
+          .difference(DateTime(dt.year, dt.month, dt.day))
+          .inDays;
+      String relative;
+      if (days < 0) {
+        relative = base; // future date — fallback to plain date
+        return relative;
+      } else if (days == 0) {
+        relative = 'today';
+      } else if (days == 1) {
+        relative = 'yesterday';
+      } else {
+        relative = '$days days ago';
+      }
+      return '$base ($relative)';
+    } catch (_) {
+      return dateTimeStr;
+    }
+  }
+
+  /// "N days ago" / "today" / "yesterday" — sof relative format.
+  static String relativeDate(String dateTimeStr) {
+    try {
+      final dt = DateTime.parse(dateTimeStr).toLocal();
+      final today = DateTime.now();
+      final days = DateTime(today.year, today.month, today.day)
+          .difference(DateTime(dt.year, dt.month, dt.day))
+          .inDays;
+      if (days == 0) return 'today';
+      if (days == 1) return 'yesterday';
+      if (days < 0) return formatDateTime(dateTimeStr, format: 'dd.MM.yyyy');
+      return '$days days ago';
+    } catch (_) {
+      return dateTimeStr;
+    }
+  }
 }

@@ -274,6 +274,7 @@ class _FinishedOrderScreenState extends State<FinishedOrderScreen> {
                           children: [
                             AvatarImage(
                               imageUrl: state.currentOrder.selectedMechanic.photo,
+                              name: state.currentOrder.selectedMechanic.fullName,
                               size: 44,
                             ),
                             SizedBox(width: 8),

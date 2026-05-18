@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:taxi_app/src/core/network/api_constants.dart';
 import 'package:taxi_app/src/core/network/dio_model.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
@@ -10,6 +11,29 @@ import 'package:taxi_app/src/core/network/token_service.dart';
 class PushNotifications {
   static bool _initialized = false;
   static StreamSubscription<String>? _tokenRefreshSub;
+
+  /// Notification event keldi — global ping. NotificationsBloc shu notifierga
+  /// listener qo'shadi va o'qilmagan soni yangilanadi. Counter sifatida
+  /// ishlatamiz — value har safar incrementga uchraydi.
+  static final ValueNotifier<int> notificationPing = ValueNotifier<int>(0);
+
+  /// Background/cold-start tap'da ochilishi kerak bo'lgan notification ID.
+  /// MainScreen `initState`'da o'qib navigate qiladi va clear qilib qo'yadi.
+  static int? pendingDeepLinkNotificationId;
+
+  static void _handleIncomingMessage(RemoteMessage message, {required bool fromTap}) {
+    final event = (message.data['event'] ?? '').toString();
+    if (event != 'notification') return;
+
+    // Ping bloc — list page va badgeni yangilash uchun.
+    notificationPing.value = notificationPing.value + 1;
+
+    if (fromTap) {
+      final idStr = (message.data['notification_id'] ?? '').toString();
+      final id = int.tryParse(idStr);
+      if (id != null) pendingDeepLinkNotificationId = id;
+    }
+  }
 
   static Future<void> initFCM() async {
     if (_initialized) return;
@@ -24,15 +48,17 @@ class PushNotifications {
 
     // Foreground push: do not show anything. The WebSocket-driven order
     // bloc already covers the same payload — duplicating via local
-    // notification would double-fire.
+    // notification would double-fire. For admin-broadcast `event=notification`
+    // payloads, the global notificationPing notifier is bumped so the
+    // notifications bloc refreshes its unread count and list silently.
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print('💡 Foreground push (suppressed): ${message.notification?.title}');
+      print('💡 Foreground push: data=${message.data}');
+      _handleIncomingMessage(message, fromTap: false);
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       print('📲 Notification tapped: data=${message.data}');
-      // TODO(notif-router): port NotificationRouter from mechanic-app and
-      // dispatch into Routes.router from here.
+      _handleIncomingMessage(message, fromTap: true);
     });
 
     // FCM token rotation — har qachon yangi token kelganda backendga
@@ -59,7 +85,7 @@ class PushNotifications {
           await FirebaseMessaging.instance.getInitialMessage();
       if (initialMessage != null) {
         print('🚀 App launched from terminated via notification');
-        // TODO(notif-router): same as above for cold-start taps.
+        _handleIncomingMessage(initialMessage, fromTap: true);
       }
     } catch (e) {
       print('⚠️ getInitialMessage failed: $e');

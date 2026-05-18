@@ -123,6 +123,9 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
 
   void _onMapCreated(mapbox.MapboxMap map) {
     _map = map;
+    map.style.setProjection(
+      mapbox.StyleProjection(name: mapbox.StyleProjectionName.mercator),
+    );
     map.setCamera(mapbox.CameraOptions(
       center: mapbox.Point(coordinates: _currentPosition),
       zoom: 16.0,
@@ -154,16 +157,20 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     final tp = TextPainter(
       text: TextSpan(
         text: '${distanceKm.toStringAsFixed(1)} km',
-        style: const TextStyle(fontSize: 53, color: Colors.black),
+        style: const TextStyle(
+          fontSize: 72,
+          color: Colors.black,
+          fontWeight: FontWeight.w600,
+        ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
 
-    const padH = 8.0, padV = 4.0;
+    const padH = 10.0, padV = 4.0;
     final pillW = tp.width + padH * 2;
     final pillH = tp.height + padV * 2;
-    final totalW = max(iconImage.width.toDouble(), pillW / 2);
-    final totalH = iconImage.height.toDouble() + pillH / 2;
+    final totalW = max(iconImage.width.toDouble(), pillW);
+    final totalH = iconImage.height.toDouble();
 
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
@@ -173,7 +180,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       Paint(),
     );
     final pillX = (totalW - pillW) / 2;
-    final pillY = iconImage.height.toDouble() - pillH / 2;
+    final pillY = iconImage.height * 0.72;
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(pillX, pillY, pillW, pillH),
@@ -202,7 +209,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
             coordinates: mapbox.Position(m.longitude.toDouble(), m.latitude.toDouble()),
           ),
           image: png,
-          iconSize: 0.6,
+          iconSize: 0.45,
         ),
       );
     }

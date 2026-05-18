@@ -1,4 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:taxi_app/src/core/constants/color/app_color.dart';
+
+/// Ism va familiyaning bosh harflaridan 1-2 ta belgi qaytaradi. Bo'sh
+/// kelsa — bo'sh string. "Eshonov Fakhriyor" → "EF", "Ali" → "A".
+String avatarInitials(String? name) {
+  if (name == null) return '';
+  final trimmed = name.trim();
+  if (trimmed.isEmpty) return '';
+  final parts =
+      trimmed.split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+  if (parts.isEmpty) return '';
+  if (parts.length == 1) {
+    return parts[0].substring(0, 1).toUpperCase();
+  }
+  return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+}
 
 class CommonNetworkImage extends StatelessWidget {
   const CommonNetworkImage({
@@ -56,20 +72,75 @@ class CommonNetworkImage extends StatelessWidget {
   }
 }
 
+/// Dumaloq avatar — agar [imageUrl] bo'sh yoki yuklanmasa, [name]'ning bosh
+/// harflari (1–2 ta) bilan gradient doira ko'rsatadi. Ism ham bo'lmasa —
+/// odam silueti iconi.
 class AvatarImage extends StatelessWidget {
-  const AvatarImage({super.key, this.imageUrl, this.size = 40});
+  const AvatarImage({
+    super.key,
+    this.imageUrl,
+    this.name,
+    this.size = 40,
+  });
 
   final String? imageUrl;
+  final String? name;
   final double size;
 
   @override
   Widget build(BuildContext context) {
-    return CommonNetworkImage(
-      imageUrl: imageUrl,
+    final url = imageUrl?.trim() ?? '';
+    final fallback = _InitialAvatar(name: name, size: size);
+    if (url.isEmpty) return fallback;
+    return ClipOval(
+      child: Image.network(
+        url,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => fallback,
+      ),
+    );
+  }
+}
+
+class _InitialAvatar extends StatelessWidget {
+  const _InitialAvatar({required this.name, required this.size});
+
+  final String? name;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final initials = avatarInitials(name);
+    return Container(
       width: size,
       height: size,
-      radius: size / 2,
-      fit: BoxFit.cover,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          colors: [AppColor.blueMain, const Color(0xFFCE08FF)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      alignment: Alignment.center,
+      child: initials.isEmpty
+          ? Icon(
+              Icons.person_outline,
+              color: Colors.white,
+              size: (size * 0.5).clamp(16.0, 48.0),
+            )
+          : Text(
+              initials,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: (size * 0.4).clamp(12.0, 32.0),
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.5,
+                height: 1.0,
+              ),
+            ),
     );
   }
 }

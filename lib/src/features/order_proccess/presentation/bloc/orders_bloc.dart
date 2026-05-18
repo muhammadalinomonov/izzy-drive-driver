@@ -160,8 +160,10 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
   void _onGetCurrentOrder(GetCurrentOrderEvent event, Emitter<OrdersState> emit) async {
     // Stale-while-revalidate: on silent refreshes (lifecycle resume, WS reconnect)
     // we already have order data on screen, so skip the `inProgress` flash and
-    // just swap in fresh data when it arrives.
-    final hasData = state.currentOrder.id != -1;
+    // just swap in fresh data when it arrives. Aktiv buyurtmasi yo'q user (id=-1)
+    // ham success holatda — uni "data yo'q" deb hisoblamaymiz, aks holda skeleton
+    // flash bo'ladi pull-to-refresh paytida.
+    final hasData = state.currentOrderStatus.isSuccess;
     if (!(event.silent && hasData)) {
       emit(state.copyWith(currentOrderStatus: FormzSubmissionStatus.inProgress));
     }

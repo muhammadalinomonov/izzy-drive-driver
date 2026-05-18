@@ -36,6 +36,11 @@ import 'package:taxi_app/src/features/map/presenation/bloc/map_bloc.dart';
 import 'package:taxi_app/src/features/master/data/repository/master_repository_impl.dart';
 import 'package:taxi_app/src/features/master/data/source/master_remote_data_source.dart';
 import 'package:taxi_app/src/features/master/presentation/bloc/master_bloc.dart';
+import 'package:taxi_app/src/features/notifications/data/repo/notifications_repo_impl.dart';
+import 'package:taxi_app/src/features/notifications/data/source/notifications_data_source.dart';
+import 'package:taxi_app/src/features/notifications/presentation/bloc/notifications_bloc.dart';
+import 'package:taxi_app/src/features/notifications/presentation/pages/notification_detail_page.dart';
+import 'package:taxi_app/src/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/pages/finished_order_screen.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/pages/order_info_screen.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/pages/order_single_screen.dart';
@@ -162,6 +167,11 @@ class Routes {
                   authRepo: AuthRepoImpl(authDataSource: AuthDataSource()),
                 ),
               ),
+              BlocProvider(
+                create: (_) => NotificationsBloc(
+                  repo: NotificationsRepoImpl(dataSource: NotificationsDataSource()),
+                )..add(const UnreadCountRequested()),
+              ),
             ],
             child: MainScreen(),
           );
@@ -253,6 +263,28 @@ class Routes {
           value: resolvePhoneVerifyBloc(),
           child: const PhoneOtpPage(),
         ),
+      ),
+      GoRoute(
+        path: Pages.notifications,
+        builder: (context, state) {
+          return BlocProvider(
+            create: (_) => NotificationsBloc(
+              repo: NotificationsRepoImpl(dataSource: NotificationsDataSource()),
+            )..add(const NotificationsLoaded()),
+            child: const NotificationsPage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: Pages.notificationDetail,
+        builder: (context, state) {
+          final extra = (state.extra as Map?) ?? const {};
+          final id = (extra['id'] as int?) ?? 0;
+          return NotificationDetailPage(
+            id: id,
+            repo: NotificationsRepoImpl(dataSource: NotificationsDataSource()),
+          );
+        },
       ),
     ],
   );

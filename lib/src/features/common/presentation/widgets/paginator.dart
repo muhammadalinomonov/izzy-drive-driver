@@ -34,15 +34,23 @@ class Paginator extends StatelessWidget {
     return Builder(builder: (context) {
       if (itemCount == 0 && status.isSuccess) {
         if (emptyWidget != null) {
-          return RefreshIndicator.adaptive(
-            onRefresh: onRefresh ?? () async {},
-            child: SingleChildScrollView(
-              physics: AlwaysScrollableScrollPhysics(),
-              child: Padding(
-                padding:EdgeInsets.only(top: MediaQuery.sizeOf(context).height/3 - 100),
-                child: emptyWidget!,
+          // Empty state Stack ichida — eng tagga qo'yiladi va qimirlamaydi.
+          // Ustida transparent ListView pull-to-refresh gesturlarini qabul
+          // qiladi, lekin uning ichi bo'sh shaffof bo'lgani sabab user
+          // hech qanday vizual o'zgarishni ko'rmaydi — faqat spinner.
+          return Stack(
+            children: [
+              Positioned.fill(
+                child: Center(child: emptyWidget!),
               ),
-            ),
+              RefreshIndicator.adaptive(
+                onRefresh: onRefresh ?? () async {},
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: const [SizedBox(height: 1)],
+                ),
+              ),
+            ],
           );
         }
       } else if (status.isInProgress) {

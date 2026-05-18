@@ -201,12 +201,15 @@ class AuthDataSource {
         _persistTokens(response.data);
         return NetworkResponse(data: response.data);
       }
+      print('Apple sign-in non-2xx response: ${response.statusCode} ${response.data}');
       return NetworkResponse(
         errorText: response.statusMessage ?? LocaleKeys.auth_errors_appleSignInFailed.tr(),
       );
     } on DioException catch (e) {
+      print('Apple sign-in DioException: status=${e.response?.statusCode} data=${e.response?.data}');
       return NetworkResponse(errorText: _dioMessage(e));
     } catch (e) {
+      print('Apple sign-in unexpected error: $e');
       return NetworkResponse(errorText: e.toString());
     }
   }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:taxi_app/src/core/exeptions/failures.dart';
 import 'package:taxi_app/src/core/network/network_response.dart';
 import 'package:taxi_app/src/core/utils/either.dart';
@@ -17,6 +19,11 @@ class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Future<NetworkResponse> getProfile() async {
     return await dataSource.fetchProfile();
+  }
+
+  @override
+  Future<NetworkResponse<String>> uploadAvatar(File file) async {
+    return await dataSource.uploadAvatar(file);
   }
 
   @override

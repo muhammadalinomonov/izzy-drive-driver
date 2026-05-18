@@ -14,6 +14,7 @@ class AuthInputWidget extends StatefulWidget {
     this.obscureText = false,
     this.isPassword = false,
     this.readOnly,
+    this.onFieldSubmitted,
   });
 
   final String hint, label;
@@ -24,6 +25,7 @@ class AuthInputWidget extends StatefulWidget {
   final TextInputAction? textInputAction;
   final TextInputType? textInputType;
   final bool? readOnly;
+  final ValueChanged<String>? onFieldSubmitted;
 
   @override
   State<AuthInputWidget> createState() => _AuthInputWidgetState();
@@ -66,7 +68,7 @@ class _AuthInputWidgetState extends State<AuthInputWidget> with SingleTickerProv
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(widget.label, style: context.textS.titleSmall!.copyWith(fontWeight: FontWeight.w400)),
-        const SizedBox(height: 10),
+        const SizedBox(height: 6),
         TextFormField(
           canRequestFocus: !(widget.readOnly ?? false),
           readOnly: widget.readOnly ?? false,
@@ -75,22 +77,25 @@ class _AuthInputWidgetState extends State<AuthInputWidget> with SingleTickerProv
           obscureText: widget.isPassword ? _obscureText : widget.obscureText,
           keyboardType: widget.textInputType,
           textInputAction: widget.textInputAction ?? TextInputAction.next,
+          onFieldSubmitted: widget.onFieldSubmitted,
           obscuringCharacter: '*',
           decoration: InputDecoration(
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             hintText: widget.hint,
             hintStyle: context.textS.titleMedium!.copyWith(color: AppColor.lightGreyBlue, fontWeight: FontWeight.w400),
             fillColor: AppColor.lightBlue,
             filled: true,
 
             labelStyle: TextStyle(color: AppColor.grey),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(color: AppColor.red),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(color: AppColor.kPrimaryColor),
             ),
             suffixIcon: widget.isPassword

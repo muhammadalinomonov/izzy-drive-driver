@@ -75,7 +75,11 @@ class _MechanicInfoRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14),
           child: Row(
             children: [
-              AvatarImage(imageUrl: mechanic.photo as String, size: 44),
+              AvatarImage(
+                imageUrl: mechanic.photo as String,
+                name: mechanic.fullName as String,
+                size: 44,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(

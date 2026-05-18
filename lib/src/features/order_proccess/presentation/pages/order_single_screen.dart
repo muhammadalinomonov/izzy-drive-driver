@@ -308,6 +308,7 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
                                 children: [
                                   AvatarImage(
                                     imageUrl: state.currentOrder.selectedMechanic.photo,
+                                    name: state.currentOrder.selectedMechanic.fullName,
                                     size: 44,
                                   ),
                                   const SizedBox(width: 8),

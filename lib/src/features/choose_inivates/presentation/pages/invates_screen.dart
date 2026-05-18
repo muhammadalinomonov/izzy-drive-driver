@@ -7,6 +7,7 @@ import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
 import 'package:taxi_app/src/core/services/websocket_service.dart';
+import 'package:taxi_app/src/features/common/presentation/widgets/common_image.dart';
 import 'package:taxi_app/src/features/choose_inivates/presentation/widgets/profile_order_model_sheet.dart';
 import 'package:taxi_app/src/features/common/presentation/widgets/common_scalel_animation.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bloc.dart';
@@ -496,26 +497,10 @@ class _InvatesScreenState extends State<InvatesScreen> with WidgetsBindingObserv
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    CircleAvatar(
-                      radius: 25,
-                      backgroundColor: Colors.transparent,
-                      child: ClipOval(
-                        child: offer.avatar != null
-                            ? Image.network(
-                                offer.avatar!,
-                                fit: BoxFit.cover,
-                                width: 50,
-                                height: 50,
-                                loadingBuilder: (context, child, loadingProgress) {
-                                  if (loadingProgress == null) return child;
-                                  return const Center(child: CircularProgressIndicator(strokeWidth: 2));
-                                },
-                                errorBuilder: (context, error, stackTrace) {
-                                  return SvgPicture.asset(AppIcons.profile, fit: BoxFit.cover, width: 50, height: 50);
-                                },
-                              )
-                            : SvgPicture.asset(AppIcons.profile, fit: BoxFit.cover, width: 50, height: 50),
-                      ),
+                    AvatarImage(
+                      imageUrl: offer.avatar,
+                      name: offer.mechanicName,
+                      size: 50,
                     ),
                     const SizedBox(width: 10),
                     Expanded(

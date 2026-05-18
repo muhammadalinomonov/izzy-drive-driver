@@ -20,6 +20,18 @@ class OrderCreateInitialized extends OrderCreateEvent {
   List<Object?> get props => [address, latitude, longitude];
 }
 
+class QuestionsFetchRequested extends OrderCreateEvent {
+  const QuestionsFetchRequested();
+}
+
+class ReviewRequested extends OrderCreateEvent {
+  const ReviewRequested();
+}
+
+class ReviewDismissed extends OrderCreateEvent {
+  const ReviewDismissed();
+}
+
 class DescriptionChanged extends OrderCreateEvent {
   const DescriptionChanged(this.value);
   final String value;
@@ -47,6 +59,13 @@ class AudioRecordingStopped extends OrderCreateEvent {
 
 class AudioRecordingCancelled extends OrderCreateEvent {
   const AudioRecordingCancelled();
+}
+
+class AudioPeakCaptured extends OrderCreateEvent {
+  const AudioPeakCaptured(this.value);
+  final double value; // 0..1
+  @override
+  List<Object?> get props => [value];
 }
 
 class AudioCleared extends OrderCreateEvent {

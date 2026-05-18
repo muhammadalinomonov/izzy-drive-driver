@@ -152,5 +152,12 @@
   "Your order is being worked on.": "Your order is being worked on.",
   "Arrival time": "Arrival time",
   "Distance": "Distance",
-  "More": "More"
+  "More": "More",
+  "notifications": {
+    "title": "Notifications",
+    "detailTitle": "Notification",
+    "emptyTitle": "No notifications yet",
+    "emptySubtitle": "News and messages will appear here",
+    "markAllRead": "Mark all as read"
+  }
 }

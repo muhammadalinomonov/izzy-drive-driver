@@ -56,6 +56,42 @@ class ProfileModel {
      this.id = -1,
   });
 
+  ProfileModel copyWith({
+    int? id,
+    String? email,
+    String? fullName,
+    String? mechanicName,
+    int? mechanicId,
+    String? photo,
+    String? truckImage,
+    String? truckYear,
+    String? phoneNumber,
+    String? licenseNumber,
+    String? deviceToken,
+    String? truckmodel,
+    String? truckMark,
+    int? wsId,
+    int? driverId,
+  }) {
+    return ProfileModel(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      fullName: fullName ?? this.fullName,
+      mechanicName: mechanicName ?? this.mechanicName,
+      mechanicId: mechanicId ?? this.mechanicId,
+      photo: photo ?? this.photo,
+      truckImage: truckImage ?? this.truckImage,
+      truckYear: truckYear ?? this.truckYear,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      licenseNumber: licenseNumber ?? this.licenseNumber,
+      deviceToken: deviceToken ?? this.deviceToken,
+      truckmodel: truckmodel ?? this.truckmodel,
+      truckMark: truckMark ?? this.truckMark,
+      wsId: wsId ?? this.wsId,
+      driverId: driverId ?? this.driverId,
+    );
+  }
+
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
     return ProfileModel(
       email: toStr(json['email']),

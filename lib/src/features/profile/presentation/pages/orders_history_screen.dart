@@ -35,7 +35,17 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen> {
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: AppColor.white,
-          leading: IconButton(onPressed: () => context.pop(), icon: Icon(Icons.arrow_back)),
+          leading: IconButton(
+            onPressed: () => context.pop(),
+            icon: const Icon(Icons.arrow_back),
+          ),
+          title: Text(
+            'Order history',
+            style: context.textTheme.bodyLarge!.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 20,
+            ),
+          ),
         ),
         body: BlocBuilder<OrdersHistoryBloc, OrdersHistoryState>(
           builder: (context, state) {
@@ -47,11 +57,7 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Order history',
-                    style: context.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w600, fontSize: 20),
-                  ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 8),
                   Expanded(
                     child: Paginator(
                       onRefresh: () async {
@@ -96,21 +102,49 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen> {
 class _OrdersHistoryEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), color: AppColor.lightBlue),
-      child: Row(
-        children: [
-          SvgPicture.asset(AppIcons.pending),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'No order history yet',
-              style: context.textTheme.bodyMedium?.copyWith(color: AppColor.grey),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColor.lightBlue,
+              ),
+              alignment: Alignment.center,
+              child: SvgPicture.asset(
+                AppIcons.timePast,
+                width: 52,
+                height: 52,
+                colorFilter: ColorFilter.mode(AppColor.darkGrey, BlendMode.srcIn),
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            Text(
+              'No orders yet',
+              textAlign: TextAlign.center,
+              style: context.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+                color: AppColor.black,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Your completed orders will appear here',
+              textAlign: TextAlign.center,
+              style: context.textTheme.bodyMedium?.copyWith(
+                color: AppColor.grey,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

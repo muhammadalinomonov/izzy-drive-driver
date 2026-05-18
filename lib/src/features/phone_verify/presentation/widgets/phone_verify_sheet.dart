@@ -214,16 +214,7 @@ class _PhoneVerifySheetState extends State<_PhoneVerifySheet> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColor.lightGrey,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
+
                 const SizedBox(height: 20),
                 Image.asset('assets/images/phone.png', width: 53, height: 75),
                 const SizedBox(height: 12),

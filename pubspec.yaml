@@ -44,6 +44,7 @@ dependencies:
   go_router: ^16.0.0
   voice_message_player: ^1.1.2
   record: ^6.0.0
+  just_audio: ^0.9.46
   formz: ^0.8.0
   mapbox_maps_flutter: ^2.9.0
   geolocator: ^14.0.1
@@ -75,6 +76,12 @@ dependencies:
 dependency_overrides:
   audio_session: ^0.2.2
   intl: ^0.20.2
+  # path_provider_foundation 2.6.0 dropped the CocoaPods podspec in favor of
+  # Swift Package Manager. The iOS project here still uses CocoaPods, so the
+  # `objective_c.framework` from `objective_c 9.x` can't be linked, which
+  # crashes the app on launch ("Failed to load dynamic library 'objective_c.framework'").
+  # Pin to the last 2.5.x release, which ships a podspec.
+  path_provider_foundation: 2.5.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -110,6 +117,18 @@ flutter:
     - assets/icons/
     - assets/translations/
     - .env
+
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter_18pt-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter_18pt-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter_18pt-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter_18pt-Bold.ttf
+          weight: 700
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

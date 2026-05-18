@@ -7,6 +7,17 @@ abstract class ProfileEvent extends Equatable {
 
 class LoadProfile extends ProfileEvent {}
 
+class UploadAvatarEvent extends ProfileEvent {
+  final File file;
+  final VoidCallback? onSuccess;
+  final void Function(String message)? onError;
+
+  UploadAvatarEvent({required this.file, this.onSuccess, this.onError});
+
+  @override
+  List<Object?> get props => [file.path];
+}
+
 class GetOutputsEvent extends ProfileEvent {}
 
 class CreateOutputEvent extends ProfileEvent {

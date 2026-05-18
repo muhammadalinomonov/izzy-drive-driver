@@ -12,8 +12,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<GetBannersEvent>((event, emit) async {
       // Stale-while-revalidate: on silent refresh (pull-to-refresh) keep the
       // existing banners visible while we re-fetch in the background so the
-      // carousel doesn't blink into a shimmer.
-      final hasData = state.banners.isNotEmpty;
+      // carousel doesn't blink into a shimmer. Backend bo'sh array qaytarsa
+      // ham success — uni "data yo'q" deb qaramaymiz.
+      final hasData = state.status == HomeStatus.success;
       if (!(event.silent && hasData)) {
         emit(HomeState(status: HomeStatus.loading));
       }

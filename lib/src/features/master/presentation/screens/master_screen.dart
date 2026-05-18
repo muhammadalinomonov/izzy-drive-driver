@@ -10,6 +10,7 @@ import 'package:taxi_app/src/features/common/presentation/widgets/common_image.d
 import 'package:taxi_app/src/features/master/data/model/master_model.dart';
 import 'package:taxi_app/src/features/master/presentation/bloc/master_bloc.dart';
 import 'package:taxi_app/src/features/master/presentation/screens/master_detail_sheet.dart';
+import 'package:taxi_app/src/features/notifications/presentation/widgets/notification_bell_action.dart';
 
 class MasterScreen extends StatefulWidget {
   const MasterScreen({super.key});
@@ -44,10 +45,7 @@ class _MasterScreenState extends State<MasterScreen> {
         ),
         centerTitle: false,
         actions: [
-          IconButton(
-            onPressed: () {},
-            icon: SvgPicture.asset(AppIcons.bell, width: 24, height: 24),
-          ),
+          const NotificationBellAction(),
           const SizedBox(width: 4),
         ],
       ),
@@ -58,9 +56,7 @@ class _MasterScreenState extends State<MasterScreen> {
           children: [
             BlocBuilder<MasterBloc, MasterState>(
               buildWhen: (p, c) => p.currentAddress != c.currentAddress,
-              builder: (context, state) => _AddressPill(
-                address: state.currentAddress ?? 'No location found'.tr(),
-              ),
+              builder: (context, state) => _AddressPill(address: state.currentAddress ?? 'No location found'.tr()),
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -76,10 +72,7 @@ class _MasterScreenState extends State<MasterScreen> {
                         },
                         child: ListView(
                           physics: const AlwaysScrollableScrollPhysics(),
-                          children: const [
-                            SizedBox(height: 120),
-                            _MastersEmptyState(),
-                          ],
+                          children: const [SizedBox(height: 120), _MastersEmptyState()],
                         ),
                       );
                     }
@@ -134,6 +127,7 @@ class _MasterScreenState extends State<MasterScreen> {
 
 class _AddressPill extends StatelessWidget {
   const _AddressPill({required this.address});
+
   final String address;
 
   @override
@@ -143,10 +137,7 @@ class _AddressPill extends StatelessWidget {
       height: 28,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       alignment: Alignment.centerLeft,
-      decoration: BoxDecoration(
-        color: AppColor.lightBlue,
-        borderRadius: BorderRadius.circular(50),
-      ),
+      decoration: BoxDecoration(color: AppColor.lightBlue, borderRadius: BorderRadius.circular(50)),
       child: Row(
         children: [
           SvgPicture.asset(AppIcons.location, width: 16, height: 16),
@@ -167,62 +158,59 @@ class _AddressPill extends StatelessWidget {
 
 class _MasterCard extends StatelessWidget {
   final MasterModel master;
+
   const _MasterCard({required this.master});
 
   @override
   Widget build(BuildContext context) {
     final ratingValue = master.rating;
     return Container(
-      decoration: BoxDecoration(
-        color: AppColor.lightBlue,
-        borderRadius: BorderRadius.circular(24),
-      ),
+      decoration: BoxDecoration(color: AppColor.lightBlue, borderRadius: BorderRadius.circular(24)),
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
       child: Column(
         children: [
           SizedBox(
-            width: 60,
+            width: 44,
             height: 47,
             child: Stack(
               clipBehavior: Clip.none,
               alignment: Alignment.topCenter,
               children: [
-                AvatarImage(
-                  imageUrl: master.photo ?? '',
-                  size: 44,
+                Padding(
+                  padding: EdgeInsets.only(bottom: 2),
+                  child: AvatarImage(imageUrl: master.photo ?? '', name: master.fullName ?? '', size: 44),
                 ),
                 if (ratingValue != null)
                   Positioned(
                     bottom: 0,
                     right: 0,
-                    child: Container(
-                      width: 28,
-                      height: 14,
-                      padding: const EdgeInsets.symmetric(horizontal: 3),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(50),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.12),
-                            blurRadius: 12,
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SvgPicture.asset(AppIcons.star, width: 9, height: 9),
-                          const SizedBox(width: 2),
-                          Text(
-                            ratingValue.toStringAsFixed(0),
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black,
+                    left: 0,
+                    child: Center(
+                      child: Container(
+                        width: 28,
+                        height: 14,
+                        padding: const EdgeInsets.symmetric(horizontal: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(50),
+                          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 12)],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SvgPicture.asset(
+                              AppIcons.star,
+                              width: 9,
+                              height: 9,
+                              colorFilter: ColorFilter.mode(Color(0xffF3AB00), BlendMode.srcIn),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 2),
+                            Text(
+                              ratingValue.toStringAsFixed(0),
+                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.black),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -230,10 +218,7 @@ class _MasterCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Text(
-            'Mechanic'.tr(),
-            style: TextStyle(fontSize: 12, color: AppColor.grey),
-          ),
+          Text('Mechanic'.tr(), style: TextStyle(fontSize: 12, color: AppColor.grey)),
           const SizedBox(height: 6),
           Text(
             master.fullName ?? '',
@@ -244,9 +229,7 @@ class _MasterCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            master.experience != null
-                ? '${master.experience} ${"years experience".tr()}'
-                : '',
+            master.experience != null ? '${master.experience} ${"years experience".tr()}' : '',
             style: TextStyle(fontSize: 12, color: AppColor.grey),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -271,10 +254,7 @@ class _MasterCard extends StatelessWidget {
               width: double.infinity,
               height: 36,
               alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(50),
-              ),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(50)),
               child: Text(
                 'More'.tr(),
                 style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black),
@@ -307,10 +287,7 @@ class _MastersGridSkeleton extends StatelessWidget {
         ),
         itemCount: 6,
         itemBuilder: (_, __) => Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFFEFF3F6),
-            borderRadius: BorderRadius.circular(24),
-          ),
+          decoration: BoxDecoration(color: const Color(0xFFEFF3F6), borderRadius: BorderRadius.circular(24)),
         ),
       ),
     );
@@ -349,6 +326,7 @@ class _MastersEmptyState extends StatelessWidget {
 
 class _MastersErrorState extends StatelessWidget {
   const _MastersErrorState({this.message});
+
   final String? message;
 
   @override

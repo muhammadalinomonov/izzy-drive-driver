@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:taxi_app/src/core/exeptions/failures.dart';
 import 'package:taxi_app/src/core/network/network_response.dart';
 import 'package:taxi_app/src/core/utils/either.dart';
@@ -8,6 +10,9 @@ import 'package:taxi_app/src/features/profile/domain/entities/output_entity.dart
 
 abstract class ProfileRepository {
   Future<NetworkResponse> getProfile();
+
+  /// Returns the absolute avatar URL on success.
+  Future<NetworkResponse<String>> uploadAvatar(File file);
 
   Future<Either<Failure, GenericPagination<OutPutEntity>>> getAllOutputs();
 

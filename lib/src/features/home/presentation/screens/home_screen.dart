@@ -18,6 +18,7 @@ import 'package:taxi_app/src/features/home/presentation/bloc/bloc/home_bloc.dart
 import 'package:taxi_app/src/features/home/presentation/widgets/active_order_widget.dart';
 import 'package:taxi_app/src/features/home/presentation/widgets/search_input.dart';
 import 'package:taxi_app/src/features/chat/data/model/report_response.dart';
+import 'package:taxi_app/src/features/notifications/presentation/widgets/notification_bell_action.dart';
 import 'package:taxi_app/src/features/order_proccess/domain/entities/current_order_entity.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bloc.dart';
 import 'package:taxi_app/src/features/profile/presentation/bloc/history/orders_history_bloc.dart';
@@ -46,6 +47,7 @@ List<Address> _dedupedRecents(List<CurrentOrderEntity> history) {
 
 class _HomeScreenState extends State<HomeScreen> {
   late OrdersHistoryBloc historyBloc;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -55,6 +57,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
     context.read<OrdersBloc>().add(GetCurrentOrderEvent());
     BlocProvider.of<HomeBloc>(context).add(GetBannersEvent());
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -73,6 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
             scrolledUnderElevation: 0,
             backgroundColor: Colors.white,
             surfaceTintColor: Colors.transparent,
+            actions: const [NotificationBellAction(), SizedBox(width: 8)],
           ),
           body: GestureDetector(
             onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
@@ -85,10 +94,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 context.read<OrdersBloc>().add(GetCurrentOrderEvent(silent: true));
                 BlocProvider.of<HomeBloc>(context).add(GetBannersEvent(silent: true));
                 await Future.delayed(const Duration(milliseconds: 400));
+                // RefreshIndicator collapse paytida ba'zan content tepaga
+                // siljib qolishi mumkin (iOS BouncingScrollPhysics + content
+                // height o'zgarishi tufayli). 0 ga qaytarish — barqaror.
+                if (mounted && _scrollController.hasClients) {
+                  _scrollController.jumpTo(0);
+                }
               },
               child: SingleChildScrollView(
+                controller: _scrollController,
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.only(bottom: 24),
+                // Pull-to-refresh kuchli tortilsa content 150+px gacha
+                // pastga siljishi mumkin. Banner ekrandan chiqib ketmasligi
+                // uchun katta buffer qoldiramiz.
+                padding: const EdgeInsets.only(bottom: 180),
                 child: Column(
                 children: [
                   Padding(
@@ -114,10 +133,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                       context.push(Pages.searchLocation);
                                     },
                                   ),
-                                  const SizedBox(height: 12),
-                                  if (recents.isEmpty)
-                                    _RecentEmptyState()
-                                  else
+                                  // Tarix bo'sh bo'lsa hech narsa ko'rsatmaymiz —
+                                  // search inputdan keyin to'g'ridan-to'g'ri "Boshqa
+                                  // imkoniyatlar" boshlanadi.
+                                  if (recents.isNotEmpty) ...[
+                                    const SizedBox(height: 12),
                                     ...recents.map(
                                       (addr) => Padding(
                                         padding: const EdgeInsets.only(bottom: 8),
@@ -136,6 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                       ),
                                     ),
+                                  ],
                                 ],
                               );
                             },
@@ -302,26 +323,6 @@ class BannerWidget extends StatelessWidget {
           );
         }
       },
-    );
-  }
-}
-
-class _RecentEmptyState extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), color: AppColor.lightBlue),
-      child: Row(
-        children: [
-          SvgPicture.asset(AppIcons.pending),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text('No order history yet'.tr(), style: context.textS.bodyMedium?.copyWith(color: AppColor.grey)),
-          ),
-        ],
-      ),
     );
   }
 }

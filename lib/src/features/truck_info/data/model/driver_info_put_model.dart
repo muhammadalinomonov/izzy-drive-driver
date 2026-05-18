@@ -1,6 +1,12 @@
+import 'dart:io';
+
 import 'package:taxi_app/src/core/utils/json_safe.dart';
 
 class DriverInfoPutModel {
+  /// Lokal fayl — yangi tanlangan rasm. Backend'ga multipart sifatida
+  /// `truck_image` field nomi bilan yuboriladi. `null` bo'lsa, mavjud
+  /// rasm o'zgarishsiz qoldiriladi.
+  final File? truckImageFile;
   final String avatar;
   final String truckImage;
   final String truckMark;
@@ -11,6 +17,7 @@ class DriverInfoPutModel {
   final String address;
 
   DriverInfoPutModel({
+    this.truckImageFile,
     required this.avatar,
     required this.truckImage,
     required this.truckMark,

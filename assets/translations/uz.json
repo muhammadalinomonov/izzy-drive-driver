@@ -152,5 +152,12 @@
   "Your order is being worked on.": "Buyurtmangiz ustida ishlanmoqda.",
   "Arrival time": "Yetib kelish vaqti",
   "Distance": "Masofa",
-  "More": "Batafsil"
+  "More": "Batafsil",
+  "notifications": {
+    "title": "Bildirishnomalar",
+    "detailTitle": "Bildirishnoma",
+    "emptyTitle": "Hozircha bildirishnomalar yo'q",
+    "emptySubtitle": "Yangiliklar va xabarlar shu yerda paydo bo'ladi",
+    "markAllRead": "Hammasini o'qildi qilish"
+  }
 }

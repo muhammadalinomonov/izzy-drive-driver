@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
+import 'package:taxi_app/src/features/notifications/presentation/widgets/notification_bell_action.dart';
 
 class ServiceScreen extends StatelessWidget {
   const ServiceScreen({super.key});
@@ -21,12 +22,9 @@ class ServiceScreen extends StatelessWidget {
         scrolledUnderElevation: 0,
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: SvgPicture.asset(AppIcons.bell, width: 24, height: 24),
-          ),
-          const SizedBox(width: 4),
+        actions: const [
+          NotificationBellAction(),
+          SizedBox(width: 4),
         ],
       ),
       body: SingleChildScrollView(

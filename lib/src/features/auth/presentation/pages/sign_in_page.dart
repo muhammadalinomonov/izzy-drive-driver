@@ -93,7 +93,15 @@ class _SignInPageState extends State<SignInPage> {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final viewInsetsBottom = mediaQuery.viewInsets.bottom;
+    final keyboardOpen = viewInsetsBottom > 0;
+    final cardTop = keyboardOpen
+        ? mediaQuery.padding.top + 16
+        : context.h * 0.34;
+
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: BlocListener<AuthBloc, AuthState>(
         listenWhen: (p, c) => p.loginStatus != c.loginStatus,
         listener: (context, state) {
@@ -112,25 +120,23 @@ class _SignInPageState extends State<SignInPage> {
                 top: 0,
                 left: 0,
                 right: 0,
-                height: context.h * 0.42,
+                height: context.h * 0.40,
                 child: Image.asset(
                   AppImages.loginbg,
                   fit: BoxFit.cover,
-                  alignment: Alignment.topCenter,
+                  alignment: Alignment.bottomCenter,
                 ),
               ),
-              Positioned(
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOutCubic,
                 left: 0,
                 right: 0,
                 bottom: 0,
-                top: MediaQuery.of(context).viewInsets.bottom == 0
-                    ? context.h * 0.32
-                    : context.h * 0.18,
-                child: AnimatedContainer(
-                  height: double.infinity,
-                  duration: const Duration(milliseconds: 300),
+                top: cardTop,
+                child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(12, 20, 12, 0),
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
                   decoration: BoxDecoration(
                     color: AppColor.white,
                     boxShadow: [
@@ -148,7 +154,8 @@ class _SignInPageState extends State<SignInPage> {
                   ),
                   child: SingleChildScrollView(
                     padding: EdgeInsets.only(
-                      bottom: MediaQuery.of(context).viewInsets.bottom + 12,
+                      top: 20,
+                      bottom: viewInsetsBottom + 12,
                     ),
                     child: Form(
                       key: _formKey,
@@ -162,7 +169,7 @@ class _SignInPageState extends State<SignInPage> {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const SizedBox(height: 18),
+                          const SizedBox(height: 12),
                           BlocBuilder<AuthBloc, AuthState>(
                             buildWhen: (p, c) =>
                                 p.googleStatus != c.googleStatus,
@@ -184,7 +191,7 @@ class _SignInPageState extends State<SignInPage> {
                             },
                           ),
                           if (Platform.isIOS) ...[
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 8),
                             BlocBuilder<AuthBloc, AuthState>(
                               buildWhen: (p, c) =>
                                   p.appleStatus != c.appleStatus,
@@ -206,7 +213,7 @@ class _SignInPageState extends State<SignInPage> {
                               },
                             ),
                           ],
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 10),
                           Row(
                             children: [
                               Expanded(
@@ -229,15 +236,16 @@ class _SignInPageState extends State<SignInPage> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 10),
                           AuthInputWidget(
                             hint: LocaleKeys.auth_signIn_emailHint.tr(),
                             label: LocaleKeys.auth_signIn_emailLabel.tr(),
                             controller: _emailController,
                             validator: AppValidators.email,
                             textInputType: TextInputType.emailAddress,
+                            textInputAction: TextInputAction.next,
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
                           AuthInputWidget(
                             hint: LocaleKeys.auth_signIn_passwordHint.tr(),
                             label: LocaleKeys.auth_signIn_passwordLabel.tr(),
@@ -245,6 +253,8 @@ class _SignInPageState extends State<SignInPage> {
                             controller: _passwordController,
                             validator: AppValidators.password,
                             obscureText: true,
+                            textInputAction: TextInputAction.done,
+                            onFieldSubmitted: (_) => _onLogin(),
                           ),
                           Align(
                             alignment: Alignment.centerRight,
@@ -269,7 +279,7 @@ class _SignInPageState extends State<SignInPage> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
                           BlocBuilder<AuthBloc, AuthState>(
                             buildWhen: (p, c) => p.loginStatus != c.loginStatus,
                             builder: (context, state) {
@@ -282,7 +292,7 @@ class _SignInPageState extends State<SignInPage> {
                             },
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            padding: const EdgeInsets.symmetric(vertical: 6),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -308,6 +318,7 @@ class _SignInPageState extends State<SignInPage> {
                                     LocaleKeys.auth_signIn_registerCta.tr(),
                                     style: context.textS.titleSmall!.copyWith(
                                       fontWeight: FontWeight.w600,
+                                      color: AppColor.kPrimaryColor,
                                     ),
                                   ),
                                 ),

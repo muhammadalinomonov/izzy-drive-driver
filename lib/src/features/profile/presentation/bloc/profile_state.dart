@@ -9,6 +9,7 @@ class ProfileState extends Equatable {
   final String totalAmount;
   final FormzSubmissionStatus createOutputStatus;
   final FormzSubmissionStatus updatePasswordStatus;
+  final FormzSubmissionStatus uploadAvatarStatus;
 
   const ProfileState({
     this.profile,
@@ -19,6 +20,7 @@ class ProfileState extends Equatable {
     this.totalAmount = '',
     this.createOutputStatus = FormzSubmissionStatus.initial,
     this.updatePasswordStatus = FormzSubmissionStatus.initial,
+    this.uploadAvatarStatus = FormzSubmissionStatus.initial,
   });
 
   ProfileState copyWith({
@@ -30,6 +32,7 @@ class ProfileState extends Equatable {
     String? totalAmount,
     FormzSubmissionStatus? createOutputStatus,
     FormzSubmissionStatus? updatePasswordStatus,
+    FormzSubmissionStatus? uploadAvatarStatus,
   }) {
     return ProfileState(
       profile: profile ?? this.profile,
@@ -40,6 +43,7 @@ class ProfileState extends Equatable {
       totalAmount: totalAmount ?? this.totalAmount,
       createOutputStatus: createOutputStatus ?? this.createOutputStatus,
       updatePasswordStatus: updatePasswordStatus ?? this.updatePasswordStatus,
+      uploadAvatarStatus: uploadAvatarStatus ?? this.uploadAvatarStatus,
     );
   }
 
@@ -53,6 +57,7 @@ class ProfileState extends Equatable {
     totalAmount,
     createOutputStatus,
     updatePasswordStatus,
+    uploadAvatarStatus,
   ];
 }
 

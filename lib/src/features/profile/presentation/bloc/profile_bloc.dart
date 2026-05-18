@@ -1,6 +1,7 @@
-import 'dart:ui';
+import 'dart:io';
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:taxi_app/src/features/profile/data/model/profile_model.dart';
@@ -29,6 +30,48 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     on<GetOutputsEvent>(_onGetOutputsEvent);
     on<CreateOutputEvent>(_onCreateOutputEvent);
     on<UpdatePasswordEvent>(_onUpdatePasswordEvent);
+    on<UploadAvatarEvent>(_onUploadAvatarEvent);
+  }
+
+  Future<void> _onUploadAvatarEvent(
+    UploadAvatarEvent event,
+    Emitter<ProfileState> emit,
+  ) async {
+    emit(state.copyWith(uploadAvatarStatus: FormzSubmissionStatus.inProgress));
+    final result = await repository.uploadAvatar(event.file);
+    if (result.errorText.isEmpty) {
+      final newUrl = result.data ?? '';
+      final oldUrl = state.profile?.photo ?? '';
+      // Backend yangi rasmni eski URL'ga overwrite qilishi mumkin —
+      // shu sababli Flutter'ning image cache'ida eski rasm qoladi va
+      // Image.network qayta render bo'lganda eski rasmni ko'rsatadi.
+      // Cache'dan eski (va xavfsizlik uchun yangi) URL entry'larini
+      // o'chiramiz — keyingi render fresh fetch qiladi.
+      if (oldUrl.isNotEmpty) {
+        await NetworkImage(oldUrl).evict();
+      }
+      if (newUrl.isNotEmpty && newUrl != oldUrl) {
+        await NetworkImage(newUrl).evict();
+      }
+      // Patch the profile in-place with the new avatar URL — avoids
+      // an extra GET /drivers/get-me/ roundtrip.
+      final updated = state.profile?.copyWith(photo: newUrl);
+      emit(
+        state.copyWith(
+          profile: updated,
+          uploadAvatarStatus: FormzSubmissionStatus.success,
+        ),
+      );
+      event.onSuccess?.call();
+    } else {
+      emit(
+        state.copyWith(
+          uploadAvatarStatus: FormzSubmissionStatus.failure,
+          message: result.errorText,
+        ),
+      );
+      event.onError?.call(result.errorText);
+    }
   }
 
   Future<void> _onGetOutputsEvent(GetOutputsEvent event, Emitter<ProfileState> emit) async {

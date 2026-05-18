@@ -79,6 +79,24 @@ class DriverInfoSource {
   Future<NetworkResponse> putDriverInfo(DriverInfoPutModel data) async {
     final client = serviceLocator.get<DioSettings>().dio;
     try {
+      // truck_image fayli alohida MultipartFile sifatida qo'shiladi —
+      // toJson()'dagi bo'sh string yuborilmaydi, aks holda backend rasmni
+      // o'chirib yuborishi mumkin.
+      final form = FormData.fromMap({
+        'avatar': data.avatar,
+        'truck_mark': data.truckMark,
+        'truck_model': data.truckModel,
+        'truck_year': data.truckYear,
+        'phone_number': data.phoneNumber,
+        'license_number': data.licenseNumber,
+        'address': data.address,
+      });
+      if (data.truckImageFile != null) {
+        form.files.add(MapEntry(
+          'truck_image',
+          await MultipartFile.fromFile(data.truckImageFile!.path),
+        ));
+      }
       final response = await client.put(
         ApiConstants.driverInfo,
         options: Options(
@@ -86,7 +104,7 @@ class DriverInfoSource {
             'Authorization': "Bearer ${StorageRepository.getString('token')}",
           },
         ),
-        data: FormData.fromMap(data.toJson()),
+        data: form,
       );
       if (response.isSuccess) {
         print('Success on put data');
