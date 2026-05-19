@@ -41,9 +41,15 @@ class DoneCurrentOrderEvent extends OrdersEvent {
 class RateMasterEvent extends OrdersEvent {
   final int star;
   final String comment;
+  final String? tag;
   final int mechanicId;
 
-  RateMasterEvent({required this.star, required this.comment, required this.mechanicId});
+  RateMasterEvent({
+    required this.star,
+    required this.comment,
+    required this.mechanicId,
+    this.tag,
+  });
 }
 
 class ClearLifecycleEventEvent extends OrdersEvent {}

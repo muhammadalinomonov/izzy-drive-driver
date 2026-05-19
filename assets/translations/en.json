@@ -159,5 +159,11 @@
     "emptyTitle": "No notifications yet",
     "emptySubtitle": "News and messages will appear here",
     "markAllRead": "Mark all as read"
+  },
+  "comingSoon": {
+    "badge": "COMING SOON",
+    "title": "{feature} is coming soon",
+    "subtitle": "This service is still in development. It will be available very soon — stay tuned!",
+    "cta": "Got it"
   }
 }

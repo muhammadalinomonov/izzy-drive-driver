@@ -13,6 +13,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
+import 'package:taxi_app/src/core/widgets/coming_soon_toast.dart';
 import 'package:taxi_app/src/features/common/presentation/widgets/common_scalel_animation.dart';
 import 'package:taxi_app/src/features/home/presentation/bloc/bloc/home_bloc.dart';
 import 'package:taxi_app/src/features/home/presentation/widgets/active_order_widget.dart';
@@ -502,55 +503,64 @@ class _OpportunityCard extends StatelessWidget {
     return Expanded(
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: Container(
-          height: isLarge ? 112 : 78,
+        child: Material(
           color: AppColor.lightBlue,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.asset(
-                      icon,
-                      width: isLarge ? 60 : 40,
-                      height: isLarge ? 50 : 32,
-                      fit: BoxFit.contain,
+          child: InkWell(
+            onTap: soon
+                ? () => showComingSoonToast(context, icon: icon, label: label)
+                : null,
+            splashColor: AppColor.kPrimaryColor.withValues(alpha: 0.08),
+            highlightColor: AppColor.kPrimaryColor.withValues(alpha: 0.04),
+            child: SizedBox(
+              height: isLarge ? 112 : 78,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          icon,
+                          width: isLarge ? 60 : 40,
+                          height: isLarge ? 50 : 32,
+                          fit: BoxFit.contain,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          label,
+                          style: const TextStyle(fontSize: 12, color: Colors.black),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      label,
-                      style: const TextStyle(fontSize: 12, color: Colors.black),
-                    ),
-                  ],
-                ),
-              ),
-              if (soon)
-                Positioned(
-                  top: 6,
-                  right: -22,
-                  child: Transform.rotate(
-                    angle: 45 * math.pi / 180,
-                    alignment: Alignment.center,
-                    child: Container(
-                      width: 80,
-                      height: 18,
-                      alignment: Alignment.center,
-                      color: const Color(0xFF7BA2B9),
-                      child: Text(
-                        'SOON'.tr(),
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.3,
+                  ),
+                  if (soon)
+                    Positioned(
+                      top: 6,
+                      right: -22,
+                      child: Transform.rotate(
+                        angle: 45 * math.pi / 180,
+                        alignment: Alignment.center,
+                        child: Container(
+                          width: 80,
+                          height: 18,
+                          alignment: Alignment.center,
+                          color: const Color(0xFF7BA2B9),
+                          child: Text(
+                            'SOON'.tr(),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-            ],
+                ],
+              ),
+            ),
           ),
         ),
       ),

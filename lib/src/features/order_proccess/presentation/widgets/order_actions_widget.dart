@@ -68,6 +68,11 @@ class OrderActionsWidget extends StatelessWidget {
             OrderActionItem(
               icon: AppIcons.info,
               text: 'Order About',
+              // Pending sub-order'lar soni — orange badge "Order About"
+              // tugmasi ustida ko'rinadi, foydalanuvchini diqqatini tortadi.
+              badgeCount: state.currentOrder.subOrders
+                  .where((s) => s.status.toLowerCase() == 'pending')
+                  .length,
               onTap: () {
                 context.push(Pages.orderInfo);
               },

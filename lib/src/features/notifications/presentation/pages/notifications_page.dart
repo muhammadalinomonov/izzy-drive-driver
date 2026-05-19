@@ -102,7 +102,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
               context.read<NotificationsBloc>().add(const NotificationsRefreshed());
               await Future.delayed(const Duration(milliseconds: 350));
             },
-            child: ListView.builder(
+            child: ListView.separated(
+              separatorBuilder: (context, index) => Divider(color:  AppColor.grey2, indent: 64, height: 1),
               controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
               itemCount: state.items.length + (state.hasMore ? 1 : 0),

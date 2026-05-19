@@ -14,7 +14,7 @@ abstract class OrderRepository {
 
   Future<NetworkResponse<int>> doneCurrentOrder();
 
-  Future<NetworkResponse<void>> rateMechanic(int rating, String comment, int mechanicId);
+  Future<NetworkResponse<void>> rateMechanic(int rating, String comment, int mechanicId, {String? tag});
 }
 
 class OrderRepositoryImpl implements OrderRepository {
@@ -48,7 +48,7 @@ class OrderRepositoryImpl implements OrderRepository {
   }
 
   @override
-  Future<NetworkResponse<void>> rateMechanic(int rating, String comment, int mechanicId) {
-    return orderProccessSource.rateMaster(rating, comment, mechanicId);
+  Future<NetworkResponse<void>> rateMechanic(int rating, String comment, int mechanicId, {String? tag}) {
+    return orderProccessSource.rateMaster(rating, comment, mechanicId, tag: tag);
   }
 }

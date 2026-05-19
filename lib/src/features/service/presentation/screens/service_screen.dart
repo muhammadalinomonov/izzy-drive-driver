@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
+import 'package:taxi_app/src/core/widgets/coming_soon_toast.dart';
 import 'package:taxi_app/src/features/notifications/presentation/widgets/notification_bell_action.dart';
 
 class ServiceScreen extends StatelessWidget {
@@ -90,25 +91,33 @@ class _CategoryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Container(
-        height: 78,
-        decoration: BoxDecoration(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Material(
           color: AppColor.lightBlue,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset(icon, width: 38, height: 35, fit: BoxFit.contain),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: const TextStyle(fontSize: 12, color: Colors.black),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+          child: InkWell(
+            onTap: () =>
+                showComingSoonToast(context, icon: icon, label: label),
+            splashColor: AppColor.kPrimaryColor.withValues(alpha: 0.08),
+            highlightColor: AppColor.kPrimaryColor.withValues(alpha: 0.04),
+            child: SizedBox(
+              height: 78,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(icon, width: 38, height: 35, fit: BoxFit.contain),
+                  const SizedBox(height: 4),
+                  Text(
+                    label,
+                    style: const TextStyle(fontSize: 12, color: Colors.black),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -160,7 +169,10 @@ class _ServiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => showComingSoonToast(context, icon: image, label: title),
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Stack(
@@ -237,6 +249,7 @@ class _ServiceCard extends StatelessWidget {
           ],
         ),
       ],
+      ),
     );
   }
 }

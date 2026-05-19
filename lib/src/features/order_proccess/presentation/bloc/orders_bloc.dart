@@ -114,13 +114,14 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
 
       case 'suborder-accepted':
       case 'suborder-cancelled':
-        // Driver's response was accepted; refresh order to show updated suborders/total.
-        add(GetCurrentOrderEvent());
+        // Driver's response was accepted; silent refresh — UI already
+        // shows the order, we just swap in fresh data without shimmer.
+        add(GetCurrentOrderEvent(silent: true));
         break;
 
       case 'update-order-price':
         // Pre-proposal price edit; refresh current order if any.
-        add(GetCurrentOrderEvent());
+        add(GetCurrentOrderEvent(silent: true));
         break;
 
       case 'new-mechanic-address':
@@ -183,7 +184,9 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     await orderRepository.changeSubOrderStatus(event.id, event.status);
     // Clear the pending suborder modal trigger.
     emit(state.clearPendingSubOrder());
-    add(GetCurrentOrderEvent());
+    // Silent refresh — tracking UI ekranda turibdi, shimmer ko'rsatmaymiz.
+    // Yangi suborder list va total_price jim almashtiriladi.
+    add(GetCurrentOrderEvent(silent: true));
   }
 
   void _onDoneCurrentOrder(DoneCurrentOrderEvent event, Emitter<OrdersState> emit) async {
@@ -201,7 +204,9 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
   }
 
   void _onRateMaster(RateMasterEvent event, Emitter<OrdersState> emit) async {
-    await orderRepository.rateMechanic(event.star, event.comment, event.mechanicId);
+    await orderRepository.rateMechanic(
+      event.star, event.comment, event.mechanicId, tag: event.tag,
+    );
   }
 
   void _onClearLifecycleEvent(ClearLifecycleEventEvent event, Emitter<OrdersState> emit) {

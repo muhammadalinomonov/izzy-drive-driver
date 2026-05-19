@@ -10,6 +10,7 @@ import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/location_service.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
 import 'package:taxi_app/src/core/services/websocket_service.dart';
+import 'package:taxi_app/src/core/utils/adaptive_poller.dart';
 import 'package:taxi_app/src/features/common/presentation/widgets/common_image.dart';
 import 'package:taxi_app/src/features/master/data/repository/master_repository_impl.dart';
 import 'package:taxi_app/src/features/master/data/source/master_remote_data_source.dart';
@@ -17,7 +18,7 @@ import 'package:taxi_app/src/features/master/presentation/bloc/master_bloc.dart'
 import 'package:taxi_app/src/features/master/presentation/screens/master_detail_sheet.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bloc.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/arrived_sheet.dart';
-import 'package:taxi_app/src/features/order_proccess/presentation/widgets/beuty_widget.dart';
+import 'package:taxi_app/src/features/order_proccess/presentation/widgets/awaiting_mechanic_sheet.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/in_progress_sheet.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/order_status_row.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/sub_order_proposal_sheet.dart';
@@ -35,27 +36,34 @@ class OrderSingleScreen extends StatefulWidget {
 class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindingObserver {
   static const _resumeDebounce = Duration(seconds: 10);
   DateTime? _lastResumeRefresh;
+  late final AdaptivePoller _poller;
 
   late mapbox.MapboxMap _mapboxMap;
   mapbox.PolylineAnnotationManager? _polylineAnnotationManager;
   mapbox.PointAnnotationManager? _pointAnnotationManager;
+  // Arrived / in_progress vaziyatda mexanik atrofidagi ko'k pulse halqalar.
+  mapbox.CircleAnnotationManager? _circleAnnotationManager;
 
   // Separate tracked annotations so we can update only the mechanic marker
   // without touching the static destination marker.
   mapbox.PointAnnotation? _mechanicAnnotation;
   mapbox.PointAnnotation? _destinationAnnotation;
+  final List<mapbox.CircleAnnotation> _pulseAnnotations = [];
 
   Uint8List? _mechanicMarkerPng;
   Uint8List? _destinationMarkerPng;
 
   bool _mapReady = false;
 
-  // Insets used for cameraForCoordinateBounds — bottom matches the sheet height.
+  // Insets used for cameraForCoordinateBounds — bottom matches the sheet
+  // height. Yangi 3-card panel (status + master + actions) eski sheet'dan
+  // kattaroq, shuning uchun bottom 420 — marker bottomsheet ostida qolib
+  // ketmaydi.
   static final _mapPadding = mapbox.MbxEdgeInsets(
-    top: 90,
-    left: 50,
-    bottom: 200,
-    right: 50,
+    top: 100,
+    left: 60,
+    bottom: 420,
+    right: 60,
   );
 
   @override
@@ -65,10 +73,20 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
     context.read<OrdersBloc>()
       ..add(GetCurrentOrderEvent())
       ..add(ConnectToWebSocketEvent());
+    // WS uzilgan vaziyatlar uchun backup polling — silent fetch UI'ni
+    // o'zgartirmaydi, tracking sheet o'z holatida qoladi.
+    _poller = AdaptivePoller(
+      ws: serviceLocator<WebSocketService>(),
+      onPoll: () {
+        if (!mounted) return;
+        context.read<OrdersBloc>().add(GetCurrentOrderEvent(silent: true));
+      },
+    )..start();
   }
 
   @override
   void dispose() {
+    _poller.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -90,7 +108,15 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      // Back doim main'ga olib boradi (offers list yoki order_create'ga
+      // emas) — foydalanuvchi qaerdan kelganidan qat'i nazar, tracking
+      // screen'dan chiqsa kerakli joyga tushadi.
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && context.mounted) context.go(Pages.main);
+      },
+      child: Scaffold(
       body: MultiBlocListener(
         listeners: [
           BlocListener<OrdersBloc, OrdersState>(
@@ -127,6 +153,14 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
               if (_mapReady) _drawRoute(state.currentOrder.map);
             },
           ),
+          // Status changed — accepted ↔ arrived/in_progress oralig'ida
+          // marker stilini almashtirish kerak (route vs pulse halqali nuqta).
+          BlocListener<OrdersBloc, OrdersState>(
+            listenWhen: (p, c) => p.currentOrder.status != c.currentOrder.status,
+            listener: (context, state) {
+              if (_mapReady) _drawRoute(state.currentOrder.map);
+            },
+          ),
           BlocListener<OrdersBloc, OrdersState>(
             listenWhen: (p, c) => p is! OrderCanceled && c is OrderCanceled,
             listener: (context, state) {
@@ -153,96 +187,38 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
                       bottom: MediaQuery.of(context).padding.bottom +
                           (MediaQuery.of(context).size.height * 0.3),
                     ),
-                    child: mapbox.MapWidget(
-                      key: const ValueKey('beautifulPulseMapWidget'),
-                      styleUri: mapbox.MapboxStyles.MAPBOX_STREETS,
-                      onMapCreated: _onMapCreated,
-                      cameraOptions: mapbox.CameraOptions(
-                        center: mapbox.Point(
-                          coordinates: mapbox.Position(
-                            state.currentOrder.currentAddress.longitude,
-                            state.currentOrder.currentAddress.latitude,
+                    // Mexanik javobini kutgan paytda map non-interactive bo'ladi
+                    // — har ikkala marker ham allaqachon ko'rinib turibdi.
+                    child: IgnorePointer(
+                      ignoring: status.isMechanicSelected,
+                      child: mapbox.MapWidget(
+                        key: const ValueKey('beautifulPulseMapWidget'),
+                        styleUri: mapbox.MapboxStyles.MAPBOX_STREETS,
+                        onMapCreated: _onMapCreated,
+                        cameraOptions: mapbox.CameraOptions(
+                          center: mapbox.Point(
+                            coordinates: mapbox.Position(
+                              state.currentOrder.currentAddress.longitude,
+                              state.currentOrder.currentAddress.latitude,
+                            ),
                           ),
+                          zoom: 14.5,
+                          pitch: 0.0,
+                          bearing: 0.0,
                         ),
-                        zoom: 14.5,
-                        pitch: 0.0,
-                        bearing: 0.0,
                       ),
                     ),
                   ),
 
-                  // mechanicSelected — searching animation
-                  if (status.isMechanicSelected) ...[
-                    BeautifulRadiationWidget(
-                      isVisible: true,
-                      position: Offset(
-                        MediaQuery.of(context).size.width / 2,
-                        MediaQuery.of(context).size.height / 2,
+                  // mechanicSelected — chiroyli kutish sheet (map ustida
+                  // markaziy spinner yo'q, hammasi sheet ichida).
+                  if (status.isMechanicSelected)
+                    Positioned(
+                      bottom: 0, left: 0, right: 0,
+                      child: AwaitingMechanicSheetConnector(
+                        onCancel: () => _confirmCancel(context),
                       ),
-                    ),
-                    AnimatedPositioned(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOut,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: Container(
-                        height: 333,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                          boxShadow: [BoxShadow(blurRadius: 10, color: Colors.black12)],
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(AppColor.blueMain),
-                                strokeWidth: 4.0,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Waiting for the master to accept the order...',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.black87,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: -0.2,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'A driver is usually found within 1 minute (30 seconds)',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400),
-                              ),
-                              const SizedBox(height: 16),
-                              TextButton(
-                                onPressed: () => _confirmCancel(context),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: Colors.red,
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20, vertical: 10),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8)),
-                                ),
-                                child: const Text(
-                                  'Cancel',
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ]
+                    )
 
                   else if (status.isAccepted)
                     const Positioned(
@@ -391,15 +367,16 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
                 ],
               );
             } else if (state.currentOrderStatus.isInProgress) {
-              return const Center(child: CircularProgressIndicator());
+              return const _OrderSingleSkeleton();
             } else if (state.currentOrderStatus.isFailure) {
               return const Center(child: Text('Error'));
             } else {
-              return const Center(child: Text('No current order'));
+              return const _OrderSingleSkeleton();
             }
           },
         ),
       ),
+    ),
     );
   }
 
@@ -428,25 +405,27 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
     bloc.add(CancelOrderEvent());
   }
 
-  /// Redraw polyline + both markers from fresh MapEntity.
-  /// Clears any previously drawn annotations before drawing new ones.
+  /// Redraw polyline + markers from fresh MapEntity. Status'ga qarab ikki
+  /// xil vizual:
+  ///  - accepted (yo'lda): polyline + 2 ta marker (mexanik + manzil)
+  ///  - arrived / in_progress: bitta nuqta + atrofida ko'k pulse halqalari
+  ///    (Figma 1897:4828)
   void _drawRoute(MapEntity map) async {
     if (_polylineAnnotationManager == null || _pointAnnotationManager == null) return;
     try {
-      // Clear polyline
-      await _polylineAnnotationManager!.deleteAll();
+      await _clearMapAnnotations();
 
-      // Clear tracked point annotations
-      if (_destinationAnnotation != null) {
-        await _pointAnnotationManager!.delete(_destinationAnnotation!);
-        _destinationAnnotation = null;
-      }
-      if (_mechanicAnnotation != null) {
-        await _pointAnnotationManager!.delete(_mechanicAnnotation!);
-        _mechanicAnnotation = null;
+      if (!mounted) return;
+      final status = context.read<OrdersBloc>().state.currentOrder.status;
+      final atSinglePoint = status.isArrived || status.isInProgress;
+
+      if (atSinglePoint) {
+        // Mexanik allaqachon haydovchining manzilida — bitta nuqta yetadi.
+        await _drawPulseMarker(map.endPoint.lat, map.endPoint.lng);
+        return;
       }
 
-      // Draw polyline if route has enough points
+      // accepted: yo'l chizig'i + 2 marker.
       if (map.route.length >= 2) {
         final positions = map.route.map((p) => mapbox.Position(p.lng, p.lat)).toList();
         await _polylineAnnotationManager!.create(
@@ -457,8 +436,6 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
           ),
         );
       }
-
-      // Destination marker — driver's order address (endPoint)
       if (map.endPoint.lat != 0 || map.endPoint.lng != 0) {
         _destinationAnnotation = await _pointAnnotationManager!.create(
           mapbox.PointAnnotationOptions(
@@ -468,8 +445,6 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
           ),
         );
       }
-
-      // Mechanic marker — mechanic's position at acceptance time (startPoint)
       if (map.startPoint.lat != 0 || map.startPoint.lng != 0) {
         _mechanicAnnotation = await _pointAnnotationManager!.create(
           mapbox.PointAnnotationOptions(
@@ -479,7 +454,6 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
           ),
         );
       }
-
       await _fitCameraToBounds(
         lat1: map.startPoint.lat, lng1: map.startPoint.lng,
         lat2: map.endPoint.lat, lng2: map.endPoint.lng,
@@ -487,6 +461,66 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
     } catch (e) {
       debugPrint('Error drawing route: $e');
     }
+  }
+
+  /// Barcha annotation'larni tozalash — status o'zgarganda har xil
+  /// stildagi marker'lar bir-biriga yopishib qolmasligi uchun.
+  Future<void> _clearMapAnnotations() async {
+    await _polylineAnnotationManager?.deleteAll();
+    if (_destinationAnnotation != null) {
+      await _pointAnnotationManager!.delete(_destinationAnnotation!);
+      _destinationAnnotation = null;
+    }
+    if (_mechanicAnnotation != null) {
+      await _pointAnnotationManager!.delete(_mechanicAnnotation!);
+      _mechanicAnnotation = null;
+    }
+    if (_pulseAnnotations.isNotEmpty && _circleAnnotationManager != null) {
+      for (final c in _pulseAnnotations) {
+        await _circleAnnotationManager!.delete(c);
+      }
+      _pulseAnnotations.clear();
+    }
+  }
+
+  /// Figma 1897:4828 — bitta nuqta atrofida ikkita ko'k translucent halqa
+  /// + ustida mexanik ikoni. Yo'l chizig'i va manzil markeri ko'rsatilmaydi.
+  Future<void> _drawPulseMarker(double lat, double lng) async {
+    if (lat == 0 && lng == 0) return;
+    final point = mapbox.Point(coordinates: mapbox.Position(lng, lat));
+    // Tashqi katta translucent halqa.
+    final outer = await _circleAnnotationManager?.create(
+      mapbox.CircleAnnotationOptions(
+        geometry: point,
+        circleRadius: 60,
+        circleColor: 0xFF0866FF,
+        circleOpacity: 0.10,
+      ),
+    );
+    if (outer != null) _pulseAnnotations.add(outer);
+    // Ichki kichikroq, biroz quyuqroq halqa.
+    final inner = await _circleAnnotationManager?.create(
+      mapbox.CircleAnnotationOptions(
+        geometry: point,
+        circleRadius: 42,
+        circleColor: 0xFF0866FF,
+        circleOpacity: 0.18,
+      ),
+    );
+    if (inner != null) _pulseAnnotations.add(inner);
+    // Mexanik ikoni — markazda (kichikroq qilindi, halqalar ichida ko'rinsin).
+    _mechanicAnnotation = await _pointAnnotationManager!.create(
+      mapbox.PointAnnotationOptions(
+        geometry: point,
+        image: _mechanicMarkerPng,
+        iconSize: 0.35,
+      ),
+    );
+    // Camera nuqtaga yaqinroq olib boriladi.
+    await _mapboxMap.flyTo(
+      mapbox.CameraOptions(center: point, zoom: 16, pitch: 0, bearing: 0),
+      mapbox.MapAnimationOptions(duration: 600),
+    );
   }
 
   /// Update only the mechanic marker — destination stays fixed.
@@ -523,6 +557,11 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
     final bloc = mounted ? context.read<OrdersBloc>() : null;
     try {
       await Future.delayed(const Duration(milliseconds: 500));
+      // Z-order: birinchi yaratilgan pastda turadi. Circle pastda, polyline
+      // o'rtada, point (mexanik ikoni) tepada — pulse halqalar ustani
+      // tagiga tushadi, ko'k rang ustaning ikoniga "urilmaydi".
+      _circleAnnotationManager =
+          await _mapboxMap.annotations.createCircleAnnotationManager();
       _polylineAnnotationManager =
           await _mapboxMap.annotations.createPolylineAnnotationManager();
       _pointAnnotationManager =
@@ -615,5 +654,205 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
     } catch (e) {
       debugPrint('Error centering on address: $e');
     }
+  }
+}
+
+// ---------- Loading skeleton ----------
+
+/// Order single screen yuklanish vaziyati uchun skeleton — success holatining
+/// strukturasini taqlid qiladi: yuqorida xira map placeholder, pastda bottom
+/// sheet shape'i (drag handle + sarlavha + status row + master row + actions).
+/// Markaziy spinner yo'q — buncha shimmer effekti bilan UI silliq tuyuladi.
+class _OrderSingleSkeleton extends StatefulWidget {
+  const _OrderSingleSkeleton();
+
+  @override
+  State<_OrderSingleSkeleton> createState() => _OrderSingleSkeletonState();
+}
+
+class _OrderSingleSkeletonState extends State<_OrderSingleSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _shimmer;
+
+  static const Color _kBg = Color(0xFFEFF3F6);
+  static const Color _kBgDark = Color(0xFFE3E8EB);
+
+  @override
+  void initState() {
+    super.initState();
+    _shimmer = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _shimmer.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final sheetHeight = size.height * 0.42;
+    return Stack(
+      children: [
+        // Xira map placeholder — success state'da map qaysi joyni egallasa,
+        // shu joyda turadi.
+        Positioned.fill(
+          bottom: sheetHeight,
+          child: AnimatedBuilder(
+            animation: _shimmer,
+            builder: (context, _) {
+              final t = _shimmer.value;
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment(-1 + 2 * t, -1),
+                    end: Alignment(1 + 2 * t, 1),
+                    colors: const [_kBg, _kBgDark, _kBg],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        // Bottom sheet skeleton.
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0x14000000),
+                  blurRadius: 18,
+                  offset: Offset(0, -4),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                16, 12, 16, 16 + MediaQuery.of(context).padding.bottom,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Drag handle.
+                  Center(
+                    child: Container(
+                      width: 43,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: _kBgDark,
+                        borderRadius: BorderRadius.circular(540),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Title placeholder.
+                  Center(child: _shimmerBox(width: 220, height: 22)),
+                  const SizedBox(height: 28),
+                  // Status row (4 ta krug).
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: List.generate(
+                        4,
+                        (_) => _shimmerCircle(size: 40),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  // "Master" label.
+                  _shimmerBox(width: 80, height: 14),
+                  const SizedBox(height: 12),
+                  // Master row.
+                  Row(
+                    children: [
+                      _shimmerCircle(size: 44),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _shimmerBox(width: 140, height: 14),
+                            const SizedBox(height: 6),
+                            _shimmerBox(width: 80, height: 12),
+                          ],
+                        ),
+                      ),
+                      _shimmerBox(width: 70, height: 28, radius: 50),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  // Actions row (3 ta button).
+                  Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _shimmerCircle(size: 48),
+                        const SizedBox(width: 24),
+                        _shimmerCircle(size: 48),
+                        const SizedBox(width: 24),
+                        _shimmerCircle(size: 48),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _shimmerBox({required double width, required double height, double radius = 6}) {
+    return AnimatedBuilder(
+      animation: _shimmer,
+      builder: (context, _) {
+        final t = _shimmer.value;
+        return Container(
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(radius),
+            gradient: LinearGradient(
+              begin: Alignment(-1 + 2 * t, 0),
+              end: Alignment(1 + 2 * t, 0),
+              colors: const [_kBg, _kBgDark, _kBg],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _shimmerCircle({required double size}) {
+    return AnimatedBuilder(
+      animation: _shimmer,
+      builder: (context, _) {
+        final t = _shimmer.value;
+        return Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              begin: Alignment(-1 + 2 * t, 0),
+              end: Alignment(1 + 2 * t, 0),
+              colors: const [_kBg, _kBgDark, _kBg],
+            ),
+          ),
+        );
+      },
+    );
   }
 }

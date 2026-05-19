@@ -7,12 +7,14 @@ import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/network/auth_session.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
 import 'package:taxi_app/src/core/services/websocket_service.dart';
+import 'package:taxi_app/src/core/utils/adaptive_poller.dart';
 import 'package:taxi_app/src/core/utils/notifications.dart';
 import 'package:taxi_app/src/features/home/presentation/screens/home_screen.dart';
 import 'package:taxi_app/src/features/master/presentation/screens/master_screen.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bloc.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
 import 'package:taxi_app/src/features/phone_verify/presentation/bloc/phone_verify_bloc.dart';
+// ignore: unused_import
 import 'package:taxi_app/src/features/phone_verify/presentation/widgets/phone_verify_sheet.dart';
 import 'package:taxi_app/src/features/profile/data/model/profile_model.dart';
 import 'package:taxi_app/src/features/profile/data/source/profile_data_source.dart';
@@ -42,8 +44,10 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   int _initialIndex = 0;
 
   bool _phoneSheetShown = false;
+  // ignore: unused_field
   late final PhoneVerifyBloc _phoneVerifyBloc;
   VoidCallback? _phoneSessionListener;
+  late final AdaptivePoller _poller;
 
   @override
   void initState() {
@@ -55,6 +59,15 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     context.read<OrdersBloc>()
       ..add(ConnectToWebSocketEvent())
       ..add(GetCurrentOrderEvent());
+    // WS uzilib qolgan vaziyatlarda backup polling — silent fetch UI'ni
+    // o'zgartirmaydi, foydalanuvchi sezmaydi.
+    _poller = AdaptivePoller(
+      ws: serviceLocator<WebSocketService>(),
+      onPoll: () {
+        if (!mounted) return;
+        context.read<OrdersBloc>().add(GetCurrentOrderEvent(silent: true));
+      },
+    )..start();
     // FCM tokenni backendga yangilab qo'yamiz. Token rotation yoki yangi
     // qurilma bo'lsa, shu yerda yangilanadi — backend doimo amaldagi token
     // bilan push yuboradi.
@@ -130,24 +143,25 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     };
     AuthSession.tick.addListener(_phoneSessionListener!);
     if (!context.mounted) return;
-    // showPhoneVerifySheet(context, bloc: _phoneVerifyBloc).whenComplete(() {
-    //   if (_phoneSessionListener != null) {
-    //     AuthSession.tick.removeListener(_phoneSessionListener!);
-    //     _phoneSessionListener = null;
-    //   }
-    //   // Agar foydalanuvchi qandaydir tarzda sheet'ni yopib qo'ysa-yu, lekin
-    //   // hali ham phone verify qilinmagan bo'lsa — qayta ochib qo'yamiz.
-    //   if (mounted && !AuthSession.isPhoneVerified) {
-    //     _phoneSheetShown = false;
-    //     WidgetsBinding.instance.addPostFrameCallback((_) {
-    //       _maybeShowPhoneVerifySheet();
-    //     });
-    //   }
-    // });
+    showPhoneVerifySheet(context, bloc: _phoneVerifyBloc).whenComplete(() {
+      if (_phoneSessionListener != null) {
+        AuthSession.tick.removeListener(_phoneSessionListener!);
+        _phoneSessionListener = null;
+      }
+      // Agar foydalanuvchi qandaydir tarzda sheet'ni yopib qo'ysa-yu, lekin
+      // hali ham phone verify qilinmagan bo'lsa — qayta ochib qo'yamiz.
+      if (mounted && !AuthSession.isPhoneVerified) {
+        _phoneSheetShown = false;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _maybeShowPhoneVerifySheet();
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
+    _poller.dispose();
     if (_phoneSessionListener != null) {
       AuthSession.tick.removeListener(_phoneSessionListener!);
     }

@@ -216,8 +216,8 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                               Row(
                                 children: [
                                   AvatarImage(
-                                    imageUrl: state.orderHistoryDetail.selectedMechanic.photo,
-                                    name: state.orderHistoryDetail.selectedMechanic.fullName,
+                                    imageUrl: state.orderHistoryDetail.mechanicInfo.photo,
+                                    name: state.orderHistoryDetail.mechanicInfo.mechanicName,
                                     size: 44,
                                   ),
                                   SizedBox(width: 12),

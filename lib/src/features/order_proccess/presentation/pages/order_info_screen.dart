@@ -104,99 +104,101 @@ class _OrderInfoScreenState extends State<OrderInfoScreen> {
       ),
       body: BlocBuilder<OrdersBloc, OrdersState>(
         builder: (context, state) {
-          return Column(
-            children: [
-              Container(
-                padding: EdgeInsets.only(left: 12, bottom: 18, right: 12),
-                width: MediaQuery.sizeOf(context).width,
-                decoration: BoxDecoration(
-                  color: AppColor.white,
-                  borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                Container(
+                  padding: EdgeInsets.only(left: 12, bottom: 18, right: 12),
+                  width: MediaQuery.sizeOf(context).width,
+                  decoration: BoxDecoration(
+                    color: AppColor.white,
+                    borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: MediaQuery.paddingOf(context).top),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                        child: Icon(Icons.arrow_back),
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        state.currentOrder.status.orderDescription,
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 20, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: MediaQuery.paddingOf(context).top),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-                      child: Icon(Icons.arrow_back),
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      state.currentOrder.status.orderDescription,
-                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 20, fontWeight: FontWeight.w600),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.all(12),
-                margin: EdgeInsets.only(top: 8),
-                decoration: BoxDecoration(color: AppColor.white, borderRadius: BorderRadius.circular(12)),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Master',
-                      style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                    SizedBox(height: 8),
-                    Row(
-                      children: [
-                        AvatarImage(
-                          imageUrl: state.currentOrder.selectedMechanic.photo,
-                          name: state.currentOrder.selectedMechanic.fullName,
-                          size: 44,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          state.currentOrder.selectedMechanic.fullName,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w600, fontSize: 14),
-                        ),
-                        Spacer(),
-                        GestureDetector(
-                          onTap: () {
-                            final bloc = MasterBloc(
-                              MasterRepositoryImpl(MasterRemoteDataSource()),
-                              LocationService(),
-                            );
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              builder: (ctx) => BlocProvider.value(
-                                value: bloc,
-                                child: MasterDetailSheet(
-                                  id: state.currentOrder.selectedMechanic.id,
+                Container(
+                  padding: EdgeInsets.all(12),
+                  margin: EdgeInsets.only(top: 8),
+                  decoration: BoxDecoration(color: AppColor.white, borderRadius: BorderRadius.circular(12)),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Master',
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                      SizedBox(height: 8),
+                      Row(
+                        children: [
+                          AvatarImage(
+                            imageUrl: state.currentOrder.selectedMechanic.photo,
+                            name: state.currentOrder.selectedMechanic.fullName,
+                            size: 44,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            state.currentOrder.selectedMechanic.fullName,
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w600, fontSize: 14),
+                          ),
+                          Spacer(),
+                          GestureDetector(
+                            onTap: () {
+                              final bloc = MasterBloc(
+                                MasterRepositoryImpl(MasterRemoteDataSource()),
+                                LocationService(),
+                              );
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                builder: (ctx) => BlocProvider.value(
+                                  value: bloc,
+                                  child: MasterDetailSheet(
+                                    id: state.currentOrder.selectedMechanic.id,
+                                  ),
                                 ),
+                              );
+                            },
+                            child: Container(
+                              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                              decoration: BoxDecoration(borderRadius: BorderRadius.circular(50), color: AppColor.lightBlue),
+                              child: Text(
+                                'More',
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w500, fontSize: 13),
                               ),
-                            );
-                          },
-                          child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(50), color: AppColor.lightBlue),
-                            child: Text(
-                              'More',
-                              style: Theme.of(
-                                context,
-                              ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w500, fontSize: 13),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              OrderInfoCard(currentOrder: state.currentOrder),
-
-              SubOrdersCard(currentOrder: state.currentOrder),
-            ],
+                OrderInfoCard(currentOrder: state.currentOrder),
+            
+                SubOrdersCard(currentOrder: state.currentOrder),
+              ],
+            ),
           );
         },
       ),

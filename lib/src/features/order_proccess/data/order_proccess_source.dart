@@ -128,13 +128,18 @@ class OrderProccessSource {
     }
   }
 
-  Future<NetworkResponse<void>> rateMaster(int star, String comment, int mechanicId) async {
+  Future<NetworkResponse<void>> rateMaster(int star, String comment, int mechanicId, {String? tag}) async {
     try {
       final token = StorageRepository.getString('token').replaceAll('Bearer', '').trim();
 
       final result = await client.post(
         ApiConstants.rateMaster,
-        data: {'stars': star, 'comment': comment, 'mechanic_id': mechanicId},
+        data: {
+          'stars': star,
+          'comment': comment,
+          'mechanic_id': mechanicId,
+          if (tag != null && tag.isNotEmpty) 'tag': tag,
+        },
         options: Options(
           headers: {'Authorization': "Bearer $token", 'Content-Type': 'application/x-www-form-urlencoded'},
         ),

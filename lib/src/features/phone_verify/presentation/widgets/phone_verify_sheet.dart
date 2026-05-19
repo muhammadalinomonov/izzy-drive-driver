@@ -23,8 +23,8 @@ Future<void> showPhoneVerifySheet(
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    isDismissible: false,
-    enableDrag: false,
+    isDismissible: true,
+    enableDrag: true,
     backgroundColor: Colors.transparent,
     builder: (sheetContext) {
       return BlocProvider.value(

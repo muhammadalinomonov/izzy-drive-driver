@@ -93,13 +93,16 @@ class ProfileModel {
   }
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
+    final photoStr = toStr(json['photo']);
     return ProfileModel(
       email: toStr(json['email']),
       truckmodel: toStr(json['truck_model']),
       fullName: toStr(json['full_name']),
       mechanicName: toStr(json['mechanic_name']),
       mechanicId: toInt(json['mechanic_id']),
-      photo: toStr(json['photo']),
+      // `mechanic_info` payloadlari `mechanic_photo` ni qaytaradi, oddiy
+      // profil javoblari esa `photo` ni — ikkalasini ham qabul qilamiz.
+      photo: photoStr.isNotEmpty ? photoStr : toStr(json['mechanic_photo']),
       truckImage: toStr(json['truck_image']),
       truckMark: toStr(json['truck_mark']),
       truckYear: toStr(json['truck_year']),

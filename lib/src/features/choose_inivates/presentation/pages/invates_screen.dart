@@ -1,12 +1,13 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
 import 'package:taxi_app/src/core/services/websocket_service.dart';
+import 'package:taxi_app/src/core/utils/adaptive_poller.dart';
 import 'package:taxi_app/src/features/common/presentation/widgets/common_image.dart';
 import 'package:taxi_app/src/features/choose_inivates/presentation/widgets/profile_order_model_sheet.dart';
 import 'package:taxi_app/src/features/common/presentation/widgets/common_scalel_animation.dart';
@@ -15,6 +16,22 @@ import 'package:taxi_app/src/routes/pages.dart';
 
 import '../../data/model/active_order.dart';
 import '../bloc/inivites_bloc.dart';
+
+// Figma design tokens (Quadrix Ai design system).
+const Color _kBg = Color(0xFFEFF3F6); // Gray/BG — page background
+const Color _kBorder = Color(0xFFE3E8EB);
+const Color _kSubtitle = Color(0xFF6B7073);
+const Color _kCaption = Color(0xFF43484B);
+const Color _kDivider = Color(0xFFECF0F3);
+const Color _kInputBg = Color(0xFFEFF3F6);
+const Color _kPrimary = Color(0xFF0866FF);
+const Color _kMuted = Color(0xFF93989B);
+const Color _kCancelBg = Color(0x19FC0000);
+const Color _kCancelText = Color(0xFFFC0000);
+const Color _kPositiveBg = Color(0x1404A516);
+const Color _kPositiveText = Color(0xFF009011);
+const Color _kNegativeBg = Color(0x14FF1212);
+const Color _kNegativeText = Color(0xFFFF1212);
 
 class InvatesScreen extends StatefulWidget {
   const InvatesScreen({super.key});
@@ -25,7 +42,9 @@ class InvatesScreen extends StatefulWidget {
 
 class _InvatesScreenState extends State<InvatesScreen> with WidgetsBindingObserver {
   static const _resumeDebounce = Duration(seconds: 10);
+
   DateTime? _lastResumeRefresh;
+  late final AdaptivePoller _poller;
 
   late InivitesBloc inivitesBloc;
 
@@ -33,16 +52,26 @@ class _InvatesScreenState extends State<InvatesScreen> with WidgetsBindingObserv
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // Dastlab ma'lumotlarni yuklash
     inivitesBloc = context.read<InivitesBloc>()..add(FetchActiveOrderEvent());
+    // Adaptiv polling: WS ulangan paytda har 30s, uzilgan paytda har 10s.
+    // Tick'larda setState — time-ago labellarini yangilab turish uchun.
+    _poller = AdaptivePoller(
+      ws: serviceLocator<WebSocketService>(),
+      onPoll: () {
+        if (!mounted) return;
+        context.read<InivitesBloc>().add(FetchActiveOrderEvent());
+      },
+      onTick: () {
+        if (mounted) setState(() {});
+      },
+    )..start();
   }
 
   @override
   void dispose() {
+    _poller.dispose();
     WidgetsBinding.instance.removeObserver(this);
-    // WebSocket'dan uzilish
     inivitesBloc.add(DisconnectFromWebSocketEvent());
-    print('WebSocket disconnected');
     super.dispose();
   }
 
@@ -54,17 +83,15 @@ class _InvatesScreenState extends State<InvatesScreen> with WidgetsBindingObserv
       return;
     }
     _lastResumeRefresh = now;
-    // Force a fresh socket — iOS often suspends the WS during background
-    // without firing onDone, so the cached _isConnected can be a lie.
+    // iOS often suspends the WS during background without firing onDone, so
+    // the cached `_isConnected` can be a lie — force a fresh socket.
     serviceLocator<WebSocketService>().reconnect();
     if (!mounted) return;
     context.read<InivitesBloc>().add(FetchActiveOrderEvent());
   }
 
-  // Function to handle the refresh action
   Future<void> _onRefresh() async {
     context.read<InivitesBloc>().add(FetchActiveOrderEvent());
-    // Optional delay to ensure the refresh indicator is visible
     await Future.delayed(const Duration(milliseconds: 500));
   }
 
@@ -100,580 +127,1082 @@ class _InvatesScreenState extends State<InvatesScreen> with WidgetsBindingObserv
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _backToMain();
-      },
-      child: Scaffold(
-      backgroundColor: AppColor.greyBg,
-      appBar: AppBar(
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: _backToMain,
-        ),
-        actions: [
-          TextButton(
-            onPressed: _confirmCancel,
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text('Cancel'.tr()),
-          ),
-        ],
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
       ),
-      body: BlocConsumer<InivitesBloc, InivitesState>(
-        listenWhen: (prev, curr) => curr is InivitesCancelled || curr is InivitesError,
-        listener: (context, state) {
-          if (state is InivitesCancelled) {
-            // Cancel API faqat shu bloc orqali chaqiriladi — OrdersBloc
-            // shu paytda eski "active" state'da qotirib qoladi. WS dan
-            // `order-cancelled` event har doim yetib bormasligi mumkin
-            // (broadcast vs targeted), shu sababli aniq signal yuboramiz.
-            context.read<OrdersBloc>().add(ResetCurrentOrderEvent());
-            context.go(Pages.main);
-            return;
-          }
-          if (state is InivitesError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
-          }
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) _backToMain();
         },
-        builder: (context, state) {
-          if (state is InivitesLoading) {
-            return const Center(child: CircularProgressIndicator.adaptive());
-          } else if (state is InivitesLoaded) {
-            final orderResponse = state.orderResponse;
-            final order = orderResponse.order;
-            final offers = orderResponse.data;
-            return RefreshIndicator.adaptive(
-              onRefresh: () async {
-                _onRefresh.call();
-              },
-              child: SingleChildScrollView(
-                physics: AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: AppColor.white,
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(20),
-                          bottomRight: Radius.circular(20),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 10),
-                          Text(
-                            _formatTimeAgo(order.createdAt),
-                            style: const TextStyle(
-                              color: Color(0xFF43484B),
-                              fontSize: 13,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w400,
-                              letterSpacing: -0.30,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            order.orderTitle,
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 23,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w500,
-                              letterSpacing: -0.30,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              SvgPicture.asset(width: 20, height: 20, AppIcons.location),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(right: 25.0),
-                                  child: Text(
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    order.currentAddress.address,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      color: Color(0xFF6B7073),
-                                      fontSize: 15,
-                                      fontFamily: 'Inter',
-                                      fontWeight: FontWeight.w500,
-                                      letterSpacing: -0.30,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          Container(
-                            padding: const EdgeInsets.symmetric(vertical: 8.5),
-                            decoration: ShapeDecoration(
-                              shape: RoundedRectangleBorder(
-                                side: const BorderSide(width: 1, color: Color(0xFFE2E7EB)),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                const SizedBox(width: 12),
-                                Text(
-                                  'Offer amount'.tr(),
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 15,
-                                    fontFamily: 'Inter',
-                                    fontWeight: FontWeight.w500,
-                                    height: 1.20,
-                                    letterSpacing: -0.30,
-                                  ),
-                                ),
-                                const Spacer(),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 13),
-                                  decoration: ShapeDecoration(
-                                    color: const Color(0xFFEFF2F5),
-                                    shape: RoundedRectangleBorder(
-                                      side: const BorderSide(width: 1, color: Color(0xFFE2E7EB)),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      '\$${order.totalPrice.toStringAsFixed(0)}',
-                                      style: const TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 15,
-                                        fontFamily: 'Inter',
-                                        fontWeight: FontWeight.w500,
-                                        height: 1.40,
-                                        letterSpacing: -0.30,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                if (offers.isEmpty) ...[
-                                  const SizedBox(width: 10),
-                                  CommonScaleAnimation(
-                                    onTap: () {
-                                      if (order.price > 1) {
-                                        context.read<InivitesBloc>().add(UpdateOrderPriceEvent(price: order.price - 1));
-                                      }
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.all(3),
-                                      width: 35,
-                                      height: 35,
-                                      decoration: ShapeDecoration(
-                                        color: const Color(0x19FB0000),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                      ),
-                                      child: SvgPicture.asset(AppIcons.down),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  CommonScaleAnimation(
-                                    onTap: () {
-                                      context.read<InivitesBloc>().add(UpdateOrderPriceEvent(price: order.price + 1));
-                                    },
-                                    child: Container(
-                                      width: 38,
-                                      padding: const EdgeInsets.all(3),
-                                      height: 38,
-                                      decoration: ShapeDecoration(
-                                        color: const Color(0x1904A516),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                      ),
-                                      child: SvgPicture.asset(AppIcons.up),
-                                    ),
-                                  ),
-                                ],
-                                const SizedBox(width: 12),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 15),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      decoration: BoxDecoration(
-                        color: AppColor.white,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(20),
-                          topRight: Radius.circular(20),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 18),
-                          Text(
-                            '${'Offers'.tr()}: ${offers.length}',
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 18,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w500,
-                              letterSpacing: -0.30,
-                            ),
-                          ),
-                          const SizedBox(height: 15),
-                          offers.isEmpty
-                              ? Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 50),
-                                    child: Column(
-                                      children: [
-                                        Icon(Icons.hourglass_empty, size: 50, color: Colors.grey[400]),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          'Waiting for offers...'.tr(),
-                                          style: TextStyle(
-                                            color: Colors.grey[600],
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          'Mechanics are reviewing your order'.tr(),
-                                          style: TextStyle(color: Colors.grey[500], fontSize: 14),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                )
-                              : ListView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: offers.length,
-                                  itemBuilder: (context, index) {
-                                    final offer = offers[index];
-                                    final percentageChange = offer.changePercent;
-                                    final balanceColor = _getBalanceColors(offer.balance);
-                                    final changeColor = balanceColor['text']!;
-                                    final changeBackgroundColor = balanceColor['background']!;
-                                    final balanceText = offer.balance.toLowerCase() == 'equal'
-                                        ? 'EQUAL'
-                                        : offer.balance.toUpperCase();
-                                    return AnimatedContainer(
-                                      duration: const Duration(milliseconds: 300),
-                                      child: _buildOfferItem(
-                                        context: context,
-                                        offer: offer,
-                                        percentageChange: percentageChange,
-                                        changeColor: changeColor,
-                                        changeBackgroundColor: changeBackgroundColor,
-                                        changeText: percentageChange >= 0
-                                            ? '↑${percentageChange.toStringAsFixed(1)}%'
-                                            : '↓${percentageChange.abs().toStringAsFixed(1)}%',
-                                        balanceColor: balanceColor['background']!,
-                                        balanceTextColor: balanceColor['text']!,
-                                        balanceText: balanceText,
-                                        isNew: index == 0 && offers.length > 1, // Eng birinchi taklif yangi
-                                      ),
-                                    );
-                                  },
-                                ),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
-                    ),
-                  ],
+        child: Scaffold(
+          backgroundColor: _kBg,
+          body: Column(
+            children: [
+              // Status bar + TopBar — fixed white area, doesn't scroll on refresh.
+              Container(
+                color: Colors.white,
+                child: SafeArea(
+                  bottom: false,
+                  child: _TopBar(onBack: _backToMain, onCancel: _confirmCancel),
                 ),
               ),
-            );
-          } else if (state is InivitesError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 60, color: Colors.red[300]),
-                  const SizedBox(height: 16),
-                  Text(
-                    'An error occurred'.tr(),
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey[700]),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${'Error'.tr()}: ${state.message}',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  MaterialButton(
-                    onPressed: () => context.read<InivitesBloc>().add(FetchActiveOrderEvent()),
-                    color: const Color(0xFF0866FF),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                    child: Text(
-                      'Try again'.tr(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
+              Expanded(
+                child: BlocConsumer<InivitesBloc, InivitesState>(
+                  listenWhen: (prev, curr) =>
+                      curr is InivitesCancelled || curr is InivitesError,
+                  listener: (context, state) {
+                    if (state is InivitesCancelled) {
+                      // Cancel API faqat shu bloc orqali chaqiriladi — OrdersBloc
+                      // shu paytda eski "active" state'da qotirib qoladi. WS dan
+                      // `order-cancelled` event har doim yetib bormasligi mumkin
+                      // (broadcast vs targeted), shu sababli aniq signal yuboramiz.
+                      context.read<OrdersBloc>().add(ResetCurrentOrderEvent());
+                      context.go(Pages.main);
+                      return;
+                    }
+                    if (state is InivitesError) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(state.message)),
+                      );
+                    }
+                  },
+                  // Pull-to-refresh paytida bloc Loading → Loaded chiqaradi.
+                  // Loaded UI'ni Loading bilan almashtirmaymiz — refresh
+                  // indicator o'zi yetarli signal beradi.
+                  buildWhen: (prev, curr) {
+                    if (curr is InivitesLoading && prev is InivitesLoaded) {
+                      return false;
+                    }
+                    return true;
+                  },
+                  builder: (context, state) {
+                    if (state is InivitesLoaded) {
+                      return _Loaded(
+                        orderResponse: state.orderResponse,
+                        onRefresh: _onRefresh,
+                      );
+                    } else if (state is InivitesError) {
+                      return _ErrorView(message: state.message);
+                    } else {
+                      // Initial + Loading (first load): skeleton placeholder.
+                      return const _LoadingSkeleton();
+                    }
+                  },
+                ),
               ),
-            );
-          } else {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 16),
-                  Text('Loading data...'.tr()),
-                ],
-              ),
-            );
-          }
-        },
+            ],
+          ),
+        ),
       ),
-    ),
     );
   }
+}
 
-  Map<String, Color> _getBalanceColors(String balance) {
-    switch (balance.toLowerCase()) {
-      case 'equal':
-        return {'background': Colors.yellow[100]!, 'text': Colors.yellow[800]!};
-      case 'cheap':
-        return {
-          'background': Colors.red[100]!, // Red for "cheap"
-          'text': Colors.red[800]!,
-        };
-      case 'expensive':
-        return {
-          'background': Colors.green[100]!, // Green for "expensive"
-          'text': Colors.green[800]!,
-        };
-      default:
-        return {'background': Colors.grey[100]!, 'text': Colors.grey[800]!};
+class _Loaded extends StatefulWidget {
+  const _Loaded({required this.orderResponse, required this.onRefresh});
+
+  final OrderResponse orderResponse;
+  final Future<void> Function() onRefresh;
+
+  @override
+  State<_Loaded> createState() => _LoadedState();
+}
+
+class _LoadedState extends State<_Loaded> {
+  // Pull masofasi — shu chegaradan oshganda refresh ishga tushadi.
+  static const double _pullThreshold = 80;
+  bool _refreshing = false;
+  double _pullAccumulator = 0;
+
+  Future<void> _doRefresh() async {
+    if (_refreshing) return;
+    setState(() => _refreshing = true);
+    try {
+      await widget.onRefresh();
+    } finally {
+      if (mounted) setState(() => _refreshing = false);
     }
   }
 
-  Widget _buildOfferItem({
-    required BuildContext context,
-    required OrderData offer,
-    required double percentageChange,
-    required Color changeColor,
-    required Color changeBackgroundColor,
-    required String changeText,
-    required Color balanceColor,
-    required Color balanceTextColor,
-    required String balanceText,
-    bool isNew = false,
-  }) {
-    return Container(
-      width: double.infinity,
-      margin: EdgeInsets.only(bottom: isNew ? 8 : 0),
-      decoration: BoxDecoration(color: AppColor.white),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    AvatarImage(
-                      imageUrl: offer.avatar,
-                      name: offer.mechanicName,
-                      size: 50,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
+  bool _onScroll(ScrollNotification n) {
+    if (n is OverscrollNotification && n.overscroll < 0 && !_refreshing) {
+      // ClampingScrollPhysics overscroll'ni vizual qabul qilmaydi, lekin
+      // rejected delta'ni notification orqali yuboradi — biz uni yig'amiz.
+      _pullAccumulator += n.overscroll.abs();
+      if (_pullAccumulator >= _pullThreshold) {
+        _pullAccumulator = 0;
+        _doRefresh();
+      }
+    } else if (n is ScrollEndNotification) {
+      _pullAccumulator = 0;
+    }
+    return false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final order = widget.orderResponse.order;
+    final offers = widget.orderResponse.data;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Stack(
+          children: [
+            // Android'dagi glow indikatorni o'chiramiz — content tinch turadi.
+            NotificationListener<OverscrollIndicatorNotification>(
+              onNotification: (n) {
+                n.disallowIndicator();
+                return true;
+              },
+              child: NotificationListener<ScrollNotification>(
+                onNotification: _onScroll,
+                child: SingleChildScrollView(
+                  // ClampingScrollPhysics — overscroll vizual yo'q (bounce yo'q),
+                  // lekin OverscrollNotification chiqaradi. Shu orqali content
+                  // joyidan jilmasdan refresh detect qilamiz.
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: ClampingScrollPhysics(),
+                  ),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    child: IntrinsicHeight(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  offer.mechanicName,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 15,
-                                    fontFamily: 'Inter',
-                                    fontWeight: FontWeight.w600,
-                                    height: 1.40,
-                                    letterSpacing: -0.30,
-                                  ),
-                                ),
-                              ),
-                              if (offer.distance > 0)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue[50],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    '${offer.distance.toStringAsFixed(1)} km',
-                                    style: TextStyle(
-                                      color: Colors.blue[700],
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            offer.shopAddress,
-                            style: const TextStyle(
-                              color: Color(0xFF6B7073),
-                              fontSize: 12,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w400,
-                              height: 1.40,
-                              letterSpacing: -0.30,
+                          _HeaderCard(order: order, hasOffers: offers.isNotEmpty),
+                          const SizedBox(height: 12),
+                          Expanded(
+                            child: _OffersCard(
+                              offers: offers,
+                              orderCreatedAt: order.createdAt,
+                              orderPrice: order.totalPrice,
                             ),
                           ),
                         ],
                       ),
                     ),
+                  ),
+                ),
+              ),
+            ),
+            // Overlay spinner — content ustida suzib turadi, content esa qotgan.
+            Positioned(
+              top: 12,
+              left: 0,
+              right: 0,
+              child: IgnorePointer(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: _refreshing
+                      ? const _RefreshBadge(key: ValueKey('refresh'))
+                      : const SizedBox(key: ValueKey('idle'), height: 0),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _RefreshBadge extends StatelessWidget {
+  const _RefreshBadge({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x1F000000),
+              blurRadius: 16,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: const Center(
+          child: SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.4,
+              valueColor: AlwaysStoppedAnimation(_kPrimary),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TopBar extends StatelessWidget {
+  const _TopBar({required this.onBack, required this.onCancel});
+
+  final VoidCallback onBack;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Row(
+        children: [
+          CommonScaleAnimation(
+            onTap: onBack,
+            child: SizedBox(
+              width: 36,
+              height: 36,
+              child: Center(
+                child: SvgPicture.asset(AppIcons.back, width: 24, height: 24),
+              ),
+            ),
+          ),
+          const Spacer(),
+          CommonScaleAnimation(
+            onTap: onCancel,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(
+                color: _kCancelBg,
+                borderRadius: BorderRadius.circular(50),
+              ),
+              child: Text(
+                'Cancel'.tr(),
+                style: const TextStyle(
+                  color: _kCancelText,
+                  fontSize: 14,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: -0.30,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeaderCard extends StatelessWidget {
+  const _HeaderCard({required this.order, required this.hasOffers});
+
+  final Order order;
+  final bool hasOffers;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 16),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(12),
+          bottomRight: Radius.circular(12),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _formatTimeAgo(order.createdAt),
+            style: const TextStyle(
+              color: _kCaption,
+              fontSize: 14,
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w400,
+              letterSpacing: -0.30,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            order.orderTitle,
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 24,
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w500,
+              letterSpacing: -0.30,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              SvgPicture.asset(AppIcons.location, width: 20, height: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  order.currentAddress.address,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: _kSubtitle,
+                    fontSize: 15,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: -0.30,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _OfferAmountBox(order: order, canAdjust: !hasOffers),
+        ],
+      ),
+    );
+  }
+}
+
+class _OfferAmountBox extends StatelessWidget {
+  const _OfferAmountBox({required this.order, required this.canAdjust});
+
+  final Order order;
+  final bool canAdjust;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 58,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: ShapeDecoration(
+        shape: RoundedRectangleBorder(
+          side: const BorderSide(width: 1, color: _kBorder),
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      child: Row(
+        children: [
+          Text(
+            'Offer amount'.tr(),
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 16,
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w500,
+              height: 1.2,
+              letterSpacing: -0.30,
+            ),
+          ),
+          const Spacer(),
+          Container(
+            height: 38,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            alignment: Alignment.center,
+            decoration: ShapeDecoration(
+              color: _kInputBg,
+              shape: RoundedRectangleBorder(
+                side: const BorderSide(width: 1, color: _kBorder),
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text(
+              '\$${order.totalPrice.toStringAsFixed(0)}',
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 16,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w500,
+                height: 1.4,
+                letterSpacing: -0.30,
+              ),
+            ),
+          ),
+          if (canAdjust) ...[
+            const SizedBox(width: 8),
+            _PriceAdjustButton(
+              color: const Color(0x19FB0000),
+              icon: AppIcons.down,
+              onTap: () {
+                if (order.price > 1) {
+                  context
+                      .read<InivitesBloc>()
+                      .add(UpdateOrderPriceEvent(price: order.price - 1));
+                }
+              },
+            ),
+            const SizedBox(width: 8),
+            _PriceAdjustButton(
+              color: const Color(0x1904A516),
+              icon: AppIcons.up,
+              onTap: () {
+                context
+                    .read<InivitesBloc>()
+                    .add(UpdateOrderPriceEvent(price: order.price + 1));
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PriceAdjustButton extends StatelessWidget {
+  const _PriceAdjustButton({
+    required this.color,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final Color color;
+  final String icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return CommonScaleAnimation(
+      onTap: onTap,
+      child: Container(
+        width: 38,
+        height: 38,
+        padding: const EdgeInsets.all(7),
+        decoration: ShapeDecoration(
+          color: color,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        child: SvgPicture.asset(icon),
+      ),
+    );
+  }
+}
+
+class _OffersCard extends StatelessWidget {
+  const _OffersCard({
+    required this.offers,
+    required this.orderCreatedAt,
+    required this.orderPrice,
+  });
+
+  final List<OrderData> offers;
+  final String orderCreatedAt;
+  final double orderPrice;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(12),
+          topRight: Radius.circular(12),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 18, 12, 12),
+            child: Text(
+              '${'Offers'.tr()}: ${offers.length}',
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 18,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w500,
+                letterSpacing: -0.30,
+              ),
+            ),
+          ),
+          if (offers.isEmpty)
+            Expanded(child: _EmptyOffers(orderCreatedAt: orderCreatedAt))
+          else
+            Padding(
+              // ListView.separated(shrinkWrap) IntrinsicHeight ichida crash beradi —
+              // bu yerda outer SingleChildScrollView allaqachon scrollni boshqaryapti,
+              // shuning uchun oddiy Column ishlatamiz.
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (int i = 0; i < offers.length; i++) ...[
+                    _OfferTile(offer: offers[i], orderPrice: orderPrice),
+                    if (i < offers.length - 1)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: Divider(height: 1, thickness: 1, color: _kDivider),
+                      ),
+                  ],
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyOffers extends StatelessWidget {
+  const _EmptyOffers({required this.orderCreatedAt});
+
+  final String orderCreatedAt;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: _kInputBg,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.hourglass_empty, size: 36, color: _kSubtitle),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Waiting for offers...'.tr(),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 16,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.30,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Mechanics are reviewing your order'.tr(),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: _kSubtitle,
+                fontSize: 13,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+                letterSpacing: -0.30,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OfferTile extends StatelessWidget {
+  const _OfferTile({required this.offer, required this.orderPrice});
+
+  final OrderData offer;
+  final double orderPrice;
+
+  void _openDetail(BuildContext context) {
+    showOrderDetailBottomSheet(context, offer.id.toString(), () {
+      context.push(Pages.proccessOrder);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Mexanik narxi haydovchining narxidan QIMMAT bo'lsa — qizil (haydovchi
+    // uchun yomon). ARZON bo'lsa — yashil. Figma'dagi mantiq.
+    final isExpensive = offer.proposedPrice > orderPrice;
+    final isCheaper = offer.proposedPrice < orderPrice;
+    final showStrike = orderPrice > 0 && offer.proposedPrice != orderPrice;
+
+    final changeBg = isExpensive
+        ? _kNegativeBg
+        : (isCheaper ? _kPositiveBg : const Color(0x14C5CACD));
+    final changeText = isExpensive
+        ? _kNegativeText
+        : (isCheaper ? _kPositiveText : _kSubtitle);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _openDetail(context),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: _buildContent(
+            context,
+            changeBg,
+            changeText,
+            isExpensive,
+            showStrike,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent(
+    BuildContext context,
+    Color changeBg,
+    Color changeText,
+    bool isExpensive,
+    bool showStrike,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            _AvatarWithDistance(
+              imageUrl: offer.avatar,
+              name: offer.mechanicName,
+              distance: offer.distance,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    offer.mechanicName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 15,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w600,
+                      height: 1.4,
+                      letterSpacing: -0.30,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    offer.shopAddress,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: _kSubtitle,
+                      fontSize: 12,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w400,
+                      height: 1.4,
+                      letterSpacing: -0.30,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Figma: original (haydovchi) narxi strikethrough, keyin mexanik
+            // narxi qalin, keyin foiz chip.
+            if (showStrike) ...[
+              Text(
+                '\$${orderPrice.toStringAsFixed(0)}',
+                style: const TextStyle(
+                  color: _kMuted,
+                  fontSize: 12,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: -0.30,
+                  decoration: TextDecoration.lineThrough,
+                ),
+              ),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              '\$${offer.proposedPrice.toStringAsFixed(0)}',
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 16,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.30,
+              ),
+            ),
+            const SizedBox(width: 6),
+            _ChangeChip(
+              isExpensive: isExpensive,
+              percent: offer.changePercent,
+              backgroundColor: changeBg,
+              textColor: changeText,
+            ),
+            if (offer.workTimeEstimateMin != null && offer.workTimeEstimateMin! > 0) ...[
+              const SizedBox(width: 6),
+              _MinutesChip(minutes: offer.workTimeEstimateMin!),
+            ],
+            const Spacer(),
+            Text(
+              _formatTimeAgo(offer.createdAt),
+              style: const TextStyle(
+                color: _kSubtitle,
+                fontSize: 11,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+                letterSpacing: -0.30,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // Choose tugmasi — figma'da bor. Butun card ham InkWell bilan
+        // tap qilinadigan; bu tugma alohida visual CTA sifatida qoladi.
+        SizedBox(
+          width: double.infinity,
+          height: 38,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(50),
+              border: Border.all(width: 1, color: _kBorder),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x14000000),
+                  blurRadius: 12,
+                ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                'Choose'.tr(),
+                style: const TextStyle(
+                  color: _kPrimary,
+                  fontSize: 14,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                  height: 1.4,
+                  letterSpacing: -0.30,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AvatarWithDistance extends StatelessWidget {
+  const _AvatarWithDistance({
+    required this.imageUrl,
+    required this.name,
+    required this.distance,
+  });
+
+  final String? imageUrl;
+  final String name;
+  final double distance;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 50,
+      height: 50,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          AvatarImage(imageUrl: imageUrl, name: name, size: 44),
+          if (distance > 0)
+            Positioned(
+              left: 5,
+              bottom: -2,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(50),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x1F000000),
+                      blurRadius: 6,
+                    ),
                   ],
                 ),
-                const SizedBox(height: 13),
-                Row(
-                  children: [
-                    const SizedBox(width: 6),
-                    Text(
-                      '\$${offer.proposedPrice.toStringAsFixed(0)}',
-                      style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(color: changeBackgroundColor, borderRadius: BorderRadius.circular(10)),
-                      child: Text(
-                        changeText,
-                        style: TextStyle(color: changeColor, fontSize: 11.5, fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                    if (offer.workTimeEstimateMin != null && offer.workTimeEstimateMin! > 0) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEFF2F5),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                child: Text(
+                  '${distance.toStringAsFixed(distance < 10 ? 1 : 0)} km',
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 10,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: -0.30,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChangeChip extends StatelessWidget {
+  const _ChangeChip({
+    required this.isExpensive,
+    required this.percent,
+    required this.backgroundColor,
+    required this.textColor,
+  });
+
+  // QIMMAT bo'lsa — ↑ qizil. ARZON bo'lsa — ↓ yashil.
+  final bool isExpensive;
+  final double percent;
+  final Color backgroundColor;
+  final Color textColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 18,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(50),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isExpensive ? Icons.arrow_upward : Icons.arrow_downward,
+            size: 10,
+            color: textColor,
+          ),
+          const SizedBox(width: 2),
+          Text(
+            '${percent.abs().toStringAsFixed(percent.abs() < 10 ? 1 : 0)}%',
+            style: TextStyle(
+              color: textColor,
+              fontSize: 10,
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w500,
+              letterSpacing: -0.30,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MinutesChip extends StatelessWidget {
+  const _MinutesChip({required this.minutes});
+
+  final int minutes;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 18,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      decoration: BoxDecoration(
+        color: _kInputBg,
+        borderRadius: BorderRadius.circular(50),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.schedule, size: 11, color: _kCaption),
+          const SizedBox(width: 3),
+          Text(
+            '~$minutes min',
+            style: const TextStyle(
+              color: _kCaption,
+              fontSize: 10,
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w500,
+              letterSpacing: -0.30,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 60, color: Colors.red[300]),
+          const SizedBox(height: 16),
+          Text(
+            'An error occurred'.tr(),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              '${'Error'.tr()}: $message',
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 24),
+          MaterialButton(
+            onPressed: () =>
+                context.read<InivitesBloc>().add(FetchActiveOrderEvent()),
+            color: _kPrimary,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+            child: Text(
+              'Try again'.tr(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LoadingSkeleton extends StatelessWidget {
+  const _LoadingSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Top white card (header) skeleton.
+        Container(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(12),
+              bottomRight: Radius.circular(12),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              _SkeletonBox(width: 100, height: 14),
+              SizedBox(height: 10),
+              _SkeletonBox(width: 240, height: 22),
+              SizedBox(height: 10),
+              _SkeletonBox(width: 200, height: 16),
+              SizedBox(height: 16),
+              _SkeletonBox(width: double.infinity, height: 58, radius: 12),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Expanded(
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(12, 18, 12, 12),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _SkeletonBox(width: 120, height: 18),
+                const SizedBox(height: 18),
+                for (int i = 0; i < 3; i++) ...[
+                  Row(
+                    children: const [
+                      _SkeletonBox(width: 44, height: 44, radius: 22),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.schedule, size: 11, color: Color(0xFF43484B)),
-                            const SizedBox(width: 3),
-                            Text(
-                              '~${offer.workTimeEstimateMin} min',
-                              style: const TextStyle(
-                                color: Color(0xFF43484B),
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                            _SkeletonBox(width: 140, height: 14),
+                            SizedBox(height: 6),
+                            _SkeletonBox(width: 200, height: 12),
                           ],
                         ),
                       ),
                     ],
-                    const Spacer(),
-                    Text(
-                      _formatTimeAgo(offer.createdAt),
-                      style: const TextStyle(
-                        color: Color(0xFF6B7073),
-                        fontSize: 11,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const _SkeletonBox(width: double.infinity, height: 38, radius: 50),
+                  if (i < 2) ...[
+                    const SizedBox(height: 16),
+                    const Divider(height: 1, thickness: 1, color: _kDivider),
+                    const SizedBox(height: 16),
                   ],
-                ),
-                const SizedBox(height: 13),
-                MaterialButton(
-                  minWidth: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  onPressed: () {
-                    showOrderDetailBottomSheet(context, offer.id.toString(), () {
-                      context.push(Pages.proccessOrder);
-                    });
-                  },
-                  shape: RoundedRectangleBorder(
-                    side: const BorderSide(width: 1, color: Color(0xFFE2E7EB)),
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                  child: Text(
-                    'Choose'.tr(),
-                    style: const TextStyle(
-                      color: Color(0xFF0866FF),
-                      fontSize: 14,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w600,
-                      height: 1.40,
-                      letterSpacing: -0.30,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 15),
+                ],
               ],
             ),
           ),
-          Container(
-            width: double.infinity,
-            decoration: const ShapeDecoration(
-              shape: RoundedRectangleBorder(
-                side: BorderSide(width: 1, strokeAlign: BorderSide.strokeAlignCenter, color: Color(0xFFECF0F3)),
-              ),
-            ),
-          ),
-        ],
+        ),
+      ],
+    );
+  }
+}
+
+class _SkeletonBox extends StatelessWidget {
+  const _SkeletonBox({
+    required this.width,
+    required this.height,
+    this.radius = 6,
+  });
+
+  final double width;
+  final double height;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: _kBg,
+        borderRadius: BorderRadius.circular(radius),
       ),
     );
   }
+}
 
-  String _formatTimeAgo(String createdAt) {
-    try {
-      final dateTime = DateTime.parse(createdAt).toLocal();
-      final now = DateTime.now();
-      final difference = now.difference(dateTime);
+String _formatTimeAgo(String createdAt) {
+  try {
+    final dateTime = DateTime.parse(createdAt).toLocal();
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
 
-      if (difference.inSeconds < 60) {
-        return 'Now'.tr();
-      } else if (difference.inMinutes < 60) {
-        return '${difference.inMinutes} ${'minutes ago'.tr()}';
-      } else if (difference.inHours < 24) {
-        return '${difference.inHours} ${'hours ago'.tr()}';
-      } else {
-        return '${difference.inDays} ${'days ago'.tr()}';
-      }
-    } catch (e) {
-      return 'Unknown time'.tr();
+    if (difference.inSeconds < 60) {
+      return 'Now'.tr();
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes} ${'minutes ago'.tr()}';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours} ${'hours ago'.tr()}';
+    } else {
+      return '${difference.inDays} ${'days ago'.tr()}';
     }
+  } catch (_) {
+    return 'Unknown time'.tr();
   }
 }

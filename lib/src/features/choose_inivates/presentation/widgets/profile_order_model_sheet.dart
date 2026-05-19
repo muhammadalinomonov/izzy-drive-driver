@@ -1,27 +1,31 @@
-// File: profile_order_model_sheet.dart
-// ! Responsive Order Detail Bottom Sheet
+// Master detail bottom sheet — Figma frame 15 (node 1859:4927).
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:taxi_app/src/core/constants/color/app_color.dart';
-import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/choose_inivates/presentation/bloc/inivites_bloc.dart';
 import 'package:taxi_app/src/features/common/presentation/widgets/common_image.dart';
 import 'package:taxi_app/src/features/choose_inivates/presentation/bloc/proposal_bloc.dart';
 import 'package:taxi_app/src/features/choose_inivates/presentation/bloc/proposal_state.dart';
 
-import '../../../order_proccess/presentation/bloc/orders_bloc.dart';
 import '../bloc/proposal_event.dart';
+
+const Color _kBg = Color(0xFFEFF3F6);
+const Color _kBorder = Color(0xFFE3E8EB);
+const Color _kSubtitle = Color(0xFF6B7073);
+const Color _kCaption = Color(0xFF43484B);
+const Color _kMuted = Color(0xFF93989B);
+const Color _kPrimary = Color(0xFF0866FF);
+
 void showOrderDetailBottomSheet(
-    BuildContext c,
-    String id,
-    VoidCallback onDoneTap,
-    ) {
-  print(id);
+  BuildContext c,
+  String id,
+  VoidCallback onDoneTap,
+) {
   showModalBottomSheet(
     context: c,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
+    barrierColor: const Color(0x4D000000),
     builder: (context) {
       final proposalBloc = BlocProvider.of<ProposalBloc>(c);
       final invitesBloc = BlocProvider.of<InivitesBloc>(c);
@@ -29,161 +33,40 @@ void showOrderDetailBottomSheet(
       return BlocProvider.value(
         value: proposalBloc,
         child: DraggableScrollableSheet(
-          initialChildSize: 0.85,
-          minChildSize: 0.5,
-          maxChildSize: 0.95,
+          // Figma: bottom sheet 15px-dan boshlanadi (statusbar ostida) — deyarli
+          // butun ekranni egallaydi.
+          initialChildSize: 0.96,
+          minChildSize: 0.6,
+          maxChildSize: 0.96,
           expand: false,
           builder: (context, scrollController) {
-            return BlocBuilder<ProposalBloc, ProposalState>(
-              builder: (c, state) {
-                return Container(
-                  decoration: BoxDecoration(
-                    color: AppColor.kPrimary2Color,
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(28),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 16,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: SingleChildScrollView(
-                    controller: scrollController,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.only(
-                            top: 12,
-                            left: 50,
-                            right: 60,
-                            bottom: 18,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            color: AppColor.white,
-                          ),
-                          child: Column(
-                            children: [
-                              Container(
-                                width: 40,
-                                height: 5,
-                                margin: const EdgeInsets.only(bottom: 16),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[300],
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              const ProfileSection(),
-                              const SizedBox(height: 18),
-                              const _StatsRow(),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 18,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            color: AppColor.white,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const _SectionTitle('ABOUT ORDER'),
-                              const _OrderInfoSection(),
-                              if (state.route != null) ...[
-                                const _SectionTitle('SELECTED ORDER DETAILS'),
-                                Text(
-                                  'Title: ${state.route!['order_title']}',
-                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
-                                ),
-                                Text(
-                                  'Address: ${state.route!['order_address']}',
-                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
-                                ),
-                                Text(
-                                  'Price: \$${state.route!['order_price']}',
-                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 18,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            color: AppColor.white,
-                          ),
-                          child: Column(
-                            children: [
-                              const _SectionTitle('PAYMENT INFORMATION'),
-                              _CashPaymentRow(),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 15,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            color: AppColor.white,
-                          ),
-                          child: Column(
-                            children: [
-                              const _OffersRow(),
-                              const SizedBox(height: 18),
-                              AppButton(
-                                title: 'Call',
-                                isLoading: state.status == ProposalStatus.loading,
-                                onTap: () async {
-                                  proposalBloc.add(SelectProposalEvent(proposalId: int.parse(id)));
-                                  final completed = await proposalBloc.stream.firstWhere(
-                                    (s) => (s.status == ProposalStatus.loaded && s.route != null) ||
-                                        s.status == ProposalStatus.error,
-                                  );
-                                  if (completed.status == ProposalStatus.error) {
-                                    if (c.mounted) {
-                                      ScaffoldMessenger.of(c).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            completed.errorMessage ?? 'Failed to select master',
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                    return;
-                                  }
-                                  invitesBloc.add(DisconnectFromWebSocketEvent());
-                                  if (c.mounted && Navigator.of(c).canPop()) {
-                                    Navigator.of(c).pop();
-                                  }
-                                  onDoneTap();
-                                },
-                              ),
-                              const SizedBox(height: 10),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+            return _SheetContent(
+              proposalId: id,
+              scrollController: scrollController,
+              onCall: () async {
+                proposalBloc.add(SelectProposalEvent(proposalId: int.parse(id)));
+                final completed = await proposalBloc.stream.firstWhere(
+                  (s) =>
+                      (s.status == ProposalStatus.loaded && s.route != null) ||
+                      s.status == ProposalStatus.error,
                 );
+                if (completed.status == ProposalStatus.error) {
+                  if (c.mounted) {
+                    ScaffoldMessenger.of(c).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          completed.errorMessage ?? 'Failed to select master',
+                        ),
+                      ),
+                    );
+                  }
+                  return;
+                }
+                invitesBloc.add(DisconnectFromWebSocketEvent());
+                if (c.mounted && Navigator.of(c).canPop()) {
+                  Navigator.of(c).pop();
+                }
+                onDoneTap();
               },
             );
           },
@@ -193,6 +76,95 @@ void showOrderDetailBottomSheet(
   );
 }
 
+class _SheetContent extends StatelessWidget {
+  const _SheetContent({
+    required this.proposalId,
+    required this.scrollController,
+    required this.onCall,
+  });
+
+  final String proposalId;
+  final ScrollController scrollController;
+  final Future<void> Function() onCall;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: _kBg,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 18,
+            offset: Offset(0, -4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Scrollable content (profile + about + payment). Drag handle endi
+          // birinchi oq cardning ICHIDA — Figma'dagidek.
+          Expanded(
+            child: BlocBuilder<ProposalBloc, ProposalState>(
+              builder: (context, state) {
+                if (state.status == ProposalStatus.loading ||
+                    state.status == ProposalStatus.initial) {
+                  return ListView(
+                    controller: scrollController,
+                    padding: EdgeInsets.zero,
+                    children: const [_ProfileCardSkeleton()],
+                  );
+                }
+                if (state.status == ProposalStatus.error) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        state.errorMessage ?? 'Error loading proposal',
+                        style: const TextStyle(color: _kSubtitle),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                }
+                final proposal = state.proposal!;
+                return ListView(
+                  controller: scrollController,
+                  padding: EdgeInsets.zero,
+                  children: [
+                    _ProfileCard(proposal: proposal),
+                    const SizedBox(height: 8),
+                    _AboutOrderCard(order: proposal.orderInfo),
+                    const SizedBox(height: 8),
+                    const _PaymentCard(),
+                  ],
+                );
+              },
+            ),
+          ),
+          // Fixed bottom action card — system nav bar maydonigacha cho'ziladi.
+          BlocBuilder<ProposalBloc, ProposalState>(
+            builder: (context, state) {
+              final loading = state.status == ProposalStatus.loading ||
+                  state.status == ProposalStatus.initial;
+              final proposal = state.proposal;
+              return _BottomActionCard(
+                yourOffer: proposal?.orderInfo.orderPrice ?? 0,
+                masterOffer: proposal?.orderInfo.proposalPrice ?? 0,
+                isLoading: loading,
+                onCall: onCall,
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Public ProfileSection — comment_section_modal_sheet.dart shu nom bilan
+// import qiladi. Master avatar + ism + ro'yxatdan o'tgan sanani ko'rsatadi.
 class ProfileSection extends StatelessWidget {
   const ProfileSection({super.key});
 
@@ -201,214 +173,629 @@ class ProfileSection extends StatelessWidget {
     final mq = MediaQuery.of(context);
     return BlocBuilder<ProposalBloc, ProposalState>(
       builder: (context, state) {
-        if (state.status == ProposalStatus.loading) {
-          return const Center(child: CircularProgressIndicator.adaptive());
-        }
-        if (state.status == ProposalStatus.error) {
-          return Center(child: Text('Error: ${state.errorMessage ?? "Unknown error"}'));
-        }
-        if (state.status == ProposalStatus.loaded && state.proposal != null) {
-          final mechanic = state.proposal!.mechanicInfo;
-          return Column(
-            children: [
-              AvatarImage(
-                imageUrl: mechanic.avatar,
-                size: mq.size.width * 0.26,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                mechanic.mechanicName,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 18,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Registered data  ${state.proposal!.orderInfo.createdAt.split('T').first}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColor.grey),
-              ),
-            ],
+        if (state.status == ProposalStatus.loading ||
+            state.status == ProposalStatus.initial) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(child: CircularProgressIndicator.adaptive()),
           );
         }
-        return const Center(child: Text('No data available'));
+        if (state.status == ProposalStatus.error) {
+          return Center(
+            child: Text('Error: ${state.errorMessage ?? "Unknown error"}'),
+          );
+        }
+        if (state.proposal == null) {
+          return const Center(child: Text('No data available'));
+        }
+        final mechanic = state.proposal!.mechanicInfo;
+        return Column(
+          children: [
+            AvatarImage(
+              imageUrl: mechanic.avatar,
+              name: mechanic.mechanicName,
+              size: mq.size.width * 0.26,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              mechanic.mechanicName,
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 18,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.30,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${'Registered data'.tr()}  '
+              '${_formatRegisteredDate(state.proposal!.orderInfo.createdAt)}',
+              style: const TextStyle(
+                color: _kSubtitle,
+                fontSize: 12,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+                letterSpacing: -0.30,
+              ),
+            ),
+          ],
+        );
       },
     );
   }
 }
 
-class _StatsRow extends StatelessWidget {
-  const _StatsRow();
+// ---------- Profile card (top white card with avatar + stats) ----------
+
+class _ProfileCard extends StatelessWidget {
+  const _ProfileCard({required this.proposal});
+
+  final dynamic proposal; // Proposal — kept dynamic to avoid extra imports
 
   @override
   Widget build(BuildContext context) {
-    TextStyle? labelStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColor.grey);
-    TextStyle? valueStyle = Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w500);
-    return BlocBuilder<ProposalBloc, ProposalState>(
-      builder: (context, state) {
-        if (state.status == ProposalStatus.loaded && state.proposal != null) {
-          final mechanic = state.proposal!.mechanicInfo;
-          return Row(
+    final mechanic = proposal.mechanicInfo;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 14, 12, 24),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        // Sheet top bilan birga 24px rounded — drag handle ham shu cardning
+        // ichida.
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+          bottomLeft: Radius.circular(12),
+          bottomRight: Radius.circular(12),
+        ),
+      ),
+      child: Column(
+        children: [
+          // Drag handle — endi oq cardning ICHIDA, Figma'dagi pozitsiyada.
+          Container(
+            width: 43,
+            height: 4,
+            decoration: BoxDecoration(
+              color: _kBorder,
+              borderRadius: BorderRadius.circular(540),
+            ),
+          ),
+          const SizedBox(height: 18),
+          // Avatar 87x87.
+          AvatarImage(
+            imageUrl: mechanic.avatar,
+            name: mechanic.mechanicName,
+            size: 87,
+          ),
+          const SizedBox(height: 14),
+          Text(
+            mechanic.mechanicName,
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 18,
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w600,
+              height: 1.4,
+              letterSpacing: -0.30,
+            ),
+          ),
+          const SizedBox(height: 6),
+          // "Registered data DATE (X days ago)"
+          DefaultTextStyle(
+            style: const TextStyle(
+              color: _kSubtitle,
+              fontSize: 12,
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w400,
+              height: 1.4,
+              letterSpacing: -0.30,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Registered data'.tr()),
+                const SizedBox(width: 8),
+                Text(_formatRegisteredDate(proposal.orderInfo.createdAt)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 22),
+          // Stats row: All orders / Success / Performance.
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _StatColumn('All orders', '${mechanic.allOrdersCount}', labelStyle, valueStyle),
-              _StatColumn('Success', '${mechanic.successOrdersCount}', labelStyle, valueStyle),
-              _StatColumn('Performance', '${mechanic.performance.averageStars.toStringAsFixed(1)}', labelStyle, valueStyle),
+              _StatColumn(
+                label: 'All orders'.tr(),
+                value: '${mechanic.allOrdersCount}',
+              ),
+              _StatColumn(
+                label: 'Success'.tr(),
+                value: '${mechanic.successOrdersCount}',
+              ),
+              _StatColumn(
+                label: 'Performance'.tr(),
+                value: _formatPerformance(mechanic.performance.averageStars),
+              ),
             ],
-          );
-        }
-        return const SizedBox.shrink();
-      },
+          ),
+        ],
+      ),
     );
   }
 }
 
 class _StatColumn extends StatelessWidget {
+  const _StatColumn({required this.label, required this.value});
+
   final String label;
   final String value;
-  final TextStyle? labelStyle;
-  final TextStyle? valueStyle;
-
-  const _StatColumn(this.label, this.value, this.labelStyle, this.valueStyle);
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(label, style: labelStyle),
-        const SizedBox(height: 4),
-        Text(value, style: valueStyle),
+        Text(
+          label,
+          style: const TextStyle(
+            color: _kMuted,
+            fontSize: 14,
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w400,
+            letterSpacing: -0.30,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 22,
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w500,
+            letterSpacing: -0.30,
+          ),
+        ),
       ],
     );
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  final String title;
-
-  const _SectionTitle(this.title);
+class _ProfileCardSkeleton extends StatelessWidget {
+  const _ProfileCardSkeleton();
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          color: AppColor.darkGrey,
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 12),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.all(Radius.circular(12)),
       ),
-    );
-  }
-}
-
-class _OrderInfoSection extends StatelessWidget {
-  const _OrderInfoSection();
-
-  @override
-  Widget build(BuildContext context) {
-    TextStyle? labelStyle = Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColor.grey);
-    TextStyle? valueStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500);
-    return BlocBuilder<ProposalBloc, ProposalState>(
-      builder: (context, state) {
-        if (state.status == ProposalStatus.loaded && state.proposal != null) {
-          final order = state.proposal!.orderInfo;
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Issue', style: labelStyle),
-                Text(order.orderTitle, style: valueStyle),
-                const SizedBox(height: 8),
-                Text('Where to', style: labelStyle),
-                Text(order.orderAddress, style: valueStyle),
-                Text('${order.distance} km away', style: labelStyle),
-              ],
-            ),
-          );
-        }
-        return const Center(child: CircularProgressIndicator.adaptive());
-      },
-    );
-  }
-}
-
-class _CashPaymentRow extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(Icons.payments_outlined, color: AppColor.kPrimaryColor),
-      title: Text('Cash'.tr()),
-      trailing: Transform.scale(
-        scale: 1.3,
-        child: Checkbox(
-          side: const BorderSide(width: 0.5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+      child: const Column(
+        children: [
+          _SkBox(width: 87, height: 87, radius: 50),
+          SizedBox(height: 14),
+          _SkBox(width: 160, height: 18),
+          SizedBox(height: 8),
+          _SkBox(width: 220, height: 12),
+          SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _SkStat(),
+              _SkStat(),
+              _SkStat(),
+            ],
           ),
-          value: true,
-          onChanged: (bool? value) {},
+        ],
+      ),
+    );
+  }
+}
+
+class _SkStat extends StatelessWidget {
+  const _SkStat();
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      children: [
+        _SkBox(width: 70, height: 12),
+        SizedBox(height: 8),
+        _SkBox(width: 50, height: 22),
+      ],
+    );
+  }
+}
+
+class _SkBox extends StatelessWidget {
+  const _SkBox({required this.width, required this.height, this.radius = 4});
+  final double width;
+  final double height;
+  final double radius;
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: _kBg,
+        borderRadius: BorderRadius.circular(radius),
+      ),
+    );
+  }
+}
+
+// ---------- About order card ----------
+
+class _AboutOrderCard extends StatelessWidget {
+  const _AboutOrderCard({required this.order});
+
+  final dynamic order; // OrderInfo
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 18, 12, 18),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'ABOUT ORDER'.tr(),
+            style: const TextStyle(
+              color: _kMuted,
+              fontSize: 15,
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.30,
+            ),
+          ),
+          const SizedBox(height: 18),
+          _Field(
+            label: 'Problem'.tr(),
+            value: order.orderTitle,
+          ),
+          const SizedBox(height: 14),
+          _Field(
+            label: 'Where to'.tr(),
+            value: order.orderAddress,
+            italicSuffix: _formatDistance(order.distance),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Field extends StatelessWidget {
+  const _Field({required this.label, required this.value, this.italicSuffix});
+
+  final String label;
+  final String value;
+  final String? italicSuffix;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: _kMuted,
+            fontSize: 12,
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w400,
+            letterSpacing: -0.30,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 16,
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w500,
+            height: 1.4,
+            letterSpacing: -0.30,
+          ),
+        ),
+        if (italicSuffix != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            italicSuffix!,
+            style: const TextStyle(
+              color: _kCaption,
+              fontSize: 12,
+              fontFamily: 'Inter',
+              fontStyle: FontStyle.italic,
+              fontWeight: FontWeight.w400,
+              letterSpacing: -0.30,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// ---------- Payment card ----------
+
+class _PaymentCard extends StatelessWidget {
+  const _PaymentCard();
+
+  @override
+  Widget build(BuildContext context) {
+    // Hozircha faqat Cash mavjud — Apple Pay va Google Pay keyinroq qo'shiladi.
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 18, 12, 18),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'PAYMENT INFORMATION'.tr(),
+            style: const TextStyle(
+              color: _kMuted,
+              fontSize: 15,
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.30,
+            ),
+          ),
+          const SizedBox(height: 18),
+          _PayRow(
+            icon: Icons.payments_outlined,
+            label: 'Cash'.tr(),
+            selected: true,
+            onTap: () {},
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PayRow extends StatelessWidget {
+  const _PayRow({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Icon(icon, size: 24, color: Colors.black),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 16,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w500,
+                height: 1.4,
+                letterSpacing: -0.30,
+              ),
+            ),
+          ),
+          // Selection indicator: filled blue check if selected, else empty
+          // gray circle.
+          if (selected)
+            Container(
+              width: 24,
+              height: 24,
+              decoration: const BoxDecoration(
+                color: _kPrimary,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.check, color: Colors.white, size: 16),
+            )
+          else
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(width: 1.5, color: _kBorder),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------- Bottom action card (fixed) ----------
+
+class _BottomActionCard extends StatelessWidget {
+  const _BottomActionCard({
+    required this.yourOffer,
+    required this.masterOffer,
+    required this.isLoading,
+    required this.onCall,
+  });
+
+  final double yourOffer;
+  final double masterOffer;
+  final bool isLoading;
+  final Future<void> Function() onCall;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+    // Oq card system nav-gacha cho'ziladi (margin top 8 — sheet-da scroll
+    // content bilan orasidagi kichik bo'shliq). Ichidagi paddingga safe-area
+    // bottom qo'shiladi — tugma home indicator ostiga tushib qolmaydi.
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(12),
+          topRight: Radius.circular(12),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x0F000000),
+            blurRadius: 16,
+            offset: Offset(0, -4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(12, 16, 12, 16 + bottomInset),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Sizning taklifingiz / Ustani taklifi — 2-col with divider.
+            Row(
+              children: [
+                Expanded(
+                  child: _OfferColumn(
+                    label: 'Your offer'.tr(),
+                    value: '\$${yourOffer.toStringAsFixed(0)}',
+                    valueColor: _kCaption,
+                  ),
+                ),
+                Container(width: 1, height: 36, color: _kBorder),
+                Expanded(
+                  child: _OfferColumn(
+                    label: "Master's offer".tr(),
+                    value: '\$${masterOffer.toStringAsFixed(0)}',
+                    valueColor: _kPrimary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: Material(
+                color: _kPrimary,
+                borderRadius: BorderRadius.circular(50),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(50),
+                  onTap: isLoading ? null : () => onCall(),
+                  child: Center(
+                    child: isLoading
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.4,
+                              valueColor: AlwaysStoppedAnimation(Colors.white),
+                            ),
+                          )
+                        : Text(
+                            'Call'.tr(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontFamily: 'Inter',
+                              fontWeight: FontWeight.w600,
+                              height: 1.4,
+                              letterSpacing: -0.30,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _OffersRow extends StatelessWidget {
-  const _OffersRow();
+class _OfferColumn extends StatelessWidget {
+  const _OfferColumn({
+    required this.label,
+    required this.value,
+    required this.valueColor,
+  });
+
+  final String label;
+  final String value;
+  final Color valueColor;
 
   @override
   Widget build(BuildContext context) {
-    TextStyle? labelStyle = Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColor.grey);
-    TextStyle? valueStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
-      fontWeight: FontWeight.w600,
-      fontSize: 18,
-    );
-    return BlocBuilder<ProposalBloc, ProposalState>(
-      builder: (context, state) {
-        if (state.status == ProposalStatus.loaded && state.proposal != null) {
-          final order = state.proposal!.orderInfo;
-          return Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text('Your offer', style: labelStyle),
-                      const SizedBox(height: 4),
-                      Text('${order.orderPrice} \$', style: valueStyle),
-                    ],
-                  ),
-                ),
-                Container(width: 1, height: 32, color: Colors.grey[300]),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text("Master's offer", style: labelStyle),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${order.proposalPrice} \$',
-                        style: valueStyle?.copyWith(color: AppColor.kPrimaryColor),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-        return const SizedBox.shrink();
-      },
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: _kSubtitle,
+            fontSize: 12,
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w400,
+            height: 1.4,
+            letterSpacing: -0.30,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            color: valueColor,
+            fontSize: 18,
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w600,
+            height: 1.4,
+            letterSpacing: -0.30,
+          ),
+        ),
+      ],
     );
   }
+}
+
+// ---------- Helpers ----------
+
+String _formatRegisteredDate(String iso) {
+  try {
+    final dt = DateTime.parse(iso).toLocal();
+    final now = DateTime.now();
+    final diffDays = now.difference(dt).inDays;
+    final dateStr =
+        '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year}';
+    if (diffDays <= 0) return dateStr;
+    return '$dateStr ($diffDays ${'days ago'.tr()})';
+  } catch (_) {
+    return iso;
+  }
+}
+
+String _formatDistance(double distance) {
+  if (distance <= 0) return '';
+  final km = distance < 10 ? distance.toStringAsFixed(1) : distance.toStringAsFixed(0);
+  return '$km km ${'away'.tr()}';
+}
+
+String _formatPerformance(double stars) {
+  // Figma: "99%" — performance as percentage (stars/5 * 100).
+  final pct = (stars / 5 * 100).clamp(0, 100);
+  return '${pct.toStringAsFixed(0)}%';
 }

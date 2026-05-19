@@ -27,11 +27,7 @@ class NotificationTile extends StatelessWidget {
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: AppColor.grey2, width: 0.5),
-            ),
-          ),
+
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

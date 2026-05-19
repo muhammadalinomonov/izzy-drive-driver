@@ -159,5 +159,11 @@
     "emptyTitle": "Hozircha bildirishnomalar yo'q",
     "emptySubtitle": "Yangiliklar va xabarlar shu yerda paydo bo'ladi",
     "markAllRead": "Hammasini o'qildi qilish"
+  },
+  "comingSoon": {
+    "badge": "TEZ ORADA",
+    "title": "{feature} tez orada",
+    "subtitle": "Bu xizmat hozircha ishlab chiqilmoqda. Tez orada foydalanish mumkin bo'ladi — kuzatib boring!",
+    "cta": "Tushunarli"
   }
 }

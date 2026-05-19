@@ -89,7 +89,7 @@ class SubOrderProposalSheet extends StatelessWidget {
                       style: TextStyle(color: AppColor.grey, fontSize: 14),
                     ),
                     Text(
-                      '${subOrder.price ?? "—"} \$',
+                      '\$${subOrder.price}',
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 16,

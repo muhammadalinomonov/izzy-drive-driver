@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
-import 'package:otp_pin_field/otp_pin_field.dart';
 import 'package:taxi_app/src/core/components/app_snack_bar.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
@@ -71,7 +71,7 @@ class _PhoneOtpPageState extends State<PhoneOtpPage> {
   }
 
   void _onConfirm() {
-    if (_otp.length != 6) return;
+    if (_otp.length != 5) return;
     FocusManager.instance.primaryFocus?.unfocus();
     context.read<PhoneVerifyBloc>().add(
       VerifyOtpEvent(
@@ -171,36 +171,15 @@ class _PhoneOtpPageState extends State<PhoneOtpPage> {
                   ),
                   const SizedBox(height: 12),
                   Center(
-                    child: OtpPinField(
-                      maxLength: 6,
-                      fieldWidth: 44,
-                      fieldHeight: 48,
-                      keyboardType: TextInputType.number,
-                      otpPinFieldStyle: OtpPinFieldStyle(
-                        defaultFieldBorderColor: hasError ? AppColor.red.withValues(alpha: 0.18) : AppColor.lightBlue,
-                        activeFieldBorderColor: hasError ? AppColor.red.withValues(alpha: 0.4) : AppColor.kPrimaryColor,
-                        filledFieldBorderColor: hasError ? AppColor.red.withValues(alpha: 0.4) : AppColor.lightBlue,
-                        defaultFieldBackgroundColor: hasError ? AppColor.red.withValues(alpha: 0.08) : AppColor.lightBlue,
-                        activeFieldBackgroundColor: hasError ? AppColor.red.withValues(alpha: 0.08) : AppColor.lightBlue,
-                        filledFieldBackgroundColor: hasError ? AppColor.red.withValues(alpha: 0.08) : AppColor.lightBlue,
-                        textStyle: TextStyle(
-                          color: hasError ? AppColor.red : AppColor.black,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 18,
-                        ),
-                        fieldBorderRadius: 10,
-                        showHintText: true,
-                        hintText: '0',
-                        hintTextColor: AppColor.lightGreyBlue,
-                      ),
-                      onChange: (value) {
-                        if (hasError) {
+                    child: _OtpInput(
+                      length: 5,
+                      hasError: hasError,
+                      onChanged: (value) {
+                        if (hasError && value.isNotEmpty) {
                           context.read<PhoneVerifyBloc>().add(const ClearOtpErrorEvent());
                         }
                         setState(() => _otp = value);
                       },
-                      onCodeChanged: (value) => setState(() => _otp = value),
-                      onSubmit: (value) => setState(() => _otp = value),
                     ),
                   ),
                   if (hasError) ...[
@@ -394,5 +373,139 @@ class _ResendRow extends StatelessWidget {
     final m = (seconds ~/ 60).toString().padLeft(2, '0');
     final s = (seconds % 60).toString().padLeft(2, '0');
     return '$m:$s';
+  }
+}
+
+// Figma 14334:13790 / 14075 / 14469 — 1:1.
+// 5 ta 48×48 katakcha, gap 18px, radius 12px, fon #EFF3F6 (error: rgba(252,0,0,0.05)).
+// Border yo'q, cursor yo'q — yashirin TextField input qabul qiladi.
+class _OtpInput extends StatefulWidget {
+  const _OtpInput({
+    required this.length,
+    required this.hasError,
+    required this.onChanged,
+  });
+
+  final int length;
+  final bool hasError;
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<_OtpInput> createState() => _OtpInputState();
+}
+
+class _OtpInputState extends State<_OtpInput> {
+  static const double _boxSize = 48;
+  static const double _gap = 18;
+  static const Color _bgNormal = Color(0xFFEFF3F6);
+  static const Color _bgError = Color(0x0DFC0000);
+  static const Color _textNormal = Color(0xFF000000);
+  static const Color _textError = Color(0xFFFC0000);
+  static const Color _hint = Color(0xFF93989B);
+
+  final TextEditingController _controller = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_handleChange);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focusNode.requestFocus();
+    });
+  }
+
+  void _handleChange() {
+    widget.onChanged(_controller.text);
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_handleChange);
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final totalWidth = widget.length * _boxSize + (widget.length - 1) * _gap;
+    final bg = widget.hasError ? _bgError : _bgNormal;
+    final filledColor = widget.hasError ? _textError : _textNormal;
+    // Keyingi to'ldiriladigan katakcha — keyboard ochiq turganda active.
+    // hasFocus'ga ishonmaymiz: keyboard yopilsa ham FocusNode focus saqlab
+    // qoladi. MediaQuery.viewInsets esa keyboard ko'rinayotganini aniq aytadi.
+    final activeIndex = _controller.text.length;
+    final keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final showActiveBorder =
+        keyboardVisible && !widget.hasError && activeIndex < widget.length;
+
+    return SizedBox(
+      width: totalWidth,
+      height: _boxSize,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Input qabul qiluvchi yashirin TextField — sistemada keyboard ochadi.
+          // Matn ham, cursor ham shaffof — faqat ustidagi box'lar ko'rinadi.
+          TextField(
+            controller: _controller,
+            focusNode: _focusNode,
+            maxLength: widget.length,
+            keyboardType: TextInputType.number,
+            showCursor: false,
+            autocorrect: false,
+            enableSuggestions: false,
+            cursorWidth: 0,
+            cursorColor: Colors.transparent,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            style: const TextStyle(color: Colors.transparent, height: 1),
+            decoration: const InputDecoration(
+              counterText: '',
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              contentPadding: EdgeInsets.zero,
+              isCollapsed: true,
+            ),
+          ),
+          // Ko'rinadigan box'lar. IgnorePointer — taplar TextField'ga o'tib
+          // keyboard'ni ochishi uchun.
+          IgnorePointer(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(widget.length, (i) {
+                final filled = i < _controller.text.length;
+                final char = filled ? _controller.text[i] : '0';
+                final isActive = showActiveBorder && i == activeIndex;
+                return Container(
+                  width: _boxSize,
+                  height: _boxSize,
+                  margin: EdgeInsets.only(left: i == 0 ? 0 : _gap),
+                  decoration: BoxDecoration(
+                    color: bg,
+                    borderRadius: BorderRadius.circular(12),
+                    border: isActive
+                        ? Border.all(color: AppColor.kPrimaryColor, width: 1.5)
+                        : null,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    char,
+                    style: TextStyle(
+                      fontSize: filled ? 18 : 16,
+                      fontWeight: filled ? FontWeight.w500 : FontWeight.w400,
+                      color: filled ? filledColor : _hint,
+                      height: 1,
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
