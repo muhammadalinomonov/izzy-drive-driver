@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:taxi_app/src/core/components/app_snack_bar.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
@@ -78,12 +79,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
   Future<void> _onMicLongPressStart(LongPressStartDetails _) async {
     final bloc = context.read<OrderCreateBloc>();
     if (bloc.state.isRecording) return;
-    final hasPermission = await _recorder.hasPermission();
-    if (!hasPermission) {
-      if (!mounted) return;
-      AppSnackBar.showError(context, 'Microphone permission denied');
-      return;
-    }
+    if (!await _ensureMicPermission()) return;
     final dir = await getApplicationDocumentsDirectory();
     final path = '${dir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
     await _recorder.start(
@@ -252,11 +248,86 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
       AppSnackBar.showError(context, 'Maximum $_maxPhotos photos');
       return;
     }
+    if (!await _ensurePhotosPermission()) return;
     final picked = await _picker.pickMultiImage(imageQuality: 85, maxWidth: 1920);
     if (picked.isEmpty || !mounted) return;
     final files = picked.take(remaining).map((x) => File(x.path)).toList(growable: false);
     context.read<OrderCreateBloc>().add(PhotosAdded(files));
     _scrollToBottom();
+  }
+
+  // ---------- permission helpers ----------
+
+  /// Mic permission with MIUI/HyperOS fallback. `record.hasPermission()` alone
+  /// sometimes reports `false` on MIUI even when the OS would grant it, so we
+  /// also request via [permission_handler] and direct the user to settings on
+  /// permanent denial.
+  Future<bool> _ensureMicPermission() async {
+    if (await _recorder.hasPermission()) return true;
+    var status = await Permission.microphone.status;
+    if (status.isDenied || status.isRestricted) {
+      status = await Permission.microphone.request();
+    }
+    if (status.isGranted || status.isLimited) {
+      return await _recorder.hasPermission();
+    }
+    if (!mounted) return false;
+    if (status.isPermanentlyDenied) {
+      _showOpenSettingsDialog(
+        title: 'Microphone access',
+        message:
+            'Enable microphone permission in Settings to record voice messages.',
+      );
+    } else {
+      AppSnackBar.showError(context, 'Microphone permission denied');
+    }
+    return false;
+  }
+
+  /// Photo gallery permission with Android 13+ granular handling.
+  /// `Permission.photos` maps to READ_MEDIA_IMAGES on Android 13+; on older
+  /// Android it maps to READ_EXTERNAL_STORAGE automatically.
+  Future<bool> _ensurePhotosPermission() async {
+    if (!Platform.isAndroid && !Platform.isIOS) return true;
+    var status = await Permission.photos.status;
+    if (status.isDenied || status.isRestricted) {
+      status = await Permission.photos.request();
+    }
+    if (status.isGranted || status.isLimited) return true;
+    if (!mounted) return false;
+    if (status.isPermanentlyDenied) {
+      _showOpenSettingsDialog(
+        title: 'Photo access',
+        message:
+            'Enable photo permission in Settings to attach images to your order.',
+      );
+    } else {
+      AppSnackBar.showError(context, 'Photo permission denied');
+    }
+    return false;
+  }
+
+  void _showOpenSettingsDialog({required String title, required String message}) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogCtx).pop();
+              openAppSettings();
+            },
+            child: const Text('Open settings'),
+          ),
+        ],
+      ),
+    );
   }
 
   // ---------- input routing ----------

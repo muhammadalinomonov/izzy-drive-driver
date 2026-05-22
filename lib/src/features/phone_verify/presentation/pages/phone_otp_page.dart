@@ -70,8 +70,10 @@ class _PhoneOtpPageState extends State<PhoneOtpPage> {
     return '$dial *** ** $tail';
   }
 
+  static const int _otpLength = 6;
+
   void _onConfirm() {
-    if (_otp.length != 5) return;
+    if (_otp.length != _otpLength) return;
     FocusManager.instance.primaryFocus?.unfocus();
     context.read<PhoneVerifyBloc>().add(
       VerifyOtpEvent(
@@ -120,12 +122,14 @@ class _PhoneOtpPageState extends State<PhoneOtpPage> {
               _startTimer(state.resendAfter);
             }
             // Resend xato (cooldown, sms_service_not_configured, va h.k.) —
-            // backend xabarini snackbar bilan ko'rsatamiz.
+            // backend xabarini snackbar bilan ko'rsatamiz. Lokal fallback —
+            // ingliz tilida (mobile xatosi backend localized response'idan
+            // farqlanishi uchun).
             if (state.sendStatus == PhoneVerifyStatus.failure) {
               AppSnackBar.showError(
                 context,
                 state.errorMessage.isEmpty
-                    ? LocaleKeys.phoneVerify_otp_resendFailed.tr()
+                    ? 'Failed to resend code'
                     : state.errorMessage,
               );
             }
@@ -138,7 +142,7 @@ class _PhoneOtpPageState extends State<PhoneOtpPage> {
                 AppSnackBar.showError(
                   context,
                   state.errorMessage.isEmpty
-                      ? LocaleKeys.phoneVerify_otp_incorrect.tr()
+                      ? 'Incorrect or expired code'
                       : state.errorMessage,
                 );
                 if (Navigator.of(context).canPop()) {
@@ -172,7 +176,7 @@ class _PhoneOtpPageState extends State<PhoneOtpPage> {
                   const SizedBox(height: 12),
                   Center(
                     child: _OtpInput(
-                      length: 5,
+                      length: _otpLength,
                       hasError: hasError,
                       onChanged: (value) {
                         if (hasError && value.isNotEmpty) {
@@ -188,10 +192,12 @@ class _PhoneOtpPageState extends State<PhoneOtpPage> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24),
                         child: Text(
-                          // Backend'dan kelgan localized message (masalan
-                          // "Kod noto'g'ri"). Tarmoq xatosi bo'lsa lokal fallback.
+                          // Backend localized response (masalan "Kod noto'g'ri")
+                          // bo'sh bo'lmasa o'sha ko'rsatiladi. Aks holda lokal
+                          // ingliz fallback — mobile-side xatolar inglizcha
+                          // bo'lib qoladi.
                           state.errorMessage.isEmpty
-                              ? LocaleKeys.phoneVerify_otp_incorrect.tr()
+                              ? 'Incorrect or expired code'
                               : state.errorMessage,
                           textAlign: TextAlign.center,
                           style: context.textS.bodySmall!
@@ -208,7 +214,7 @@ class _PhoneOtpPageState extends State<PhoneOtpPage> {
                     onResend: () {
                       context.read<PhoneVerifyBloc>().add(
                         ResendOtpEvent(
-                          onError: () => AppSnackBar.showError(context, LocaleKeys.phoneVerify_otp_resendFailed.tr()),
+                          onError: () => AppSnackBar.showError(context, 'Failed to resend code'),
                         ),
                       );
                     },
@@ -376,8 +382,9 @@ class _ResendRow extends StatelessWidget {
   }
 }
 
-// Figma 14334:13790 / 14075 / 14469 — 1:1.
-// 5 ta 48×48 katakcha, gap 18px, radius 12px, fon #EFF3F6 (error: rgba(252,0,0,0.05)).
+// Figma 14334:13790 / 14075 / 14469.
+// 6 ta 48×48 katakcha (backend 6-xonali kod yuboradi), gap 18px, radius 12px,
+// fon #EFF3F6 (error: rgba(252,0,0,0.05)).
 // Border yo'q, cursor yo'q — yashirin TextField input qabul qiladi.
 class _OtpInput extends StatefulWidget {
   const _OtpInput({

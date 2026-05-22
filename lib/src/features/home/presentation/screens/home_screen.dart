@@ -577,33 +577,42 @@ class _GymCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: Image.asset(image, width: 60, height: 50, fit: BoxFit.cover),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                name,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.black),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => showComingSoonToast(context, icon: image, label: name),
+        borderRadius: BorderRadius.circular(10),
+        splashColor: AppColor.kPrimaryColor.withValues(alpha: 0.08),
+        highlightColor: AppColor.kPrimaryColor.withValues(alpha: 0.04),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.asset(image, width: 60, height: 50, fit: BoxFit.cover),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.black),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    distance,
+                    style: TextStyle(fontSize: 11, color: AppColor.grey),
+                  ),
+                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                distance,
-                style: TextStyle(fontSize: 11, color: AppColor.grey),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

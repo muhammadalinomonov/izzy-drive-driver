@@ -56,7 +56,7 @@ class ServiceScreen extends StatelessWidget {
               image: 'assets/images/kfc.jpg',
               title: 'KFC California',
               rating: '4.6',
-              time: '20-25 daq.',
+              time: '20-25 min.',
             ),
             const SizedBox(height: 24),
             _ServiceCard(
@@ -65,7 +65,7 @@ class ServiceScreen extends StatelessWidget {
               image: 'assets/images/gym.png',
               title: 'Gym 1.8 elite',
               rating: '4.6',
-              time: '20-25 daq.',
+              time: '20-25 min.',
             ),
             const SizedBox(height: 24),
             const _ServiceCard(
@@ -74,7 +74,7 @@ class ServiceScreen extends StatelessWidget {
               image: 'assets/images/grocery.png',
               title: 'Fresh Market',
               rating: '4.6',
-              time: '20-25 daq.',
+              time: '20-25 min.',
             ),
           ],
         ),
