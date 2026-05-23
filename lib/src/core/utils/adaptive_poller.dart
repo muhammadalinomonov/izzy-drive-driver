@@ -6,11 +6,15 @@ import 'package:taxi_app/src/core/services/websocket_service.dart';
 ///
 /// Har `tickInterval` da [_onTick] chaqiriladi va WS holatiga qarab poll
 /// qiladi:
-/// * WS **ulangan** — har `normalPollTicks` ta tick'da bir marta (30s default)
-/// * WS **uzilgan** — har tick'da (10s default)
+/// * WS **ulangan** - har `normalPollTicks` ta tick'da bir marta (30s default)
+/// * WS **uzilgan** - har tick'da (10s default)
 ///
 /// Backup vazifasini bajaradi: WS event yetib bormay qolsa yoki socket jim
 /// turib qolsa, polling oxirgi ma'lumotlarni darrov olib keladi.
+///
+/// Bundan tashqari [ws.connectionStream] ga obuna bo'lib WS dropdetect'ni
+/// kuzatadi va darhol bitta poll trigger qiladi (10s tick'ni kutmaydi) —
+/// shu sababli WS uzilsa ham UI 10s ichida emas, balki birdaniga yangilanadi.
 class AdaptivePoller {
   AdaptivePoller({
     required this.ws,
@@ -26,7 +30,7 @@ class AdaptivePoller {
   final void Function() onPoll;
 
   /// Har tick'da chaqiriladigan ixtiyoriy callback (poll qilinmagan
-  /// tick'lar uchun ham) — odatda time-ago label'larni yangilash uchun
+  /// tick'lar uchun ham) - odatda time-ago label'larni yangilash uchun
   /// `setState(() {})` qilamiz.
   final void Function()? onTick;
 
@@ -38,6 +42,7 @@ class AdaptivePoller {
   final int normalPollTicks;
 
   Timer? _timer;
+  StreamSubscription<bool>? _connectionSub;
   int _ticks = 0;
   bool _paused = false;
 
@@ -45,12 +50,24 @@ class AdaptivePoller {
   void start() {
     _timer?.cancel();
     _timer = Timer.periodic(tickInterval, (_) => _tick());
+    // WS uzulganini tezda payqab darhol poll qilamiz — keyingi tick'gacha
+    // (10s gacha) kutib o'tirmaymiz.
+    _connectionSub?.cancel();
+    _connectionSub = ws.connectionStream.listen((online) {
+      if (_paused) return;
+      if (!online) {
+        _ticks = 0;
+        onPoll();
+      }
+    });
   }
 
   /// To'xtatish (background-ga ketganda yoki ekran yopilganda).
   void stop() {
     _timer?.cancel();
     _timer = null;
+    _connectionSub?.cancel();
+    _connectionSub = null;
   }
 
   /// Vaqtinchalik pauza (timer ishlashda davom etadi, lekin poll qilinmaydi).

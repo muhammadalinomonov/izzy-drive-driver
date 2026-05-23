@@ -133,7 +133,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Header bo'limi — oq fonli, dekorativ blur doiralar bilan.
+                    // Header bo'limi - oq fonli, dekorativ blur doiralar bilan.
                     // Vehicle card uning pastki qismiga yopishib turadi.
                     SizedBox(
                       height: headerHeight + 34,
@@ -157,6 +157,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 _AvatarWidget(
                                   photoUrl: profile?.photo ?? '',
                                   initial: initial,
+                                  name: fullName,
                                   isUploading: state.uploadAvatarStatus ==
                                       FormzSubmissionStatus.inProgress,
                                   onTap: _onAvatarTap,
@@ -184,7 +185,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               ],
                             ),
                           ),
-                          // Vehicle card — header pastki qismiga yopishtirilgan
+                          // Vehicle card - header pastki qismiga yopishtirilgan
                           Positioned(
                             left: 12,
                             right: 12,
@@ -221,7 +222,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
-/// Header foni — Figma'da oq fonga ikkita yumshoq blur doira (chap-binafsha,
+/// Header foni - Figma'da oq fonga ikkita yumshoq blur doira (chap-binafsha,
 /// o'ng-cyan) qo'shilgan. Profile gradient PNG ham xuddi shu effektni beradi,
 /// shu sababli mavjud asset'ni ishlatamiz; agar dizayn pixel-precise kerak
 /// bo'lsa, dekorativ doiralar manually qo'shilishi mumkin.
@@ -520,7 +521,7 @@ class _ProfileMenuItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // SVG iconlar Figma'dan native rang bilan (Gray/5 = #43484B) eksport
-    // qilingan. Agar `iconColor` aniq berilmasa (default holat) — colorFilter
+    // qilingan. Agar `iconColor` aniq berilmasa (default holat) - colorFilter
     // qo'llamaymiz, shunda SVG o'z rangida ko'rinadi. Material `Icon` esa
     // doim qora bo'ladi, shu sababli unga ham Gray/5 default beramiz.
     const defaultGray = Color(0xFF43484B);
@@ -580,19 +581,21 @@ class _ProfileMenuItem extends StatelessWidget {
 ///
 /// Figma frames `1913:4738` (no-photo state with "+" badge over a
 /// blue→purple gradient + initial letter) and `14441:5941` (uploaded photo
-/// with a pencil/edit badge) are both represented here — we swap the badge
+/// with a pencil/edit badge) are both represented here - we swap the badge
 /// icon based on whether a photo URL is present, and overlay a centered
 /// progress indicator while [isUploading] is true.
 class _AvatarWidget extends StatelessWidget {
   const _AvatarWidget({
     required this.photoUrl,
     required this.initial,
+    required this.name,
     required this.isUploading,
     required this.onTap,
   });
 
   final String photoUrl;
   final String initial;
+  final String name;
   final bool isUploading;
   final VoidCallback onTap;
 
@@ -608,7 +611,7 @@ class _AvatarWidget extends StatelessWidget {
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            // Avatar circle — gradient + initial when no photo, network
+            // Avatar circle - gradient + initial when no photo, network
             // image once uploaded.
             Positioned(
               left: 0,
@@ -622,10 +625,7 @@ class _AvatarWidget extends StatelessWidget {
                   gradient: hasPhoto
                       ? null
                       : LinearGradient(
-                          colors: [
-                            AppColor.blueMain,
-                            const Color(0xFFCE08FF),
-                          ],
+                          colors: avatarGradientFor(name),
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                         ),
@@ -634,7 +634,7 @@ class _AvatarWidget extends StatelessWidget {
                 child: hasPhoto
                     ? Image.network(
                         photoUrl,
-                        // Key URL bilan bog'langan — URL o'zgarganda Flutter
+                        // Key URL bilan bog'langan - URL o'zgarganda Flutter
                         // eski Image elementini emas, yangisini yaratadi va
                         // shu sabab yangi rasm darrov tushadi (oldingi rasm
                         // widget kesh'iga yopishib qolmaydi).
@@ -683,7 +683,7 @@ class _AvatarWidget extends StatelessWidget {
                           ),
               ),
             ),
-            // Uploading overlay — dims the avatar while the request is
+            // Uploading overlay - dims the avatar while the request is
             // in flight and shows a spinner over the centre of the circle.
             if (isUploading)
               Positioned(
@@ -702,7 +702,7 @@ class _AvatarWidget extends StatelessWidget {
                   ),
                 ),
               ),
-            // Edit badge — small white circle in the top-right with a "+"
+            // Edit badge - small white circle in the top-right with a "+"
             // (no photo) or pencil (photo present) icon, matching the
             // Figma frames 1913:4738 / 14441:5941.
             Positioned(
@@ -737,7 +737,7 @@ class _AvatarWidget extends StatelessWidget {
   }
 }
 
-/// Bottom sheet for choosing the avatar source — gallery or camera.
+/// Bottom sheet for choosing the avatar source - gallery or camera.
 /// Returns the selected [ImageSource] (or null on dismiss).
 class _AvatarSourceSheet extends StatelessWidget {
   const _AvatarSourceSheet();
@@ -751,7 +751,7 @@ class _AvatarSourceSheet extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Asosiy karta — drag handle + sarlavha + ikkita variant.
+            // Asosiy karta - drag handle + sarlavha + ikkita variant.
             // Divider o'rniga element orasidagi bo'sh joy ishlatilgan.
             Container(
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
@@ -798,7 +798,7 @@ class _AvatarSourceSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            // Cancel — alohida karta sifatida iOS action sheet uslubida.
+            // Cancel - alohida karta sifatida iOS action sheet uslubida.
             Material(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),

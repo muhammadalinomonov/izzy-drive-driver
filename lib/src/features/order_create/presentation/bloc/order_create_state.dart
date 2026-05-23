@@ -18,10 +18,8 @@ class OrderCreateState extends Equatable {
     this.status = OrderCreateStatus.initial,
     this.questionsStatus = QuestionsLoadStatus.initial,
     this.questions = const [],
-    this.description = '',
-    this.audioPath,
-    this.audioDuration = Duration.zero,
-    this.audioPeaks = const [],
+    this.messages = const [],
+    this.currentRecordingPeaks = const [],
     this.isRecording = false,
     this.currentRecordingElapsed = Duration.zero,
     this.photos = const [],
@@ -39,13 +37,15 @@ class OrderCreateState extends Equatable {
   final QuestionsLoadStatus questionsStatus;
   final List<QuestionTemplate> questions;
 
-  final String description;
+  /// Committed chat-style entries authored so far. Either typed text or
+  /// finished voice notes; rendered in position order both in the chat and
+  /// on the wire (`messages` JSON sent to the backend).
+  final List<OrderMessage> messages;
 
-  final String? audioPath;
-  final Duration audioDuration;
-  // Normalized amplitude samples (0..1) captured while recording.
-  // Sent to the backend so the mechanic app can render the same bars.
-  final List<double> audioPeaks;
+  /// Live amplitude buffer captured while the recorder is running. Becomes
+  /// the [OrderAudioMessage.peaks] when recording stops; reset on the next
+  /// recording start.
+  final List<double> currentRecordingPeaks;
   final bool isRecording;
   final Duration currentRecordingElapsed;
 
@@ -60,8 +60,16 @@ class OrderCreateState extends Equatable {
   final int? createdOrderId;
   final bool showReview;
 
-  bool get hasContent =>
-      description.trim().isNotEmpty || audioPath != null || photos.isNotEmpty;
+  /// All text messages joined into one paragraph — used for review summary
+  /// display and as the legacy `text` field on the multipart submission.
+  String get description => messages
+      .whereType<OrderTextMessage>()
+      .map((m) => m.text)
+      .join('\n');
+
+  bool get hasAudio => messages.any((m) => m is OrderAudioMessage);
+
+  bool get hasContent => messages.isNotEmpty || photos.isNotEmpty;
 
   bool get canSubmit => hasContent && price.isNotEmpty;
 
@@ -69,13 +77,13 @@ class OrderCreateState extends Equatable {
   bool hasAnswerFor(QuestionType type) {
     switch (type) {
       case QuestionType.textOrAudio:
-        return description.trim().isNotEmpty || audioPath != null;
+        return messages.isNotEmpty;
       case QuestionType.photos:
         return photos.isNotEmpty;
       case QuestionType.price:
         return price.isNotEmpty;
       case QuestionType.text:
-        return description.trim().isNotEmpty;
+        return messages.any((m) => m is OrderTextMessage);
       case QuestionType.unknown:
         return true;
     }
@@ -100,11 +108,8 @@ class OrderCreateState extends Equatable {
     OrderCreateStatus? status,
     QuestionsLoadStatus? questionsStatus,
     List<QuestionTemplate>? questions,
-    String? description,
-    String? audioPath,
-    bool clearAudioPath = false,
-    Duration? audioDuration,
-    List<double>? audioPeaks,
+    List<OrderMessage>? messages,
+    List<double>? currentRecordingPeaks,
     bool? isRecording,
     Duration? currentRecordingElapsed,
     List<File>? photos,
@@ -121,10 +126,9 @@ class OrderCreateState extends Equatable {
       status: status ?? this.status,
       questionsStatus: questionsStatus ?? this.questionsStatus,
       questions: questions ?? this.questions,
-      description: description ?? this.description,
-      audioPath: clearAudioPath ? null : (audioPath ?? this.audioPath),
-      audioDuration: audioDuration ?? this.audioDuration,
-      audioPeaks: audioPeaks ?? this.audioPeaks,
+      messages: messages ?? this.messages,
+      currentRecordingPeaks:
+          currentRecordingPeaks ?? this.currentRecordingPeaks,
       isRecording: isRecording ?? this.isRecording,
       currentRecordingElapsed:
           currentRecordingElapsed ?? this.currentRecordingElapsed,
@@ -145,10 +149,8 @@ class OrderCreateState extends Equatable {
     status,
     questionsStatus,
     questions,
-    description,
-    audioPath,
-    audioDuration,
-    audioPeaks,
+    messages,
+    currentRecordingPeaks,
     isRecording,
     currentRecordingElapsed,
     photos,

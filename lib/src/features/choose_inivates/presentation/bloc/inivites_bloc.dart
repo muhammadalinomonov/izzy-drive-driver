@@ -17,6 +17,10 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
   final ActiveOrderRepository activeOrderRepository;
   final WebSocketService _ws = serviceLocator<WebSocketService>();
   StreamSubscription<Map<String, dynamic>>? _wsSub;
+  // True while this bloc currently holds a retain on the WS. Prevents
+  // double-retain when FetchActiveOrderEvent is dispatched repeatedly
+  // (polling, ws-driven refresh).
+  bool _wsRetained = false;
 
   InivitesBloc({required this.activeOrderRepository}) : super(InivitesInitial()) {
     on<FetchActiveOrderEvent>(_onFetchActiveOrder);
@@ -37,7 +41,7 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
       emit(InivitesCancelled());
     } else {
       // Restore the previous state so the offers list and proposal
-      // stream stay intact — only surface the error.
+      // stream stay intact - only surface the error.
       if (previous is InivitesLoaded) {
         emit(previous);
       }
@@ -65,16 +69,25 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
   }
 
   // Subscribe to the shared WS service. The actual socket is owned by
-  // [WebSocketService] — we only attach a listener.
+  // [WebSocketService] — bu yerda faqat listener qo'shamiz va ref-count
+  // retain'ni boshqaramiz. Polling refresh paytida event qayta-qayta
+  // dispatch bo'lishi mumkin, shuning uchun [_wsRetained] flag dublyajni
+  // oldini oladi.
   void _onConnectWebSocket(ConnectToWebSocketEvent event, Emitter<InivitesState> emit) {
+    if (_wsRetained) return;
     _ws.connect();
     _wsSub ??= _ws.stream.listen((data) => add(_WsMessageReceivedEvent(data)));
+    _wsRetained = true;
   }
 
   void _onDisconnectFromWebSocket(DisconnectFromWebSocketEvent event, Emitter<InivitesState> emit) {
+    if (!_wsRetained) return;
     _wsSub?.cancel();
     _wsSub = null;
-    // Do not call _ws.disconnect() — other blocs may still need the socket.
+    // Ref-counted release: agar OrdersBloc ham retain qilgan bo'lsa, WS
+    // ochiq qoladi. Aks holda bu oxirgi retain edi va WS yopiladi.
+    _ws.disconnect();
+    _wsRetained = false;
   }
 
   void _onWsMessage(_WsMessageReceivedEvent event, Emitter<InivitesState> emit) {
@@ -86,7 +99,7 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
       final newProposal = _parseNewProposal(data);
       add(NewProposalReceivedEvent(newProposal));
     } else if (eventType == 'update-order-price') {
-      debugPrint('Order price updated via WS — refreshing active order');
+      debugPrint('Order price updated via WS - refreshing active order');
       add(FetchActiveOrderEvent());
     }
   }
@@ -166,6 +179,10 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
   @override
   Future<void> close() {
     _wsSub?.cancel();
+    if (_wsRetained) {
+      _ws.disconnect();
+      _wsRetained = false;
+    }
     return super.close();
   }
 }

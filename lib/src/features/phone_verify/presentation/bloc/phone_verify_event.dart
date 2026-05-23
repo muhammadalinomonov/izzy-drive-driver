@@ -10,7 +10,7 @@ sealed class PhoneVerifyEvent extends Equatable {
 class SendOtpEvent extends PhoneVerifyEvent {
   // To'liq E.164 raqam: "+998901234567"
   final String phoneNumber;
-  // Dial code ("+998") — UI'da masklash uchun.
+  // Dial code ("+998") - UI'da masklash uchun.
   final String dialCode;
   final VoidCallback onSuccess;
   final VoidCallback onError;

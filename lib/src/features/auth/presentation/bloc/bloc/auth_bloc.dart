@@ -34,7 +34,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(state.copyWith(logoutStatus: AuthStatus.loading, errorMessage: ''));
     final response = await authRepo.logout();
     // Always treat as success client-side: tokens are cleared either way.
-    serviceLocator<WebSocketService>().disconnect();
+    // forceDisconnect — refcount-aware disconnect emas: logout paytida
+    // qancha retain qolgan bo'lishidan qat'i nazar socketni butunlay yopadi.
+    serviceLocator<WebSocketService>().forceDisconnect();
     event.onSuccess();
     emit(state.copyWith(
       logoutStatus: AuthStatus.success,
@@ -52,7 +54,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     ));
     final response = await authRepo.deleteAccount();
     if (response.errorText.isEmpty) {
-      serviceLocator<WebSocketService>().disconnect();
+      // forceDisconnect — refcount-aware disconnect emas: logout paytida
+    // qancha retain qolgan bo'lishidan qat'i nazar socketni butunlay yopadi.
+    serviceLocator<WebSocketService>().forceDisconnect();
       event.onSuccess();
       emit(state.copyWith(deleteAccountStatus: AuthStatus.success));
     } else {

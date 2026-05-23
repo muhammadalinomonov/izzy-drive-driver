@@ -12,9 +12,9 @@ class PushNotifications {
   static bool _initialized = false;
   static StreamSubscription<String>? _tokenRefreshSub;
 
-  /// Notification event keldi — global ping. NotificationsBloc shu notifierga
+  /// Notification event keldi - global ping. NotificationsBloc shu notifierga
   /// listener qo'shadi va o'qilmagan soni yangilanadi. Counter sifatida
-  /// ishlatamiz — value har safar incrementga uchraydi.
+  /// ishlatamiz - value har safar incrementga uchraydi.
   static final ValueNotifier<int> notificationPing = ValueNotifier<int>(0);
 
   /// Background/cold-start tap'da ochilishi kerak bo'lgan notification ID.
@@ -25,7 +25,7 @@ class PushNotifications {
     final event = (message.data['event'] ?? '').toString();
     if (event != 'notification') return;
 
-    // Ping bloc — list page va badgeni yangilash uchun.
+    // Ping bloc - list page va badgeni yangilash uchun.
     notificationPing.value = notificationPing.value + 1;
 
     if (fromTap) {
@@ -47,7 +47,7 @@ class PushNotifications {
     print('🔔 Permission status: ${settings.authorizationStatus}');
 
     // Foreground push: do not show anything. The WebSocket-driven order
-    // bloc already covers the same payload — duplicating via local
+    // bloc already covers the same payload - duplicating via local
     // notification would double-fire. For admin-broadcast `event=notification`
     // payloads, the global notificationPing notifier is bumped so the
     // notifications bloc refreshes its unread count and list silently.
@@ -61,7 +61,7 @@ class PushNotifications {
       _handleIncomingMessage(message, fromTap: true);
     });
 
-    // FCM token rotation — har qachon yangi token kelganda backendga
+    // FCM token rotation - har qachon yangi token kelganda backendga
     // jo'natamiz. Tokensiz onda backend eski qiymatga push uradi va hech
     // narsa yetib bormaydi.
     _tokenRefreshSub?.cancel();
@@ -99,7 +99,7 @@ class PushNotifications {
         apnsReady = await _waitForApnsToken();
       }
       if (!apnsReady) {
-        print('⚠️ APNS token unavailable after 10s — skipping FCM getToken()');
+        print('⚠️ APNS token unavailable after 10s - skipping FCM getToken()');
         return;
       }
       final token = await FirebaseMessaging.instance.getToken();
@@ -124,7 +124,7 @@ class PushNotifications {
 
   /// Hozirgi qurilmani backend'da ro'yxatga oladi. Token berilmasa
   /// `getToken()`dan oladi. Auth bo'lmagan holatda (refresh token bo'sh)
-  /// jim o'tadi — login keyin yana chaqiriladi.
+  /// jim o'tadi - login keyin yana chaqiriladi.
   ///
   /// Main screen ochilganda va `onTokenRefresh` ishlaganda chaqiriladi.
   /// Multi-device push pipeline `UserDevice` jadvalida tokenlarni saqlaydi,
@@ -132,7 +132,7 @@ class PushNotifications {
   static Future<void> registerDeviceWithBackend({String? token}) async {
     try {
       if (StorageRepository.getString('refresh').isEmpty) {
-        // Auth qilinmagan — keyinroq main screen'da qayta chaqirish kerak.
+        // Auth qilinmagan - keyinroq main screen'da qayta chaqirish kerak.
         return;
       }
       final fcmToken = (token ?? await getToken()).trim();

@@ -8,6 +8,9 @@ class ReviewModel extends Equatable {
   final String driverAvatar;
   final int stars;
   final String comment;
+  // Optional short tag chosen by the driver (e.g. "On time", "Polite").
+  // Backend column is CharField(blank=True, null=True) so empty is normal.
+  final String tag;
   final String createdAt;
 
   const ReviewModel({
@@ -17,11 +20,12 @@ class ReviewModel extends Equatable {
     this.driverAvatar = '',
     this.stars = 0,
     this.comment = '',
+    this.tag = '',
     this.createdAt = '',
   });
 
   @override
-  List<Object> get props => [id, driver, driverName, driverAvatar, stars, comment, createdAt];
+  List<Object> get props => [id, driver, driverName, driverAvatar, stars, comment, tag, createdAt];
 
   factory ReviewModel.fromJson(Map<String, dynamic> json) {
     return ReviewModel(
@@ -29,6 +33,7 @@ class ReviewModel extends Equatable {
       driver: toInt(json['driver'], -1),
       driverName: toStr(json['driver_name']),
       comment: toStr(json['comment']),
+      tag: toStr(json['tag']),
       driverAvatar: toStr(json['driver_avatar']),
       stars: toInt(json['stars']),
       createdAt: toStr(json['created_at']),

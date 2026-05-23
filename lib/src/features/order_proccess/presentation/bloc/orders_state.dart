@@ -105,7 +105,7 @@ class OrderCanceled extends OrdersState {
   // Cancel keyin home `state.currentOrderStatus`'ni initial deb topib
   // shimmer'da qotirib qo'ymasligi uchun success + bo'sh order bilan
   // boshlanadi (id=-1). `is OrderCanceled` tekshiruvlari hali ham
-  // ishlaydi — bu sub-class identity'i listenWhen filterlarida kerak.
+  // ishlaydi - bu sub-class identity'i listenWhen filterlarida kerak.
   const OrderCanceled()
       : super(
           currentOrderStatus: FormzSubmissionStatus.success,

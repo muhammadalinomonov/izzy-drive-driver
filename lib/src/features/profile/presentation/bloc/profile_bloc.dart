@@ -42,18 +42,18 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     if (result.errorText.isEmpty) {
       final newUrl = result.data ?? '';
       final oldUrl = state.profile?.photo ?? '';
-      // Backend yangi rasmni eski URL'ga overwrite qilishi mumkin —
+      // Backend yangi rasmni eski URL'ga overwrite qilishi mumkin -
       // shu sababli Flutter'ning image cache'ida eski rasm qoladi va
       // Image.network qayta render bo'lganda eski rasmni ko'rsatadi.
       // Cache'dan eski (va xavfsizlik uchun yangi) URL entry'larini
-      // o'chiramiz — keyingi render fresh fetch qiladi.
+      // o'chiramiz - keyingi render fresh fetch qiladi.
       if (oldUrl.isNotEmpty) {
         await NetworkImage(oldUrl).evict();
       }
       if (newUrl.isNotEmpty && newUrl != oldUrl) {
         await NetworkImage(newUrl).evict();
       }
-      // Patch the profile in-place with the new avatar URL — avoids
+      // Patch the profile in-place with the new avatar URL - avoids
       // an extra GET /drivers/get-me/ roundtrip.
       final updated = state.profile?.copyWith(photo: newUrl);
       emit(

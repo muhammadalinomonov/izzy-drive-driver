@@ -44,7 +44,7 @@ class DioSettings {
           onError: (error, handler) async {
             final status = error.response?.statusCode;
             // SimpleJWT returns 401 for expired/invalid tokens. 403 in
-            // DRF usually means "authenticated but lacks permission" —
+            // DRF usually means "authenticated but lacks permission" -
             // refreshing won't help, so we don't trigger refresh on it
             // (otherwise legitimate 403 endpoints kick the user out).
             final isAuthFailure = status == 401;
@@ -57,7 +57,7 @@ class DioSettings {
               return handler.next(error);
             }
             if (alreadyRetried) {
-              // Server still rejects after a successful refresh — give up.
+              // Server still rejects after a successful refresh - give up.
               await AuthSession.clear();
               return handler.next(error);
             }

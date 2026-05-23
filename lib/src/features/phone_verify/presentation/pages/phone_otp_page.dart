@@ -81,7 +81,7 @@ class _PhoneOtpPageState extends State<PhoneOtpPage> {
         onSuccess: () {
           if (!mounted) return;
           // OTP page + bottom sheet ikkalasini birvarakayiga yopib,
-          // ostidagi MainScreen'ga qaytamiz. context.go ishlatmaymiz —
+          // ostidagi MainScreen'ga qaytamiz. context.go ishlatmaymiz -
           // u stack'ni butunlay almashtirardi va MainScreen.initState'ni
           // qaytadan ishga tushirardi (WS, FCM, OrdersBloc qayta yuklanardi).
           if (Navigator.of(context).canPop()) {
@@ -117,12 +117,12 @@ class _PhoneOtpPageState extends State<PhoneOtpPage> {
         body: BlocConsumer<PhoneVerifyBloc, PhoneVerifyState>(
           listenWhen: (p, c) => p.sendStatus != c.sendStatus || p.verifyStatus != c.verifyStatus,
           listener: (context, state) {
-            // Resend muvaffaqiyatli — timer'ni yangi resendAfter bilan boshlaymiz.
+            // Resend muvaffaqiyatli - timer'ni yangi resendAfter bilan boshlaymiz.
             if (state.sendStatus == PhoneVerifyStatus.success && state.resendAfter > 0 && _secondsLeft == 0) {
               _startTimer(state.resendAfter);
             }
-            // Resend xato (cooldown, sms_service_not_configured, va h.k.) —
-            // backend xabarini snackbar bilan ko'rsatamiz. Lokal fallback —
+            // Resend xato (cooldown, sms_service_not_configured, va h.k.) -
+            // backend xabarini snackbar bilan ko'rsatamiz. Lokal fallback -
             // ingliz tilida (mobile xatosi backend localized response'idan
             // farqlanishi uchun).
             if (state.sendStatus == PhoneVerifyStatus.failure) {
@@ -133,11 +133,11 @@ class _PhoneOtpPageState extends State<PhoneOtpPage> {
                     : state.errorMessage,
               );
             }
-            // Verify xato — code'ga qarab harakat qilamiz.
+            // Verify xato - code'ga qarab harakat qilamiz.
             if (state.verifyStatus == PhoneVerifyStatus.failure) {
               final code = state.errorCode;
               if (code == 'otp_too_many_attempts' || code == 'otp_expired') {
-                // Twilio'da verification yo'q yoki maks. urinishlar tugagan —
+                // Twilio'da verification yo'q yoki maks. urinishlar tugagan -
                 // foydalanuvchi yangi kod so'rashi kerak. Sheet'ga qaytaramiz.
                 AppSnackBar.showError(
                   context,
@@ -149,7 +149,7 @@ class _PhoneOtpPageState extends State<PhoneOtpPage> {
                   Navigator.of(context).pop();
                 }
               }
-              // Aks holda (otp_invalid yoki tarmoq xatosi) — sahifada qolamiz,
+              // Aks holda (otp_invalid yoki tarmoq xatosi) - sahifada qolamiz,
               // boxlar qizil bo'lib turaveradi, error matn ko'rsatiladi.
             }
           },
@@ -194,7 +194,7 @@ class _PhoneOtpPageState extends State<PhoneOtpPage> {
                         child: Text(
                           // Backend localized response (masalan "Kod noto'g'ri")
                           // bo'sh bo'lmasa o'sha ko'rsatiladi. Aks holda lokal
-                          // ingliz fallback — mobile-side xatolar inglizcha
+                          // ingliz fallback - mobile-side xatolar inglizcha
                           // bo'lib qoladi.
                           state.errorMessage.isEmpty
                               ? 'Incorrect or expired code'
@@ -245,7 +245,7 @@ class _OtpHeader extends StatelessWidget {
           // Auth sahifalardagi bilan bir xil gradient: yon-bo'yi joylashgan
           // ikkita PNG. OTP header'i shu fonni meros qiladi.
           Positioned.fill(child: Image.asset('assets/images/app_bar_gradiend.png', fit: BoxFit.fill)),
-          // Gradient pastga oq fonga yumshoq o'tadi — keyin OTP boxlar uchun
+          // Gradient pastga oq fonga yumshoq o'tadi - keyin OTP boxlar uchun
           // toza oq joy qoladi.
           Positioned.fill(
             child: DecoratedBox(
@@ -385,7 +385,7 @@ class _ResendRow extends StatelessWidget {
 // Figma 14334:13790 / 14075 / 14469.
 // 6 ta 48×48 katakcha (backend 6-xonali kod yuboradi), gap 18px, radius 12px,
 // fon #EFF3F6 (error: rgba(252,0,0,0.05)).
-// Border yo'q, cursor yo'q — yashirin TextField input qabul qiladi.
+// Border yo'q, cursor yo'q - yashirin TextField input qabul qiladi.
 class _OtpInput extends StatefulWidget {
   const _OtpInput({
     required this.length,
@@ -440,7 +440,7 @@ class _OtpInputState extends State<_OtpInput> {
     final totalWidth = widget.length * _boxSize + (widget.length - 1) * _gap;
     final bg = widget.hasError ? _bgError : _bgNormal;
     final filledColor = widget.hasError ? _textError : _textNormal;
-    // Keyingi to'ldiriladigan katakcha — keyboard ochiq turganda active.
+    // Keyingi to'ldiriladigan katakcha - keyboard ochiq turganda active.
     // hasFocus'ga ishonmaymiz: keyboard yopilsa ham FocusNode focus saqlab
     // qoladi. MediaQuery.viewInsets esa keyboard ko'rinayotganini aniq aytadi.
     final activeIndex = _controller.text.length;
@@ -454,8 +454,8 @@ class _OtpInputState extends State<_OtpInput> {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Input qabul qiluvchi yashirin TextField — sistemada keyboard ochadi.
-          // Matn ham, cursor ham shaffof — faqat ustidagi box'lar ko'rinadi.
+          // Input qabul qiluvchi yashirin TextField - sistemada keyboard ochadi.
+          // Matn ham, cursor ham shaffof - faqat ustidagi box'lar ko'rinadi.
           TextField(
             controller: _controller,
             focusNode: _focusNode,
@@ -477,7 +477,7 @@ class _OtpInputState extends State<_OtpInput> {
               isCollapsed: true,
             ),
           ),
-          // Ko'rinadigan box'lar. IgnorePointer — taplar TextField'ga o'tib
+          // Ko'rinadigan box'lar. IgnorePointer - taplar TextField'ga o'tib
           // keyboard'ni ochishi uchun.
           IgnorePointer(
             child: Row(

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:taxi_app/src/core/constants/color/app_color.dart';
 
 /// Ism va familiyaning bosh harflaridan 1-2 ta belgi qaytaradi. Bo'sh
-/// kelsa — bo'sh string. "Eshonov Fakhriyor" → "EF", "Ali" → "A".
+/// kelsa - bo'sh string. "Eshonov Fakhriyor" → "EF", "Ali" → "A".
 String avatarInitials(String? name) {
   if (name == null) return '';
   final trimmed = name.trim();
@@ -14,6 +13,33 @@ String avatarInitials(String? name) {
     return parts[0].substring(0, 1).toUpperCase();
   }
   return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+}
+
+/// Telegram uslubidagi gradient palitra - har bir foydalanuvchi nomi/idsiga
+/// qarab birini tanlaymiz. Yumshoq, o'qiladigan ranglar; oq matn ustida
+/// kontrast yaxshi bo'lishi uchun to'q-o'rta tonlar tanlangan.
+const List<List<Color>> _avatarGradients = [
+  [Color(0xFFFF885E), Color(0xFFFF516A)], // qizil-pushti
+  [Color(0xFFFFCD6A), Color(0xFFFFA85C)], // to'q sariq
+  [Color(0xFFE0A2F3), Color(0xFFD669ED)], // binafsha
+  [Color(0xFFA0DE7E), Color(0xFF54CB68)], // yashil
+  [Color(0xFF53EDD6), Color(0xFF28C9B7)], // turkuaz
+  [Color(0xFF72D5FD), Color(0xFF2A9EF1)], // ko'k
+  [Color(0xFF82B1FF), Color(0xFF665FFF)], // siyohrang
+  [Color(0xFFFF8AAE), Color(0xFFFF5C8A)], // pushti
+  [Color(0xFFB8C2D9), Color(0xFF6E7D9B)], // kulrang-ko'k
+];
+
+/// Berilgan stringdan barqaror (deterministik) gradient tanlaydi -
+/// bir xil ism har doim bir xil rangga tushadi.
+List<Color> avatarGradientFor(String? seed) {
+  final s = (seed ?? '').trim();
+  if (s.isEmpty) return _avatarGradients[5]; // default ko'k
+  var hash = 0;
+  for (final code in s.codeUnits) {
+    hash = (hash * 31 + code) & 0x7fffffff;
+  }
+  return _avatarGradients[hash % _avatarGradients.length];
 }
 
 class CommonNetworkImage extends StatelessWidget {
@@ -72,8 +98,8 @@ class CommonNetworkImage extends StatelessWidget {
   }
 }
 
-/// Dumaloq avatar — agar [imageUrl] bo'sh yoki yuklanmasa, [name]'ning bosh
-/// harflari (1–2 ta) bilan gradient doira ko'rsatadi. Ism ham bo'lmasa —
+/// Dumaloq avatar - agar [imageUrl] bo'sh yoki yuklanmasa, [name]'ning bosh
+/// harflari (1–2 ta) bilan gradient doira ko'rsatadi. Ism ham bo'lmasa -
 /// odam silueti iconi.
 class AvatarImage extends StatelessWidget {
   const AvatarImage({
@@ -113,13 +139,14 @@ class _InitialAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final initials = avatarInitials(name);
+    final colors = avatarGradientFor(name);
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(
-          colors: [AppColor.blueMain, const Color(0xFFCE08FF)],
+          colors: colors,
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),

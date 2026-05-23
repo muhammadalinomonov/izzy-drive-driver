@@ -1,4 +1,4 @@
-// Preserved Apple Pay / Google Pay UI — currently replaced by cash payment. Restore if those payment methods are reintroduced.
+// Preserved Apple Pay / Google Pay UI - currently replaced by cash payment. Restore if those payment methods are reintroduced.
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';

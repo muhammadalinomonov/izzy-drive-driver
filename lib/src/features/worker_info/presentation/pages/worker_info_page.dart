@@ -93,7 +93,7 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                     ),
                                     const SizedBox(height: 12),
                                     Text(
-                                      'Please rate the master — it helps us improve!',
+                                      'Please rate the master - it helps us improve!',
                                       style: context.textS.bodyMedium?.copyWith(
                                         color: AppColor.grey,
                                       ),

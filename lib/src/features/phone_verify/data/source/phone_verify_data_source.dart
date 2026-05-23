@@ -13,13 +13,13 @@ import 'package:taxi_app/src/features/phone_verify/data/model/send_otp_response.
 // Response shape: { status, message, data?, code? }
 //
 // Error code'lar:
-//   - otp_resend_cooldown       (request-otp 400 — kuting)
-//   - phone_invalid             (request-otp 400 — yaroqsiz raqam)
+//   - otp_resend_cooldown       (request-otp 400 - kuting)
+//   - phone_invalid             (request-otp 400 - yaroqsiz raqam)
 //   - sms_service_not_configured (request-otp 503)
-//   - invalid_input             (verify-otp 400 — bo'sh maydon)
-//   - otp_invalid               (verify-otp 400 — xato kod, yana urinish bor)
-//   - otp_expired               (verify-otp 400 — verification topilmadi)
-//   - otp_too_many_attempts     (verify-otp 400 — qayta request kerak)
+//   - invalid_input             (verify-otp 400 - bo'sh maydon)
+//   - otp_invalid               (verify-otp 400 - xato kod, yana urinish bor)
+//   - otp_expired               (verify-otp 400 - verification topilmadi)
+//   - otp_too_many_attempts     (verify-otp 400 - qayta request kerak)
 class PhoneVerifyDataSource {
   final client = serviceLocator.get<DioSettings>().dio;
 
@@ -44,7 +44,7 @@ class PhoneVerifyDataSource {
   }
 
   Future<NetworkResponse<SendOtpResponse>> resendOtp(String phoneNumber) {
-    // Backend bir xil endpoint — cooldown serverda Redis orqali boshqariladi.
+    // Backend bir xil endpoint - cooldown serverda Redis orqali boshqariladi.
     return sendOtp(phoneNumber);
   }
 
@@ -63,7 +63,7 @@ class PhoneVerifyDataSource {
         if (verified) {
           return NetworkResponse(data: true);
         }
-        // 200 OK lekin is_verified=false — kutilmagan vaziyat, xato sifatida ishlamiz.
+        // 200 OK lekin is_verified=false - kutilmagan vaziyat, xato sifatida ishlamiz.
         return NetworkResponse(errorText: 'OTP not verified', errorCode: 'otp_invalid');
       }
       return _bodyError(response);

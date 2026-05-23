@@ -64,7 +64,7 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     NotificationsRefreshed event,
     Emitter<NotificationsState> emit,
   ) async {
-    // silent — preserve current list while reloading, don't flash shimmer.
+    // silent - preserve current list while reloading, don't flash shimmer.
     final response = await repo.fetchPage(page: 1);
     if (response.errorText.isEmpty && response.data != null) {
       final page = response.data!;
@@ -108,7 +108,7 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     NotificationMarkRead event,
     Emitter<NotificationsState> emit,
   ) async {
-    // Optimistic update — local item read flag flips immediately.
+    // Optimistic update - local item read flag flips immediately.
     final idx = state.items.indexWhere((n) => n.id == event.id);
     if (idx < 0) return;
     final item = state.items[idx];
@@ -146,7 +146,7 @@ class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
     NotificationReceivedFromPush event,
     Emitter<NotificationsState> emit,
   ) async {
-    // FCM payload kelganda — listni qaytadan yuklaymiz va counterni yangilaymiz.
+    // FCM payload kelganda - listni qaytadan yuklaymiz va counterni yangilaymiz.
     add(const NotificationsRefreshed());
     add(const UnreadCountRequested());
   }

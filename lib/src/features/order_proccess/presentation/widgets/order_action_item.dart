@@ -15,7 +15,7 @@ class OrderActionItem extends StatelessWidget {
   final String text;
   final VoidCallback onTap;
 
-  /// Yuqori-o'ng burchakda orange badge ko'rsatadi. `null` yoki `<= 0` — badge yo'q.
+  /// Yuqori-o'ng burchakda orange badge ko'rsatadi. `null` yoki `<= 0` - badge yo'q.
   /// Qiymat berilgan bo'lsa: 1 → faqat aylana, 2+ → raqam.
   final int? badgeCount;
 
@@ -39,7 +39,7 @@ class OrderActionItem extends StatelessWidget {
                   width: 48,
                   decoration: BoxDecoration(shape: BoxShape.circle, color: AppColor.lightBlue),
                   alignment: Alignment.center,
-                  child: Center(child: SvgPicture.asset(icon, width: 25, height: 25)),
+                  child: Center(child: SvgPicture.asset(icon, width: 19, height: 19)),
                 ),
                 if (count > 0)
                   Positioned(

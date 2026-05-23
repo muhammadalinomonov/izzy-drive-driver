@@ -101,7 +101,7 @@ class ProfileModel {
       mechanicName: toStr(json['mechanic_name']),
       mechanicId: toInt(json['mechanic_id']),
       // `mechanic_info` payloadlari `mechanic_photo` ni qaytaradi, oddiy
-      // profil javoblari esa `photo` ni — ikkalasini ham qabul qilamiz.
+      // profil javoblari esa `photo` ni - ikkalasini ham qabul qilamiz.
       photo: photoStr.isNotEmpty ? photoStr : toStr(json['mechanic_photo']),
       truckImage: toStr(json['truck_image']),
       truckMark: toStr(json['truck_mark']),

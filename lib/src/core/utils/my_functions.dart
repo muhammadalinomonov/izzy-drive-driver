@@ -43,7 +43,7 @@ class MyFunctions {
 
   /// Sana stringini "dd.MM.yyyy (N days ago)" ko'rinishida qaytaradi.
   /// "today" / "yesterday" uchun maxsus shakl. Parse xatolik bersa
-  /// — original stringni qaytaradi.
+  /// - original stringni qaytaradi.
   static String formatDateWithRelative(String dateTimeStr) {
     try {
       final dt = DateTime.parse(dateTimeStr).toLocal();
@@ -55,7 +55,7 @@ class MyFunctions {
           .inDays;
       String relative;
       if (days < 0) {
-        relative = base; // future date — fallback to plain date
+        relative = base; // future date - fallback to plain date
         return relative;
       } else if (days == 0) {
         relative = 'today';
@@ -70,7 +70,7 @@ class MyFunctions {
     }
   }
 
-  /// "N days ago" / "today" / "yesterday" — sof relative format.
+  /// "N days ago" / "today" / "yesterday" - sof relative format.
   static String relativeDate(String dateTimeStr) {
     try {
       final dt = DateTime.parse(dateTimeStr).toLocal();

@@ -153,6 +153,13 @@
   "Arrival time": "Yetib kelish vaqti",
   "Distance": "Masofa",
   "More": "Batafsil",
+  "Online": "Onlayn",
+  "Offline": "Oflayn",
+  "Busy": "Band",
+  "On work": "Ish jarayonida",
+  "Nearby": "Yaqin",
+  "m away": "m",
+  "km away": "km",
   "notifications": {
     "title": "Bildirishnomalar",
     "detailTitle": "Bildirishnoma",

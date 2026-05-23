@@ -12,6 +12,7 @@ class ReviewItem extends StatelessWidget {
     required this.date,
     required this.review,
     required this.rating,
+    this.tag = '',
   });
 
   final String avatar;
@@ -19,12 +20,17 @@ class ReviewItem extends StatelessWidget {
   final String date;
   final String review;
 
+  /// Optional short tag (e.g. "On time"). Empty hides the chip entirely.
+  final String tag;
+
   /// 0..5 oralig'idagi yulduz soni.
   final int rating;
 
   @override
   Widget build(BuildContext context) {
     final clampedRating = rating.clamp(0, 5);
+    final hasComment = review.trim().isNotEmpty;
+    final hasTag = tag.trim().isNotEmpty;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,15 +82,35 @@ class ReviewItem extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 10),
-        Text(
-          review,
-          style: context.textTheme.bodyLarge!.copyWith(
-            fontSize: 13,
-            fontWeight: FontWeight.w400,
-            height: 1.4,
+        if (hasTag) ...[
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColor.lightBlue,
+              borderRadius: BorderRadius.circular(50),
+            ),
+            child: Text(
+              tag,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: AppColor.darkBlue,
+              ),
+            ),
           ),
-        ),
+        ],
+        if (hasComment) ...[
+          const SizedBox(height: 10),
+          Text(
+            review,
+            style: context.textTheme.bodyLarge!.copyWith(
+              fontSize: 13,
+              fontWeight: FontWeight.w400,
+              height: 1.4,
+            ),
+          ),
+        ],
         const SizedBox(height: 10),
         Text(
           MyFunctions.relativeDate(date),

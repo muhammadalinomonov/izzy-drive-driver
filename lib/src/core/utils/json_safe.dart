@@ -1,4 +1,4 @@
-/// Safe JSON value parsers — never throw, always return a sensible default.
+/// Safe JSON value parsers - never throw, always return a sensible default.
 ///
 /// Backend may return null, omit a field, or send a numeric value as a string
 /// (or vice-versa). Use these helpers in `fromJson` factories instead of raw

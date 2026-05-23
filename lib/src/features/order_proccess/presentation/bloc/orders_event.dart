@@ -17,7 +17,7 @@ class _WsMessageReceivedEvent extends OrdersEvent {
 }
 
 class GetCurrentOrderEvent extends OrdersEvent {
-  /// When true, skip emitting `inProgress` if we already have order data —
+  /// When true, skip emitting `inProgress` if we already have order data -
   /// used for lifecycle resume / WS reconnect refresh so the UI doesn't
   /// flash a shimmer over already-rendered content.
   final bool silent;
@@ -58,5 +58,5 @@ class ClearPendingSubOrderEvent extends OrdersEvent {}
 
 /// Boshqa joydan (masalan `InivitesBloc.cancelOrder` API chaqirilgandan
 /// keyin) `OrdersBloc.state.currentOrder`'ni clear qilish uchun. API
-/// qaytadan chaqirilmaydi — bu signal-only event.
+/// qaytadan chaqirilmaydi - bu signal-only event.
 class ResetCurrentOrderEvent extends OrdersEvent {}

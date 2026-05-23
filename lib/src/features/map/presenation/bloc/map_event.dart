@@ -30,7 +30,7 @@ class PickerModeChangedEvent extends MapEvent {
   PickerModeChangedEvent(this.mode);
 }
 
-/// Final selection — used by LocationPickerScreen on "Davom ettirish" /
+/// Final selection - used by LocationPickerScreen on "Davom ettirish" /
 /// "Tanlash" CTA. State carries the chosen address+coords; the screen
 /// then pops or pushes the next route with extras.
 class LocationSelectedEvent extends MapEvent {

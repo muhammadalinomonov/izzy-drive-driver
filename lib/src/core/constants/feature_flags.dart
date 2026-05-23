@@ -22,7 +22,7 @@ class FeatureFlags {
   static bool get webSocketEnabled => webSocketEnabledNotifier.value;
 
   // Persist + broadcast a new value. Existing open channels are NOT closed
-  // here — disable takes effect on the next reconnect (or next route entry,
+  // here - disable takes effect on the next reconnect (or next route entry,
   // since BLoCs are scoped per route in this repo).
   static Future<void> setWebSocketEnabled(bool value) async {
     await StorageRepository.putBool(key: _wsKey, value: value);

@@ -1,4 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
+// ignore: unnecessary_import — material.dart does NOT re-export
+// CupertinoSliverRefreshControl/RefreshIndicatorMode.
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,7 +21,7 @@ import '../../data/model/active_order.dart';
 import '../bloc/inivites_bloc.dart';
 
 // Figma design tokens (Quadrix Ai design system).
-const Color _kBg = Color(0xFFEFF3F6); // Gray/BG — page background
+const Color _kBg = Color(0xFFEFF3F6); // Gray/BG - page background
 const Color _kBorder = Color(0xFFE3E8EB);
 const Color _kSubtitle = Color(0xFF6B7073);
 const Color _kCaption = Color(0xFF43484B);
@@ -54,7 +57,7 @@ class _InvatesScreenState extends State<InvatesScreen> with WidgetsBindingObserv
     WidgetsBinding.instance.addObserver(this);
     inivitesBloc = context.read<InivitesBloc>()..add(FetchActiveOrderEvent());
     // Adaptiv polling: WS ulangan paytda har 30s, uzilgan paytda har 10s.
-    // Tick'larda setState — time-ago labellarini yangilab turish uchun.
+    // Tick'larda setState - time-ago labellarini yangilab turish uchun.
     _poller = AdaptivePoller(
       ws: serviceLocator<WebSocketService>(),
       onPoll: () {
@@ -84,7 +87,7 @@ class _InvatesScreenState extends State<InvatesScreen> with WidgetsBindingObserv
     }
     _lastResumeRefresh = now;
     // iOS often suspends the WS during background without firing onDone, so
-    // the cached `_isConnected` can be a lie — force a fresh socket.
+    // the cached `_isConnected` can be a lie - force a fresh socket.
     serviceLocator<WebSocketService>().reconnect();
     if (!mounted) return;
     context.read<InivitesBloc>().add(FetchActiveOrderEvent());
@@ -142,7 +145,7 @@ class _InvatesScreenState extends State<InvatesScreen> with WidgetsBindingObserv
           backgroundColor: _kBg,
           body: Column(
             children: [
-              // Status bar + TopBar — fixed white area, doesn't scroll on refresh.
+              // Status bar + TopBar - fixed white area, doesn't scroll on refresh.
               Container(
                 color: Colors.white,
                 child: SafeArea(
@@ -156,7 +159,7 @@ class _InvatesScreenState extends State<InvatesScreen> with WidgetsBindingObserv
                       curr is InivitesCancelled || curr is InivitesError,
                   listener: (context, state) {
                     if (state is InivitesCancelled) {
-                      // Cancel API faqat shu bloc orqali chaqiriladi — OrdersBloc
+                      // Cancel API faqat shu bloc orqali chaqiriladi - OrdersBloc
                       // shu paytda eski "active" state'da qotirib qoladi. WS dan
                       // `order-cancelled` event har doim yetib bormasligi mumkin
                       // (broadcast vs targeted), shu sababli aniq signal yuboramiz.
@@ -171,7 +174,7 @@ class _InvatesScreenState extends State<InvatesScreen> with WidgetsBindingObserv
                     }
                   },
                   // Pull-to-refresh paytida bloc Loading → Loaded chiqaradi.
-                  // Loaded UI'ni Loading bilan almashtirmaymiz — refresh
+                  // Loaded UI'ni Loading bilan almashtirmaymiz - refresh
                   // indicator o'zi yetarli signal beradi.
                   buildWhen: (prev, curr) {
                     if (curr is InivitesLoading && prev is InivitesLoaded) {
@@ -213,130 +216,116 @@ class _Loaded extends StatefulWidget {
 }
 
 class _LoadedState extends State<_Loaded> {
-  // Pull masofasi — shu chegaradan oshganda refresh ishga tushadi.
-  static const double _pullThreshold = 80;
-  bool _refreshing = false;
-  double _pullAccumulator = 0;
-
-  Future<void> _doRefresh() async {
-    if (_refreshing) return;
-    setState(() => _refreshing = true);
-    try {
-      await widget.onRefresh();
-    } finally {
-      if (mounted) setState(() => _refreshing = false);
-    }
-  }
-
-  bool _onScroll(ScrollNotification n) {
-    if (n is OverscrollNotification && n.overscroll < 0 && !_refreshing) {
-      // ClampingScrollPhysics overscroll'ni vizual qabul qilmaydi, lekin
-      // rejected delta'ni notification orqali yuboradi — biz uni yig'amiz.
-      _pullAccumulator += n.overscroll.abs();
-      if (_pullAccumulator >= _pullThreshold) {
-        _pullAccumulator = 0;
-        _doRefresh();
-      }
-    } else if (n is ScrollEndNotification) {
-      _pullAccumulator = 0;
-    }
-    return false;
-  }
-
   @override
   Widget build(BuildContext context) {
     final order = widget.orderResponse.order;
     final offers = widget.orderResponse.data;
+    final hasOffers = offers.isNotEmpty;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Stack(
-          children: [
-            // Android'dagi glow indikatorni o'chiramiz — content tinch turadi.
-            NotificationListener<OverscrollIndicatorNotification>(
-              onNotification: (n) {
-                n.disallowIndicator();
-                return true;
-              },
-              child: NotificationListener<ScrollNotification>(
-                onNotification: _onScroll,
-                child: SingleChildScrollView(
-                  // ClampingScrollPhysics — overscroll vizual yo'q (bounce yo'q),
-                  // lekin OverscrollNotification chiqaradi. Shu orqali content
-                  // joyidan jilmasdan refresh detect qilamiz.
-                  physics: const AlwaysScrollableScrollPhysics(
-                    parent: ClampingScrollPhysics(),
-                  ),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                    child: IntrinsicHeight(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _HeaderCard(order: order, hasOffers: offers.isNotEmpty),
-                          const SizedBox(height: 12),
-                          Expanded(
-                            child: _OffersCard(
-                              offers: offers,
-                              orderCreatedAt: order.createdAt,
-                              orderPrice: order.totalPrice,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            // Overlay spinner — content ustida suzib turadi, content esa qotgan.
-            Positioned(
-              top: 12,
-              left: 0,
-              right: 0,
-              child: IgnorePointer(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: _refreshing
-                      ? const _RefreshBadge(key: ValueKey('refresh'))
-                      : const SizedBox(key: ValueKey('idle'), height: 0),
-                ),
-              ),
-            ),
-          ],
-        );
+    return NotificationListener<OverscrollIndicatorNotification>(
+      // Android'dagi glow indikatorni o'chiramiz — CupertinoSliverRefreshControl
+      // o'zining spinneri va content-shift animatsiyasini ko'rsatadi.
+      onNotification: (n) {
+        n.disallowIndicator();
+        return true;
       },
+      child: CustomScrollView(
+        // BouncingScrollPhysics — pull qilganda content vizual ravishda pastga
+        // cho'ziladi, Cupertino sliver shu cho'zilish balandligida joy ochib
+        // spinner ko'rsatadi. AlwaysScrollableScrollPhysics — list bo'sh
+        // (offers yo'q) bo'lsa ham scroll bilan refresh qilinadi.
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        slivers: [
+          CupertinoSliverRefreshControl(
+            onRefresh: widget.onRefresh,
+            // Default thresholds his qulay — minimum joy 60, refresh trigger 100.
+            builder: _buildRefreshIndicator,
+          ),
+          SliverToBoxAdapter(
+            child: _HeaderCard(order: order, hasOffers: hasOffers),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 12)),
+          // Offerlar bo'lmasa — viewport'ning qolgan qismini to'ldirib bo'sh
+          // holatni markazda ko'rsatamiz. Offerlar bo'lsa tabiiy balandlikda
+          // ro'yxat shaklida (ko'p bo'lsa scroll qilinadi).
+          if (hasOffers)
+            SliverToBoxAdapter(
+              child: _OffersCard(
+                offers: offers,
+                orderCreatedAt: order.createdAt,
+                orderPrice: order.totalPrice,
+              ),
+            )
+          else
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: _OffersCard(
+                offers: offers,
+                orderCreatedAt: order.createdAt,
+                orderPrice: order.totalPrice,
+              ),
+            ),
+        ],
+      ),
     );
   }
-}
 
-class _RefreshBadge extends StatelessWidget {
-  const _RefreshBadge({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x1F000000),
-              blurRadius: 16,
-              offset: Offset(0, 4),
+  /// Custom refresh indicator — Cupertino default spinneri o'rniga loyiha
+  /// rangiga mos circular progress ko'rsatamiz. Pull masofasiga qarab faded
+  /// (drag) yoki spinning (refreshing) holatda chiqadi.
+  ///
+  /// Builder qaytargan widget sliver'ning butun pulled-extent area'sini
+  /// to'ldiradi — shu sababli ColoredBox(white) bilan o'rasak, pull qilganda
+  /// ochilgan joy Scaffold'ning gray foni o'rniga oq bo'lib chiqadi (HeaderCard
+  /// bilan vizual ravishda bog'lanadi).
+  Widget _buildRefreshIndicator(
+    BuildContext context,
+    RefreshIndicatorMode refreshState,
+    double pulledExtent,
+    double refreshTriggerPullDistance,
+    double refreshIndicatorExtent,
+  ) {
+    final progress =
+        (pulledExtent / refreshTriggerPullDistance).clamp(0.0, 1.0);
+    final isSpinning = refreshState == RefreshIndicatorMode.refresh ||
+        refreshState == RefreshIndicatorMode.armed;
+    return ColoredBox(
+      color: Colors.white,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0x1F000000),
+                  blurRadius: 16,
+                  offset: Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: const Center(
-          child: SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.4,
-              valueColor: AlwaysStoppedAnimation(_kPrimary),
+            child: Center(
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: isSpinning
+                    ? const CircularProgressIndicator(
+                        strokeWidth: 2.4,
+                        valueColor: AlwaysStoppedAnimation(_kPrimary),
+                      )
+                    : CircularProgressIndicator(
+                        strokeWidth: 2.4,
+                        value: progress,
+                        valueColor:
+                            const AlwaysStoppedAnimation(_kPrimary),
+                      ),
+              ),
             ),
           ),
         ),
@@ -466,11 +455,73 @@ class _HeaderCard extends StatelessWidget {
   }
 }
 
-class _OfferAmountBox extends StatelessWidget {
+class _OfferAmountBox extends StatefulWidget {
   const _OfferAmountBox({required this.order, required this.canAdjust});
 
   final Order order;
   final bool canAdjust;
+
+  @override
+  State<_OfferAmountBox> createState() => _OfferAmountBoxState();
+}
+
+class _OfferAmountBoxState extends State<_OfferAmountBox> {
+  static const TextStyle _priceStyle = TextStyle(
+    color: Colors.black,
+    fontSize: 16,
+    fontFamily: 'Inter',
+    fontWeight: FontWeight.w500,
+    height: 1.4,
+    letterSpacing: -0.30,
+  );
+
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: widget.order.totalPrice.toStringAsFixed(0),
+    );
+    _focusNode = FocusNode()..addListener(_onFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(covariant _OfferAmountBox oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Narx tashqaridan o'zgargan bo'lsa (+/- tugma yoki WS update) - controllerni
+    // sinxronlaymiz. User shu paytda TextFieldda tahrirlamayotgan bo'lsa.
+    if (!_focusNode.hasFocus &&
+        widget.order.totalPrice != oldWidget.order.totalPrice) {
+      final newText = widget.order.totalPrice.toStringAsFixed(0);
+      if (_controller.text != newText) {
+        _controller.text = newText;
+      }
+    }
+  }
+
+  void _onFocusChange() {
+    if (!_focusNode.hasFocus) _submit();
+  }
+
+  void _submit() {
+    final parsed = double.tryParse(_controller.text.trim());
+    if (parsed == null || parsed < 1) {
+      _controller.text = widget.order.totalPrice.toStringAsFixed(0);
+      return;
+    }
+    if (parsed == widget.order.totalPrice) return;
+    context.read<InivitesBloc>().add(UpdateOrderPriceEvent(price: parsed));
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -499,7 +550,7 @@ class _OfferAmountBox extends StatelessWidget {
           const Spacer(),
           Container(
             height: 38,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             alignment: Alignment.center,
             decoration: ShapeDecoration(
               color: _kInputBg,
@@ -508,28 +559,54 @@ class _OfferAmountBox extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: Text(
-              '\$${order.totalPrice.toStringAsFixed(0)}',
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 16,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w500,
-                height: 1.4,
-                letterSpacing: -0.30,
-              ),
-            ),
+            child: widget.canAdjust
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('\$', style: _priceStyle),
+                      SizedBox(
+                        width: 64,
+                        child: TextField(
+                          controller: _controller,
+                          focusNode: _focusNode,
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          textAlignVertical: TextAlignVertical.center,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(6),
+                          ],
+                          decoration: const InputDecoration(
+                            isCollapsed: true,
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                          style: _priceStyle,
+                          cursorColor: _kPrimary,
+                          onTapOutside: (_) => _focusNode.unfocus(),
+                          onSubmitted: (_) {
+                            _submit();
+                            _focusNode.unfocus();
+                          },
+                        ),
+                      ),
+                    ],
+                  )
+                : Text(
+                    '\$${widget.order.totalPrice.toStringAsFixed(0)}',
+                    style: _priceStyle,
+                  ),
           ),
-          if (canAdjust) ...[
+          if (widget.canAdjust) ...[
             const SizedBox(width: 8),
             _PriceAdjustButton(
               color: const Color(0x19FB0000),
               icon: AppIcons.down,
               onTap: () {
-                if (order.price > 1) {
+                if (widget.order.price > 1) {
                   context
                       .read<InivitesBloc>()
-                      .add(UpdateOrderPriceEvent(price: order.price - 1));
+                      .add(UpdateOrderPriceEvent(price: widget.order.price - 1));
                 }
               },
             ),
@@ -540,7 +617,7 @@ class _OfferAmountBox extends StatelessWidget {
               onTap: () {
                 context
                     .read<InivitesBloc>()
-                    .add(UpdateOrderPriceEvent(price: order.price + 1));
+                    .add(UpdateOrderPriceEvent(price: widget.order.price + 1));
               },
             ),
           ],
@@ -621,7 +698,7 @@ class _OffersCard extends StatelessWidget {
             Expanded(child: _EmptyOffers(orderCreatedAt: orderCreatedAt))
           else
             Padding(
-              // ListView.separated(shrinkWrap) IntrinsicHeight ichida crash beradi —
+              // ListView.separated(shrinkWrap) IntrinsicHeight ichida crash beradi -
               // bu yerda outer SingleChildScrollView allaqachon scrollni boshqaryapti,
               // shuning uchun oddiy Column ishlatamiz.
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
@@ -712,8 +789,8 @@ class _OfferTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Mexanik narxi haydovchining narxidan QIMMAT bo'lsa — qizil (haydovchi
-    // uchun yomon). ARZON bo'lsa — yashil. Figma'dagi mantiq.
+    // Mexanik narxi haydovchining narxidan QIMMAT bo'lsa - qizil (haydovchi
+    // uchun yomon). ARZON bo'lsa - yashil. Figma'dagi mantiq.
     final isExpensive = offer.proposedPrice > orderPrice;
     final isCheaper = offer.proposedPrice < orderPrice;
     final showStrike = orderPrice > 0 && offer.proposedPrice != orderPrice;
@@ -854,11 +931,12 @@ class _OfferTile extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        // Choose tugmasi — figma'da bor. Butun card ham InkWell bilan
+        // Choose tugmasi - figma'da bor. Butun card ham InkWell bilan
         // tap qilinadigan; bu tugma alohida visual CTA sifatida qoladi.
+        // Height 48 — loyihadagi asosiy AppButton bilan bir xil baland.
         SizedBox(
           width: double.infinity,
-          height: 38,
+          height: 48,
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -953,7 +1031,7 @@ class _ChangeChip extends StatelessWidget {
     required this.textColor,
   });
 
-  // QIMMAT bo'lsa — ↑ qizil. ARZON bo'lsa — ↓ yashil.
+  // QIMMAT bo'lsa - ↑ qizil. ARZON bo'lsa - ↓ yashil.
   final bool isExpensive;
   final double percent;
   final Color backgroundColor;
@@ -1147,7 +1225,7 @@ class _LoadingSkeleton extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const _SkeletonBox(width: double.infinity, height: 38, radius: 50),
+                  const _SkeletonBox(width: double.infinity, height: 48, radius: 50),
                   if (i < 2) ...[
                     const SizedBox(height: 16),
                     const Divider(height: 1, thickness: 1, color: _kDivider),

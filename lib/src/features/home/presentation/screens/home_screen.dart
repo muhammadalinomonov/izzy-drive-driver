@@ -89,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: RefreshIndicator.adaptive(
               onRefresh: () async {
                 // Pull-to-refresh: the RefreshIndicator spinner is the user-visible
-                // progress affordance — keep stale data on screen instead of
+                // progress affordance - keep stale data on screen instead of
                 // collapsing into per-section shimmers underneath it.
                 historyBloc.add(GetOrdersHistoryEvent(silent: true));
                 context.read<OrdersBloc>().add(GetCurrentOrderEvent(silent: true));
@@ -97,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 await Future.delayed(const Duration(milliseconds: 400));
                 // RefreshIndicator collapse paytida ba'zan content tepaga
                 // siljib qolishi mumkin (iOS BouncingScrollPhysics + content
-                // height o'zgarishi tufayli). 0 ga qaytarish — barqaror.
+                // height o'zgarishi tufayli). 0 ga qaytarish - barqaror.
                 if (mounted && _scrollController.hasClients) {
                   _scrollController.jumpTo(0);
                 }
@@ -134,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       context.push(Pages.searchLocation);
                                     },
                                   ),
-                                  // Tarix bo'sh bo'lsa hech narsa ko'rsatmaymiz —
+                                  // Tarix bo'sh bo'lsa hech narsa ko'rsatmaymiz -
                                   // search inputdan keyin to'g'ridan-to'g'ri "Boshqa
                                   // imkoniyatlar" boshlanadi.
                                   if (recents.isNotEmpty) ...[
@@ -205,7 +205,7 @@ Future<void> _openBannerRouter(BuildContext context, String router) async {
     uri = null;
   }
   if (uri == null || (!uri.hasScheme)) {
-    // Treat as plain URL without scheme — fall back to https
+    // Treat as plain URL without scheme - fall back to https
     try {
       uri = Uri.parse('https://$router');
     } catch (_) {

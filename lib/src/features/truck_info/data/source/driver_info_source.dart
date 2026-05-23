@@ -79,7 +79,7 @@ class DriverInfoSource {
   Future<NetworkResponse> putDriverInfo(DriverInfoPutModel data) async {
     final client = serviceLocator.get<DioSettings>().dio;
     try {
-      // truck_image fayli alohida MultipartFile sifatida qo'shiladi —
+      // truck_image fayli alohida MultipartFile sifatida qo'shiladi -
       // toJson()'dagi bo'sh string yuborilmaydi, aks holda backend rasmni
       // o'chirib yuborishi mumkin.
       final form = FormData.fromMap({

@@ -14,6 +14,12 @@ class MasterModel {
   final int allOrdersCount;
   final int successOrdersCount;
   final int reviewCount;
+  // Backend-computed performance percentage (0-100). Kept nullable so the
+  // mobile fallback `(success / all * 100)` still works while the backend
+  // field is rolling out — once backend always returns it, this stays the
+  // single source of truth (the formula can change server-side without an
+  // app release).
+  final int? performance;
   final ReviewModel? review;
   final String allReviewsUrl;
   final double distance;
@@ -33,6 +39,7 @@ class MasterModel {
     this.allOrdersCount = 0,
     this.successOrdersCount = 0,
     this.reviewCount = 0,
+    this.performance,
     this.review,
     this.allReviewsUrl = '',
     this.distance = 0,
@@ -54,6 +61,9 @@ class MasterModel {
       allOrdersCount: toInt(json['all_orders_count']),
       successOrdersCount: toInt(json['success_orders_count']),
       reviewCount: toInt(json['review_count']),
+      performance: json['performance_percent'] != null
+          ? toInt(json['performance_percent'])
+          : (json['performance'] is num ? toInt(json['performance']) : null),
       review: json['review'] != null ? ReviewModel.fromJson(toMap(json['review'])) : null,
       allReviewsUrl: toStr(json['all_reviews_url']),
       distance: toDouble(json['distance']),

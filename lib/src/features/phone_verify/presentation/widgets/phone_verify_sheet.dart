@@ -50,7 +50,7 @@ class _PhoneVerifySheetState extends State<_PhoneVerifySheet> {
   @override
   void initState() {
     super.initState();
-    // Default davlat — USA, Figma'dagi kabi.
+    // Default davlat - USA, Figma'dagi kabi.
     _selected = Country.parse('US');
     _maskFormatter = _PhoneMaskFormatter(_maskFor(_selected));
   }
@@ -176,14 +176,9 @@ class _PhoneVerifySheetState extends State<_PhoneVerifySheet> {
               if (!mounted) return;
               context.push(Pages.phoneOtp);
             },
-            onError: () {
-              if (!mounted) return;
-              final msg = context.read<PhoneVerifyBloc>().state.errorMessage;
-              AppSnackBar.showError(
-                context,
-                msg.isEmpty ? LocaleKeys.phoneVerify_otp_sendFailed.tr() : msg,
-              );
-            },
+            // Failure handling - sheet ichidagi inline banner orqali (BlocListener),
+            // chunki modal sheet pastdagi snackbar'ni yopib qo'yadi.
+            onError: () {},
           ),
         );
   }
@@ -238,6 +233,21 @@ class _PhoneVerifySheetState extends State<_PhoneVerifySheet> {
                   country: _selected,
                   maskFormatter: _maskFormatter,
                   onPickCountry: _pickCountry,
+                ),
+                BlocBuilder<PhoneVerifyBloc, PhoneVerifyState>(
+                  buildWhen: (p, c) =>
+                      p.sendStatus != c.sendStatus ||
+                      p.errorMessage != c.errorMessage,
+                  builder: (context, state) {
+                    final showError =
+                        state.sendStatus == PhoneVerifyStatus.failure &&
+                            state.errorMessage.isNotEmpty;
+                    if (!showError) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: _SheetErrorBanner(message: state.errorMessage),
+                    );
+                  },
                 ),
                 const SizedBox(height: 20),
                 BlocBuilder<PhoneVerifyBloc, PhoneVerifyState>(
@@ -332,6 +342,43 @@ class _PhoneInput extends StatelessWidget {
                 ),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SheetErrorBanner extends StatelessWidget {
+  const _SheetErrorBanner({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColor.red.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColor.red.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.error_rounded, color: AppColor.red, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: context.textS.bodyMedium!.copyWith(
+                color: AppColor.red,
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+                height: 1.3,
               ),
             ),
           ),

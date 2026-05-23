@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:taxi_app/src/features/order_create/data/model/order_create_request_model.dart';
+import 'package:taxi_app/src/features/order_create/data/model/order_message.dart';
 import 'package:taxi_app/src/features/order_create/data/model/question_template_model.dart';
 import 'package:taxi_app/src/features/order_create/domain/repo/order_create_repo.dart';
 
@@ -14,13 +15,13 @@ class OrderCreateBloc extends Bloc<OrderCreateEvent, OrderCreateState> {
   OrderCreateBloc({required this.repo}) : super(const OrderCreateState()) {
     on<OrderCreateInitialized>(_onInitialized);
     on<QuestionsFetchRequested>(_onQuestionsFetchRequested);
-    on<DescriptionChanged>(_onDescriptionChanged);
+    on<TextMessageAppended>(_onTextMessageAppended);
+    on<MessageRemoved>(_onMessageRemoved);
     on<AudioRecordingStarted>(_onAudioRecordingStarted);
     on<AudioRecordingTicked>(_onAudioRecordingTicked);
     on<AudioRecordingStopped>(_onAudioRecordingStopped);
     on<AudioRecordingCancelled>(_onAudioRecordingCancelled);
     on<AudioPeakCaptured>(_onAudioPeakCaptured);
-    on<AudioCleared>(_onAudioCleared);
     on<PhotosAdded>(_onPhotosAdded);
     on<PhotoRemoved>(_onPhotoRemoved);
     on<PriceChanged>(_onPriceChanged);
@@ -72,8 +73,29 @@ class OrderCreateBloc extends Bloc<OrderCreateEvent, OrderCreateState> {
     emit(state.copyWith(showReview: false));
   }
 
-  void _onDescriptionChanged(DescriptionChanged event, Emitter<OrderCreateState> emit) {
-    emit(state.copyWith(description: event.value));
+  void _onTextMessageAppended(
+    TextMessageAppended event,
+    Emitter<OrderCreateState> emit,
+  ) {
+    final trimmed = event.text.trim();
+    if (trimmed.isEmpty) return;
+    final next = [
+      ...state.messages,
+      OrderTextMessage(position: state.messages.length, text: trimmed),
+    ];
+    emit(state.copyWith(messages: next));
+  }
+
+  void _onMessageRemoved(MessageRemoved event, Emitter<OrderCreateState> emit) {
+    if (event.position < 0 || event.position >= state.messages.length) return;
+    // Removing a recorded audio leaves the file on disk; safe to ignore —
+    // the picker dir is purged when the page is left.
+    final next = <OrderMessage>[];
+    for (final m in state.messages) {
+      if (m.position == event.position) continue;
+      next.add(_reposition(m, next.length));
+    }
+    emit(state.copyWith(messages: next));
   }
 
   void _onAudioRecordingStarted(
@@ -84,7 +106,7 @@ class OrderCreateBloc extends Bloc<OrderCreateEvent, OrderCreateState> {
       step: OrderCreateStep.recordingAudio,
       isRecording: true,
       currentRecordingElapsed: Duration.zero,
-      audioPeaks: const [],
+      currentRecordingPeaks: const [],
     ));
   }
 
@@ -99,12 +121,18 @@ class OrderCreateBloc extends Bloc<OrderCreateEvent, OrderCreateState> {
     AudioRecordingStopped event,
     Emitter<OrderCreateState> emit,
   ) {
+    final newMessage = OrderAudioMessage(
+      position: state.messages.length,
+      path: event.path,
+      duration: state.currentRecordingElapsed,
+      peaks: List<double>.unmodifiable(state.currentRecordingPeaks),
+    );
     emit(state.copyWith(
       step: OrderCreateStep.describing,
       isRecording: false,
-      audioPath: event.path,
-      audioDuration: state.currentRecordingElapsed,
+      messages: [...state.messages, newMessage],
       currentRecordingElapsed: Duration.zero,
+      currentRecordingPeaks: const [],
     ));
   }
 
@@ -116,7 +144,7 @@ class OrderCreateBloc extends Bloc<OrderCreateEvent, OrderCreateState> {
       step: OrderCreateStep.describing,
       isRecording: false,
       currentRecordingElapsed: Duration.zero,
-      audioPeaks: const [],
+      currentRecordingPeaks: const [],
     ));
   }
 
@@ -124,23 +152,15 @@ class OrderCreateBloc extends Bloc<OrderCreateEvent, OrderCreateState> {
     AudioPeakCaptured event,
     Emitter<OrderCreateState> emit,
   ) {
-    // Cap the buffer — backend trims to 256 anyway and longer lists hurt
+    // Cap the buffer - backend trims to 256 anyway and longer lists hurt
     // bubble-render perf. At a 200ms sample rate this caps recordings at
     // ~51 seconds before we start dropping the head; for longer recordings
     // we still capture the *recent* envelope.
     const max = 256;
-    final next = state.audioPeaks.length >= max
-        ? <double>[...state.audioPeaks.sublist(1), event.value]
-        : <double>[...state.audioPeaks, event.value];
-    emit(state.copyWith(audioPeaks: next));
-  }
-
-  void _onAudioCleared(AudioCleared event, Emitter<OrderCreateState> emit) {
-    emit(state.copyWith(
-      clearAudioPath: true,
-      audioDuration: Duration.zero,
-      audioPeaks: const [],
-    ));
+    final next = state.currentRecordingPeaks.length >= max
+        ? <double>[...state.currentRecordingPeaks.sublist(1), event.value]
+        : <double>[...state.currentRecordingPeaks, event.value];
+    emit(state.copyWith(currentRecordingPeaks: next));
   }
 
   void _onPhotosAdded(PhotosAdded event, Emitter<OrderCreateState> emit) {
@@ -179,9 +199,7 @@ class OrderCreateBloc extends Bloc<OrderCreateEvent, OrderCreateState> {
     emit(state.copyWith(status: OrderCreateStatus.submitting, errorMessage: ''));
 
     final request = OrderCreateRequestModel(
-      text: state.description.trim(),
-      voiceFile: state.audioPath != null ? File(state.audioPath!) : null,
-      voicePeaks: state.audioPeaks,
+      messages: state.messages,
       photos: state.photos,
       price: state.price,
       latitude: state.latitude,
@@ -208,6 +226,22 @@ class OrderCreateBloc extends Bloc<OrderCreateEvent, OrderCreateState> {
   void _onReset(OrderCreateReset event, Emitter<OrderCreateState> emit) {
     emit(const OrderCreateState());
   }
+}
+
+/// Returns [m] with its position field replaced by [newPosition].
+OrderMessage _reposition(OrderMessage m, int newPosition) {
+  return switch (m) {
+    OrderTextMessage() => OrderTextMessage(
+        position: newPosition,
+        text: m.text,
+      ),
+    OrderAudioMessage() => OrderAudioMessage(
+        position: newPosition,
+        path: m.path,
+        duration: m.duration,
+        peaks: m.peaks,
+      ),
+  };
 }
 
 // Used when /accounts/questions-templates/ is unreachable so the user can

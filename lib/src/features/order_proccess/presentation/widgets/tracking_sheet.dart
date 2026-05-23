@@ -5,7 +5,7 @@ import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bl
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/order_state_panel.dart';
 import 'package:taxi_app/src/features/order_proccess/utils/tracking_calculator.dart';
 
-/// Mexanik buyurtmani qabul qildi va yo'lda — Figma frame 1884:4489.
+/// Mexanik buyurtmani qabul qildi va yo'lda - Figma frame 1884:4489.
 class TrackingSheet extends StatelessWidget {
   const TrackingSheet({super.key});
 

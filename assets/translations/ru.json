@@ -153,6 +153,13 @@
   "Arrival time": "Время прибытия",
   "Distance": "Расстояние",
   "More": "Подробнее",
+  "Online": "В сети",
+  "Offline": "Не в сети",
+  "Busy": "Занят",
+  "On work": "На работе",
+  "Nearby": "Рядом",
+  "m away": "м",
+  "km away": "км",
   "notifications": {
     "title": "Уведомления",
     "detailTitle": "Уведомление",

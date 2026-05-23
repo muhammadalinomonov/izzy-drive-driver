@@ -34,7 +34,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         mechanicsStatus: MapStatus.success,
         nearbyMechanics: mechanics,
         // The `near-mechanics-km` response carries reverse-geocoded address
-        // for the queried point — adopt it as the current selectedAddress.
+        // for the queried point - adopt it as the current selectedAddress.
         selectedAddress: mechanics.data.driverCurrentAddress.address,
         selectedLatitude: event.latitude,
         selectedLongitude: event.longitude,

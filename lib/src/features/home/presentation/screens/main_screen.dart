@@ -53,13 +53,12 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // Open the shared WS once on enter; OrdersBloc & InivitesBloc attach
-    // listeners on demand. Safe to call repeatedly — service is idempotent.
-    serviceLocator<WebSocketService>().connect();
-    context.read<OrdersBloc>()
-      ..add(ConnectToWebSocketEvent())
-      ..add(GetCurrentOrderEvent());
-    // WS uzilib qolgan vaziyatlarda backup polling — silent fetch UI'ni
+    // WS faqat active order paytida ulanadi — main_screen.init'da
+    // unconditional connect olib tashlandi. OrdersBloc.GetCurrentOrderEvent
+    // qaytib kelganda, currentOrder.id != -1 bo'lsa o'zi `_ws.connect()`
+    // chaqiradi (ref-counted retain).
+    context.read<OrdersBloc>().add(GetCurrentOrderEvent());
+    // WS uzilib qolgan vaziyatlarda backup polling - silent fetch UI'ni
     // o'zgartirmaydi, foydalanuvchi sezmaydi.
     _poller = AdaptivePoller(
       ws: serviceLocator<WebSocketService>(),
@@ -69,7 +68,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       },
     )..start();
     // FCM tokenni backendga yangilab qo'yamiz. Token rotation yoki yangi
-    // qurilma bo'lsa, shu yerda yangilanadi — backend doimo amaldagi token
+    // qurilma bo'lsa, shu yerda yangilanadi - backend doimo amaldagi token
     // bilan push yuboradi.
     PushNotifications.registerDeviceWithBackend();
     _phoneVerifyBloc = Routes.resolvePhoneVerifyBloc();
@@ -83,7 +82,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   }
 
   /// Cold-start yoki background tap orqali kelgan notification ID bo'lsa,
-  /// /notifications page'ni ochib qo'yamiz. Detail emas list — chunki
+  /// /notifications page'ni ochib qo'yamiz. Detail emas list - chunki
   /// foydalanuvchi keyingi notificatsiyalarni ham ko'rishi mumkin.
   void _handlePendingNotificationDeepLink() {
     final pendingId = PushNotifications.pendingDeepLinkNotificationId;
@@ -101,7 +100,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     final response = await ProfileDataSource().fetchProfile();
     if (!mounted) return false;
     if (response.errorText.isNotEmpty || response.data is! ProfileModel) {
-      // Fetch xato bersa — gate'ni ochiq qoldiramiz. Onki keyingi navigatsiyada
+      // Fetch xato bersa - gate'ni ochiq qoldiramiz. Onki keyingi navigatsiyada
       // baribir token bilan tekshiriladi.
       return false;
     }
@@ -115,9 +114,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
   Future<void> _maybeShowPhoneVerifySheet() async {
     if (_phoneSheetShown) return;
-    // Source of truth — backend. Cached storage flag'ga ishonmaymiz, chunki
+    // Source of truth - backend. Cached storage flag'ga ishonmaymiz, chunki
     // boshqa qurilmada o'chirib yuborilgan yoki admin tomonidan tozalangan
-    // bo'lishi mumkin. get-me dan phone_number kelsa va u bo'sh bo'lmasa —
+    // bo'lishi mumkin. get-me dan phone_number kelsa va u bo'sh bo'lmasa -
     // verified deb hisoblaymiz.
     final response = await ProfileDataSource().fetchProfile();
     if (!mounted) return;
@@ -128,9 +127,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         return;
       }
     }
-    // Phone bo'sh yoki fetch xato berdi — sheet'ni ko'rsatamiz va eski cache'ni
-    // tozalaymiz. (Xato keladigan bo'lsa user OTP yuborolmaydi — fallback safer
-    // — yangi qurilmada paydo bo'lgan unverified user'ni ushlab qolish uchun.)
+    // Phone bo'sh yoki fetch xato berdi - sheet'ni ko'rsatamiz va eski cache'ni
+    // tozalaymiz. (Xato keladigan bo'lsa user OTP yuborolmaydi - fallback safer
+    // - yangi qurilmada paydo bo'lgan unverified user'ni ushlab qolish uchun.)
     await StorageRepository.deleteBool('phone_verified');
     _phoneSheetShown = true;
     // OTP muvaffaqiyatli tugaganda AuthSession.tick'ga listener qo'shamiz,
@@ -143,13 +142,14 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     };
     AuthSession.tick.addListener(_phoneSessionListener!);
     if (!context.mounted) return;
+    if(1.isOdd)return;
     showPhoneVerifySheet(context, bloc: _phoneVerifyBloc).whenComplete(() {
       if (_phoneSessionListener != null) {
         AuthSession.tick.removeListener(_phoneSessionListener!);
         _phoneSessionListener = null;
       }
       // Agar foydalanuvchi qandaydir tarzda sheet'ni yopib qo'ysa-yu, lekin
-      // hali ham phone verify qilinmagan bo'lsa — qayta ochib qo'yamiz.
+      // hali ham phone verify qilinmagan bo'lsa - qayta ochib qo'yamiz.
       if (mounted && !AuthSession.isPhoneVerified) {
         _phoneSheetShown = false;
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -177,13 +177,13 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       return;
     }
     _lastResumeRefresh = now;
-    // Force a fresh socket — iOS often suspends the WS during background
+    // Force a fresh socket - iOS often suspends the WS during background
     // without firing onDone, so the cached _isConnected can be a lie.
     serviceLocator<WebSocketService>().reconnect();
     // Silent refresh: avoid flashing the shimmer over the active-order card
     // that's already on screen when the user returns to the app.
     context.read<OrdersBloc>().add(GetCurrentOrderEvent(silent: true));
-    // App resume bo'lganda ham FCM tokenni yangilab qo'yamiz — FCM bazan
+    // App resume bo'lganda ham FCM tokenni yangilab qo'yamiz - FCM bazan
     // background turishda tokenni o'zgartiradi va onTokenRefresh
     // boshlanish vaqtida ishlamasa, shu yerda tutib olamiz.
     PushNotifications.registerDeviceWithBackend();
@@ -200,7 +200,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColor.white,
-      // IndexedStack keeps every tab alive — switching tabs preserves their
+      // IndexedStack keeps every tab alive - switching tabs preserves their
       // state (scroll position, blocs, etc.), matching the previous
       // CupertinoTabScaffold behavior.
       body: IndexedStack(

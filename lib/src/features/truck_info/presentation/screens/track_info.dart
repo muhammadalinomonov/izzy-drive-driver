@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:taxi_app/src/core/components/app_snack_bar.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
+import 'package:taxi_app/src/core/utils/extensions.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/auth/presentation/widgets/auth_input_widget.dart';
 import 'package:taxi_app/src/features/truck_info/data/model/driver_info_put_model.dart';
@@ -99,32 +100,35 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
         behavior: HitTestBehavior.opaque,
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: Stack(
-        children: [
-          SizedBox(
-            height: double.infinity,
-            width: double.infinity,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Image.asset(
-                    'assets/images/gradient2.png',
-                    fit: BoxFit.fill,
-                    height: 600,
+          children: [
+            SizedBox(
+              height: double.infinity,
+              width: double.infinity,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Image.asset(
+                      'assets/images/gradient2.png',
+                      fit: BoxFit.fill,
+                      height: 600,
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: Image.asset(
-                    'assets/images/gradient1.png',
-                    fit: BoxFit.fill,
-                    height: 600,
+                  Expanded(
+                    child: Image.asset(
+                      'assets/images/gradient1.png',
+                      fit: BoxFit.fill,
+                      height: 600,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          SafeArea(
-            child: SingleChildScrollView(
+            SingleChildScrollView(
+              padding: EdgeInsets.only(
+                top: context.padding.top + 12,
+                bottom: context.padding.bottom,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -143,7 +147,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                         ),
                         const SizedBox(height: 12),
                         const Text(
-                          "We recommend filling in your truck information — it will help you keep track of your records!",
+                          "We recommend filling in your truck information - it will help you keep track of your records!",
                           style: TextStyle(fontSize: 16, color: Colors.black54),
                         ),
                       ],
@@ -251,8 +255,11 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                         ),
                         const SizedBox(height: 8),
                         BlocBuilder<TrackInfoBloc, TrackInfoState>(
+                          buildWhen: (prev, curr) =>
+                              prev.marksStatus != curr.marksStatus ||
+                              prev.truckMarkResponse != curr.truckMarkResponse,
                           builder: (context, state) {
-                            if (state.status == TrackInfoStatus.error) {
+                            if (state.marksStatus == TrackInfoStatus.error) {
                               WidgetsBinding.instance.addPostFrameCallback((v) {
                                 AppSnackBar.showError(
                                   context,
@@ -263,7 +270,8 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                             }
                             return TruckDropDownWidget(
                               isLoading:
-                                  state.status == TrackInfoStatus.loading,
+                                  state.marksStatus == TrackInfoStatus.loading,
+                              hint: 'Select truck make',
                               value: pickeDtruckMark?.name,
                               items:
                                   state.truckMarkResponse?.data.map((mark) {
@@ -281,8 +289,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                                 if (selectedMark != null) {
                                   setState(() {
                                     pickeDtruckMark = selectedMark;
-                                    pickedTruckModel =
-                                        null; // reset model when mark changes
+                                    pickedTruckModel = null;
                                   });
                                   BlocProvider.of<TrackInfoBloc>(context).add(
                                     GetTrackModelsEvent(
@@ -304,18 +311,21 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                         ),
                         const SizedBox(height: 8),
                         BlocBuilder<TrackInfoBloc, TrackInfoState>(
+                          buildWhen: (prev, curr) =>
+                              prev.modelsStatus != curr.modelsStatus ||
+                              prev.truckModelResponse !=
+                                  curr.truckModelResponse,
                           builder: (context, state) {
-                            if (state.status == TrackInfoStatus.loading) {
-                              return TruckDropDownWidget(
-                                isLoading: true,
-                                value: null,
-                                items: const [],
-                                onChanged: (value) {},
-                              );
-                            }
                             final models =
                                 state.truckModelResponse?.data.models ?? [];
+                            final markSelected = pickeDtruckMark != null;
                             return TruckDropDownWidget(
+                              isLoading:
+                                  state.modelsStatus == TrackInfoStatus.loading,
+                              enabled: markSelected,
+                              hint: markSelected
+                                  ? 'Select truck model'
+                                  : 'Select make first',
                               value: pickedTruckModel?.name,
                               items: models
                                   .map(
@@ -414,8 +424,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                 ],
               ),
             ),
-          ),
-        ],
+          ],
         ),
       ),
     );
@@ -426,20 +435,18 @@ class TruckDropDownWidget extends StatelessWidget {
   final String? value;
   final List<DropdownMenuItem<String>> items;
   final ValueChanged<String?> onChanged;
-  final Widget? hint;
-  final Widget? icon;
-  final bool isExpanded;
+  final String hint;
   final bool isLoading;
+  final bool enabled;
 
   const TruckDropDownWidget({
     super.key,
     required this.value,
     required this.items,
     required this.onChanged,
-    this.hint,
-    this.icon,
-    this.isExpanded = true,
+    this.hint = 'Select',
     this.isLoading = false,
+    this.enabled = true,
   });
 
   @override
@@ -449,29 +456,77 @@ class TruckDropDownWidget extends StatelessWidget {
         baseColor: Colors.grey.shade300,
         highlightColor: Colors.grey.shade100,
         child: Container(
-          height: 48,
+          height: 52,
           decoration: BoxDecoration(
             color: Colors.grey.shade100,
             borderRadius: BorderRadius.circular(14),
           ),
-          margin: const EdgeInsets.symmetric(vertical: 8),
         ),
       );
     }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+    final isInteractive = enabled && items.isNotEmpty;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: AppColor.lightBlue,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: value != null
+              ? AppColor.kPrimaryColor.withValues(alpha: 0.35)
+              : Colors.transparent,
+          width: 1,
+        ),
       ),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
-          hint: hint ?? const Text("Select"),
+          isExpanded: true,
+          menuMaxHeight: 320,
+          borderRadius: BorderRadius.circular(14),
+          dropdownColor: Colors.white,
+          elevation: 6,
+          icon: Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: isInteractive
+                ? AppColor.kPrimaryColor
+                : AppColor.lightGreyBlue,
+          ),
+          iconSize: 26,
+          style: const TextStyle(
+            color: Colors.black87,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+          hint: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Text(
+              hint,
+              style: TextStyle(
+                color: AppColor.lightGreyBlue,
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+          selectedItemBuilder: (context) => items
+              .map(
+                (item) => Container(
+                  alignment: Alignment.centerLeft,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  child: DefaultTextStyle(
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    child: item.child,
+                  ),
+                ),
+              )
+              .toList(),
           items: items,
-          onChanged: onChanged,
-          isExpanded: isExpanded,
-          icon: icon ?? const Icon(Icons.keyboard_arrow_down),
+          onChanged: isInteractive ? onChanged : null,
         ),
       ),
     );

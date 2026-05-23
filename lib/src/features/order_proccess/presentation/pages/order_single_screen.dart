@@ -55,9 +55,9 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
 
   bool _mapReady = false;
 
-  // Insets used for cameraForCoordinateBounds — bottom matches the sheet
+  // Insets used for cameraForCoordinateBounds - bottom matches the sheet
   // height. Yangi 3-card panel (status + master + actions) eski sheet'dan
-  // kattaroq, shuning uchun bottom 420 — marker bottomsheet ostida qolib
+  // kattaroq, shuning uchun bottom 420 - marker bottomsheet ostida qolib
   // ketmaydi.
   static final _mapPadding = mapbox.MbxEdgeInsets(
     top: 100,
@@ -73,7 +73,7 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
     context.read<OrdersBloc>()
       ..add(GetCurrentOrderEvent())
       ..add(ConnectToWebSocketEvent());
-    // WS uzilgan vaziyatlar uchun backup polling — silent fetch UI'ni
+    // WS uzilgan vaziyatlar uchun backup polling - silent fetch UI'ni
     // o'zgartirmaydi, tracking sheet o'z holatida qoladi.
     _poller = AdaptivePoller(
       ws: serviceLocator<WebSocketService>(),
@@ -110,7 +110,7 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
   Widget build(BuildContext context) {
     return PopScope(
       // Back doim main'ga olib boradi (offers list yoki order_create'ga
-      // emas) — foydalanuvchi qaerdan kelganidan qat'i nazar, tracking
+      // emas) - foydalanuvchi qaerdan kelganidan qat'i nazar, tracking
       // screen'dan chiqsa kerakli joyga tushadi.
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -135,7 +135,7 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
               if (pending != null) SubOrderProposalSheet.show(context, pending);
             },
           ),
-          // Mechanic live position — update only the mechanic marker.
+          // Mechanic live position - update only the mechanic marker.
           BlocListener<OrdersBloc, OrdersState>(
             listenWhen: (p, c) =>
                 p.mechanicLat != c.mechanicLat || p.mechanicLng != c.mechanicLng,
@@ -146,14 +146,14 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
               _updateMechanicMarker(lat, lng);
             },
           ),
-          // Route changed — redraw everything.
+          // Route changed - redraw everything.
           BlocListener<OrdersBloc, OrdersState>(
             listenWhen: (p, c) => p.currentOrder.map != c.currentOrder.map,
             listener: (context, state) {
               if (_mapReady) _drawRoute(state.currentOrder.map);
             },
           ),
-          // Status changed — accepted ↔ arrived/in_progress oralig'ida
+          // Status changed - accepted ↔ arrived/in_progress oralig'ida
           // marker stilini almashtirish kerak (route vs pulse halqali nuqta).
           BlocListener<OrdersBloc, OrdersState>(
             listenWhen: (p, c) => p.currentOrder.status != c.currentOrder.status,
@@ -188,7 +188,7 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
                           (MediaQuery.of(context).size.height * 0.3),
                     ),
                     // Mexanik javobini kutgan paytda map non-interactive bo'ladi
-                    // — har ikkala marker ham allaqachon ko'rinib turibdi.
+                    // - har ikkala marker ham allaqachon ko'rinib turibdi.
                     child: IgnorePointer(
                       ignoring: status.isMechanicSelected,
                       child: mapbox.MapWidget(
@@ -210,7 +210,7 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
                     ),
                   ),
 
-                  // mechanicSelected — chiroyli kutish sheet (map ustida
+                  // mechanicSelected - chiroyli kutish sheet (map ustida
                   // markaziy spinner yo'q, hammasi sheet ichida).
                   if (status.isMechanicSelected)
                     Positioned(
@@ -354,7 +354,10 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
                       child: IconButton(
                         icon: const Icon(Icons.arrow_back, color: Colors.black),
                         onPressed: () {
-                          context.read<OrdersBloc>().add(DisConnectFromWebSocketEvent());
+                          // Back qilish active orderni bekor qilmaydi — WS
+                          // hayotda qoladi, MainScreen/HomeScreen WS event-
+                          // larini olishi davom etadi. Disconnect faqat
+                          // logout / cancel oqimlarida bo'lishi kerak.
                           if (context.canPop()) {
                             context.pop();
                           } else {
@@ -364,6 +367,23 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
                       ),
                     ),
                   ),
+
+                  // Recenter button — Stack'ning ENG OXIRIDA, sheet'lardan
+                  // KEYIN turishi shart, aks holda u sheet ostida qoladi.
+                  // O'ng tomon, sheet yuqorisida (~30% balandlik + safe-area
+                  // + 16px gap).
+                  if (!status.isMechanicSelected)
+                    Positioned(
+                      right: 16,
+                      // Sheet'ning real balandligi ~50% atrofida (figma'ga
+                      // qarab) — map'ning 30% padding'idan kattaroq. Tugma
+                      // sheet'ning yuqori chetidan ~16px tepada turishi
+                      // uchun 0.52 + 16 ishlatamiz.
+                      bottom: MediaQuery.paddingOf(context).bottom +
+                          MediaQuery.sizeOf(context).height * 0.5 +
+                          16,
+                      child: _MapRecenterButton(onTap: _recenterMap),
+                    ),
                 ],
               );
             } else if (state.currentOrderStatus.isInProgress) {
@@ -420,7 +440,7 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
       final atSinglePoint = status.isArrived || status.isInProgress;
 
       if (atSinglePoint) {
-        // Mexanik allaqachon haydovchining manzilida — bitta nuqta yetadi.
+        // Mexanik allaqachon haydovchining manzilida - bitta nuqta yetadi.
         await _drawPulseMarker(map.endPoint.lat, map.endPoint.lng);
         return;
       }
@@ -463,7 +483,7 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
     }
   }
 
-  /// Barcha annotation'larni tozalash — status o'zgarganda har xil
+  /// Barcha annotation'larni tozalash - status o'zgarganda har xil
   /// stildagi marker'lar bir-biriga yopishib qolmasligi uchun.
   Future<void> _clearMapAnnotations() async {
     await _polylineAnnotationManager?.deleteAll();
@@ -483,7 +503,7 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
     }
   }
 
-  /// Figma 1897:4828 — bitta nuqta atrofida ikkita ko'k translucent halqa
+  /// Figma 1897:4828 - bitta nuqta atrofida ikkita ko'k translucent halqa
   /// + ustida mexanik ikoni. Yo'l chizig'i va manzil markeri ko'rsatilmaydi.
   Future<void> _drawPulseMarker(double lat, double lng) async {
     if (lat == 0 && lng == 0) return;
@@ -508,7 +528,7 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
       ),
     );
     if (inner != null) _pulseAnnotations.add(inner);
-    // Mexanik ikoni — markazda (kichikroq qilindi, halqalar ichida ko'rinsin).
+    // Mexanik ikoni - markazda (kichikroq qilindi, halqalar ichida ko'rinsin).
     _mechanicAnnotation = await _pointAnnotationManager!.create(
       mapbox.PointAnnotationOptions(
         geometry: point,
@@ -516,14 +536,15 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
         iconSize: 0.35,
       ),
     );
-    // Camera nuqtaga yaqinroq olib boriladi.
+    // Camera nuqtaga yaqinroq olib boriladi. Zoom 15 — pulse halqalar va
+    // mexanik ikoni bemalol joylashadi, ko'cha kontekst ham ko'rinadi.
     await _mapboxMap.flyTo(
-      mapbox.CameraOptions(center: point, zoom: 16, pitch: 0, bearing: 0),
+      mapbox.CameraOptions(center: point, zoom: 14, pitch: 0, bearing: 0),
       mapbox.MapAnimationOptions(duration: 600),
     );
   }
 
-  /// Update only the mechanic marker — destination stays fixed.
+  /// Update only the mechanic marker - destination stays fixed.
   /// Refits the camera so both points remain visible.
   void _updateMechanicMarker(double lat, double lng) async {
     if (_pointAnnotationManager == null || !mounted) return;
@@ -556,9 +577,14 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
     _mapboxMap = mapboxMap;
     final bloc = mounted ? context.read<OrdersBloc>() : null;
     try {
+      // Mapbox v10+ default projection — globe (uzoqlashtirilganda Yer
+      // sharsifat ko'rinadi). Loyiha uchun har doim flat (mercator) kerak.
+      await _mapboxMap.style.setProjection(
+        mapbox.StyleProjection(name: mapbox.StyleProjectionName.mercator),
+      );
       await Future.delayed(const Duration(milliseconds: 500));
       // Z-order: birinchi yaratilgan pastda turadi. Circle pastda, polyline
-      // o'rtada, point (mexanik ikoni) tepada — pulse halqalar ustani
+      // o'rtada, point (mexanik ikoni) tepada - pulse halqalar ustani
       // tagiga tushadi, ko'k rang ustaning ikoniga "urilmaydi".
       _circleAnnotationManager =
           await _mapboxMap.annotations.createCircleAnnotationManager();
@@ -655,14 +681,117 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
       debugPrint('Error centering on address: $e');
     }
   }
+
+  /// Recenter button: foydalanuvchi zoomni xohlagancha o'zgartirgan bo'lsa,
+  /// shu tugmani bosib mexanik + manzil markerlari ko'rinadigan dastlabki
+  /// fit-bounds vaziyatga qaytarish. Active order map data'sidan foydalanadi;
+  /// agar marshrut mavjud bo'lmasa current address atrofiga zoom qiladi.
+  Future<void> _recenterMap() async {
+    if (!_mapReady) return;
+    if (!mounted) return;
+    final state = context.read<OrdersBloc>().state;
+    final map = state.currentOrder.map;
+    try {
+      await _mapboxMap.flyTo(
+        await _buildRecenterCamera(state),
+        mapbox.MapAnimationOptions(duration: 500),
+      );
+    } catch (_) {
+      // flyTo bolnomalanmagan markerlarda fail bo'lishi mumkin — fallback.
+      if (map.startPoint.lat != 0 || map.startPoint.lng != 0) {
+        await _fitCameraToBounds(
+          lat1: map.startPoint.lat, lng1: map.startPoint.lng,
+          lat2: map.endPoint.lat, lng2: map.endPoint.lng,
+        );
+      } else {
+        await _centerOnAddress(state.currentOrder.currentAddress);
+      }
+    }
+  }
+
+  Future<mapbox.CameraOptions> _buildRecenterCamera(OrdersState state) async {
+    final map = state.currentOrder.map;
+    final status = state.currentOrder.status;
+    final hasStart = map.startPoint.lat != 0 || map.startPoint.lng != 0;
+    final hasEnd = map.endPoint.lat != 0 || map.endPoint.lng != 0;
+
+    // Arrived / in-progress — pulse marker stilida bitta nuqta atrofiga
+    // zoom qilamiz (drawPulseMarker bilan bir xil zoom 15).
+    if (status.isArrived || status.isInProgress) {
+      final lat = hasEnd ? map.endPoint.lat : map.startPoint.lat;
+      final lng = hasEnd ? map.endPoint.lng : map.startPoint.lng;
+      if (lat != 0 || lng != 0) {
+        return mapbox.CameraOptions(
+          center: mapbox.Point(coordinates: mapbox.Position(lng, lat)),
+          zoom: 15,
+          pitch: 0.0,
+          bearing: 0.0,
+        );
+      }
+    }
+
+    // Accepted (yo'lda) — yo'l + 2 marker. cameraForCoordinateBounds barchasini
+    // ekranga sig'diradi (drawRoute bilan bir xil mantiq).
+    if (hasStart && hasEnd) {
+      return _buildBoundsCamera(
+        lat1: map.startPoint.lat, lng1: map.startPoint.lng,
+        lat2: map.endPoint.lat, lng2: map.endPoint.lng,
+      );
+    }
+
+    // Hech qaysi marker yo'q — current address atrofida zoom.
+    final addr = state.currentOrder.currentAddress;
+    return mapbox.CameraOptions(
+      center: mapbox.Point(
+        coordinates: mapbox.Position(addr.longitude, addr.latitude),
+      ),
+      zoom: 14.5,
+      pitch: 0.0,
+      bearing: 0.0,
+    );
+  }
+}
+
+/// Map recenter button — pastki-o'ngda turuvchi oq dumaloq tugma, ichida
+/// "my_location" piktogrammasi. Bosish bilan kamerani markerlar ko'rinadigan
+/// initial fit-bounds holatiga qaytaradi.
+class _MapRecenterButton extends StatelessWidget {
+  const _MapRecenterButton({required this.onTap});
+
+  final Future<void> Function() onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      shape: const CircleBorder(),
+      elevation: 4,
+      shadowColor: const Color(0x33000000),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: () {
+          onTap();
+        },
+        child: const SizedBox(
+          width: 44,
+          height: 44,
+          child: Icon(
+            Icons.my_location_rounded,
+            color: Color(0xFF0866FF),
+            size: 22,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ---------- Loading skeleton ----------
 
-/// Order single screen yuklanish vaziyati uchun skeleton — success holatining
+/// Order single screen yuklanish vaziyati uchun skeleton - success holatining
 /// strukturasini taqlid qiladi: yuqorida xira map placeholder, pastda bottom
 /// sheet shape'i (drag handle + sarlavha + status row + master row + actions).
-/// Markaziy spinner yo'q — buncha shimmer effekti bilan UI silliq tuyuladi.
+/// Markaziy spinner yo'q - buncha shimmer effekti bilan UI silliq tuyuladi.
 class _OrderSingleSkeleton extends StatefulWidget {
   const _OrderSingleSkeleton();
 
@@ -698,7 +827,7 @@ class _OrderSingleSkeletonState extends State<_OrderSingleSkeleton>
     final sheetHeight = size.height * 0.42;
     return Stack(
       children: [
-        // Xira map placeholder — success state'da map qaysi joyni egallasa,
+        // Xira map placeholder - success state'da map qaysi joyni egallasa,
         // shu joyda turadi.
         Positioned.fill(
           bottom: sheetHeight,
@@ -743,17 +872,7 @@ class _OrderSingleSkeletonState extends State<_OrderSingleSkeleton>
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Drag handle.
-                  Center(
-                    child: Container(
-                      width: 43,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: _kBgDark,
-                        borderRadius: BorderRadius.circular(540),
-                      ),
-                    ),
-                  ),
+
                   const SizedBox(height: 24),
                   // Title placeholder.
                   Center(child: _shimmerBox(width: 220, height: 22)),

@@ -10,6 +10,7 @@ import 'package:taxi_app/src/features/common/presentation/widgets/common_image.d
 import 'package:taxi_app/src/features/master/data/model/master_model.dart';
 import 'package:taxi_app/src/features/master/presentation/bloc/master_bloc.dart';
 import 'package:taxi_app/src/features/master/presentation/screens/master_detail_sheet.dart';
+import 'package:taxi_app/src/features/master/presentation/widgets/master_status_helpers.dart';
 import 'package:taxi_app/src/features/notifications/presentation/widgets/notification_bell_action.dart';
 
 class MasterScreen extends StatefulWidget {
@@ -89,7 +90,7 @@ class _MasterScreenState extends State<MasterScreen> {
                           crossAxisCount: 2,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
-                          mainAxisExtent: 190,
+                          mainAxisExtent: 230,
                         ),
                         itemCount: state.masters.length,
                         itemBuilder: (context, index) {
@@ -164,22 +165,26 @@ class _MasterCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ratingValue = master.rating;
+    final distanceLabel = masterDistanceLabel(master);
+    final hasDistance = distanceLabel != '-';
     return Container(
       decoration: BoxDecoration(color: AppColor.lightBlue, borderRadius: BorderRadius.circular(24)),
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
       child: Column(
         children: [
           SizedBox(
-            width: 44,
-            height: 47,
+            width: 60,
+            height: 51,
             child: Stack(
               clipBehavior: Clip.none,
               alignment: Alignment.topCenter,
               children: [
                 Padding(
-                  padding: EdgeInsets.only(bottom: 2),
+                  padding: const EdgeInsets.only(bottom: 2),
                   child: AvatarImage(imageUrl: master.photo ?? '', name: master.fullName ?? '', size: 44),
                 ),
+                // Online/offline/busy dot on avatar — classic chat affordance.
+
                 if (ratingValue != null)
                   Positioned(
                     bottom: 0,
@@ -217,8 +222,8 @@ class _MasterCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          Text('Mechanic'.tr(), style: TextStyle(fontSize: 12, color: AppColor.grey)),
+          const SizedBox(height: 10),
+          MasterStatusPill(status: master.status, compact: true),
           const SizedBox(height: 6),
           Text(
             master.fullName ?? '',
@@ -227,13 +232,36 @@ class _MasterCard extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             master.experience != null ? '${master.experience} ${"years experience".tr()}' : '',
             style: TextStyle(fontSize: 12, color: AppColor.grey),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
+          if (hasDistance) ...[
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SvgPicture.asset(
+                  AppIcons.location,
+                  width: 12,
+                  height: 12,
+                  colorFilter: ColorFilter.mode(AppColor.grey, BlendMode.srcIn),
+                ),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    distanceLabel,
+                    style: TextStyle(fontSize: 12, color: AppColor.grey, fontWeight: FontWeight.w500),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ],
           const Spacer(),
           GestureDetector(
             onTap: () {
@@ -283,7 +311,7 @@ class _MastersGridSkeleton extends StatelessWidget {
           crossAxisCount: 2,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          mainAxisExtent: 190,
+          mainAxisExtent: 230,
         ),
         itemCount: 6,
         itemBuilder: (_, __) => Container(

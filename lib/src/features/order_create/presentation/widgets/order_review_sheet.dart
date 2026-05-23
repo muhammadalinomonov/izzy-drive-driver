@@ -5,10 +5,12 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
+import 'package:taxi_app/src/features/order_create/data/model/order_message.dart';
 import 'package:taxi_app/src/features/order_create/presentation/bloc/order_create_bloc.dart';
+import 'package:taxi_app/src/features/order_create/presentation/widgets/photo_preview.dart';
 
 /// Inline summary card shown at the bottom of the chat when the user
-/// taps "Yuborish". Matches Figma `1818:25684` — title, three sections
+/// taps "Yuborish". Matches Figma `1818:25684` - title, three sections
 /// (audio/photos/price), edit shortcuts, and the final submit button.
 class OrderReviewSheet extends StatelessWidget {
   const OrderReviewSheet({
@@ -16,11 +18,20 @@ class OrderReviewSheet extends StatelessWidget {
     required this.state,
     required this.onDismiss,
     required this.onConfirm,
+    required this.onAddPhoto,
+    required this.onAddDetails,
+    required this.onChangePrice,
   });
 
   final OrderCreateState state;
   final VoidCallback onDismiss;
   final VoidCallback onConfirm;
+  // Har bir tahrir tugmasi alohida handler - preview yopiladi va kerakli
+  // input/picker darhol ochiladi, foydalanuvchi nima qilishi mumkinligi
+  // aniq bo'ladi (keyboard, focus, pre-filled value).
+  final VoidCallback onAddPhoto;
+  final VoidCallback onAddDetails;
+  final VoidCallback onChangePrice;
 
   String get _formattedPrice {
     if (state.price.isEmpty) return '\$0';
@@ -28,8 +39,7 @@ class OrderReviewSheet extends StatelessWidget {
     return '\$$n';
   }
 
-  String get _audioLabel {
-    final d = state.audioDuration;
+  static String _formatDuration(Duration d) {
     final mm = d.inMinutes.toString().padLeft(2, '0');
     final ss = (d.inSeconds % 60).toString().padLeft(2, '0');
     return '$mm:$ss';
@@ -71,10 +81,10 @@ class OrderReviewSheet extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 18),
-          if (state.audioPath != null || state.description.trim().isNotEmpty)
+          if (state.messages.isNotEmpty)
             _ReviewSection(
               label: 'Description or audio',
-              child: _AudioOrTextSummary(state: state, audioLabel: _audioLabel),
+              child: _AudioOrTextSummary(state: state),
             ),
           if (state.photos.isNotEmpty) ...[
             const SizedBox(height: 16),
@@ -98,7 +108,7 @@ class OrderReviewSheet extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           const Text(
-            'If everything looks right, tap "Send" — or type "send" in the chat.',
+            'If everything looks right, tap "Send" - or type "send" in the chat.',
             style: TextStyle(
               fontSize: 13,
               color: Color(0xFF6B7073),
@@ -118,11 +128,11 @@ class OrderReviewSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          _EditAction(label: 'Add another photo', onTap: onDismiss),
+          _EditAction(label: 'Add another photo', onTap: onAddPhoto),
           const SizedBox(height: 8),
-          _EditAction(label: 'Add more details', onTap: onDismiss),
+          _EditAction(label: 'Add more details', onTap: onAddDetails),
           const SizedBox(height: 8),
-          _EditAction(label: 'Change the price', onTap: onDismiss),
+          _EditAction(label: 'Change the price', onTap: onChangePrice),
           const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
@@ -188,28 +198,33 @@ class _ReviewSection extends StatelessWidget {
 }
 
 class _AudioOrTextSummary extends StatelessWidget {
-  const _AudioOrTextSummary({required this.state, required this.audioLabel});
+  const _AudioOrTextSummary({required this.state});
 
   final OrderCreateState state;
-  final String audioLabel;
 
   @override
   Widget build(BuildContext context) {
     final widgets = <Widget>[];
-    if (state.audioPath != null) {
-      widgets.add(_MiniAudio(
-        path: state.audioPath!,
-        peaks: state.audioPeaks,
-        duration: state.audioDuration,
-        label: audioLabel,
-      ));
-    }
-    if (state.description.trim().isNotEmpty) {
+    for (final m in state.messages) {
       if (widgets.isNotEmpty) widgets.add(const SizedBox(height: 8));
-      widgets.add(Text(
-        state.description.trim(),
-        style: const TextStyle(fontSize: 14, height: 1.4, color: Colors.black),
-      ));
+      switch (m) {
+        case OrderTextMessage():
+          widgets.add(Text(
+            m.text,
+            style: const TextStyle(
+              fontSize: 14,
+              height: 1.4,
+              color: Colors.black,
+            ),
+          ));
+        case OrderAudioMessage():
+          widgets.add(_MiniAudio(
+            path: m.path,
+            peaks: m.peaks,
+            duration: m.duration,
+            label: OrderReviewSheet._formatDuration(m.duration),
+          ));
+      }
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,11 +301,33 @@ class _MiniAudioState extends State<_MiniAudio> {
     return (_position.inMilliseconds / total.inMilliseconds).clamp(0.0, 1.0);
   }
 
+  /// Same Telegram-style interpolation as the chat bubble waveform — short
+  /// clips are stretched so the bar still feels full instead of looking
+  /// like a handful of stubs at the start.
   List<double> _resample(List<double> src, int target) {
     if (src.isEmpty) {
       return List<double>.generate(target, (i) => (i % 4 + 1) / 5);
     }
-    if (src.length <= target) return src;
+    if (src.length == target) return src;
+    if (src.length < target) {
+      final out = <double>[];
+      for (var i = 0; i < target; i++) {
+        if (target == 1) {
+          out.add(src[0]);
+          continue;
+        }
+        final pos = i * (src.length - 1) / (target - 1);
+        final lo = pos.floor();
+        final hi = pos.ceil().clamp(0, src.length - 1);
+        if (lo == hi) {
+          out.add(src[lo]);
+        } else {
+          final t = pos - lo;
+          out.add(src[lo] * (1 - t) + src[hi] * t);
+        }
+      }
+      return out;
+    }
     final out = <double>[];
     final bucket = src.length / target;
     for (var i = 0; i < target; i++) {
@@ -307,11 +344,12 @@ class _MiniAudioState extends State<_MiniAudio> {
 
   @override
   Widget build(BuildContext context) {
-    final bars = _resample(widget.peaks, 24);
+    const int barCount = 38;
+    final bars = _resample(widget.peaks, barCount);
     final activeColor = AppColor.kPrimaryColor;
     final inactiveColor = AppColor.kPrimaryColor.withValues(alpha: 0.35);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
@@ -323,8 +361,8 @@ class _MiniAudioState extends State<_MiniAudio> {
             onTap: _toggle,
             behavior: HitTestBehavior.opaque,
             child: Container(
-              width: 28,
-              height: 28,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 color: AppColor.kPrimaryColor,
                 shape: BoxShape.circle,
@@ -332,37 +370,42 @@ class _MiniAudioState extends State<_MiniAudio> {
               child: Icon(
                 _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                 color: Colors.white,
-                size: 20,
+                size: 24,
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
             child: SizedBox(
-              height: 18,
-              child: Row(
-                children: List.generate(bars.length, (i) {
-                  final active = (i / bars.length) <= _progress;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 1),
-                    child: Container(
-                      width: 2,
-                      height: (bars[i] * 18).clamp(2.0, 18.0),
-                      decoration: BoxDecoration(
-                        color: active ? activeColor : inactiveColor,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
+              height: 24,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final maxH = constraints.maxHeight;
+                  final minH = (maxH * 0.18).clamp(3.0, 5.0);
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: List.generate(barCount, (i) {
+                      final active = (i / barCount) <= _progress;
+                      return Container(
+                        width: 2.5,
+                        height: (bars[i] * maxH).clamp(minH, maxH),
+                        decoration: BoxDecoration(
+                          color: active ? activeColor : inactiveColor,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      );
+                    }),
                   );
-                }),
+                },
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Text(
             widget.label,
             style: const TextStyle(
-              fontSize: 12,
+              fontSize: 13,
               color: Color(0xFF6B7073),
               fontWeight: FontWeight.w500,
               fontFeatures: [FontFeature.tabularFigures()],
@@ -384,16 +427,23 @@ class _PhotosSummary extends StatelessWidget {
     return Wrap(
       spacing: 6,
       runSpacing: 6,
-      children: photos.map((f) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: SizedBox(
-            width: 80,
-            height: 80,
-            child: Image.file(f, fit: BoxFit.cover),
+      children: List.generate(photos.length, (i) {
+        return GestureDetector(
+          onTap: () => openPhotoPreview(
+            context,
+            photos: photos,
+            initialIndex: i,
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: SizedBox(
+              width: 80,
+              height: 80,
+              child: Image.file(photos[i], fit: BoxFit.cover),
+            ),
           ),
         );
-      }).toList(),
+      }),
     );
   }
 }

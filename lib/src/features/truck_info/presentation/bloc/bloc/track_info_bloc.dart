@@ -14,41 +14,40 @@ class TrackInfoBloc extends Bloc<TrackInfoEvent, TrackInfoState> {
   final DriverInfoRepo driverInfoRepo;
 
   TrackInfoBloc({required this.driverInfoRepo})
-    : super(TrackInfoState(status: TrackInfoStatus.initial)) {
+    : super(const TrackInfoState()) {
     on<GetTrackMarskEvent>((event, emit) async {
-      emit(TrackInfoState(status: TrackInfoStatus.loading));
+      emit(state.copyWith(marksStatus: TrackInfoStatus.loading));
       final result = await driverInfoRepo.getTrackMarks();
       if (result.errorText.isEmpty) {
-        print('TrackInfoBloc ${(result.data as TruckMarkResponse).data}');
         emit(
-          TrackInfoState(
-            status: TrackInfoStatus.success,
+          state.copyWith(
+            marksStatus: TrackInfoStatus.success,
             truckMarkResponse: result.data as TruckMarkResponse,
           ),
         );
       } else {
         emit(
-          TrackInfoState(
-            status: TrackInfoStatus.error,
+          state.copyWith(
+            marksStatus: TrackInfoStatus.error,
             errorMessage: result.errorText,
           ),
         );
       }
     });
     on<GetTrackModelsEvent>((event, emit) async {
-      emit(state.copyWith(status: TrackInfoStatus.loading));
+      emit(state.copyWith(modelsStatus: TrackInfoStatus.loading));
       final result = await driverInfoRepo.getTrackModels(event.id);
       if (result.errorText.isEmpty) {
         emit(
           state.copyWith(
-            status: TrackInfoStatus.success,
+            modelsStatus: TrackInfoStatus.success,
             truckModelResponse: result.data as TruckModelResponse,
           ),
         );
       } else {
         emit(
           state.copyWith(
-            status: TrackInfoStatus.error,
+            modelsStatus: TrackInfoStatus.error,
             errorMessage: result.errorText,
           ),
         );

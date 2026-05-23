@@ -15,7 +15,7 @@ const Color _kBg = Color(0xFFEFF3F6);
 const Color _kSubtitle = Color(0xFF6B7073);
 const Color _kBorder = Color(0xFFE3E8EB);
 
-/// Tracking / Arrived bottom sheet uchun umumiy panel — Figma frame 1884:4489
+/// Tracking / Arrived bottom sheet uchun umumiy panel - Figma frame 1884:4489
 /// va 1897:4828 dizaynlarini taqlid qiladi. Tashqi gray fon (24px rounded top)
 /// + 3 ta oq card: status, master, actions.
 class OrderStatePanel extends StatelessWidget {
@@ -26,13 +26,13 @@ class OrderStatePanel extends StatelessWidget {
     required this.infoValue,
   });
 
-  /// Asosiy sarlavha — "Usta buyurtmani qabul qildi..." kabi.
+  /// Asosiy sarlavha - "Usta buyurtmani qabul qildi..." kabi.
   final String title;
 
-  /// Yordamchi label — "Kelish vaqti" / "Tahminiy ish vaqti".
+  /// Yordamchi label - "Kelish vaqti" / "Tahminiy ish vaqti".
   final String infoLabel;
 
-  /// Label qiymati — "17:00-17:10" / "40 daqiqa".
+  /// Label qiymati - "17:00-17:10" / "40 daqiqa".
   final String infoValue;
 
   @override
@@ -56,7 +56,7 @@ class OrderStatePanel extends StatelessWidget {
           const SizedBox(height: 8),
           const _MasterCard(),
           const SizedBox(height: 8),
-          // Actions card telefon tagigacha cho'ziladi — safe-area inset
+          // Actions card telefon tagigacha cho'ziladi - safe-area inset
           // shu cardning ichida, content esa home indicator ostiga tushmaydi.
           const _ActionsCard(),
         ],
@@ -94,15 +94,7 @@ class _StatusCard extends StatelessWidget {
         child: Column(
           children: [
             // Drag handle.
-            Container(
-              width: 43,
-              height: 4,
-              decoration: BoxDecoration(
-                color: _kBorder,
-                borderRadius: BorderRadius.circular(540),
-              ),
-            ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 8),
             Text(
               title,
               textAlign: TextAlign.center,
@@ -139,7 +131,7 @@ class _StatusCard extends StatelessWidget {
                 letterSpacing: -0.30,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 8),
             const OrderStatusRow(),
           ],
         ),
@@ -289,7 +281,7 @@ class _ActionsCard extends StatelessWidget {
       width: double.infinity,
       decoration: const BoxDecoration(
         color: Colors.white,
-        // Faqat tepa burchaklari rounded — pastki qism telefon chetigacha
+        // Faqat tepa burchaklari rounded - pastki qism telefon chetigacha
         // tekis cho'ziladi.
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(12),

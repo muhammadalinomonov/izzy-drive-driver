@@ -34,10 +34,10 @@ class Paginator extends StatelessWidget {
     return Builder(builder: (context) {
       if (itemCount == 0 && status.isSuccess) {
         if (emptyWidget != null) {
-          // Empty state Stack ichida — eng tagga qo'yiladi va qimirlamaydi.
+          // Empty state Stack ichida - eng tagga qo'yiladi va qimirlamaydi.
           // Ustida transparent ListView pull-to-refresh gesturlarini qabul
           // qiladi, lekin uning ichi bo'sh shaffof bo'lgani sabab user
-          // hech qanday vizual o'zgarishni ko'rmaydi — faqat spinner.
+          // hech qanday vizual o'zgarishni ko'rmaydi - faqat spinner.
           return Stack(
             children: [
               Positioned.fill(

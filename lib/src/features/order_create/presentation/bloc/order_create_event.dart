@@ -32,11 +32,20 @@ class ReviewDismissed extends OrderCreateEvent {
   const ReviewDismissed();
 }
 
-class DescriptionChanged extends OrderCreateEvent {
-  const DescriptionChanged(this.value);
-  final String value;
+/// Appends a typed message to [OrderCreateState.messages].
+class TextMessageAppended extends OrderCreateEvent {
+  const TextMessageAppended(this.text);
+  final String text;
   @override
-  List<Object?> get props => [value];
+  List<Object?> get props => [text];
+}
+
+/// Removes a message by its [position] (chronological index).
+class MessageRemoved extends OrderCreateEvent {
+  const MessageRemoved(this.position);
+  final int position;
+  @override
+  List<Object?> get props => [position];
 }
 
 class AudioRecordingStarted extends OrderCreateEvent {
@@ -50,6 +59,8 @@ class AudioRecordingTicked extends OrderCreateEvent {
   List<Object?> get props => [elapsed];
 }
 
+/// Recorder finished — append a new [OrderAudioMessage] built from the
+/// captured path + live peaks + elapsed duration.
 class AudioRecordingStopped extends OrderCreateEvent {
   const AudioRecordingStopped(this.path);
   final String path;
@@ -66,10 +77,6 @@ class AudioPeakCaptured extends OrderCreateEvent {
   final double value; // 0..1
   @override
   List<Object?> get props => [value];
-}
-
-class AudioCleared extends OrderCreateEvent {
-  const AudioCleared();
 }
 
 class PhotosAdded extends OrderCreateEvent {

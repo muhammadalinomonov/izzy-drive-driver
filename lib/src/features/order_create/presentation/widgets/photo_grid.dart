@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
+import 'package:taxi_app/src/features/order_create/presentation/widgets/photo_preview.dart';
 
 /// 3-column grid showing attached photos plus a final "+" tile while
-/// under the cap. Tap a photo's X overlay to remove it.
+/// under the cap. Tap a photo to open a full-screen preview; tap the X
+/// overlay to remove it.
 class PhotoGrid extends StatelessWidget {
   const PhotoGrid({
     super.key,
@@ -28,6 +30,11 @@ class PhotoGrid extends StatelessWidget {
       ...List.generate(photos.length, (i) => _PhotoTile(
             file: photos[i],
             onRemove: () => onRemove(i),
+            onTap: () => openPhotoPreview(
+              context,
+              photos: photos,
+              initialIndex: i,
+            ),
           )),
       if (canAdd) _AddTile(onTap: onAdd),
     ];
@@ -46,18 +53,29 @@ class PhotoGrid extends StatelessWidget {
 }
 
 class _PhotoTile extends StatelessWidget {
-  const _PhotoTile({required this.file, required this.onRemove});
+  const _PhotoTile({
+    required this.file,
+    required this.onRemove,
+    required this.onTap,
+  });
   final File file;
   final VoidCallback onRemove;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       fit: StackFit.expand,
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Image.file(file, fit: BoxFit.cover),
+        // Image area handles tap-to-preview. X overlay is in a separate
+        // Positioned child so its own GestureDetector wins inside its bounds.
+        GestureDetector(
+          onTap: onTap,
+          behavior: HitTestBehavior.opaque,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.file(file, fit: BoxFit.cover),
+          ),
         ),
         Positioned(
           top: 4,

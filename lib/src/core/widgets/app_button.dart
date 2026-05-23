@@ -41,7 +41,7 @@ class AppButton extends StatelessWidget {
         elevation: 0, // Flat look, remove if you want shadow
       ),
       child: isLoading
-          // SizedBox kerak — aks holda Center cheksiz joyni egallab, tugmani
+          // SizedBox kerak - aks holda Center cheksiz joyni egallab, tugmani
           // butun bo'sh joyga kengaytirib yuboradi (ayniqsa FAB slotida).
           ? SizedBox(
               width: 20,

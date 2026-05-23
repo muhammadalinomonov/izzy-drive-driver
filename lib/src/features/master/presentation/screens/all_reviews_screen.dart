@@ -3,9 +3,9 @@ import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/features/master/data/model/review_model.dart';
 import 'package:taxi_app/src/features/master/presentation/widgets/review_item.dart';
 
-/// Barcha sharhlar — MasterDetailSheet'dan "ALL COMMENTS" bosilganda
+/// Barcha sharhlar - MasterDetailSheet'dan "ALL COMMENTS" bosilganda
 /// to'liq ro'yxatni ko'rsatadi. Reviews ro'yxati allaqachon bloc'da
-/// yuklangan bo'lgani sabab konstruktor argumenti orqali uzatamiz —
+/// yuklangan bo'lgani sabab konstruktor argumenti orqali uzatamiz -
 /// bloc'ga qayta murojaat shart emas.
 class AllReviewsScreen extends StatelessWidget {
   const AllReviewsScreen({super.key, required this.reviews});
@@ -48,6 +48,7 @@ class AllReviewsScreen extends StatelessWidget {
                   child: ReviewItem(
                     rating: review.stars,
                     review: review.comment,
+                    tag: review.tag,
                     date: review.createdAt,
                     avatar: review.driverAvatar,
                     name: review.driverName,

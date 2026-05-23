@@ -62,7 +62,7 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen> {
                     child: Paginator(
                       onRefresh: () async {
                         // Pull-to-refresh: the platform spinner is enough user
-                        // feedback — keep the list rendered underneath instead
+                        // feedback - keep the list rendered underneath instead
                         // of swapping to the central CircularProgressIndicator.
                         _ordersHistoryBloc.add(GetOrdersHistoryEvent(silent: true));
                       },

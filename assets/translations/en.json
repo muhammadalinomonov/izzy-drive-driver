@@ -153,6 +153,13 @@
   "Arrival time": "Arrival time",
   "Distance": "Distance",
   "More": "More",
+  "Online": "Online",
+  "Offline": "Offline",
+  "Busy": "Busy",
+  "On work": "On work",
+  "Nearby": "Nearby",
+  "m away": "m away",
+  "km away": "km away",
   "notifications": {
     "title": "Notifications",
     "detailTitle": "Notification",

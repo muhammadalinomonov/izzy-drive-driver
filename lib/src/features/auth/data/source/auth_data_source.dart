@@ -343,7 +343,7 @@ class AuthDataSource {
     if (access is String && access.isNotEmpty) StorageRepository.putString('token', access);
     if (refresh is String && refresh.isNotEmpty) StorageRepository.putString('refresh', refresh);
     if (id != null) StorageRepository.putString('responseID', id.toString());
-    // Har bir yangi login — phone_verified cache'ni tozalaymiz. MainScreen
+    // Har bir yangi login - phone_verified cache'ni tozalaymiz. MainScreen
     // get-me orqali yangi user uchun haqiqiy holatni qaytadan aniqlaydi.
     // Token refresh (dio interceptor ichida) _persistTokens'ni chaqirmaydi,
     // shuning uchun mavjud sessiya buzilmaydi.

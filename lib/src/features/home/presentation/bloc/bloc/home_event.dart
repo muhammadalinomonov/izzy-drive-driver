@@ -8,7 +8,7 @@ sealed class HomeEvent extends Equatable {
 }
 
 class GetBannersEvent extends HomeEvent {
-  /// When true, skip emitting `loading` if banners are already loaded —
+  /// When true, skip emitting `loading` if banners are already loaded -
   /// used by pull-to-refresh so the carousel doesn't collapse into a shimmer
   /// while the user is looking at it.
   final bool silent;

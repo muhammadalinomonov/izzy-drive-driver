@@ -67,7 +67,7 @@ class Routes {
     Pages.resetPassword,
   };
 
-  // PhoneVerifyBloc — entry sheet va OTP page o'rtasida bo'lishish uchun
+  // PhoneVerifyBloc - entry sheet va OTP page o'rtasida bo'lishish uchun
   // singleton. Sheet showPhoneVerifySheet() ichida BlocProvider.value bilan
   // ulanadi; OTP page route'da xuddi shu instance'ga ulanadi.
   static PhoneVerifyBloc? _phoneVerifyBloc;

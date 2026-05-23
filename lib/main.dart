@@ -66,7 +66,7 @@ class _TaxiAppState extends State<TaxiApp> {
     // created by the routerDelegate, so showModalBottomSheet there
     // crashes with "Navigator operation requested with a context that
     // does not include a Navigator". GoRouter exposes the root
-    // navigator key — its currentContext IS the Navigator's context.
+    // navigator key - its currentContext IS the Navigator's context.
     final navCtx = Routes.router.routerDelegate.navigatorKey.currentContext;
     if (navCtx == null) return;
     _isSheetShowing = true;
@@ -100,7 +100,7 @@ class _TaxiAppState extends State<TaxiApp> {
         builder: (context, child) {
           // BlocListener only fires on subsequent emissions, not on the
           // initial state. If the app boots already offline, the cubit
-          // starts in `disconnected` and the listener stays silent — so
+          // starts in `disconnected` and the listener stays silent - so
           // we run a one-shot post-frame check that opens the sheet
           // when the very first known status is offline.
           if (!_initialConnectivityChecked) {

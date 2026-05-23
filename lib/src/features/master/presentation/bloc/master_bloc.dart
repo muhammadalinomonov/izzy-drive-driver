@@ -59,7 +59,7 @@ class MasterFetch extends MasterEvent {
   final double? long;
   final int pageSize;
 
-  /// When true, skip emitting `loading` if we already have a master list —
+  /// When true, skip emitting `loading` if we already have a master list -
   /// used by pull-to-refresh and lifecycle redispatch so the grid doesn't
   /// flash into a shimmer over already-rendered cards.
   final bool silent;
@@ -119,7 +119,18 @@ class MasterBloc extends Bloc<MasterEvent, MasterState> {
     });
 
     on<GetMasterDetail>((event, emit) async {
-      emit(state.copyWith(getMasterDetailStatus: FormzSubmissionStatus.inProgress));
+      // Reset detail + reviews so the sheet doesn't briefly show the
+      // previously-opened master's data while the new request is in flight.
+      // Without this the sheet flashes the prior master before the shimmer
+      // can take over.
+      emit(
+        state.copyWith(
+          getMasterDetailStatus: FormzSubmissionStatus.inProgress,
+          masterDetail: const MasterModel(),
+          masterReviews: const [],
+          masterReviewStatus: FormzSubmissionStatus.initial,
+        ),
+      );
 
       double? lat;
       double? long;

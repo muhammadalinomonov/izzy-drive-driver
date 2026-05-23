@@ -7,7 +7,7 @@ import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/features/notifications/presentation/bloc/notifications_bloc.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 
-/// AppBar uchun bell tugmasi — unread count'ga qarab badge ko'rsatadi.
+/// AppBar uchun bell tugmasi - unread count'ga qarab badge ko'rsatadi.
 /// MainScreen ichidagi NotificationsBloc'dan o'qiydi; tap qilinganda
 /// /notifications page ochiladi va u yopilganda badge yangilanadi.
 class NotificationBellAction extends StatelessWidget {

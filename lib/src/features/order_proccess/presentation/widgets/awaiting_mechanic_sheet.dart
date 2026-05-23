@@ -10,7 +10,7 @@ const Color _kSubtitle = Color(0xFF6B7073);
 const Color _kMuted = Color(0xFF93989B);
 const Color _kPrimary = Color(0xFF0866FF);
 
-/// "Mexanik javobini kutmoqdamiz" bottom sheet — Figma frame 14534:11949
+/// "Mexanik javobini kutmoqdamiz" bottom sheet - Figma frame 14534:11949
 /// dizayniga moslangan. Avatar atrofida konsentrik pulse + tipa kichik dot
 /// animatsiyalari + pastda aylana Cancel tugma (icon + matn).
 class AwaitingMechanicSheet extends StatefulWidget {
@@ -144,7 +144,7 @@ class _AwaitingMechanicSheetState extends State<AwaitingMechanicSheet>
               ),
             ),
             const SizedBox(height: 18),
-            // Aylana Cancel tugmasi (X icon) + matn pastda — Figma'dagidek.
+            // Aylana Cancel tugmasi (X icon) + matn pastda - Figma'dagidek.
             _CircleCancelButton(onTap: widget.onCancel),
           ],
         ),
@@ -334,7 +334,7 @@ class _CircleCancelButton extends StatelessWidget {
   }
 }
 
-/// Connector — `OrdersBloc`'dan mexanik ma'lumotlarini avtomatik oladi.
+/// Connector - `OrdersBloc`'dan mexanik ma'lumotlarini avtomatik oladi.
 class AwaitingMechanicSheetConnector extends StatelessWidget {
   const AwaitingMechanicSheetConnector({super.key, required this.onCancel});
 

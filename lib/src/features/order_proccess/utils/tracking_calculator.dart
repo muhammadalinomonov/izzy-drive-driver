@@ -12,7 +12,7 @@ double haversineKm(double lat1, double lng1, double lat2, double lng2) {
 double _rad(double deg) => deg * pi / 180;
 
 // Average city driving speed used as a fallback when the backend hasn't
-// provided distance/duration on the route — 30 km/h ≈ 0.5 km/min.
+// provided distance/duration on the route - 30 km/h ≈ 0.5 km/min.
 const double _fallbackSpeedKmPerMin = 0.5;
 
 int etaMinutes(

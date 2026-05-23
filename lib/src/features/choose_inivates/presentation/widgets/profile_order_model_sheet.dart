@@ -1,4 +1,4 @@
-// Master detail bottom sheet — Figma frame 15 (node 1859:4927).
+// Master detail bottom sheet - Figma frame 15 (node 1859:4927).
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -33,7 +33,7 @@ void showOrderDetailBottomSheet(
       return BlocProvider.value(
         value: proposalBloc,
         child: DraggableScrollableSheet(
-          // Figma: bottom sheet 15px-dan boshlanadi (statusbar ostida) — deyarli
+          // Figma: bottom sheet 15px-dan boshlanadi (statusbar ostida) - deyarli
           // butun ekranni egallaydi.
           initialChildSize: 0.96,
           minChildSize: 0.6,
@@ -104,7 +104,7 @@ class _SheetContent extends StatelessWidget {
       child: Column(
         children: [
           // Scrollable content (profile + about + payment). Drag handle endi
-          // birinchi oq cardning ICHIDA — Figma'dagidek.
+          // birinchi oq cardning ICHIDA - Figma'dagidek.
           Expanded(
             child: BlocBuilder<ProposalBloc, ProposalState>(
               builder: (context, state) {
@@ -143,7 +143,7 @@ class _SheetContent extends StatelessWidget {
               },
             ),
           ),
-          // Fixed bottom action card — system nav bar maydonigacha cho'ziladi.
+          // Fixed bottom action card - system nav bar maydonigacha cho'ziladi.
           BlocBuilder<ProposalBloc, ProposalState>(
             builder: (context, state) {
               final loading = state.status == ProposalStatus.loading ||
@@ -163,7 +163,7 @@ class _SheetContent extends StatelessWidget {
   }
 }
 
-// Public ProfileSection — comment_section_modal_sheet.dart shu nom bilan
+// Public ProfileSection - comment_section_modal_sheet.dart shu nom bilan
 // import qiladi. Master avatar + ism + ro'yxatdan o'tgan sanani ko'rsatadi.
 class ProfileSection extends StatelessWidget {
   const ProfileSection({super.key});
@@ -231,7 +231,7 @@ class ProfileSection extends StatelessWidget {
 class _ProfileCard extends StatelessWidget {
   const _ProfileCard({required this.proposal});
 
-  final dynamic proposal; // Proposal — kept dynamic to avoid extra imports
+  final dynamic proposal; // Proposal - kept dynamic to avoid extra imports
 
   @override
   Widget build(BuildContext context) {
@@ -240,7 +240,7 @@ class _ProfileCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 14, 12, 24),
       decoration: const BoxDecoration(
         color: Colors.white,
-        // Sheet top bilan birga 24px rounded — drag handle ham shu cardning
+        // Sheet top bilan birga 24px rounded - drag handle ham shu cardning
         // ichida.
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
@@ -251,7 +251,7 @@ class _ProfileCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Drag handle — endi oq cardning ICHIDA, Figma'dagi pozitsiyada.
+          // Drag handle - endi oq cardning ICHIDA, Figma'dagi pozitsiyada.
           Container(
             width: 43,
             height: 4,
@@ -530,7 +530,7 @@ class _PaymentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Hozircha faqat Cash mavjud — Apple Pay va Google Pay keyinroq qo'shiladi.
+    // Hozircha faqat Cash mavjud - Apple Pay va Google Pay keyinroq qo'shiladi.
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 18, 12, 18),
       decoration: const BoxDecoration(
@@ -642,9 +642,9 @@ class _BottomActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
-    // Oq card system nav-gacha cho'ziladi (margin top 8 — sheet-da scroll
+    // Oq card system nav-gacha cho'ziladi (margin top 8 - sheet-da scroll
     // content bilan orasidagi kichik bo'shliq). Ichidagi paddingga safe-area
-    // bottom qo'shiladi — tugma home indicator ostiga tushib qolmaydi.
+    // bottom qo'shiladi - tugma home indicator ostiga tushib qolmaydi.
     return Container(
       margin: const EdgeInsets.only(top: 8),
       decoration: const BoxDecoration(
@@ -666,7 +666,7 @@ class _BottomActionCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Sizning taklifingiz / Ustani taklifi — 2-col with divider.
+            // Sizning taklifingiz / Ustani taklifi - 2-col with divider.
             Row(
               children: [
                 Expanded(
@@ -795,7 +795,7 @@ String _formatDistance(double distance) {
 }
 
 String _formatPerformance(double stars) {
-  // Figma: "99%" — performance as percentage (stars/5 * 100).
+  // Figma: "99%" - performance as percentage (stars/5 * 100).
   final pct = (stars / 5 * 100).clamp(0, 100);
   return '${pct.toStringAsFixed(0)}%';
 }

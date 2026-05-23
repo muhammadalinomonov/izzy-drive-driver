@@ -30,10 +30,10 @@ class FinishedOrderScreen extends StatefulWidget {
 class _FinishedOrderScreenState extends State<FinishedOrderScreen>
     with TickerProviderStateMixin {
   final TextEditingController commentController = TextEditingController();
-  // 0 = hech qaysi yulduz tanlanmagan. Mobile'da `star + 1` yuborilmaydi —
+  // 0 = hech qaysi yulduz tanlanmagan. Mobile'da `star + 1` yuborilmaydi -
   // foydalanuvchi tanlagan qiymat to'g'ridan-to'g'ri 1..5.
   int selectedStar = 0;
-  // Tag (Good / Excellent / Bad) — comment'dan ALOHIDA, parallel ishlaydi.
+  // Tag (Good / Excellent / Bad) - comment'dan ALOHIDA, parallel ishlaydi.
   String? selectedTag;
   bool _commentExpanded = false;
 
@@ -193,7 +193,7 @@ class _SuccessHeader extends StatelessWidget {
         children: [
           SizedBox(
             width: 160, height: 160,
-            // Lottie animatsiya — JSON fayl `assets/lottie/success.json`
+            // Lottie animatsiya - JSON fayl `assets/lottie/success.json`
             // joyiga qo'yiladi. Yo'q bo'lsa eski check + pulse fallback'i
             // ko'rsatiladi.
             child: Lottie.asset(
@@ -229,7 +229,7 @@ class _SuccessHeader extends StatelessWidget {
 
 }
 
-/// Lottie JSON topilmaganda ko'rsatiladigan fallback — eski check icon +
+/// Lottie JSON topilmaganda ko'rsatiladigan fallback - eski check icon +
 /// pulse halqalar. Foydalanuvchi `assets/lottie/success.json` qo'shsa
 /// avtomatik Lottie ishlatiladi.
 class _CheckFallback extends StatelessWidget {
@@ -334,7 +334,7 @@ class _RateCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          // Stars — default 0 selected.
+          // Stars - default 0 selected.
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
@@ -357,7 +357,7 @@ class _RateCard extends StatelessWidget {
             }),
           ),
           const SizedBox(height: 16),
-          // Quick tags — Good / Excellent / Bad chips (independent toggle).
+          // Quick tags - Good / Excellent / Bad chips (independent toggle).
           Wrap(
             spacing: 8, runSpacing: 8,
             alignment: WrapAlignment.center,
@@ -384,7 +384,7 @@ class _RateCard extends StatelessWidget {
             }).toList(),
           ),
           const SizedBox(height: 14),
-          // Leave-a-comment button — centered, separate from tags.
+          // Leave-a-comment button - centered, separate from tags.
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: onExpandComment,
