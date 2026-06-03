@@ -11,6 +11,7 @@ import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
 import 'package:taxi_app/src/core/services/websocket_service.dart';
 import 'package:taxi_app/src/core/utils/adaptive_poller.dart';
+import 'package:taxi_app/src/features/cancel_reasons/presentation/widgets/cancel_reason_sheet.dart';
 import 'package:taxi_app/src/features/common/presentation/widgets/common_image.dart';
 import 'package:taxi_app/src/features/choose_inivates/presentation/widgets/profile_order_model_sheet.dart';
 import 'package:taxi_app/src/features/common/presentation/widgets/common_scalel_animation.dart';
@@ -105,27 +106,12 @@ class _InvatesScreenState extends State<InvatesScreen> with WidgetsBindingObserv
 
   Future<void> _confirmCancel() async {
     final bloc = context.read<InivitesBloc>();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text('Cancel order?'.tr()),
-        content: Text('Are you sure you want to cancel the order?'.tr()),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text('No'.tr()),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text('Yes, cancel'.tr()),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true) {
-      bloc.add(CancelActiveOrderEvent());
-    }
+    final choice = await showCancelReasonSheet(context);
+    if (choice == null) return;
+    bloc.add(CancelActiveOrderEvent(
+      reasonId: choice.reasonId,
+      reasonText: choice.customText,
+    ));
   }
 
   @override

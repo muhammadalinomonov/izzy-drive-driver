@@ -128,7 +128,14 @@ class _SheetContent extends StatelessWidget {
                     ),
                   );
                 }
-                final proposal = state.proposal!;
+                final proposal = state.proposal;
+                if (proposal == null) {
+                  return ListView(
+                    controller: scrollController,
+                    padding: EdgeInsets.zero,
+                    children: const [_ProfileCardSkeleton()],
+                  );
+                }
                 return ListView(
                   controller: scrollController,
                   padding: EdgeInsets.zero,
@@ -314,7 +321,15 @@ class _ProfileCard extends StatelessWidget {
               ),
               _StatColumn(
                 label: 'Performance'.tr(),
-                value: _formatPerformance(mechanic.performance.averageStars),
+                // Backend is the source of truth — the percentage formula
+                // can change server-side without an app release. Fall back
+                // to the local success/all ratio only while the backend
+                // rollout is in progress and `performancePercent` is null.
+                value: _formatPerformance(
+                  mechanic.performancePercent,
+                  mechanic.allOrdersCount,
+                  mechanic.successOrdersCount,
+                ),
               ),
             ],
           ),
@@ -794,8 +809,11 @@ String _formatDistance(double distance) {
   return '$km km ${'away'.tr()}';
 }
 
-String _formatPerformance(double stars) {
-  // Figma: "99%" - performance as percentage (stars/5 * 100).
-  final pct = (stars / 5 * 100).clamp(0, 100);
-  return '${pct.toStringAsFixed(0)}%';
+String _formatPerformance(int? backendPercent, int allOrders, int successOrders) {
+  if (backendPercent != null) {
+    return '${backendPercent.clamp(0, 100)}%';
+  }
+  if (allOrders <= 0) return '0%';
+  final pct = (successOrders / allOrders * 100).round().clamp(0, 100);
+  return '$pct%';
 }

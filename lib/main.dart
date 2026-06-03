@@ -91,7 +91,7 @@ class _TaxiAppState extends State<TaxiApp> {
       ],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
-        title: 'Izzy Drive Client',
+        title: 'IzzyDrive Client',
         theme: AppTheme.light,
         routerConfig: Routes.router,
         localizationsDelegates: context.localizationDelegates,
@@ -122,7 +122,12 @@ class _TaxiAppState extends State<TaxiApp> {
             },
             child: GestureDetector(
               behavior: HitTestBehavior.translucent,
-              onLongPress: () => ChuckerFlutter.showChuckerScreen(),
+              onLongPress: () {
+                final email = StorageRepository.getString('email');
+                if (email.contains('quadrixmail')) {
+                  ChuckerFlutter.showChuckerScreen();
+                }
+              },
               child: child,
             ),
           );

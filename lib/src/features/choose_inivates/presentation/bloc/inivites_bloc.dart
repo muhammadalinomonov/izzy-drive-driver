@@ -35,7 +35,10 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
   Future<void> _onCancelActiveOrder(CancelActiveOrderEvent event, Emitter<InivitesState> emit) async {
     final previous = state;
     emit(InivitesLoading());
-    final response = await activeOrderRepository.cancelOrder();
+    final response = await activeOrderRepository.cancelOrder(
+      reasonId: event.reasonId,
+      reasonText: event.reasonText,
+    );
     if (response.errorText.isEmpty) {
       add(DisconnectFromWebSocketEvent());
       emit(InivitesCancelled());
@@ -60,6 +63,10 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
 
         // Subscribe to the shared WebSocket once data is ready.
         add(ConnectToWebSocketEvent());
+      } else if (response.errorText == 'no_active_order') {
+        // Order already completed/cancelled — navigate away silently.
+        add(DisconnectFromWebSocketEvent());
+        emit(InivitesCancelled());
       } else {
         emit(InivitesError(response.errorText ?? 'Unknown error'));
       }
@@ -93,13 +100,24 @@ class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
   void _onWsMessage(_WsMessageReceivedEvent event, Emitter<InivitesState> emit) {
     final data = event.data;
     // Backend may use either `event` or `event-status`/`event_status` for the inner key.
-    final eventType = (data['event'] ?? data['event-status'] ?? data['event_status']) as String?;
+    final rawType = data['event'] ?? data['event-status'] ?? data['event_status'];
+    final eventType = rawType is String ? rawType : null;
     if (eventType == 'new-proposal') {
       debugPrint('New proposal received: ${data['mechanic_name']}');
       final newProposal = _parseNewProposal(data);
       add(NewProposalReceivedEvent(newProposal));
     } else if (eventType == 'update-order-price') {
       debugPrint('Order price updated via WS - refreshing active order');
+      add(FetchActiveOrderEvent());
+    } else if (eventType == 'mechanic-cancelled-research') {
+      // Tanlangan mexanik rad etganda InvatesScreen route stack'da hali
+      // tirik bo'lishi mumkin (proccessOrder uning ustiga push qilingan).
+      // Bu vaziyatda GoRouter eski instansiyani qaytaradi va InivitesBloc
+      // o'zining eski InivitesLoaded state'da qoladi - eski offerlar va
+      // narx ko'rinib turardi. Shu eventda darrov re-fetch qilamiz: backend
+      // arxivlanmagan proposal'lar va report narxi bilan yangi snapshot
+      // qaytaradi.
+      debugPrint('Mechanic cancelled - re-fetching active order');
       add(FetchActiveOrderEvent());
     }
   }

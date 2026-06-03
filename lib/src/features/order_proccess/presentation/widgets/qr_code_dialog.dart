@@ -2,15 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-class BookingSuccessDialog extends StatelessWidget {
+class BookingSuccessDialog extends StatefulWidget {
   final String bookingCode;
   final String qrData;
 
   const BookingSuccessDialog({
-    Key? key,
+    super.key,
     required this.bookingCode,
     required this.qrData,
-  }) : super(key: key);
+  });
+
+  @override
+  State<BookingSuccessDialog> createState() => _BookingSuccessDialogState();
+}
+
+class _BookingSuccessDialogState extends State<BookingSuccessDialog> {
+  bool _copied = false;
+
+  Future<void> _copyCode() async {
+    await Clipboard.setData(ClipboardData(text: widget.bookingCode));
+    if (!mounted) return;
+    setState(() => _copied = true);
+    await Future.delayed(const Duration(seconds: 2));
+    if (mounted) setState(() => _copied = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +86,7 @@ class BookingSuccessDialog extends StatelessWidget {
                 ),
               ),
               child: QrImageView(
-                data: qrData,
+                data: widget.qrData,
                 version: QrVersions.auto,
                 size: 180,
                 backgroundColor: Colors.white,
@@ -80,41 +95,40 @@ class BookingSuccessDialog extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // Booking code
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 12,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    bookingCode,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 2,
-                      color: Colors.black87,
+            // Booking code + copy button
+            GestureDetector(
+              onTap: _copied ? null : _copyCode,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                decoration: BoxDecoration(
+                  color: _copied ? const Color(0xFFE8F5E9) : Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      widget.bookingCode,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 2,
+                        color: Colors.black87,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  GestureDetector(
-                    onTap: () {
-                      Clipboard.setData(ClipboardData(text: bookingCode));
-
-                    },
-                    child: Icon(
-                      Icons.copy,
-                      size: 20,
-                      color: Colors.grey.shade600,
+                    const SizedBox(width: 12),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
+                        _copied ? Icons.check_circle_outline : Icons.copy,
+                        key: ValueKey(_copied),
+                        size: 20,
+                        color: _copied ? Colors.green : Colors.grey.shade600,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
 
@@ -126,7 +140,6 @@ class BookingSuccessDialog extends StatelessWidget {
   }
 }
 
-// Dialogni ko'rsatish uchun funksiya
 void showBookingSuccessDialog(
     BuildContext context, {
       required String bookingCode,

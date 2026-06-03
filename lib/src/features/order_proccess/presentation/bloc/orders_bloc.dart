@@ -104,7 +104,8 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final data = event.data;
     // Backend uses both `event-status` (hyphen) and `event_status` (underscore)
     // inconsistently - read either to be defensive.
-    final eventStatus = (data['event-status'] ?? data['event_status']) as String?;
+    final rawStatus = data['event-status'] ?? data['event_status'];
+    final eventStatus = rawStatus is String ? rawStatus : null;
 
     switch (eventStatus) {
       // WS push'lar — UI'da allaqachon order ko'rinib turibdi, faqat fresh
@@ -170,8 +171,16 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
         break;
 
       case 'order-cancelled':
-      case 'selected-order-cancelled':
         emit(const OrderCanceled());
+        break;
+
+      case 'mechanic-cancelled-research':
+        // Tanlangan mexanik orderni rad etdi - backend status'ni 'new' ga
+        // qaytarib boshqa masterlarga qayta broadcast qildi. Mobile tarafda
+        // OrderCanceled emit qilmaymiz (bu home'ga uchirgan bo'lardi); o'rniga
+        // silent refresh - currentOrder.status pending'ga aylanadi va
+        // OrderSingleScreen'dagi listener driverni offers ekraniga qaytaradi.
+        add(GetCurrentOrderEvent(silent: true));
         break;
 
       default:
@@ -181,7 +190,10 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
   }
 
   void _onCancelOrder(CancelOrderEvent event, Emitter<OrdersState> emit) async {
-    final response = await orderRepository.cancelOrder();
+    final response = await orderRepository.cancelOrder(
+      reasonId: event.reasonId,
+      reasonText: event.reasonText,
+    );
     if (response.errorText.isEmpty) {
       debugPrint('Order cancelled successfully');
       // OrderCanceled endi success + id=-1 holatini olib keladi - home

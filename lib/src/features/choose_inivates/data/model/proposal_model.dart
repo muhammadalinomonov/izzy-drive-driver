@@ -58,6 +58,10 @@ class MechanicInfo {
   final CurrentAddress currentAddress;
   final int allOrdersCount;
   final int successOrdersCount;
+  // Backend-computed performance percentage (0..100). Nullable so the
+  // mobile fallback (success/all*100) still kicks in during rollout — once
+  // the backend always returns it this is the single source of truth.
+  final int? performancePercent;
   final Performance performance;
 
   MechanicInfo({
@@ -68,10 +72,12 @@ class MechanicInfo {
     required this.currentAddress,
     required this.allOrdersCount,
     required this.successOrdersCount,
+    this.performancePercent,
     required this.performance,
   });
 
   factory MechanicInfo.fromJson(Map<String, dynamic> json) {
+    final performanceMap = toMap(json['performance']);
     return MechanicInfo(
       mechanicId: toInt(json['mechanic_id']),
       mechanicName: toStr(json['mechanic_name']),
@@ -80,7 +86,13 @@ class MechanicInfo {
       currentAddress: CurrentAddress.fromJson(toMap(json['current_address'])),
       allOrdersCount: toInt(json['all_orders_count']),
       successOrdersCount: toInt(json['success_orders_count']),
-      performance: Performance.fromJson(toMap(json['performance'])),
+      // Read from top-level first (new backend shape) then nested for safety.
+      performancePercent: json['performance_percent'] is num
+          ? toInt(json['performance_percent'])
+          : (performanceMap['performance_percent'] is num
+              ? toInt(performanceMap['performance_percent'])
+              : null),
+      performance: Performance.fromJson(performanceMap),
     );
   }
 }

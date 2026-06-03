@@ -27,12 +27,13 @@ class FinishedOrderScreen extends StatefulWidget {
   State<FinishedOrderScreen> createState() => _FinishedOrderScreenState();
 }
 
-class _FinishedOrderScreenState extends State<FinishedOrderScreen>
-    with TickerProviderStateMixin {
+class _FinishedOrderScreenState extends State<FinishedOrderScreen> with TickerProviderStateMixin {
   final TextEditingController commentController = TextEditingController();
+
   // 0 = hech qaysi yulduz tanlanmagan. Mobile'da `star + 1` yuborilmaydi -
   // foydalanuvchi tanlagan qiymat to'g'ridan-to'g'ri 1..5.
   int selectedStar = 0;
+
   // Tag (Good / Excellent / Bad) - comment'dan ALOHIDA, parallel ishlaydi.
   String? selectedTag;
   bool _commentExpanded = false;
@@ -46,12 +47,8 @@ class _FinishedOrderScreenState extends State<FinishedOrderScreen>
   void initState() {
     super.initState();
     context.read<OrdersBloc>().add(ConnectToWebSocketEvent());
-    _checkAnim = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 600),
-    )..forward();
-    _ringAnim = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 1800),
-    )..repeat();
+    _checkAnim = AnimationController(vsync: this, duration: const Duration(milliseconds: 600))..forward();
+    _ringAnim = AnimationController(vsync: this, duration: const Duration(milliseconds: 1800))..repeat();
   }
 
   @override
@@ -65,35 +62,36 @@ class _FinishedOrderScreenState extends State<FinishedOrderScreen>
   void _submit() {
     final mechanic = context.read<OrdersBloc>().state.currentOrder.selectedMechanic.id;
     context.read<OrdersBloc>()
-      ..add(RateMasterEvent(
-        star: selectedStar > 0 ? selectedStar : 5,
-        comment: commentController.text,
-        tag: selectedTag,
-        mechanicId: mechanic,
-      ))
-      ..add(DoneCurrentOrderEvent(
-        onSuccess: (code) {
-          showDialog(
-            context: context,
-            barrierDismissible: true,
-            builder: (_) => BookingSuccessDialog(
-              bookingCode: code.toString(), qrData: code.toString(),
-            ),
-          );
-        },
-      ));
+      ..add(
+        RateMasterEvent(
+          star: selectedStar > 0 ? selectedStar : 5,
+          comment: commentController.text,
+          tag: selectedTag,
+          mechanicId: mechanic,
+        ),
+      )
+      ..add(
+        DoneCurrentOrderEvent(
+          onSuccess: (code) {
+            showDialog(
+              context: context,
+              barrierDismissible: true,
+              builder: (_) => BookingSuccessDialog(bookingCode: code.toString(), qrData: code.toString()),
+            );
+          },
+        ),
+      );
   }
 
   void _openMasterDetail() {
     final mechanic = context.read<OrdersBloc>().state.currentOrder.selectedMechanic;
-    final bloc = MasterBloc(
-      MasterRepositoryImpl(MasterRemoteDataSource()), LocationService(),
-    );
+    final bloc = MasterBloc(MasterRepositoryImpl(MasterRemoteDataSource()), LocationService());
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (_) => BlocProvider.value(
-        value: bloc, child: MasterDetailSheet(id: mechanic.id),
+        value: bloc,
+        child: MasterDetailSheet(id: mechanic.id),
       ),
     );
   }
@@ -109,15 +107,14 @@ class _FinishedOrderScreenState extends State<FinishedOrderScreen>
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
             width: context.sizeOf.width,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(50),
-              color: AppColor.blueMain,
-            ),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(50), color: AppColor.blueMain),
             padding: const EdgeInsets.symmetric(vertical: 14),
             child: Text(
-              'Complete'.tr(),
+              'Finish'.tr(),
               style: context.textTheme.bodyLarge!.copyWith(
-                fontSize: 16, fontWeight: FontWeight.w600, color: AppColor.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColor.white,
               ),
               textAlign: TextAlign.center,
             ),
@@ -126,8 +123,7 @@ class _FinishedOrderScreenState extends State<FinishedOrderScreen>
         backgroundColor: AppColor.lightBlue,
         body: BlocListener<OrdersBloc, OrdersState>(
           listenWhen: (p, c) =>
-              p.lifecycleEvent != c.lifecycleEvent &&
-              c.lifecycleEvent == OrderLifecycleEvent.completed,
+              p.lifecycleEvent != c.lifecycleEvent && c.lifecycleEvent == OrderLifecycleEvent.completed,
           listener: (context, state) {
             context.read<OrdersBloc>().add(ClearLifecycleEventEvent());
             Navigator.of(context, rootNavigator: true).popUntil((r) => r.isFirst);
@@ -157,7 +153,12 @@ class _FinishedOrderScreenState extends State<FinishedOrderScreen>
                     ),
                     OrderInfoCard(currentOrder: state.currentOrder),
                     const SizedBox(height: 8),
-                    SubOrdersCard(currentOrder: state.currentOrder),
+                    SubOrdersCard(
+                      currentOrder: state.currentOrder,
+                      // Order yakunlangan — pending sub-orderlarni qabul/rad
+                      // qilib bo'lmaydi, faqat ko'rsatamiz.
+                      showActions: false,
+                    ),
                     SizedBox(height: context.padding.bottom + 80),
                   ],
                 ),
@@ -182,9 +183,7 @@ class _SuccessHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: context.sizeOf.width,
-      padding: EdgeInsets.only(
-        top: context.padding.top + 18, left: 27, right: 27, bottom: 22,
-      ),
+      padding: EdgeInsets.only(top: context.padding.top + 18, left: 27, right: 27, bottom: 22),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
@@ -192,13 +191,15 @@ class _SuccessHeader extends StatelessWidget {
       child: Column(
         children: [
           SizedBox(
-            width: 160, height: 160,
+            width: 120,
+            height: 120,
             // Lottie animatsiya - JSON fayl `assets/lottie/success.json`
             // joyiga qo'yiladi. Yo'q bo'lsa eski check + pulse fallback'i
             // ko'rsatiladi.
             child: Lottie.asset(
               'assets/lottie/success.json',
-              width: 160, height: 160,
+              width: 120,
+              height: 120,
               fit: BoxFit.contain,
               repeat: false,
               errorBuilder: (context, error, stackTrace) {
@@ -210,7 +211,8 @@ class _SuccessHeader extends StatelessWidget {
           Text(
             'Successfully completed!'.tr(),
             style: context.textTheme.bodyMedium!.copyWith(
-              fontSize: 20, fontWeight: FontWeight.w700,
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
               letterSpacing: -0.3,
             ),
           ),
@@ -218,7 +220,9 @@ class _SuccessHeader extends StatelessWidget {
           Text(
             'Please rate the master, this helps us improve!'.tr(),
             style: context.textTheme.bodySmall!.copyWith(
-              fontSize: 14, fontWeight: FontWeight.w400, color: AppColor.grey,
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: AppColor.grey,
             ),
             textAlign: TextAlign.center,
           ),
@@ -226,7 +230,6 @@ class _SuccessHeader extends StatelessWidget {
       ),
     );
   }
-
 }
 
 /// Lottie JSON topilmaganda ko'rsatiladigan fallback - eski check icon +
@@ -246,21 +249,18 @@ class _CheckFallback extends StatelessWidget {
         return Stack(
           alignment: Alignment.center,
           children: [
-            for (int i = 0; i < 3; i++)
-              _ring((ringAnim.value + i / 3) % 1.0),
+            for (int i = 0; i < 3; i++) _ring((ringAnim.value + i / 3) % 1.0),
             ScaleTransition(
-              scale: CurvedAnimation(
-                parent: checkAnim, curve: Curves.elasticOut,
-              ),
+              scale: CurvedAnimation(parent: checkAnim, curve: Curves.elasticOut),
               child: Container(
-                width: 76, height: 76,
-                decoration: BoxDecoration(
-                  color: AppColor.blueMain, shape: BoxShape.circle,
-                ),
+                width: 76,
+                height: 76,
+                decoration: BoxDecoration(color: AppColor.blueMain, shape: BoxShape.circle),
                 alignment: Alignment.center,
                 child: SvgPicture.asset(
                   AppIcons.check,
-                  width: 38, height: 38,
+                  width: 38,
+                  height: 38,
                   colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
                 ),
               ),
@@ -275,12 +275,11 @@ class _CheckFallback extends StatelessWidget {
     final size = 76 + (160 - 76) * t;
     final opacity = (1 - t) * 0.5;
     return Container(
-      width: size, height: size,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(
-          color: AppColor.blueMain.withValues(alpha: opacity), width: 2,
-        ),
+        border: Border.all(color: AppColor.blueMain.withValues(alpha: opacity), width: 2),
       ),
     );
   }
@@ -321,18 +320,11 @@ class _RateCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 8),
       width: context.sizeOf.width,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12), color: AppColor.white,
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: AppColor.white),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            'Rate'.tr(),
-            style: context.textTheme.bodyMedium!.copyWith(
-              fontSize: 16, fontWeight: FontWeight.w600,
-            ),
-          ),
+          Text('Rate'.tr(), style: context.textTheme.bodyMedium!.copyWith(fontSize: 16, fontWeight: FontWeight.w600)),
           const SizedBox(height: 10),
           // Stars - default 0 selected.
           Row(
@@ -346,107 +338,141 @@ class _RateCard extends StatelessWidget {
                 child: Padding(
                   padding: EdgeInsets.only(right: index == 4 ? 0 : 10),
                   child: SvgPicture.asset(
-                    AppIcons.star, width: 32, height: 32,
-                    colorFilter: ColorFilter.mode(
-                      filled ? AppColor.yellow : AppColor.lightGreyBlue,
-                      BlendMode.srcIn,
-                    ),
+                    AppIcons.star,
+                    width: 32,
+                    height: 32,
+                    colorFilter: ColorFilter.mode(filled ? AppColor.yellow : AppColor.lightGreyBlue, BlendMode.srcIn),
                   ),
                 ),
               );
             }),
           ),
-          const SizedBox(height: 16),
-          // Quick tags - Good / Excellent / Bad chips (independent toggle).
-          Wrap(
-            spacing: 8, runSpacing: 8,
-            alignment: WrapAlignment.center,
-            children: tagOptions.map((t) {
-              final active = selectedTag == t;
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => onTagTap(t),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: active ? AppColor.blueMain : AppColor.lightBlue,
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                  child: Text(
-                    t.tr(),
-                    style: context.textTheme.bodyLarge!.copyWith(
-                      fontSize: 14, fontWeight: FontWeight.w500,
-                      color: active ? AppColor.white : Colors.black,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 14),
-          // Leave-a-comment button - centered, separate from tags.
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: onExpandComment,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
-              decoration: BoxDecoration(
-                color: commentExpanded ? AppColor.blueMain : AppColor.lightBlue,
-                borderRadius: BorderRadius.circular(50),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.edit_outlined, size: 16,
-                    color: commentExpanded ? AppColor.white : Colors.black,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Leave a comment'.tr(),
-                    style: context.textTheme.bodyLarge!.copyWith(
-                      fontSize: 14, fontWeight: FontWeight.w500,
-                      color: commentExpanded ? AppColor.white : Colors.black,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          // Tag chips + comment input — yulduz tanlanmaguncha berkitiladi.
+          // Foydalanuvchi avval rate'ni belgilashi, keyin batafsil fikr
+          // qoldirish imkoniyati ochilishi tabiiyroq oqim.
           AnimatedSize(
-            duration: const Duration(milliseconds: 200),
+            duration: const Duration(milliseconds: 220),
             curve: Curves.easeOut,
-            child: commentExpanded
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: TextField(
-                      maxLines: 3,
-                      controller: commentController,
-                      decoration: InputDecoration(
-                        hintText: 'Write your thoughts...'.tr(),
-                        hintStyle: context.textTheme.bodyLarge!.copyWith(
-                          fontSize: 14, fontWeight: FontWeight.w400,
-                          color: AppColor.grey,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: AppColor.lightBlue),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: AppColor.lightBlue),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: AppColor.kPrimaryColor),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10,
+            alignment: Alignment.topCenter,
+            child: selectedStar == 0
+                ? const SizedBox(width: double.infinity)
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 16),
+                      // Quick tags - Good / Excellent / Bad chips (independent toggle).
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        alignment: WrapAlignment.center,
+                        children: tagOptions.map((t) {
+                          final active = selectedTag == t;
+                          return GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => onTagTap(t),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: active ? AppColor.blueMain : AppColor.lightBlue,
+                                borderRadius: BorderRadius.circular(50),
+                              ),
+                              child: Text(
+                                t.tr(),
+                                style: context.textTheme.bodyLarge!.copyWith(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: active ? AppColor.white : Colors.black,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 14),
+                      // Leave-a-comment button - centered, separate from tags.
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: onExpandComment,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18, vertical: 9,
+                          ),
+                          decoration: BoxDecoration(
+                            color: commentExpanded
+                                ? AppColor.blueMain
+                                : AppColor.lightBlue,
+                            borderRadius: BorderRadius.circular(50),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.edit_outlined,
+                                size: 16,
+                                color: commentExpanded
+                                    ? AppColor.white
+                                    : Colors.black,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Leave a comment'.tr(),
+                                style: context.textTheme.bodyLarge!.copyWith(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: commentExpanded
+                                      ? AppColor.white
+                                      : Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  )
-                : const SizedBox.shrink(),
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeOut,
+                        child: commentExpanded
+                            ? Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: TextField(
+                                  maxLines: 3,
+                                  controller: commentController,
+                                  decoration: InputDecoration(
+                                    hintText: 'Write your thoughts...'.tr(),
+                                    hintStyle: context.textTheme.bodyLarge!
+                                        .copyWith(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
+                                      color: AppColor.grey,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide:
+                                          BorderSide(color: AppColor.lightBlue),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide:
+                                          BorderSide(color: AppColor.lightBlue),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                          color: AppColor.kPrimaryColor),
+                                    ),
+                                    contentPadding:
+                                        const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 10,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    ],
+                  ),
           ),
           const SizedBox(height: 18),
           Row(
@@ -456,10 +482,9 @@ class _RateCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   mechanicName,
-                  style: context.textTheme.bodyLarge!.copyWith(
-                    fontWeight: FontWeight.w600, fontSize: 14,
-                  ),
-                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: context.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w600, fontSize: 14),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               GestureDetector(
@@ -467,15 +492,10 @@ class _RateCard extends StatelessWidget {
                 onTap: onMoreTap,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(50),
-                    color: AppColor.lightBlue,
-                  ),
+                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(50), color: AppColor.lightBlue),
                   child: Text(
                     'More'.tr(),
-                    style: context.textTheme.bodyLarge!.copyWith(
-                      fontWeight: FontWeight.w500, fontSize: 13,
-                    ),
+                    style: context.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w500, fontSize: 13),
                   ),
                 ),
               ),

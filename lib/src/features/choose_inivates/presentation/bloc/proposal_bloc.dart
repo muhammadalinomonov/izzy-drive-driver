@@ -35,14 +35,15 @@ class ProposalBloc extends Bloc<ProposalEvent, ProposalState> {
     });
 
     on<SelectProposalEvent>((event, emit) async {
+      final previousProposal = state.proposal; // save before loading clears it
       emit(const ProposalState(status: ProposalStatus.loading));
       final result = await homeRepository.selectProposal(event.proposalId);
       if (result.errorText.isEmpty && result.data != null) {
         emit(
           ProposalState(
             status: ProposalStatus.loaded,
-            proposal: state.proposal, // Retain existing proposal
-            route: result.data as Map<String, dynamic>, // Store route data
+            proposal: previousProposal, // retained from before loading
+            route: result.data as Map<String, dynamic>,
           ),
         );
       } else {

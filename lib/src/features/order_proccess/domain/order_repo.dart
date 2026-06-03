@@ -6,7 +6,7 @@ import '../../../core/network/network_response.dart';
 abstract class OrderRepository {
   Future<NetworkResponse> getMe();
 
-  Future<NetworkResponse<void>> cancelOrder();
+  Future<NetworkResponse<void>> cancelOrder({int? reasonId, String? reasonText});
 
   Future<NetworkResponse<CurrentOrderEntity>> getCurrentOrder();
 
@@ -28,8 +28,8 @@ class OrderRepositoryImpl implements OrderRepository {
   }
 
   @override
-  Future<NetworkResponse<void>> cancelOrder() {
-    return orderProccessSource.cancelOrder();
+  Future<NetworkResponse<void>> cancelOrder({int? reasonId, String? reasonText}) {
+    return orderProccessSource.cancelOrder(reasonId: reasonId, reasonText: reasonText);
   }
 
   @override

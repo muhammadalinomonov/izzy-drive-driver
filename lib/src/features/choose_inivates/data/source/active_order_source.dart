@@ -6,6 +6,7 @@ import '../../../../core/network/dio_model.dart';
 import '../../../../core/network/network_response.dart';
 import '../../../../core/network/token_service.dart';
 import '../../../../core/service_locater.dart';
+import '../../../../core/utils/json_safe.dart';
 import '../model/active_order.dart';
 
 class ActiveOrderSource {
@@ -31,19 +32,33 @@ class ActiveOrderSource {
       }
     } on DioException catch (e) {
       print('Dio error: ${e.response?.data ?? e.message}');
-      return NetworkResponse(errorText: e.response?.data ?? 'Dio exception error');
+      // 400 + {status: false} = no active offers (order completed/cancelled).
+      if (e.response?.statusCode == 400 &&
+          e.response?.data is Map &&
+          (e.response!.data as Map)['status'] == false) {
+        return NetworkResponse(errorText: 'no_active_order');
+      }
+      return NetworkResponse(errorText: dioErrorMessage(e.response?.data, e.message ?? 'Dio exception error'));
     } catch (e) {
       print('General error: $e');
       return NetworkResponse(errorText: e.toString());
     }
   }
 
-  Future<NetworkResponse<void>> cancelOrder() async {
+  Future<NetworkResponse<void>> cancelOrder({int? reasonId, String? reasonText}) async {
     try {
       var token = StorageRepository.getString("token");
+      // Either reason_id (picked from list) or reason_text (free-form
+      // "Other") — never both. Caller enforces.
+      final body = <String, dynamic>{'action': 'cancel'};
+      if (reasonId != null) {
+        body['cancel_reason_id'] = reasonId;
+      } else if (reasonText != null && reasonText.isNotEmpty) {
+        body['cancel_reason_text'] = reasonText;
+      }
       final response = await client.post(
         ApiConstants.activeOrder,
-        data: {'action': 'cancel'},
+        data: body,
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       if (response.isSuccess) {

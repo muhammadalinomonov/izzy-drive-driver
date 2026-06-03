@@ -11,6 +11,7 @@ import 'package:taxi_app/src/core/location_service.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
 import 'package:taxi_app/src/core/services/websocket_service.dart';
 import 'package:taxi_app/src/core/utils/adaptive_poller.dart';
+import 'package:taxi_app/src/features/cancel_reasons/presentation/widgets/cancel_reason_sheet.dart';
 import 'package:taxi_app/src/features/common/presentation/widgets/common_image.dart';
 import 'package:taxi_app/src/features/master/data/repository/master_repository_impl.dart';
 import 'package:taxi_app/src/features/master/data/source/master_remote_data_source.dart';
@@ -54,15 +55,29 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
   Uint8List? _destinationMarkerPng;
 
   bool _mapReady = false;
+  // True while `_drawRoute` is mid-flight (clearAnnotations → create cycle).
+  // `_updateMechanicMarker` skips while this is set so live-position updates
+  // can't race with the redraw and leave a duplicate marker on the map.
+  bool _drawingRoute = false;
+  // Latch: order tugagandan keyin pushReplacement IKKI joydan
+  // (lifecycleEvent.completed listener + currentOrder.status.isMechanicDone
+  // listener) chaqirilardi va keyingi state emissionlarda yana ham qayta
+  // ishlardi → finished screen'ga ko'p marta yo'naltirilardi. Bitta marta
+  // chaqirilishini kafolatlaymiz.
+  bool _navigatedToFinished = false;
+  // Camera-fitni faqat status almashganda qilaymiz. WS dan har mexanik
+  // position update kelganda yoki polling refresh paytida `_drawRoute`
+  // qaytadan ishga tushadi — lekin foydalanuvchi zoom qilgan bo'lsa, qayta
+  // fit qilmasdan saqlaymiz.
+  String? _lastFittedStatusKey;
 
-  // Insets used for cameraForCoordinateBounds - bottom matches the sheet
-  // height. Yangi 3-card panel (status + master + actions) eski sheet'dan
-  // kattaroq, shuning uchun bottom 420 - marker bottomsheet ostida qolib
-  // ketmaydi.
+  // Bottom padding kichikroq → markerlar sheet bilan to'qnashmaydi, lekin
+  // ikki marker (mexanik + manzil) bir-biriga juda yaqin qisilmaydi va
+  // accepted state'da zoom biroz yaqinroq chiqadi.
   static final _mapPadding = mapbox.MbxEdgeInsets(
     top: 100,
     left: 60,
-    bottom: 420,
+    bottom: 320,
     right: 60,
   );
 
@@ -122,7 +137,9 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
           BlocListener<OrdersBloc, OrdersState>(
             listenWhen: (p, c) => p.lifecycleEvent != c.lifecycleEvent,
             listener: (context, state) {
+              if (_navigatedToFinished) return;
               if (state.lifecycleEvent == OrderLifecycleEvent.completed) {
+                _navigatedToFinished = true;
                 context.read<OrdersBloc>().add(ClearLifecycleEventEvent());
                 context.pushReplacement(Pages.finishedOrder);
               }
@@ -136,6 +153,10 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
             },
           ),
           // Mechanic live position - update only the mechanic marker.
+          // _drawRoute paytida o'tkazib yuboriladi (aks holda 0.4 va 0.6
+          // o'lchamli ikki marker bir vaqtda paydo bo'lardi — _drawRoute'ning
+          // clearAnnotations → wait → create oralig'ida _updateMechanicMarker
+          // race qilardi).
           BlocListener<OrdersBloc, OrdersState>(
             listenWhen: (p, c) =>
                 p.mechanicLat != c.mechanicLat || p.mechanicLng != c.mechanicLng,
@@ -143,20 +164,18 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
               final lat = state.mechanicLat;
               final lng = state.mechanicLng;
               if (lat == null || lng == null || !_mapReady) return;
+              if (_drawingRoute) return;
               _updateMechanicMarker(lat, lng);
             },
           ),
-          // Route changed - redraw everything.
+          // Map yoki status o'zgarishi — bir listenerda birlashtirilgan, aks
+          // holda har ikkala field bir vaqtda o'zgarganda _drawRoute IKKI
+          // marta concurrent ishlardi va annotation duplikatlari paydo
+          // bo'lardi (mechanicSelected → accepted o'tishida bug edi).
           BlocListener<OrdersBloc, OrdersState>(
-            listenWhen: (p, c) => p.currentOrder.map != c.currentOrder.map,
-            listener: (context, state) {
-              if (_mapReady) _drawRoute(state.currentOrder.map);
-            },
-          ),
-          // Status changed - accepted ↔ arrived/in_progress oralig'ida
-          // marker stilini almashtirish kerak (route vs pulse halqali nuqta).
-          BlocListener<OrdersBloc, OrdersState>(
-            listenWhen: (p, c) => p.currentOrder.status != c.currentOrder.status,
+            listenWhen: (p, c) =>
+                p.currentOrder.map != c.currentOrder.map ||
+                p.currentOrder.status != c.currentOrder.status,
             listener: (context, state) {
               if (_mapReady) _drawRoute(state.currentOrder.map);
             },
@@ -167,13 +186,32 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
               if (context.mounted) context.go(Pages.main);
             },
           ),
+          // Mexanik orderni rad etganda backend status'ni 'new' (pending) ga
+          // qaytaradi va `mechanic-cancelled-research` WS event yuboradi.
+          // OrdersBloc shu eventda silent refresh qiladi - status pending
+          // bo'lib qoladi. Faqat mechanicSelected → pending transitionida
+          // driverni offers ekraniga qaytaramiz; aks holda boshqa pending
+          // holatlarda ham false-positive nav bo'lib qolardi.
+          BlocListener<OrdersBloc, OrdersState>(
+            listenWhen: (p, c) =>
+                p.currentOrder.status.isMechanicSelected &&
+                c.currentOrder.status.isPending,
+            listener: (context, state) {
+              if (context.mounted) context.go(Pages.invatesPage);
+            },
+          ),
         ],
         child: BlocConsumer<OrdersBloc, OrdersState>(
-          listenWhen: (previous, current) => previous.currentOrder != current.currentOrder,
+          // Status mechanicDone'ga TUSHGAN paytda navigate; keyingi
+          // currentOrder field o'zgarishlarida (mechanic position update)
+          // qayta fire bo'lmasligi uchun aniq transition tekshiruvi.
+          listenWhen: (previous, current) =>
+              !previous.currentOrder.status.isMechanicDone &&
+              current.currentOrder.status.isMechanicDone,
           listener: (context, state) {
-            if (state.currentOrder.status.isMechanicDone) {
-              context.pushReplacement(Pages.finishedOrder);
-            }
+            if (_navigatedToFinished) return;
+            _navigatedToFinished = true;
+            context.pushReplacement(Pages.finishedOrder);
           },
           builder: (context, state) {
             if (state.currentOrderStatus.isSuccess) {
@@ -402,27 +440,13 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
 
   Future<void> _confirmCancel(BuildContext context) async {
     final bloc = context.read<OrdersBloc>();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Cancel order?'),
-        content: const Text('Are you sure you want to cancel the order?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('No'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Yes, cancel'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !context.mounted) return;
+    final choice = await showCancelReasonSheet(context);
+    if (choice == null || !context.mounted) return;
     context.go(Pages.main);
-    bloc.add(CancelOrderEvent());
+    bloc.add(CancelOrderEvent(
+      reasonId: choice.reasonId,
+      reasonText: choice.customText,
+    ));
   }
 
   /// Redraw polyline + markers from fresh MapEntity. Status'ga qarab ikki
@@ -432,6 +456,11 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
   ///    (Figma 1897:4828)
   void _drawRoute(MapEntity map) async {
     if (_polylineAnnotationManager == null || _pointAnnotationManager == null) return;
+    // Concurrent _drawRoute call'larini ham, _updateMechanicMarker race'ini
+    // ham bloklaymiz — annotation manager'da bir vaqtda faqat bitta mutation
+    // pipeline ishlasin.
+    if (_drawingRoute) return;
+    _drawingRoute = true;
     try {
       await _clearMapAnnotations();
 
@@ -439,9 +468,21 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
       final status = context.read<OrdersBloc>().state.currentOrder.status;
       final atSinglePoint = status.isArrived || status.isInProgress;
 
+      // Status almashganida YANGI fit-camera kerak; aks holda foydalanuvchi
+      // zoom qilgan bo'lsa shunday qoladi (recenter button bilan qaytarib
+      // beradi). Bu polling refresh / WS position update sayin zoom o'z
+      // holatiga "tortib qaytishi" muammosini hal qiladi.
+      final statusKey = status.toString();
+      final shouldFit = _lastFittedStatusKey != statusKey;
+
       if (atSinglePoint) {
         // Mexanik allaqachon haydovchining manzilida - bitta nuqta yetadi.
-        await _drawPulseMarker(map.endPoint.lat, map.endPoint.lng);
+        await _drawPulseMarker(
+          map.endPoint.lat,
+          map.endPoint.lng,
+          fitCamera: shouldFit,
+        );
+        if (shouldFit) _lastFittedStatusKey = statusKey;
         return;
       }
 
@@ -474,12 +515,19 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
           ),
         );
       }
-      await _fitCameraToBounds(
-        lat1: map.startPoint.lat, lng1: map.startPoint.lng,
-        lat2: map.endPoint.lat, lng2: map.endPoint.lng,
-      );
+      // Fit faqat status transition'da; polling refresh paytida foydalanuvchi
+      // zoomida qoladi (recenter button mavjud — istasa qaytaradi).
+      if (shouldFit) {
+        await _fitCameraToBounds(
+          lat1: map.startPoint.lat, lng1: map.startPoint.lng,
+          lat2: map.endPoint.lat, lng2: map.endPoint.lng,
+        );
+        _lastFittedStatusKey = statusKey;
+      }
     } catch (e) {
       debugPrint('Error drawing route: $e');
+    } finally {
+      _drawingRoute = false;
     }
   }
 
@@ -505,7 +553,15 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
 
   /// Figma 1897:4828 - bitta nuqta atrofida ikkita ko'k translucent halqa
   /// + ustida mexanik ikoni. Yo'l chizig'i va manzil markeri ko'rsatilmaydi.
-  Future<void> _drawPulseMarker(double lat, double lng) async {
+  ///
+  /// [fitCamera] — false bo'lsa kamera holatini saqlaydi (polling refresh,
+  /// repeated _drawRoute paytida zoom snap qilmasin). True — initial / status
+  /// transition.
+  Future<void> _drawPulseMarker(
+    double lat,
+    double lng, {
+    bool fitCamera = true,
+  }) async {
     if (lat == 0 && lng == 0) return;
     final point = mapbox.Point(coordinates: mapbox.Position(lng, lat));
     // Tashqi katta translucent halqa.
@@ -536,16 +592,26 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
         iconSize: 0.35,
       ),
     );
-    // Camera nuqtaga yaqinroq olib boriladi. Zoom 15 — pulse halqalar va
-    // mexanik ikoni bemalol joylashadi, ko'cha kontekst ham ko'rinadi.
-    await _mapboxMap.flyTo(
-      mapbox.CameraOptions(center: point, zoom: 14, pitch: 0, bearing: 0),
-      mapbox.MapAnimationOptions(duration: 600),
-    );
+    // Camera faqat status transition'da yangilanadi — polling refresh paytida
+    // foydalanuvchi zoomida qoladi.
+    if (fitCamera) {
+      await _mapboxMap.flyTo(
+        mapbox.CameraOptions(center: point, zoom: 14, pitch: 0, bearing: 0),
+        mapbox.MapAnimationOptions(duration: 600),
+      );
+    }
   }
 
   /// Update only the mechanic marker - destination stays fixed.
-  /// Refits the camera so both points remain visible.
+  ///
+  /// **Icon o'lchami 0.4** — `_drawRoute` bilan bir xil; updateda flicker yoki
+  /// "katta+kichik" duplikat hissi bermaydi.
+  ///
+  /// **Camera silliq pan qiladi** (1200ms `flyTo`) — mexanik harakatlanganda
+  /// kamera ham unga ergashadi. Faqat WS dan kelgan real position update'da
+  /// chaqiriladi; polling refresh'da (mechanicLat/Lng o'zgarmaydi)
+  /// `_updateMechanicMarker` umuman chaqirilmaydi → polling paytida zoom
+  /// o'zgarmaydi.
   void _updateMechanicMarker(double lat, double lng) async {
     if (_pointAnnotationManager == null || !mounted) return;
     final endPoint = context.read<OrdersBloc>().state.currentOrder.map.endPoint;
@@ -557,7 +623,7 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
         mapbox.PointAnnotationOptions(
           geometry: mapbox.Point(coordinates: mapbox.Position(lng, lat)),
           image: _mechanicMarkerPng,
-          iconSize: 0.6,
+          iconSize: 0.4,
         ),
       );
 
@@ -566,7 +632,11 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
           lat1: lat, lng1: lng,
           lat2: endPoint.lat, lng2: endPoint.lng,
         );
-        await _mapboxMap.flyTo(camera, mapbox.MapAnimationOptions(duration: 600));
+        // Long flyTo = silliq pan; har update'da zoom snap qilmaydi.
+        await _mapboxMap.flyTo(
+          camera,
+          mapbox.MapAnimationOptions(duration: 1200),
+        );
       }
     } catch (e) {
       debugPrint('Error updating mechanic marker: $e');

@@ -131,6 +131,8 @@ class WebSocketService {
     final wsId = StorageRepository.getInt('ws_id');
     if (wsId <= 0) {
       log('WS connect skipped: ws_id missing');
+      // Schedule a retry so ws_id being briefly missing doesn't strand us.
+      _scheduleReconnect();
       return;
     }
     try {
@@ -139,28 +141,37 @@ class WebSocketService {
           '$_baseUrl?user_id=usta_client_$wsId&tab_id=1&browser_id=browser_1',
         ),
       );
-      _setConnected(true);
       _lastFrameAt = DateTime.now();
-      _retryCount = 0;
-      log('WS connected as usta_client_$wsId');
+      log('WS connecting as usta_client_$wsId');
       _channelSub?.cancel();
       _channelSub = _channel!.stream.listen(
         _handleFrame,
         onError: (Object error) {
           log('WS error: $error');
-          _setConnected(false);
+          _closeChannel();
           _scheduleReconnect();
         },
         onDone: () {
           log('WS closed');
-          _setConnected(false);
+          _closeChannel();
           _scheduleReconnect();
         },
         cancelOnError: true,
       );
+      // Set connected only after the handshake completes — avoids the
+      // health-timer stale check being fooled by a half-open channel.
+      _channel!.ready.then(
+        (_) {
+          if (_desiredConnected && _channel != null) {
+            _setConnected(true);
+            log('WS connected as usta_client_$wsId');
+          }
+        },
+        onError: (_) {/* stream's onError fires too; nothing to do here */},
+      );
     } catch (e) {
       log('WS connect failed: $e');
-      _setConnected(false);
+      _closeChannel();
       _scheduleReconnect();
     }
   }
@@ -229,6 +240,7 @@ class WebSocketService {
   /// so the silent-suspend detector sees liveness.
   void _handleFrame(dynamic raw) {
     _lastFrameAt = DateTime.now();
+    _retryCount = 0; // reset backoff only on confirmed live traffic
     try {
       final decoded = jsonDecode(raw as String);
       if (decoded is! Map<String, dynamic>) return;

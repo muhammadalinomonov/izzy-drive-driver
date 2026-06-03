@@ -45,17 +45,7 @@ class SubOrderProposalSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColor.lightGrey,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 8),
           Text(
             'New extra work proposal',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(

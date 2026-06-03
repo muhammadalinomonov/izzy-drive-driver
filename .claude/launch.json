@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "flutter-run (device/emulator)",
+      "runtimeExecutable": "flutter",
+      "runtimeArgs": ["run", "--host-vmservice-port=8181"],
+      "port": 8181
+    },
+    {
+      "name": "flutter-web (chrome)",
+      "runtimeExecutable": "flutter",
+      "runtimeArgs": ["run", "-d", "chrome", "--web-port=8080"],
+      "port": 8080
+    }
+  ]
+}

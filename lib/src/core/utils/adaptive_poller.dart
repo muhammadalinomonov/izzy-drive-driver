@@ -55,10 +55,10 @@ class AdaptivePoller {
     _connectionSub?.cancel();
     _connectionSub = ws.connectionStream.listen((online) {
       if (_paused) return;
-      if (!online) {
-        _ticks = 0;
-        onPoll();
-      }
+      // Poll immediately on both disconnect (catch missed events during outage)
+      // and reconnect (catch events that arrived while socket was down).
+      _ticks = 0;
+      onPoll();
     });
   }
 

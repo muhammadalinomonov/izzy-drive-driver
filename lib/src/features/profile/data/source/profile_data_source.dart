@@ -67,7 +67,11 @@ class ProfileDataSource {
       );
       if (response.isSuccess) {
         print('Profile fetched successfully: ${response.data}');
-        return NetworkResponse(data: ProfileModel.fromJson(toMap(response.data['data'])));
+        final profile = ProfileModel.fromJson(toMap(response.data['data']));
+        if (profile.email.isNotEmpty) {
+          StorageRepository.putString('email', profile.email);
+        }
+        return NetworkResponse(data: profile);
       } else {
         print('Error fetching profile: ${response.data}');
         return NetworkResponse(errorText: dioErrorMessage(response.data, 'Something went wrong try again'));

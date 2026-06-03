@@ -93,7 +93,32 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
     final dir = await getApplicationDocumentsDirectory();
     final path = '${dir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
     await _recorder.start(
-      const RecordConfig(encoder: AudioEncoder.aacLc, bitRate: 128000, sampleRate: 44100),
+      const RecordConfig(
+        encoder: AudioEncoder.aacLc,
+        bitRate: 128000,
+        sampleRate: 44100,
+        // `mixWithOthers` — iOS'da AVAudioSession'ni boshqa app (Zoom, Meet,
+        // musiqa player, Telegram va h.k.) bilan birgalikda ishlashga ruxsat
+        // beradi; aks holda default `playAndRecord` boshqa session'larni
+        // to'xtatib qo'yardi va recording boshlanmaydi. Mavjud defaults
+        // (defaultToSpeaker, allowBluetooth*) saqlanadi.
+        iosConfig: IosRecordConfig(
+          categoryOptions: [
+            IosAudioCategoryOption.mixWithOthers,
+            IosAudioCategoryOption.defaultToSpeaker,
+            IosAudioCategoryOption.allowBluetooth,
+            IosAudioCategoryOption.allowBluetoothA2DP,
+          ],
+        ),
+        // Android'da `voiceCommunication` source — VoIP-friendly: echo
+        // cancellation, automatic gain control, va boshqa VoIP appga
+        // tegmasdan ishlaydi. CELLULAR call paytida OS baribir mic'ni
+        // bloklaydi, lekin Zoom/Meet/WhatsApp call paytida ishlaydi.
+        androidConfig: AndroidRecordConfig(
+          audioSource: AndroidAudioSource.voiceCommunication,
+          manageBluetooth: true,
+        ),
+      ),
       path: path,
     );
     _activeRecordingPath = path;
@@ -1168,8 +1193,8 @@ class _BottomInputBar extends StatelessWidget {
           _buildRow(context),
           if (isRecording && !isLocked)
             Positioned(
-              right: 10,
-              bottom: 60 + (-dragOffsetY).clamp(0.0, 120.0),
+              right: 16,
+              bottom: 78 + (-dragOffsetY).clamp(0.0, 120.0),
               child: _LockHintBadge(active: -dragOffsetY >= 60.0),
             ),
         ],
@@ -1186,16 +1211,29 @@ class _BottomInputBar extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(child: _RecordingInfoPill(elapsed: recordingElapsed, willCancel: false)),
           const SizedBox(width: 8),
-          _MicGlow(
-            // Lock paytida yozish davom etadi - send button atrofida amplituda
-            // bo'yicha pulsatsiya qiluvchi halqalar.
-            color: AppColor.kPrimaryColor,
-            active: true,
-            child: _SquareIconButton(
-              onPressed: onLockedSend,
-              icon: const Icon(Icons.send_rounded, color: Colors.white, size: 22),
-              background: AppColor.kPrimaryColor,
-              iconColor: Colors.white,
+          // Mic button bilan bir xil layout: 44x56 box, bottomCenter align,
+          // active holatda 1.55x scale - lock paytida ham recording faol,
+          // shuning uchun send button mic'dek katta bo'lib qoladi.
+          SizedBox(
+            width: 44,
+            height: 56,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: AnimatedScale(
+                scale: 1.55,
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                child: _MicGlow(
+                  color: AppColor.kPrimaryColor,
+                  active: true,
+                  child: _SquareIconButton(
+                    onPressed: onLockedSend,
+                    icon: const Icon(Icons.send_rounded, color: Colors.white, size: 22),
+                    background: AppColor.kPrimaryColor,
+                    iconColor: Colors.white,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -1348,14 +1386,14 @@ class _LockHintBadge extends StatelessWidget {
     final iconColor = active ? Colors.white : AppColor.kPrimaryColor;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 120),
-      width: 36,
-      height: 36,
+      width: 40,
+      height: 40,
       decoration: BoxDecoration(
         color: bg,
         shape: BoxShape.circle,
-        boxShadow: const [BoxShadow(color: Color(0x29000000), blurRadius: 8, offset: Offset(0, 2))],
+        boxShadow: const [BoxShadow(color: Color(0x29000000), blurRadius: 10, offset: Offset(0, 2))],
       ),
-      child: Icon(Icons.lock_outline_rounded, size: 18, color: iconColor),
+      child: Icon(Icons.lock_outline_rounded, size: 20, color: iconColor),
     );
   }
 }
@@ -1371,14 +1409,11 @@ class _CancelPill extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
+        width: 44,
         height: 44,
-        padding: const EdgeInsets.symmetric(horizontal: 18),
-        decoration: BoxDecoration(color: const Color(0xFFEFF3F6), borderRadius: BorderRadius.circular(50)),
+        decoration: const BoxDecoration(color: Color(0xFFEFF3F6), shape: BoxShape.circle),
         alignment: Alignment.center,
-        child: const Text(
-          'Cancel',
-          style: TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: -0.3),
-        ),
+        child: const Icon(Icons.close_rounded, color: Colors.red, size: 22),
       ),
     );
   }
@@ -1425,6 +1460,11 @@ class _RecordingInfoPillState extends State<_RecordingInfoPill> with SingleTicke
         children: [
           _PulsingRecordingDot(controller: _pulseController),
           const SizedBox(width: 12),
+          // Live equalizer - to'liq Expanded'ni egallaydi, oxirgi (eng yangi)
+          // amplituda o'ng tomonda, duration matniga yondashib chiqadi.
+          // WillCancel paytida barlar qizilga aylanadi (cancel feedback).
+          Expanded(child: _LiveAmplitudeBars(willCancel: widget.willCancel)),
+          const SizedBox(width: 12),
           Text(
             _label,
             style: const TextStyle(
@@ -1434,11 +1474,6 @@ class _RecordingInfoPillState extends State<_RecordingInfoPill> with SingleTicke
               fontFeatures: [FontFeature.tabularFigures()],
             ),
           ),
-          const SizedBox(width: 12),
-          // Live equalizer - lock yoki lock emasligidan qat'iy nazar,
-          // recording paytida har doim ko'rsatiladi. WillCancel paytida
-          // barlar qizilga aylanadi (cancel feedback).
-          Expanded(child: _LiveAmplitudeBars(willCancel: widget.willCancel)),
         ],
       ),
     );
@@ -1526,21 +1561,22 @@ class _LiveAmplitudeBars extends StatelessWidget {
         final pad = _barCount - recent.length;
         return SizedBox(
           height: 22,
+          // spaceBetween - barlar Expanded'ning butun kengligi bo'ylab teng
+          // taqsimlanadi (eng chap bar chap chetida, eng o'ng bar duration
+          // matniga yondashadi). Padding olib tashlandi - gaplar avtomatik
+          // hisoblanadi.
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: List.generate(_barCount, (i) {
               final value = i < pad ? 0.0 : recent[i - pad];
               final h = (value * 18).clamp(2.0, 18.0);
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 1),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  curve: Curves.easeOut,
-                  width: 2,
-                  height: h,
-                  decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
-                ),
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                width: 2,
+                height: h,
+                decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
               );
             }),
           ),
@@ -1881,9 +1917,15 @@ class _MicHoldHintButtonState extends State<_MicHoldHintButton> {
             alignment: Alignment.bottomCenter,
             child: Transform.translate(
               offset: widget.isRecording ? Offset(widget.dragOffset, 0) : Offset.zero,
+              // Telegram-style enlargement: while recording the mic balloons
+              // to ~1.55x its rest size — visual only, layout footprint stays
+              // 44px so neighbouring widgets don't reflow. Centered scaling
+              // means the visible disc overflows up & out symmetrically, which
+              // is exactly how Telegram's recording button grows.
               child: AnimatedScale(
-                scale: widget.isRecording ? 1.15 : 1.0,
-                duration: const Duration(milliseconds: 150),
+                scale: widget.isRecording ? 1.55 : 1.0,
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
                 child: _MicGlow(
                   active: widget.isRecording,
                   color: color,

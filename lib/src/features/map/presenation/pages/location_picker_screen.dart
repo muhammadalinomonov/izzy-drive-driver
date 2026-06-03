@@ -95,7 +95,7 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       }
       if (permission == geolocator.LocationPermission.deniedForever) return null;
       return await geolocator.Geolocator.getCurrentPosition(
-        desiredAccuracy: geolocator.LocationAccuracy.high,
+        desiredAccuracy: geolocator.LocationAccuracy.bestForNavigation,
       );
     } catch (_) {
       return null;

@@ -16,5 +16,6 @@ class ActiveOrderRepositoryImpl extends ActiveOrderRepository {
   }
 
   @override
-  Future<NetworkResponse<void>> cancelOrder() => activeOrderSource.cancelOrder();
+  Future<NetworkResponse<void>> cancelOrder({int? reasonId, String? reasonText}) =>
+      activeOrderSource.cancelOrder(reasonId: reasonId, reasonText: reasonText);
 }

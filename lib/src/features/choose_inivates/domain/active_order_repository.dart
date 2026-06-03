@@ -8,5 +8,5 @@ Future<NetworkResponse> fetchActiveOrder();
 
 Future<NetworkResponse> updateOrderPrice(double price);
 
-Future<NetworkResponse<void>> cancelOrder();
+Future<NetworkResponse<void>> cancelOrder({int? reasonId, String? reasonText});
 }

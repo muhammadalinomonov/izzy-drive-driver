@@ -42,13 +42,23 @@ class OrderProccessSource {
     }
   }
 
-  Future<NetworkResponse<void>> cancelOrder() async {
+  Future<NetworkResponse<void>> cancelOrder({int? reasonId, String? reasonText}) async {
     try {
       final token = StorageRepository.getString('token');
 
+      // Backend accepts either `cancel_reason_id` (selected from list) or
+      // `cancel_reason_text` (free-form when user picked "Other") — never
+      // both. Caller is responsible for ensuring at most one is non-null.
+      final body = <String, dynamic>{'action': 'cancel'};
+      if (reasonId != null) {
+        body['cancel_reason_id'] = reasonId;
+      } else if (reasonText != null && reasonText.isNotEmpty) {
+        body['cancel_reason_text'] = reasonText;
+      }
+
       final response = await client.post(
         ApiConstants.activeOrder,
-        data: {'action': 'cancel'},
+        data: body,
         options: Options(
           headers: {'Authorization': "Bearer $token", 'Content-Type': 'application/x-www-form-urlencoded'},
         ),
@@ -84,6 +94,20 @@ class OrderProccessSource {
       } else {
         return NetworkResponse<CurrentOrderModel>(errorText: 'Unexpected status code: ${response.statusCode}');
       }
+    } on DioException catch (e) {
+      // Backend "active order yo'q" holatini 400 + `{"status": false, ...}`
+      // bilan signal beradi. Bu real xato emas — bo'sh state. Default
+      // CurrentOrderModel (id=-1) qaytarib bloc'ga "order yo'q" deydi, shu
+      // sababli home screen recents'ga o'tadi va `_syncWsRetention` WS'ni
+      // bo'shatadi.
+      if (e.response?.statusCode == 400 &&
+          e.response?.data is Map &&
+          (e.response!.data as Map)['status'] == false) {
+        return NetworkResponse<CurrentOrderModel>(
+          data: CurrentOrderModel.fromJson(const {}),
+        );
+      }
+      return NetworkResponse<CurrentOrderModel>(errorText: e.message ?? e.toString());
     } catch (e) {
       return NetworkResponse<CurrentOrderModel>(errorText: e.toString());
     }

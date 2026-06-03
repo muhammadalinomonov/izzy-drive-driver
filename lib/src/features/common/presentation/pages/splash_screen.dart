@@ -131,7 +131,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                             FittedBox(
                               fit: BoxFit.scaleDown,
                               child: const Text(
-                                'Izzy Drive',
+                                'IzzyDrive',
                                 textAlign: TextAlign.center,
                                 maxLines: 1,
                                 softWrap: false,

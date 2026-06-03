@@ -46,4 +46,6 @@ class ApiConstants {
   static final String notificationsReadAll = "accounts/notifications/read-all/";
   static String notificationDetail(int id) => "accounts/notifications/$id/";
   static String notificationMarkRead(int id) => "accounts/notifications/$id/read/";
+  // Top-level endpoint (NOT under drivers/) - shared across audiences.
+  static final String cancelReasons = 'cancel-reasons/';
 }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/location_service.dart';
+import 'package:taxi_app/src/features/cancel_reasons/presentation/widgets/cancel_reason_sheet.dart';
 import 'package:taxi_app/src/features/common/presentation/widgets/common_image.dart';
 import 'package:taxi_app/src/features/master/data/repository/master_repository_impl.dart';
 import 'package:taxi_app/src/features/master/data/source/master_remote_data_source.dart';
@@ -26,25 +27,13 @@ class OrderInfoScreen extends StatefulWidget {
 class _OrderInfoScreenState extends State<OrderInfoScreen> {
   Future<void> _confirmCancel(BuildContext context) async {
     final bloc = context.read<OrdersBloc>();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Cancel order?'),
-        content: const Text('Are you sure you want to cancel the order? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('No'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: const Text('Yes, cancel'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-    bloc.add(CancelOrderEvent());
+    final choice = await showCancelReasonSheet(context);
+    // null = user dismissed the sheet (no-op).
+    if (choice == null || !mounted) return;
+    bloc.add(CancelOrderEvent(
+      reasonId: choice.reasonId,
+      reasonText: choice.customText,
+    ));
     if (!mounted) return;
     context.go(Pages.main);
   }

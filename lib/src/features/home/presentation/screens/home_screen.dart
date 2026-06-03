@@ -71,7 +71,17 @@ class _HomeScreenState extends State<HomeScreen> {
     return KeyboardDismisser(
       child: BlocProvider.value(
         value: historyBloc,
-        child: Scaffold(
+        // Order finish bo'lgandan keyin (finished_order_screen → main'ga
+        // qaytganda) OrdersBloc.currentOrder.id real ID'dan -1 ga o'tadi.
+        // Shu transition'da history'ni qayta tortib olamiz — recent
+        // address'lar yangi yakunlangan order bilan to'ldiriladi.
+        child: BlocListener<OrdersBloc, OrdersState>(
+          listenWhen: (p, c) =>
+              p.currentOrder.id > 0 && c.currentOrder.id <= 0,
+          listener: (context, _) {
+            historyBloc.add(GetOrdersHistoryEvent(silent: true));
+          },
+          child: Scaffold(
           appBar: AppBar(
             title: Text(
               'Home'.tr(),
@@ -190,6 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             ),
           ),
+        ),
         ),
       ),
     );

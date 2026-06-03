@@ -142,7 +142,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     };
     AuthSession.tick.addListener(_phoneSessionListener!);
     if (!context.mounted) return;
-    if(1.isOdd)return;
+    if(2.isOdd)return;
     showPhoneVerifySheet(context, bloc: _phoneVerifyBloc).whenComplete(() {
       if (_phoneSessionListener != null) {
         AuthSession.tick.removeListener(_phoneSessionListener!);
@@ -183,10 +183,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     // Silent refresh: avoid flashing the shimmer over the active-order card
     // that's already on screen when the user returns to the app.
     context.read<OrdersBloc>().add(GetCurrentOrderEvent(silent: true));
-    // App resume bo'lganda ham FCM tokenni yangilab qo'yamiz - FCM bazan
-    // background turishda tokenni o'zgartiradi va onTokenRefresh
-    // boshlanish vaqtida ishlamasa, shu yerda tutib olamiz.
-    PushNotifications.registerDeviceWithBackend();
   }
 
   static const List<_NavItemData> _navItems = [

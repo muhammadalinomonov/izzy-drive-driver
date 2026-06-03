@@ -48,8 +48,31 @@ class SubOrderItem extends StatelessWidget {
               ],
             ),
             SizedBox(height: 8),
+            // Reject (chap) | Accept (o'ng) — SubOrderProposalSheet bilan
+            // bir xil tartib va matn, foydalanuvchi qaerdan ko'rsa ham bir
+            // xil tugmalarni kutadi.
             Row(
               children: [
+                Expanded(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      onAction.call(false);
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(color: AppColor.lightBlue, borderRadius: BorderRadius.circular(50)),
+                      child: Text(
+                        'Reject',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12),
                 Expanded(
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
@@ -67,26 +90,6 @@ class SubOrderItem extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                           color: AppColor.white,
                         ),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () {
-                      onAction.call(false);
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(color: AppColor.lightBlue, borderRadius: BorderRadius.circular(50)),
-                      child: Text(
-                        'Cancel',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodyLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),

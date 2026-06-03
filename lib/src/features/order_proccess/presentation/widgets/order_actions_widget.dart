@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
+import 'package:taxi_app/src/features/cancel_reasons/presentation/widgets/cancel_reason_sheet.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bloc.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/widgets/order_action_item.dart';
 import 'package:taxi_app/src/routes/pages.dart';
@@ -12,26 +13,12 @@ class OrderActionsWidget extends StatelessWidget {
 
   Future<void> _confirmCancel(BuildContext context) async {
     final bloc = context.read<OrdersBloc>();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Cancel order?'),
-        content: const Text('Are you sure you want to cancel the order?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('No'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Yes, cancel'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !context.mounted) return;
-    bloc.add(CancelOrderEvent());
+    final choice = await showCancelReasonSheet(context);
+    if (choice == null || !context.mounted) return;
+    bloc.add(CancelOrderEvent(
+      reasonId: choice.reasonId,
+      reasonText: choice.customText,
+    ));
     if (!context.mounted) return;
     context.go(Pages.main);
   }

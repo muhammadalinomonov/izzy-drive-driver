@@ -4,7 +4,15 @@ part of 'orders_bloc.dart';
 class OrdersEvent {}
 
 class CancelOrderEvent extends OrdersEvent {
-  CancelOrderEvent();
+  /// Backend-defined reason id picked from the cancel-reason sheet. Mutually
+  /// exclusive with [reasonText].
+  final int? reasonId;
+
+  /// Free-form text typed into the "Other" row of the cancel-reason sheet.
+  /// Mutually exclusive with [reasonId].
+  final String? reasonText;
+
+  CancelOrderEvent({this.reasonId, this.reasonText});
 }
 
 class ConnectToWebSocketEvent extends OrdersEvent {}

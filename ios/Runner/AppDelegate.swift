@@ -11,6 +11,14 @@ import FirebaseMessaging
   ) -> Bool {
     print("🚀 AppDelegate: didFinishLaunchingWithOptions")
 
+    // Become the UNUserNotificationCenter delegate explicitly. With the new
+    // UIScene + implicit-engine lifecycle, Firebase's app-delegate-proxy does
+    // NOT reliably wire this up, so `setForegroundNotificationPresentationOptions`
+    // never takes effect and foreground pushes are silently dropped. Setting it
+    // here (Firebase swizzling still wraps us, so `onMessage` keeps firing) makes
+    // our `willPresent` below the source of truth for foreground presentation.
+    UNUserNotificationCenter.current().delegate = self
+
     // Explicit notification authorization + APNS registration. Without this,
     // FirebaseMessaging.getInitialMessage() can block in main() waiting for an
     // APNS token that never arrives.
@@ -45,6 +53,32 @@ import FirebaseMessaging
     print("   Error: \(error.localizedDescription)")
     print("   Full: \(error)")
     super.application(application, didFailToRegisterForRemoteNotificationsWithError: error)
+  }
+
+  // Foreground presentation. iOS asks the notification-center delegate whether
+  // to show a banner while the app is open. Without an explicit delegate +
+  // present options under the new UIScene/implicit-engine lifecycle, iOS hands
+  // the push to the app silently (no banner) — exactly the "only background
+  // works" symptom.
+  //
+  // FlutterAppDelegate already implements this (it forwards to plugins), so we
+  // `override`. We first forward to super so firebase_messaging still processes
+  // the message and `onMessage` keeps firing in Dart (unread-counter, tap setup)
+  // — but we swallow the plugins' completion with a no-op and then call the real
+  // completion ourselves with banner/list/sound/badge. iOS presents per the real
+  // handler only, so there is exactly one banner (no duplicate) and the app is
+  // guaranteed to show the foreground notification.
+  override func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    willPresent notification: UNNotification,
+    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+  ) {
+    super.userNotificationCenter(center, willPresent: notification) { _ in }
+    if #available(iOS 14.0, *) {
+      completionHandler([.banner, .list, .sound, .badge])
+    } else {
+      completionHandler([.alert, .sound, .badge])
+    }
   }
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
