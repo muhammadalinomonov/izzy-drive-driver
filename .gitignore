@@ -85,3 +85,9 @@ app.*.map.json
 
 # Local backup directory — not part of the project
 ios_broken_backup/
+
+# Android signing — NEVER commit these
+*.jks
+*.keystore
+key.properties
+android/key.properties
