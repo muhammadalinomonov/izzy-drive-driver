@@ -371,7 +371,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                         const SizedBox(height: 32),
                         AppButton(
                           isLoading: isCreatingProccess,
-                          title: "Sign up",
+                          title: "Save",
                           onTap: () {
                             isCreatingProccess = true;
                             setState(() {});
@@ -416,6 +416,26 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                               ),
                             );
                           },
+                        ),
+                        const SizedBox(height: 12),
+                        // Truck info is optional ("we recommend ..."), so the
+                        // user must always be able to leave this onboarding
+                        // step and enter the app. Without this, a failed/empty
+                        // submission traps the user on this screen.
+                        Center(
+                          child: TextButton(
+                            onPressed: isCreatingProccess
+                                ? null
+                                : () => context.go(Pages.main),
+                            child: Text(
+                              'Skip for now',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppColor.kPrimaryColor,
+                              ),
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 24),
                       ],

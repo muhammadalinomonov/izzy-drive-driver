@@ -9,9 +9,9 @@ import 'package:taxi_app/src/core/components/app_snack_bar.dart';
 import 'package:taxi_app/src/core/components/app_validators.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
-import 'package:taxi_app/src/core/extensions/size_extension.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
 import 'package:taxi_app/src/core/localization/locale_keys.g.dart';
+import 'package:taxi_app/src/core/utils/extensions.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
 import 'package:taxi_app/src/features/auth/presentation/bloc/bloc/auth_bloc.dart';
 import 'package:taxi_app/src/features/auth/presentation/widgets/auth_input_widget.dart';
@@ -62,252 +62,339 @@ class _SignUpPageState extends State<SignUpPage> {
     final state = context.read<AuthBloc>().state;
     AppSnackBar.showError(
       context,
-      (state.errorMessage?.isNotEmpty ?? false) ? state.errorMessage! : fallback,
+      (state.errorMessage?.isNotEmpty ?? false)
+          ? state.errorMessage!
+          : fallback,
     );
   }
 
   void _onSubmit() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     context.read<AuthBloc>().add(
-          RequestOtpEvent(
-            email: _emailController.text.trim(),
-            fullName: _nameController.text.trim(),
-            password: _passwordController.text.trim(),
-            onSuccess: _openOtpSheet,
-            onError: () {},
-          ),
-        );
+      RequestOtpEvent(
+        email: _emailController.text.trim(),
+        fullName: _nameController.text.trim(),
+        password: _passwordController.text.trim(),
+        onSuccess: _openOtpSheet,
+        onError: () {},
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    final viewInsetsBottom = mediaQuery.viewInsets.bottom;
-    final keyboardOpen = viewInsetsBottom > 0;
-    final cardTop = keyboardOpen
-        ? mediaQuery.padding.top + 16
-        : context.h * 0.30;
-
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      backgroundColor: AppColor.white,
       body: BlocListener<AuthBloc, AuthState>(
         listenWhen: (p, c) => p.requestOtpStatus != c.requestOtpStatus,
         listener: (context, state) {
           if (state.requestOtpStatus == AuthStatus.failure && !_otpSheetOpen) {
             AppSnackBar.showError(
               context,
-              state.errorMessage ?? LocaleKeys.auth_signUp_otpRequestFailed.tr(),
+              state.errorMessage ??
+                  LocaleKeys.auth_signUp_otpRequestFailed.tr(),
             );
           }
         },
         child: GestureDetector(
           onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-          child: Stack(
-            children: [
-              SizedBox(
-                height: double.infinity,
-                width: double.infinity,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Image.asset(
-                        'assets/images/gradient2.png',
-                        fit: BoxFit.fill,
-                        height: 600,
-                      ),
+          child: SafeArea(
+            top: false,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  padding: EdgeInsetsGeometry.only(bottom: context.padding.bottom),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
                     ),
-                    Expanded(
-                      child: Image.asset(
-                        'assets/images/gradient1.png',
-                        fit: BoxFit.fill,
-                        height: 600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Positioned(
-                left: 0,
-                top: kToolbarHeight,
-                child: IconButton(
-                  onPressed: () => context.pop(),
-                  icon: SvgPicture.asset(AppIcons.back),
-                ),
-              ),
-              Positioned(
-                left: 0,
-                right: 0,
-                top: 70,
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 14, left: 14, top: 50),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      BlocBuilder<AuthBloc, AuthState>(
-                        buildWhen: (p, c) => p.googleStatus != c.googleStatus,
-                        builder: (context, state) {
-                          return SocialLoginWidget(
-                            title: LocaleKeys.auth_signIn_googleContinue.tr(),
-                            icon: AppIcons.google,
-                            isLoading: state.googleStatus == AuthStatus.loading,
-                            onTap: () => context.read<AuthBloc>().add(
-                                  GoogleSignInEvent(
-                                    onSuccess: _onSocialSuccess,
-                                    onError: () => _onSocialError(
-                                      LocaleKeys.auth_signIn_googleFailed.tr(),
-                                    ),
-                                  ),
-                                ),
-                          );
-                        },
-                      ),
-                      if (Platform.isIOS) ...[
-                        const SizedBox(height: 8),
-                        BlocBuilder<AuthBloc, AuthState>(
-                          buildWhen: (p, c) => p.appleStatus != c.appleStatus,
-                          builder: (context, state) {
-                            return SocialLoginWidget(
-                              title: LocaleKeys.auth_signIn_appleContinue.tr(),
-                              icon: AppIcons.apple,
-                              isLoading:
-                                  state.appleStatus == AuthStatus.loading,
-                              onTap: () => context.read<AuthBloc>().add(
-                                    AppleSignInEvent(
-                                      onSuccess: _onSocialSuccess,
-                                      onError: () => _onSocialError(
-                                        LocaleKeys.auth_signIn_appleFailed.tr(),
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 480),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _Header(
+                              onBack: () => context.pop(),
+                              googleButton: BlocBuilder<AuthBloc, AuthState>(
+                                buildWhen: (p, c) =>
+                                    p.googleStatus != c.googleStatus,
+                                builder: (context, state) {
+                                  return SocialLoginWidget(
+                                    title: LocaleKeys.auth_signIn_googleContinue
+                                        .tr(),
+                                    icon: AppIcons.google,
+                                    isLoading:
+                                        state.googleStatus ==
+                                        AuthStatus.loading,
+                                    onTap: () => context.read<AuthBloc>().add(
+                                      GoogleSignInEvent(
+                                        onSuccess: _onSocialSuccess,
+                                        onError: () => _onSocialError(
+                                          LocaleKeys.auth_signIn_googleFailed
+                                              .tr(),
+                                        ),
                                       ),
                                     ),
+                                  );
+                                },
+                              ),
+                              appleButton: Platform.isIOS
+                                  ? BlocBuilder<AuthBloc, AuthState>(
+                                      buildWhen: (p, c) =>
+                                          p.appleStatus != c.appleStatus,
+                                      builder: (context, state) {
+                                        return SocialLoginWidget(
+                                          title: LocaleKeys
+                                              .auth_signIn_appleContinue
+                                              .tr(),
+                                          icon: AppIcons.apple,
+                                          isLoading:
+                                              state.appleStatus ==
+                                              AuthStatus.loading,
+                                          onTap: () =>
+                                              context.read<AuthBloc>().add(
+                                                AppleSignInEvent(
+                                                  onSuccess: _onSocialSuccess,
+                                                  onError: () => _onSocialError(
+                                                    LocaleKeys
+                                                        .auth_signIn_appleFailed
+                                                        .tr(),
+                                                  ),
+                                                ),
+                                              ),
+                                        );
+                                      },
+                                    )
+                                  : null,
+                            ),
+                            Transform.translate(
+                              offset: const Offset(0, -18),
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  24,
+                                  16,
+                                  24,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColor.white,
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(18),
+                                    topRight: Radius.circular(18),
                                   ),
-                            );
-                          },
+                                ),
+                                child: Form(
+                                  key: _formKey,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        LocaleKeys.auth_signUp_title.tr(),
+                                        style: context.textS.headlineSmall!
+                                            .copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      AuthInputWidget(
+                                        textInputType:
+                                            TextInputType.emailAddress,
+                                        textInputAction: TextInputAction.next,
+                                        hint: LocaleKeys.auth_signUp_emailHint
+                                            .tr(),
+                                        label: LocaleKeys.auth_signUp_emailLabel
+                                            .tr(),
+                                        controller: _emailController,
+                                        validator: AppValidators.email,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      AuthInputWidget(
+                                        textInputType: TextInputType.text,
+                                        textInputAction: TextInputAction.next,
+                                        hint: LocaleKeys.auth_signUp_nameHint
+                                            .tr(),
+                                        label: LocaleKeys.auth_signUp_nameLabel
+                                            .tr(),
+                                        controller: _nameController,
+                                        validator: AppValidators.name,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      AuthInputWidget(
+                                        hint: LocaleKeys
+                                            .auth_signUp_passwordHint
+                                            .tr(),
+                                        label: LocaleKeys
+                                            .auth_signUp_passwordLabel
+                                            .tr(),
+                                        isPassword: true,
+                                        controller: _passwordController,
+                                        validator: AppValidators.password,
+                                        obscureText: true,
+                                        textInputAction: TextInputAction.done,
+                                        onFieldSubmitted: (_) => _onSubmit(),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      BlocBuilder<AuthBloc, AuthState>(
+                                        buildWhen: (p, c) =>
+                                            p.requestOtpStatus !=
+                                            c.requestOtpStatus,
+                                        builder: (context, state) {
+                                          return AppButton(
+                                            isLoading:
+                                                state.requestOtpStatus ==
+                                                AuthStatus.loading,
+                                            title: LocaleKeys.auth_signUp_submit
+                                                .tr(),
+                                            onTap: _onSubmit,
+                                          );
+                                        },
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 6,
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Flexible(
+                                              child: Text(
+                                                LocaleKeys
+                                                    .auth_signUp_alreadyRegistered
+                                                    .tr(),
+                                                style: context.textS.titleSmall!
+                                                    .copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                      color: AppColor.grey,
+                                                    ),
+                                              ),
+                                            ),
+                                            TextButton(
+                                              style: TextButton.styleFrom(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 6,
+                                                      vertical: 4,
+                                                    ),
+                                                minimumSize: Size.zero,
+                                                tapTargetSize:
+                                                    MaterialTapTargetSize
+                                                        .shrinkWrap,
+                                              ),
+                                              onPressed: () =>
+                                                  context.go(Pages.signIn),
+                                              child: Text(
+                                                LocaleKeys.auth_signUp_signInCta
+                                                    .tr(),
+                                                style: context.textS.titleSmall!
+                                                    .copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: AppColor
+                                                          .kPrimaryColor,
+                                                    ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeOutCubic,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                top: cardTop,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.only(left: 12, right: 12),
-                  decoration: BoxDecoration(
-                    color: AppColor.white,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      topRight: Radius.circular(16),
-                    ),
-                  ),
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.only(
-                      top: 20,
-                      bottom: viewInsetsBottom + 12,
-                    ),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            LocaleKeys.auth_signUp_title.tr(),
-                            style: context.textS.headlineSmall!.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          AuthInputWidget(
-                            textInputType: TextInputType.emailAddress,
-                            textInputAction: TextInputAction.next,
-                            hint: LocaleKeys.auth_signUp_emailHint.tr(),
-                            label: LocaleKeys.auth_signUp_emailLabel.tr(),
-                            controller: _emailController,
-                            validator: AppValidators.email,
-                          ),
-                          const SizedBox(height: 8),
-                          AuthInputWidget(
-                            textInputType: TextInputType.text,
-                            textInputAction: TextInputAction.next,
-                            hint: LocaleKeys.auth_signUp_nameHint.tr(),
-                            label: LocaleKeys.auth_signUp_nameLabel.tr(),
-                            controller: _nameController,
-                            validator: AppValidators.name,
-                          ),
-                          const SizedBox(height: 8),
-                          AuthInputWidget(
-                            hint: LocaleKeys.auth_signUp_passwordHint.tr(),
-                            label: LocaleKeys.auth_signUp_passwordLabel.tr(),
-                            isPassword: true,
-                            controller: _passwordController,
-                            validator: AppValidators.password,
-                            obscureText: true,
-                            textInputAction: TextInputAction.done,
-                            onFieldSubmitted: (_) => _onSubmit(),
-                          ),
-                          const SizedBox(height: 8),
-                          BlocBuilder<AuthBloc, AuthState>(
-                            buildWhen: (p, c) =>
-                                p.requestOtpStatus != c.requestOtpStatus,
-                            builder: (context, state) {
-                              return AppButton(
-                                isLoading: state.requestOtpStatus ==
-                                    AuthStatus.loading,
-                                title: LocaleKeys.auth_signUp_submit.tr(),
-                                onTap: _onSubmit,
-                              );
-                            },
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  LocaleKeys.auth_signUp_alreadyRegistered.tr(),
-                                  style: context.textS.titleSmall!.copyWith(
-                                    fontWeight: FontWeight.w400,
-                                    color: AppColor.grey,
-                                  ),
-                                ),
-                                TextButton(
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 4,
-                                    ),
-                                    minimumSize: Size.zero,
-                                    tapTargetSize:
-                                        MaterialTapTargetSize.shrinkWrap,
-                                  ),
-                                  onPressed: () => context.go(Pages.signIn),
-                                  child: Text(
-                                    LocaleKeys.auth_signUp_signInCta.tr(),
-                                    style: context.textS.titleSmall!.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColor.kPrimaryColor,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
                       ),
                     ),
                   ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Top section: gradient backdrop with the back button and social-login
+/// buttons painted over it. Sizes itself to its content so it never clips on
+/// small/large screens.
+class _Header extends StatelessWidget {
+  const _Header({
+    required this.onBack,
+    required this.googleButton,
+    this.appleButton,
+  });
+
+  final VoidCallback onBack;
+  final Widget googleButton;
+  final Widget? appleButton;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Image.asset(
+                  'assets/images/gradient2.png',
+                  fit: BoxFit.cover,
+                ),
+              ),
+              Expanded(
+                child: Image.asset(
+                  'assets/images/gradient1.png',
+                  fit: BoxFit.cover,
                 ),
               ),
             ],
           ),
         ),
-      ),
+        SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 4, 14, 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    onPressed: onBack,
+                    icon: SvgPicture.asset(AppIcons.back),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.only(left: 6),
+                  child: googleButton,
+                ),
+                if (appleButton != null) ...[
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: appleButton!,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

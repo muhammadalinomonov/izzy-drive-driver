@@ -18,17 +18,15 @@ import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bl
 import 'package:taxi_app/src/features/profile/data/repository/profile_repository_impl.dart';
 import 'package:taxi_app/src/features/profile/data/source/profile_data_source.dart';
 import 'package:taxi_app/src/features/profile/presentation/bloc/profile_bloc.dart';
+import 'package:taxi_app/src/core/services/remote_config_service.dart';
 import 'package:taxi_app/src/routes/app_router.dart';
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-  ]);
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await EasyLocalization.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await RemoteConfigService.init();
   await setupLocator();
   await PushNotifications.initFCM();
   ChuckerFlutter.showOnRelease = true;
@@ -56,7 +54,6 @@ class _TaxiAppState extends State<TaxiApp> {
   bool _isSheetShowing = false;
   bool _initialConnectivityChecked = false;
 
-
   @override
   void initState() {
     super.initState();
@@ -64,6 +61,7 @@ class _TaxiAppState extends State<TaxiApp> {
     // StorageRepository.deleteString('token');
     // StorageRepository.deleteString('refresh');
   }
+
   void _maybeShowSheet() {
     if (_isSheetShowing) return;
     // MaterialApp.router's builder context lives ABOVE the Navigator
@@ -84,14 +82,19 @@ class _TaxiAppState extends State<TaxiApp> {
     return MultiBlocProvider(
       providers: [
         BlocProvider<ConnectivityCubit>(
-          create: (_) => ConnectivityCubit(serviceLocator<ConnectivityService>()),
+          create: (_) =>
+              ConnectivityCubit(serviceLocator<ConnectivityService>()),
         ),
         BlocProvider(
           create: (_) => OrdersBloc(
-            orderRepository: OrderRepositoryImpl(orderProccessSource: OrderProccessSource()),
+            orderRepository: OrderRepositoryImpl(
+              orderProccessSource: OrderProccessSource(),
+            ),
           ),
         ),
-        BlocProvider.value(value: ProfileBloc(ProfileRepositoryImpl(ProfileDataSource()))),
+        BlocProvider.value(
+          value: ProfileBloc(ProfileRepositoryImpl(ProfileDataSource())),
+        ),
       ],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,

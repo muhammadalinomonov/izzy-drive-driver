@@ -40,19 +40,15 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>This app requires camera access to take photos for uploading.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>This app uses your location in the background to track deliveries and routes.</string>
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Doimiy joylashuvdan foydalanish xarita xizmatlari uchun kerak.</string>
+	<string>IzzyDrive Client uses the camera to take photos of your vehicle problem to share with the mechanic.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app needs your location to show nearby trucks and delivery routes.</string>
+	<string>IzzyDrive Client uses your location to find nearby mechanics and to share your location with the mechanic assisting you.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>This app needs access to the microphone to record or transmit audio.</string>
+	<string>IzzyDrive Client uses the microphone so you can record and send voice messages to the mechanic.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>This app needs to save images to your photo library.</string>
+	<string>IzzyDrive Client needs permission to save images to your photo library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app requires access to your photo library to select images for uploading.</string>
+	<string>IzzyDrive Client needs access to your photo library so you can select images to upload.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -19,7 +19,6 @@ import 'package:taxi_app/src/features/phone_verify/presentation/widgets/phone_ve
 import 'package:taxi_app/src/features/profile/data/model/profile_model.dart';
 import 'package:taxi_app/src/features/profile/data/source/profile_data_source.dart';
 import 'package:taxi_app/src/features/profile/presentation/pages/profile_page.dart';
-import 'package:taxi_app/src/features/service/presentation/screens/service_screen.dart';
 import 'package:taxi_app/src/routes/app_router.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 
@@ -34,12 +33,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   static const _resumeDebounce = Duration(seconds: 10);
   DateTime? _lastResumeRefresh;
 
-  final List<Widget> _pages = [
-    HomeScreen(),
-    ServiceScreen(),
-    MasterScreen(),
-    ProfilePage(),
-  ];
+  // NOTE: the "Services" tab (ServiceScreen) is temporarily removed from the
+  // bottom navigation while its marketplace content is still in development.
+  final List<Widget> _pages = [HomeScreen(), MasterScreen(), ProfilePage()];
 
   int _initialIndex = 0;
 
@@ -72,11 +68,13 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     // bilan push yuboradi.
     PushNotifications.registerDeviceWithBackend();
     _phoneVerifyBloc = Routes.resolvePhoneVerifyBloc();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final redirected = await _maybeRedirectToTruckInfo();
-      if (!redirected) {
-        _maybeShowPhoneVerifySheet();
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Truck info is optional ("recommended"), so we no longer force-redirect
+      // users to the truck screen on entry — that looped with the truck
+      // screen's "Skip" button (Skip -> main -> redirected back to truck).
+      // The phone sheet below is dismissible; phone verification is enforced
+      // only when the user actually creates an order.
+      _maybeShowPhoneVerifySheet();
       _handlePendingNotificationDeepLink();
     });
   }
@@ -90,26 +88,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     PushNotifications.pendingDeepLinkNotificationId = null;
     if (!mounted) return;
     context.push(Pages.notifications);
-  }
-
-  /// Yangi user social-auth orqali kirgan bo'lsa yoki avval tackScreen'gacha
-  /// yetmasdan chiqib ketgan bo'lsa, fura malumotlari hali to'ldirilmagan.
-  /// Profile'dan truck_mark/truck_model tortib olib, bo'sh bo'lsa user'ni
-  /// tackScreen'ga jo'natamiz. Returns true if redirected.
-  Future<bool> _maybeRedirectToTruckInfo() async {
-    final response = await ProfileDataSource().fetchProfile();
-    if (!mounted) return false;
-    if (response.errorText.isNotEmpty || response.data is! ProfileModel) {
-      // Fetch xato bersa - gate'ni ochiq qoldiramiz. Onki keyingi navigatsiyada
-      // baribir token bilan tekshiriladi.
-      return false;
-    }
-    final profile = response.data as ProfileModel;
-    final truckFilled = profile.truckMark.trim().isNotEmpty &&
-        profile.truckmodel.trim().isNotEmpty;
-    if (truckFilled) return false;
-    context.go(Pages.tackScreen);
-    return true;
   }
 
   Future<void> _maybeShowPhoneVerifySheet() async {
@@ -142,20 +120,15 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     };
     AuthSession.tick.addListener(_phoneSessionListener!);
     if (!context.mounted) return;
-    if(2.isOdd)return;
+    if (2.isOdd) return;
     showPhoneVerifySheet(context, bloc: _phoneVerifyBloc).whenComplete(() {
       if (_phoneSessionListener != null) {
         AuthSession.tick.removeListener(_phoneSessionListener!);
         _phoneSessionListener = null;
       }
-      // Agar foydalanuvchi qandaydir tarzda sheet'ni yopib qo'ysa-yu, lekin
-      // hali ham phone verify qilinmagan bo'lsa - qayta ochib qo'yamiz.
-      if (mounted && !AuthSession.isPhoneVerified) {
-        _phoneSheetShown = false;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _maybeShowPhoneVerifySheet();
-        });
-      }
+      // Sheet is dismissible: if the user closes it without verifying, we let
+      // them keep using the rest of the app. Phone verification is requested
+      // again only when they try to create an order.
     });
   }
 
@@ -173,7 +146,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
     final now = DateTime.now();
-    if (_lastResumeRefresh != null && now.difference(_lastResumeRefresh!) < _resumeDebounce) {
+    if (_lastResumeRefresh != null &&
+        now.difference(_lastResumeRefresh!) < _resumeDebounce) {
       return;
     }
     _lastResumeRefresh = now;
@@ -187,7 +161,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
   static const List<_NavItemData> _navItems = [
     _NavItemData(icon: AppIcons.home, label: 'Home'),
-    _NavItemData(icon: AppIcons.services, label: 'Services'),
     _NavItemData(icon: AppIcons.masters, label: 'Masters'),
     _NavItemData(icon: AppIcons.profile, label: 'Profile'),
   ];
@@ -199,10 +172,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       // IndexedStack keeps every tab alive - switching tabs preserves their
       // state (scroll position, blocs, etc.), matching the previous
       // CupertinoTabScaffold behavior.
-      body: IndexedStack(
-        index: _initialIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _initialIndex, children: _pages),
       bottomNavigationBar: _AppBottomNav(
         items: _navItems,
         currentIndex: _initialIndex,
@@ -280,8 +250,9 @@ class _AppBottomNav extends StatelessWidget {
                         item.label,
                         style: TextStyle(
                           fontSize: 12,
-                          fontWeight:
-                              isActive ? FontWeight.w600 : FontWeight.w400,
+                          fontWeight: isActive
+                              ? FontWeight.w600
+                              : FontWeight.w400,
                           color: isActive
                               ? AppColor.black
                               : const Color(0xFF6B7073),

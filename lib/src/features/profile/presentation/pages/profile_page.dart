@@ -8,6 +8,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:formz/formz.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:taxi_app/src/core/components/app_snack_bar.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
@@ -18,6 +19,20 @@ import 'package:taxi_app/src/features/profile/presentation/bloc/profile_bloc.dar
 import 'package:taxi_app/src/features/profile/presentation/pages/outputs_screen.dart';
 import 'package:taxi_app/src/features/profile/presentation/widgets/choose_language_bottom_sheet.dart';
 import 'package:taxi_app/src/routes/pages.dart';
+
+/// Opens the IzzyDrive Mechanic ("master") app on the platform's store.
+Future<void> _openBecomeAMaster(BuildContext context) async {
+  final url = Platform.isIOS
+      ? 'https://apps.apple.com/us/app/izzydrive-mechanic/id6751299030'
+      : 'https://play.google.com/store/apps/details?id=com.izzy.drive.mechanic';
+  final ok = await launchUrl(
+    Uri.parse(url),
+    mode: LaunchMode.externalApplication,
+  );
+  if (!ok && context.mounted) {
+    AppSnackBar.showError(context, 'Could not open the store');
+  }
+}
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -62,14 +77,14 @@ class _ProfilePageState extends State<ProfilePage> {
       );
       if (picked == null || !mounted) return;
       context.read<ProfileBloc>().add(
-            UploadAvatarEvent(
-              file: File(picked.path),
-              onError: (message) {
-                if (!mounted) return;
-                AppSnackBar.showError(context, message);
-              },
-            ),
-          );
+        UploadAvatarEvent(
+          file: File(picked.path),
+          onError: (message) {
+            if (!mounted) return;
+            AppSnackBar.showError(context, message);
+          },
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       AppSnackBar.showError(context, 'Rasm tanlashda xato: $e');
@@ -96,7 +111,9 @@ class _ProfilePageState extends State<ProfilePage> {
           builder: (context, state) {
             if (state.status == ProfileStatus.loading) {
               return Center(
-                child: CupertinoActivityIndicator(color: AppColor.kPrimaryColor),
+                child: CupertinoActivityIndicator(
+                  color: AppColor.kPrimaryColor,
+                ),
               );
             } else if (state.status == ProfileStatus.error) {
               return Center(
@@ -158,7 +175,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                   photoUrl: profile?.photo ?? '',
                                   initial: initial,
                                   name: fullName,
-                                  isUploading: state.uploadAvatarStatus ==
+                                  isUploading:
+                                      state.uploadAvatarStatus ==
                                       FormzSubmissionStatus.inProgress,
                                   onTap: _onAvatarTap,
                                 ),
@@ -191,7 +209,9 @@ class _ProfilePageState extends State<ProfilePage> {
                             right: 12,
                             bottom: 0,
                             child: _VehicleCard(
-                              title: vehicle.isEmpty ? 'No Vehicle model' : vehicle,
+                              title: vehicle.isEmpty
+                                  ? 'No Vehicle model'
+                                  : vehicle,
                               amount: r'$0',
                               onTap: () {
                                 Navigator.of(context).push(
@@ -361,35 +381,36 @@ class _ProfileMenu extends StatelessWidget {
     );
     if (!ok || !context.mounted) return;
     context.read<AuthBloc>().add(
-          LogoutEvent(
-            onSuccess: () {
-              if (!context.mounted) return;
-              context.go(Pages.signIn);
-            },
-            onError: () {},
-          ),
-        );
+      LogoutEvent(
+        onSuccess: () {
+          if (!context.mounted) return;
+          context.go(Pages.signIn);
+        },
+        onError: () {},
+      ),
+    );
   }
 
   void _onDeleteAccount(BuildContext context) async {
     final ok = await _confirm(
       context,
       title: 'Delete account',
-      message: 'Deleting your account cannot be undone. Do you want to continue?',
+      message:
+          'Deleting your account cannot be undone. Do you want to continue?',
       confirmText: 'Delete',
       confirmColor: AppColor.red,
     );
     if (!ok || !context.mounted) return;
     context.read<AuthBloc>().add(
-          DeleteAccountEvent(
-            onSuccess: () {
-              if (!context.mounted) return;
-              AppSnackBar.showSuccess(context, 'Account deleted');
-              context.go(Pages.signIn);
-            },
-            onError: () {},
-          ),
-        );
+      DeleteAccountEvent(
+        onSuccess: () {
+          if (!context.mounted) return;
+          AppSnackBar.showSuccess(context, 'Account deleted');
+          context.go(Pages.signIn);
+        },
+        onError: () {},
+      ),
+    );
   }
 
   void _onChooseLanguage(BuildContext context) {
@@ -429,12 +450,16 @@ class _ProfileMenu extends StatelessWidget {
           onTap: () => context.push(Pages.ordersHistory),
         ),
         const SizedBox(height: 8),
-        _ProfileMenuItem(
-          svgIcon: AppIcons.frame,
-          title: 'Rate our app',
-          onTap: () {},
-        ),
-        const SizedBox(height: 8),
+        // "Rate our app" is hidden until the driver app is published on the
+        // stores — there is nothing to rate yet, and a non-functional button
+        // is an App Review (2.2) risk. Re-enable with the in_app_review native
+        // prompt (or the store URL) once the app is live.
+        // _ProfileMenuItem(
+        //   svgIcon: AppIcons.frame,
+        //   title: 'Rate our app',
+        //   onTap: () {},
+        // ),
+        // const SizedBox(height: 8),
         // _ProfileMenuItem(
         //   icon: Icons.help_outline_rounded,
         //   title: 'For questions or suggestions',
@@ -463,7 +488,7 @@ class _ProfileMenu extends StatelessWidget {
         _ProfileMenuItem(
           svgIcon: AppIcons.tools,
           title: 'Become a master',
-          onTap: () {},
+          onTap: () => _openBecomeAMaster(context),
         ),
         const SizedBox(height: 8),
         BlocBuilder<AuthBloc, AuthState>(
@@ -472,7 +497,11 @@ class _ProfileMenu extends StatelessWidget {
             icon: Icons.logout_rounded,
             title: 'Log out',
             trailing: state.logoutStatus == AuthStatus.loading
-                ? const SizedBox(width: 18, height: 18, child: CupertinoActivityIndicator())
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CupertinoActivityIndicator(),
+                  )
                 : null,
             onTap: () => _onLogout(context),
           ),
@@ -486,7 +515,11 @@ class _ProfileMenu extends StatelessWidget {
             titleColor: AppColor.red,
             title: 'Delete account',
             trailing: state.deleteAccountStatus == AuthStatus.loading
-                ? const SizedBox(width: 18, height: 18, child: CupertinoActivityIndicator())
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CupertinoActivityIndicator(),
+                  )
                 : null,
             onTap: () => _onDeleteAccount(context),
           ),
@@ -514,9 +547,9 @@ class _ProfileMenuItem extends StatelessWidget {
     this.iconColor,
     this.titleColor,
   }) : assert(
-          icon != null || svgIcon != null,
-          'Provide either icon or svgIcon',
-        );
+         icon != null || svgIcon != null,
+         'Provide either icon or svgIcon',
+       );
 
   @override
   Widget build(BuildContext context) {
@@ -655,32 +688,31 @@ class _AvatarWidget extends StatelessWidget {
                             ),
                           ),
                         ),
-                        loadingBuilder: (_, child, progress) =>
-                            progress == null
-                                ? child
-                                : Container(
-                                    color: AppColor.lightGrey,
-                                    alignment: Alignment.center,
-                                    child: CupertinoActivityIndicator(
-                                      color: AppColor.kPrimaryColor,
-                                    ),
-                                  ),
+                        loadingBuilder: (_, child, progress) => progress == null
+                            ? child
+                            : Container(
+                                color: AppColor.lightGrey,
+                                alignment: Alignment.center,
+                                child: CupertinoActivityIndicator(
+                                  color: AppColor.kPrimaryColor,
+                                ),
+                              ),
                       )
                     : initial.isEmpty
-                        ? const Icon(
-                            Icons.person_outline,
-                            color: Colors.white,
-                            size: 40,
-                          )
-                        : Text(
-                            initial,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 32,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
+                    ? const Icon(
+                        Icons.person_outline,
+                        color: Colors.white,
+                        size: 40,
+                      )
+                    : Text(
+                        initial,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 32,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
               ),
             ),
             // Uploading overlay - dims the avatar while the request is
@@ -697,9 +729,7 @@ class _AvatarWidget extends StatelessWidget {
                     color: Colors.black.withValues(alpha: 0.35),
                   ),
                   alignment: Alignment.center,
-                  child: const CupertinoActivityIndicator(
-                    color: Colors.white,
-                  ),
+                  child: const CupertinoActivityIndicator(color: Colors.white),
                 ),
               ),
             // Edit badge - small white circle in the top-right with a "+"
@@ -784,15 +814,13 @@ class _AvatarSourceSheet extends StatelessWidget {
                   _SourceTile(
                     icon: Icons.photo_library_rounded,
                     label: 'Gallery',
-                    onTap: () =>
-                        Navigator.of(context).pop(ImageSource.gallery),
+                    onTap: () => Navigator.of(context).pop(ImageSource.gallery),
                   ),
                   const SizedBox(height: 8),
                   _SourceTile(
                     icon: Icons.photo_camera_rounded,
                     label: 'Camera',
-                    onTap: () =>
-                        Navigator.of(context).pop(ImageSource.camera),
+                    onTap: () => Navigator.of(context).pop(ImageSource.camera),
                   ),
                 ],
               ),
@@ -862,11 +890,7 @@ class _SourceTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   alignment: Alignment.center,
-                  child: Icon(
-                    icon,
-                    size: 22,
-                    color: AppColor.kPrimaryColor,
-                  ),
+                  child: Icon(icon, size: 22, color: AppColor.kPrimaryColor),
                 ),
                 const SizedBox(width: 14),
                 Expanded(

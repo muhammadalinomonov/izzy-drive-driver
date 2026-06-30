@@ -9,13 +9,15 @@ import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/extensions/text_style_extension.dart';
 import 'package:taxi_app/src/core/localization/locale_keys.g.dart';
 import 'package:taxi_app/src/core/widgets/app_button.dart';
+import 'package:taxi_app/src/core/network/auth_session.dart';
+import 'package:taxi_app/src/features/phone_verify/data/repo/phone_verify_repo_impl.dart';
+import 'package:taxi_app/src/features/phone_verify/data/source/phone_verify_data_source.dart';
 import 'package:taxi_app/src/features/phone_verify/presentation/bloc/phone_verify_bloc.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 
-// MainScreen'dan chaqiriladigan bloklovchi bottom sheet. Foydalanuvchi
-// telefon raqamini kiritmaguncha yopa olmaydi. OTP page'ga muvaffaqiyatli
-// o'tilganda yoki verify tugaganda navigation sheet ustidan boshqa o'rinda
-// pop qiladi.
+// Phone-verify bottom sheet. It is dismissible — the user can close it and
+// keep using the app. Phone verification is only enforced for account-based
+// actions (creating an order) via [ensurePhoneVerified].
 Future<void> showPhoneVerifySheet(
   BuildContext context, {
   required PhoneVerifyBloc bloc,
@@ -27,12 +29,21 @@ Future<void> showPhoneVerifySheet(
     enableDrag: true,
     backgroundColor: Colors.transparent,
     builder: (sheetContext) {
-      return BlocProvider.value(
-        value: bloc,
-        child: const _PhoneVerifySheet(),
-      );
+      return BlocProvider.value(value: bloc, child: const _PhoneVerifySheet());
     },
   );
+}
+
+/// Gate for account-based actions such as creating an order. Returns true if
+/// the user's phone is already verified (caller proceeds). Otherwise it opens
+/// the dismissible phone-verify sheet and returns false so the caller stops.
+bool ensurePhoneVerified(BuildContext context) {
+  if (AuthSession.isPhoneVerified) return true;
+  final bloc = PhoneVerifyBloc(
+    repo: PhoneVerifyRepoImpl(dataSource: PhoneVerifyDataSource()),
+  );
+  showPhoneVerifySheet(context, bloc: bloc).whenComplete(bloc.close);
+  return false;
 }
 
 class _PhoneVerifySheet extends StatefulWidget {
@@ -64,52 +75,52 @@ class _PhoneVerifySheetState extends State<_PhoneVerifySheet> {
   // Mamlakat dial-code → mask. Asosiy bozorlar uchun aniq maska bor;
   // qolganlari uchun umumiy "### ### ### ###" (xom raqamlar bilan ishlaydi).
   static const Map<String, String> _masks = {
-    '+1': '(###) ###-####',         // US/Canada
-    '+7': '### ###-##-##',          // RU/KZ
-    '+44': '#### ### ####',         // UK
-    '+49': '### #######',           // DE
-    '+33': '# ## ## ## ##',         // FR
-    '+34': '### ### ###',           // ES
-    '+39': '### ### ####',          // IT
-    '+90': '### ### ## ##',         // TR
-    '+91': '##### #####',           // IN
-    '+82': '##-####-####',          // KR
-    '+81': '##-####-####',          // JP
-    '+86': '### #### ####',         // CN
-    '+62': '### ### ####',          // ID
-    '+998': '## ### ## ##',         // UZ
-    '+996': '### ## ## ##',         // KG
-    '+992': '## ### ####',          // TJ
-    '+994': '## ### ## ##',         // AZ
-    '+374': '## ### ###',           // AM
-    '+995': '### ## ## ##',         // GE
-    '+971': '## ### ####',          // AE
-    '+966': '## ### ####',          // SA
-    '+20': '### ### ####',          // EG
-    '+55': '## ##### ####',         // BR
-    '+52': '### ### ####',          // MX
-    '+54': '## ####-####',          // AR
-    '+61': '### ### ###',           // AU
-    '+64': '## ### ####',           // NZ
-    '+27': '## ### ####',           // ZA
-    '+234': '### ### ####',         // NG
-    '+254': '### ### ###',          // KE
-    '+972': '##-###-####',          // IL
-    '+380': '## ### ## ##',         // UA
-    '+48': '### ### ###',           // PL
-    '+31': '# ########',            // NL
-    '+46': '##-### ## ##',          // SE
-    '+47': '### ## ###',            // NO
-    '+45': '## ## ## ##',           // DK
-    '+358': '## ### ####',          // FI
-    '+30': '### ### ####',          // GR
-    '+351': '### ### ###',          // PT
-    '+43': '### #######',           // AT
-    '+41': '## ### ## ##',          // CH
-    '+32': '### ## ## ##',          // BE
-    '+420': '### ### ###',          // CZ
-    '+421': '### ### ###',          // SK
-    '+36': '## ### ####',           // HU
+    '+1': '(###) ###-####', // US/Canada
+    '+7': '### ###-##-##', // RU/KZ
+    '+44': '#### ### ####', // UK
+    '+49': '### #######', // DE
+    '+33': '# ## ## ## ##', // FR
+    '+34': '### ### ###', // ES
+    '+39': '### ### ####', // IT
+    '+90': '### ### ## ##', // TR
+    '+91': '##### #####', // IN
+    '+82': '##-####-####', // KR
+    '+81': '##-####-####', // JP
+    '+86': '### #### ####', // CN
+    '+62': '### ### ####', // ID
+    '+998': '## ### ## ##', // UZ
+    '+996': '### ## ## ##', // KG
+    '+992': '## ### ####', // TJ
+    '+994': '## ### ## ##', // AZ
+    '+374': '## ### ###', // AM
+    '+995': '### ## ## ##', // GE
+    '+971': '## ### ####', // AE
+    '+966': '## ### ####', // SA
+    '+20': '### ### ####', // EG
+    '+55': '## ##### ####', // BR
+    '+52': '### ### ####', // MX
+    '+54': '## ####-####', // AR
+    '+61': '### ### ###', // AU
+    '+64': '## ### ####', // NZ
+    '+27': '## ### ####', // ZA
+    '+234': '### ### ####', // NG
+    '+254': '### ### ###', // KE
+    '+972': '##-###-####', // IL
+    '+380': '## ### ## ##', // UA
+    '+48': '### ### ###', // PL
+    '+31': '# ########', // NL
+    '+46': '##-### ## ##', // SE
+    '+47': '### ## ###', // NO
+    '+45': '## ## ## ##', // DK
+    '+358': '## ### ####', // FI
+    '+30': '### ### ####', // GR
+    '+351': '### ### ###', // PT
+    '+43': '### #######', // AT
+    '+41': '## ### ## ##', // CH
+    '+32': '### ## ## ##', // BE
+    '+420': '### ### ###', // CZ
+    '+421': '### ### ###', // SK
+    '+36': '## ### ####', // HU
   };
 
   static String _maskFor(Country country) {
@@ -128,7 +139,9 @@ class _PhoneVerifySheetState extends State<_PhoneVerifySheet> {
       countryListTheme: CountryListThemeData(
         flagSize: 22,
         backgroundColor: AppColor.white,
-        textStyle: context.textS.titleSmall!.copyWith(fontWeight: FontWeight.w500),
+        textStyle: context.textS.titleSmall!.copyWith(
+          fontWeight: FontWeight.w500,
+        ),
         bottomSheetHeight: 600,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
@@ -169,26 +182,28 @@ class _PhoneVerifySheetState extends State<_PhoneVerifySheet> {
     final fullNumber = '$dialCode$digits';
     FocusManager.instance.primaryFocus?.unfocus();
     context.read<PhoneVerifyBloc>().add(
-          SendOtpEvent(
-            phoneNumber: fullNumber,
-            dialCode: dialCode,
-            onSuccess: () {
-              if (!mounted) return;
-              context.push(Pages.phoneOtp);
-            },
-            // Failure handling - sheet ichidagi inline banner orqali (BlocListener),
-            // chunki modal sheet pastdagi snackbar'ni yopib qo'yadi.
-            onError: () {},
-          ),
-        );
+      SendOtpEvent(
+        phoneNumber: fullNumber,
+        dialCode: dialCode,
+        onSuccess: () {
+          if (!mounted) return;
+          context.push(Pages.phoneOtp);
+        },
+        // Failure handling - sheet ichidagi inline banner orqali (BlocListener),
+        // chunki modal sheet pastdagi snackbar'ni yopib qo'yadi.
+        onError: () {},
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false,
+      canPop: true,
       child: Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(context).bottom,
+        ),
         child: Container(
           width: double.infinity,
           decoration: BoxDecoration(
@@ -209,8 +224,17 @@ class _PhoneVerifySheetState extends State<_PhoneVerifySheet> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
-                const SizedBox(height: 20),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close),
+                    color: AppColor.grey,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ),
+                const SizedBox(height: 8),
                 Image.asset('assets/images/phone.png', width: 53, height: 75),
                 const SizedBox(height: 12),
                 Text(
@@ -224,8 +248,9 @@ class _PhoneVerifySheetState extends State<_PhoneVerifySheet> {
                 const SizedBox(height: 6),
                 Text(
                   LocaleKeys.phoneVerify_entry_title.tr(),
-                  style: context.textS.headlineSmall!
-                      .copyWith(fontWeight: FontWeight.w600),
+                  style: context.textS.headlineSmall!.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 _PhoneInput(
@@ -241,7 +266,7 @@ class _PhoneVerifySheetState extends State<_PhoneVerifySheet> {
                   builder: (context, state) {
                     final showError =
                         state.sendStatus == PhoneVerifyStatus.failure &&
-                            state.errorMessage.isNotEmpty;
+                        state.errorMessage.isNotEmpty;
                     if (!showError) return const SizedBox.shrink();
                     return Padding(
                       padding: const EdgeInsets.only(top: 12),
@@ -303,16 +328,19 @@ class _PhoneInput extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 14),
               child: Row(
                 children: [
-                  Icon(Icons.keyboard_arrow_down_rounded,
-                      color: AppColor.grey, size: 22),
+                  Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: AppColor.grey,
+                    size: 22,
+                  ),
                   const SizedBox(width: 4),
-                  Text(country.flagEmoji,
-                      style: const TextStyle(fontSize: 22)),
+                  Text(country.flagEmoji, style: const TextStyle(fontSize: 22)),
                   const SizedBox(width: 6),
                   Text(
                     '(+${country.phoneCode})',
-                    style: context.textS.titleMedium!
-                        .copyWith(fontWeight: FontWeight.w600),
+                    style: context.textS.titleMedium!.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -332,8 +360,9 @@ class _PhoneInput extends StatelessWidget {
                 FilteringTextInputFormatter.digitsOnly,
                 maskFormatter,
               ],
-              style: context.textS.titleMedium!
-                  .copyWith(fontWeight: FontWeight.w500),
+              style: context.textS.titleMedium!.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
               decoration: InputDecoration(
                 hintText: _hintFromMask(),
                 hintStyle: context.textS.titleMedium!.copyWith(

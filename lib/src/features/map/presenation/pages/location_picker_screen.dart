@@ -15,6 +15,7 @@ import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/features/map/data/model/nearby_masters_response.dart';
 import 'package:taxi_app/src/features/map/data/model/search_locations_response.dart';
 import 'package:taxi_app/src/features/map/presenation/bloc/map_bloc.dart';
+import 'package:taxi_app/src/features/phone_verify/presentation/widgets/phone_verify_sheet.dart';
 import 'package:taxi_app/src/routes/pages.dart';
 
 /// Single screen for choosing the destination address.
@@ -38,7 +39,10 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   mapbox.MapboxMap? _map;
   mapbox.PointAnnotationManager? _annotationManager;
 
-  mapbox.Position _currentPosition = mapbox.Position(69.2401, 41.2995); // Tashkent fallback
+  mapbox.Position _currentPosition = mapbox.Position(
+    69.2401,
+    41.2995,
+  ); // Tashkent fallback
   mapbox.Position? _lastFetchedPosition;
   static const double _distanceThresholdMeters = 100.0;
 
@@ -93,7 +97,8 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
         permission = await geolocator.Geolocator.requestPermission();
         if (permission == geolocator.LocationPermission.denied) return null;
       }
-      if (permission == geolocator.LocationPermission.deniedForever) return null;
+      if (permission == geolocator.LocationPermission.deniedForever)
+        return null;
       return await geolocator.Geolocator.getCurrentPosition(
         desiredAccuracy: geolocator.LocationAccuracy.bestForNavigation,
       );
@@ -126,10 +131,12 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     map.style.setProjection(
       mapbox.StyleProjection(name: mapbox.StyleProjectionName.mercator),
     );
-    map.setCamera(mapbox.CameraOptions(
-      center: mapbox.Point(coordinates: _currentPosition),
-      zoom: 16.0,
-    ));
+    map.setCamera(
+      mapbox.CameraOptions(
+        center: mapbox.Point(coordinates: _currentPosition),
+        zoom: 16.0,
+      ),
+    );
   }
 
   void _onCameraChange(mapbox.CameraChangedEventData _) {
@@ -149,7 +156,9 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   }
 
   Future<Uint8List> _composeMarkerPng(double distanceKm) async {
-    final iconBytes = (await rootBundle.load(AppIcons.master)).buffer.asUint8List();
+    final iconBytes = (await rootBundle.load(
+      AppIcons.master,
+    )).buffer.asUint8List();
     final codec = await ui.instantiateImageCodec(iconBytes);
     final frame = await codec.getNextFrame();
     final iconImage = frame.image;
@@ -206,7 +215,10 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
       await _annotationManager!.create(
         mapbox.PointAnnotationOptions(
           geometry: mapbox.Point(
-            coordinates: mapbox.Position(m.longitude.toDouble(), m.latitude.toDouble()),
+            coordinates: mapbox.Position(
+              m.longitude.toDouble(),
+              m.latitude.toDouble(),
+            ),
           ),
           image: png,
           iconSize: 0.45,
@@ -219,20 +231,24 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
     _searchDebounce?.cancel();
     _searchDebounce = Timer(const Duration(milliseconds: 350), () {
       if (!mounted) return;
-      context.read<MapBloc>().add(FetchNearbyLocationsEvent(
-        latitude: _currentPosition.lat.toDouble(),
-        longitude: _currentPosition.lng.toDouble(),
-        query: value,
-      ));
+      context.read<MapBloc>().add(
+        FetchNearbyLocationsEvent(
+          latitude: _currentPosition.lat.toDouble(),
+          longitude: _currentPosition.lng.toDouble(),
+          query: value,
+        ),
+      );
     });
   }
 
   void _selectSuggestion(LocationData loc) {
-    context.read<MapBloc>().add(LocationSelectedEvent(
-      address: loc.formatted,
-      latitude: loc.lat,
-      longitude: loc.lon,
-    ));
+    context.read<MapBloc>().add(
+      LocationSelectedEvent(
+        address: loc.formatted,
+        latitude: loc.lat,
+        longitude: loc.lon,
+      ),
+    );
     setState(() {
       _currentPosition = mapbox.Position(loc.lon, loc.lat);
     });
@@ -253,17 +269,17 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
   }
 
   void _continueToOrderCreate() {
+    if (!ensurePhoneVerified(context)) return;
     final state = context.read<MapBloc>().state;
     final lat = state.selectedLatitude ?? _currentPosition.lat.toDouble();
     final lng = state.selectedLongitude ?? _currentPosition.lng.toDouble();
     final address = state.selectedAddress.isEmpty
         ? 'Selected place'
         : state.selectedAddress;
-    context.push(Pages.orderCreate, extra: {
-      'address': address,
-      'latitude': lat,
-      'longitude': lng,
-    });
+    context.push(
+      Pages.orderCreate,
+      extra: {'address': address, 'latitude': lat, 'longitude': lng},
+    );
   }
 
   @override
@@ -312,9 +328,9 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
               if (state.pickerMode == PickerMode.map)
                 _MapModeSheet(
                   address: state.selectedAddress,
-                  onTapAddressChip: () => context
-                      .read<MapBloc>()
-                      .add(PickerModeChangedEvent(PickerMode.list)),
+                  onTapAddressChip: () => context.read<MapBloc>().add(
+                    PickerModeChangedEvent(PickerMode.list),
+                  ),
                   onContinue: _continueToOrderCreate,
                 )
               else
@@ -324,9 +340,9 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
                   onSearchChanged: _onSearchChanged,
                   onUseMyLocation: _useMyLocation,
                   onSuggestionTap: _selectSuggestion,
-                  onClose: () => context
-                      .read<MapBloc>()
-                      .add(PickerModeChangedEvent(PickerMode.map)),
+                  onClose: () => context.read<MapBloc>().add(
+                    PickerModeChangedEvent(PickerMode.map),
+                  ),
                   onConfirm: _continueToOrderCreate,
                 ),
             ],
@@ -424,8 +440,11 @@ class _MyLocationFab extends StatelessWidget {
           backgroundColor: Colors.white,
           shape: const CircleBorder(),
           onPressed: onPressed,
-          child: Icon(Icons.location_on_outlined,
-              color: AppColor.blueMain, size: 25),
+          child: Icon(
+            Icons.location_on_outlined,
+            color: AppColor.blueMain,
+            size: 25,
+          ),
         ),
       ),
     );
@@ -475,7 +494,10 @@ class _MapModeSheet extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEFF3F6),
                   borderRadius: BorderRadius.circular(12),
@@ -584,8 +606,10 @@ class _ListModeSheet extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFEFF3F6),
                       borderRadius: BorderRadius.circular(12),
@@ -596,7 +620,11 @@ class _ListModeSheet extends StatelessWidget {
                       decoration: InputDecoration(
                         hintText: 'Enter address',
                         border: InputBorder.none,
-                        icon: SvgPicture.asset(AppIcons.location, width: 18, height: 18),
+                        icon: SvgPicture.asset(
+                          AppIcons.location,
+                          width: 18,
+                          height: 18,
+                        ),
                       ),
                     ),
                   ),
@@ -632,7 +660,9 @@ class _ListModeSheet extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: MaterialButton(
-                      onPressed: state.selectedAddress.isEmpty ? null : onConfirm,
+                      onPressed: state.selectedAddress.isEmpty
+                          ? null
+                          : onConfirm,
                       padding: const EdgeInsets.symmetric(vertical: 15),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(50),
@@ -644,7 +674,10 @@ class _ListModeSheet extends StatelessWidget {
                       highlightElevation: 0,
                       child: const Text(
                         'Choose',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
