@@ -43,11 +43,19 @@ class DioSettings {
           },
           onError: (error, handler) async {
             final status = error.response?.statusCode;
-            // SimpleJWT returns 401 for expired/invalid tokens. 403 in
-            // DRF usually means "authenticated but lacks permission" -
-            // refreshing won't help, so we don't trigger refresh on it
-            // (otherwise legitimate 403 endpoints kick the user out).
-            final isAuthFailure = status == 401;
+            // SimpleJWT returns 401 for expired/invalid tokens. But the
+            // driver endpoints answer an *unauthenticated* request with
+            // 403 + {"detail": "Authentication credentials were not
+            // provided."} (DRF's NotAuthenticated). We must treat that 403
+            // as an auth failure too, otherwise a dead session loops
+            // forever (poller re-fires current-order -> 403 -> failure ->
+            // rebuild) with no way back to login. A *genuine* permission
+            // 403 ("You do not have permission to perform this action.")
+            // must NOT trigger refresh, so the 403 branch is gated on the
+            // not-authenticated detail message only.
+            final isAuthFailure =
+                status == 401 ||
+                (status == 403 && _isNotAuthenticated(error.response?.data));
             final path = error.requestOptions.path;
             final isRefreshCall = path.contains('accounts/refresh/');
             final alreadyRetried =
@@ -141,5 +149,21 @@ class DioSettings {
     }
     await AuthSession.clear();
     return false;
+  }
+
+  /// True when a 403 body is DRF's *NotAuthenticated* (no/invalid token),
+  /// as opposed to *PermissionDenied* ("You do not have permission to
+  /// perform this action."). Only the former should drive a token refresh;
+  /// a real permission denial is left untouched so we don't sign the user
+  /// out of a valid session.
+  static bool _isNotAuthenticated(dynamic body) {
+    if (body is! Map) return false;
+    final detail = body['detail'];
+    if (detail is! String) return false;
+    final d = detail.toLowerCase();
+    return d.contains('authentication credentials were not provided') ||
+        d.contains('given token not valid') ||
+        d.contains('not valid for any token type') ||
+        d.contains('token is invalid or expired');
   }
 }
