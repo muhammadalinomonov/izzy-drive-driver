@@ -195,5 +195,18 @@
     "title": "{feature} tez orada",
     "subtitle": "Bu xizmat hozircha ishlab chiqilmoqda. Tez orada foydalanish mumkin bo'ladi — kuzatib boring!",
     "cta": "Tushunarli"
+  },
+  "trips": {
+    "tab": "Safarlar",
+    "origin": "Boshlanish",
+    "destination": "Manzil",
+    "emptyTitle": "Hozircha safarlar yo'q",
+    "emptySubtitle": "Hisoblangan pullik marshrutlar shu yerda ko'rinadi.",
+    "notConnected": "Toll hisobi ulanmagan. Safarlar tarixini ko'rish uchun Quadrix ma'lumotlarini qo'shing.",
+    "status": {
+      "calculating": "Hisoblanmoqda",
+      "failed": "Xatolik",
+      "unknown": "Noma'lum"
+    }
   }
 }

@@ -9,7 +9,7 @@ import 'package:taxi_app/src/core/service_locater.dart';
 import 'package:taxi_app/src/core/services/websocket_service.dart';
 import 'package:taxi_app/src/core/utils/adaptive_poller.dart';
 import 'package:taxi_app/src/core/utils/notifications.dart';
-import 'package:taxi_app/src/features/home/presentation/screens/home_screen.dart';
+import 'package:taxi_app/src/features/home/presentation/screens/home_tabs_screen.dart';
 import 'package:taxi_app/src/features/master/presentation/screens/master_screen.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bloc.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
@@ -35,7 +35,10 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
   // NOTE: the "Services" tab (ServiceScreen) is temporarily removed from the
   // bottom navigation while its marketplace content is still in development.
-  final List<Widget> _pages = [HomeScreen(), MasterScreen(), ProfilePage()];
+  //
+  // Slot 0 is the top-tab host (Trips + the former HomeScreen), not HomeScreen
+  // directly - see HomeTabsScreen. MasterScreen keeps its own slot untouched.
+  final List<Widget> _pages = [HomeTabsScreen(), MasterScreen(), ProfilePage()];
 
   int _initialIndex = 0;
 

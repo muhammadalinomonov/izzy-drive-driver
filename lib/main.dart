@@ -21,7 +21,8 @@ import 'package:taxi_app/src/features/profile/presentation/bloc/profile_bloc.dar
 import 'package:taxi_app/src/core/services/remote_config_service.dart';
 import 'package:taxi_app/src/routes/app_router.dart';
 
-void main(List<String> args) async {
+void main() async {
+
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await EasyLocalization.ensureInitialized();
@@ -31,6 +32,7 @@ void main(List<String> args) async {
   await PushNotifications.initFCM();
   ChuckerFlutter.showOnRelease = true;
   ChuckerFlutter.showNotification = false;
+
   runApp(
     EasyLocalization(
       supportedLocales: const [Locale('en')],

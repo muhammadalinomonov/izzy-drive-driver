@@ -28,7 +28,12 @@ import 'package:taxi_app/src/features/profile/presentation/bloc/history/orders_h
 import 'package:taxi_app/src/routes/pages.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.showAppBar = true});
+
+  /// Set to false when embedded under [HomeTabsScreen], whose TabBar already
+  /// serves as the app bar - keeping this one would stack a second header
+  /// (title + bell) directly beneath the tabs.
+  final bool showAppBar;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -83,21 +88,26 @@ class _HomeScreenState extends State<HomeScreen> {
             historyBloc.add(GetOrdersHistoryEvent(silent: true));
           },
           child: Scaffold(
-            appBar: AppBar(
-              title: Text(
-                'Home'.tr(),
-                style: context.textS.titleLarge?.copyWith(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              centerTitle: false,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              backgroundColor: Colors.white,
-              surfaceTintColor: Colors.transparent,
-              actions: const [NotificationBellAction(), SizedBox(width: 8)],
-            ),
+            appBar: widget.showAppBar
+                ? AppBar(
+                    title: Text(
+                      'Home'.tr(),
+                      style: context.textS.titleLarge?.copyWith(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    centerTitle: false,
+                    elevation: 0,
+                    scrolledUnderElevation: 0,
+                    backgroundColor: Colors.white,
+                    surfaceTintColor: Colors.transparent,
+                    actions: const [
+                      NotificationBellAction(),
+                      SizedBox(width: 8),
+                    ],
+                  )
+                : null,
             body: GestureDetector(
               onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
               child: RefreshIndicator.adaptive(

@@ -195,5 +195,18 @@
     "title": "{feature} is coming soon",
     "subtitle": "This service is still in development. It will be available very soon — stay tuned!",
     "cta": "Got it"
+  },
+  "trips": {
+    "tab": "Trips",
+    "origin": "Origin",
+    "destination": "Destination",
+    "emptyTitle": "No trips yet",
+    "emptySubtitle": "Your calculated toll routes will appear here.",
+    "notConnected": "Toll account is not connected. Add your Quadrix credentials to see trip history.",
+    "status": {
+      "calculating": "Calculating",
+      "failed": "Failed",
+      "unknown": "Unknown"
+    }
   }
 }

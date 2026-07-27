@@ -39,6 +39,9 @@ import 'package:taxi_app/src/features/master/presentation/bloc/master_bloc.dart'
 import 'package:taxi_app/src/features/notifications/data/repo/notifications_repo_impl.dart';
 import 'package:taxi_app/src/features/notifications/data/source/notifications_data_source.dart';
 import 'package:taxi_app/src/features/notifications/presentation/bloc/notifications_bloc.dart';
+import 'package:taxi_app/src/features/trips/data/repo/trips_repo_impl.dart';
+import 'package:taxi_app/src/features/trips/data/source/trips_data_source.dart';
+import 'package:taxi_app/src/features/trips/presentation/bloc/trips_bloc.dart';
 import 'package:taxi_app/src/features/notifications/presentation/pages/notification_detail_page.dart';
 import 'package:taxi_app/src/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/pages/finished_order_screen.dart';
@@ -171,6 +174,14 @@ class Routes {
                 create: (_) => NotificationsBloc(
                   repo: NotificationsRepoImpl(dataSource: NotificationsDataSource()),
                 )..add(const UnreadCountRequested()),
+              ),
+              // Provided at the route (not inside HomeTabsScreen) so the trip
+              // list keeps its pages and scroll state across bottom-nav
+              // switches, which rebuild the tab host's subtree.
+              BlocProvider(
+                create: (_) => TripsBloc(
+                  repo: TripsRepoImpl(dataSource: TripsDataSource()),
+                ),
               ),
             ],
             child: MainScreen(),

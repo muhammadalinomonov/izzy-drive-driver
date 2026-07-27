@@ -36,6 +36,12 @@ class AppIcons {
   static const String check = 'assets/icons/check.svg';
   static const String star = 'assets/icons/star.svg';
 
+  // Home top-tab icons. Multi-color by design - render them without a
+  // ColorFilter so the selected/unselected state is carried by the label
+  // and the indicator, not by tinting the artwork.
+  static const String tabTrips = 'assets/icons/ic_trips.svg';
+  static const String tabMasters = 'assets/icons/ic_master.svg';
+
   // Profile menu icons
   static const String memberList = 'assets/icons/member_list_1.svg';
   static const String timePast = 'assets/icons/time_past_1.svg';
