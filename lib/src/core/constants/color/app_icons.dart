@@ -42,6 +42,13 @@ class AppIcons {
   static const String tabTrips = 'assets/icons/ic_trips.svg';
   static const String tabMasters = 'assets/icons/ic_master.svg';
 
+  // Trip planner. The two field icons ship as single-colour grey strokes
+  // (#93989B) and are tinted per focus state; ic_dot is the grey list bullet
+  // and is rendered as-authored.
+  static const String tripOrigin = 'assets/icons/ic_location.svg';
+  static const String tripDestination = 'assets/icons/ic_finish_dest.svg';
+  static const String tripDot = 'assets/icons/ic_dot.svg';
+
   // Profile menu icons
   static const String memberList = 'assets/icons/member_list_1.svg';
   static const String timePast = 'assets/icons/time_past_1.svg';

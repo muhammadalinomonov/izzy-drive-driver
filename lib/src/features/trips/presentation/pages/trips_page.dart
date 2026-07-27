@@ -1,10 +1,13 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/features/trips/presentation/bloc/trips_bloc.dart';
+import 'package:taxi_app/src/features/trips/presentation/widgets/trip_search_bar.dart';
 import 'package:taxi_app/src/features/trips/presentation/widgets/trip_tile.dart';
+import 'package:taxi_app/src/routes/pages.dart';
 
 /// Trip history — `GET mobile/toll-routes` on the Quadrix Tolling backend.
 ///
@@ -52,11 +55,30 @@ class _TripsPageState extends State<TripsPage> {
     await Future.delayed(const Duration(milliseconds: 350));
   }
 
+  /// Opens the planning flow. When it pops with a chosen origin/destination
+  /// pair the history is refreshed - calculating a route creates a new
+  /// toll-route record server-side.
+  Future<void> _openTripPlanner() async {
+    final result = await context.push(Pages.tripMap);
+    if (!mounted || result == null) return;
+    context.read<TripsBloc>().add(const TripsRefreshed());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       color: AppColor.white,
-      child: BlocBuilder<TripsBloc, TripsState>(
+      child: Column(
+        children: [
+          TripSearchBar(onTap: _openTripPlanner),
+          Expanded(child: _buildList()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildList() {
+    return BlocBuilder<TripsBloc, TripsState>(
         builder: (context, state) {
           if (state.listStatus == TripsListStatus.loading && state.items.isEmpty) {
             return const _TripsSkeleton();
@@ -90,7 +112,6 @@ class _TripsPageState extends State<TripsPage> {
             ),
           );
         },
-      ),
     );
   }
 }

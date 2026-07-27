@@ -41,7 +41,9 @@ import 'package:taxi_app/src/features/notifications/data/source/notifications_da
 import 'package:taxi_app/src/features/notifications/presentation/bloc/notifications_bloc.dart';
 import 'package:taxi_app/src/features/trips/data/repo/trips_repo_impl.dart';
 import 'package:taxi_app/src/features/trips/data/source/trips_data_source.dart';
+import 'package:taxi_app/src/features/trips/presentation/bloc/trip_map/trip_map_bloc.dart';
 import 'package:taxi_app/src/features/trips/presentation/bloc/trips_bloc.dart';
+import 'package:taxi_app/src/features/trips/presentation/pages/trip_map_page.dart';
 import 'package:taxi_app/src/features/notifications/presentation/pages/notification_detail_page.dart';
 import 'package:taxi_app/src/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:taxi_app/src/features/order_proccess/presentation/pages/finished_order_screen.dart';
@@ -187,6 +189,16 @@ class Routes {
             child: MainScreen(),
           );
         },
+      ),
+      GoRoute(
+        path: Pages.tripMap,
+        builder: (context, state) => BlocProvider(
+          create: (_) => TripMapBloc(
+            repo: TripsRepoImpl(dataSource: TripsDataSource()),
+            locationService: serviceLocator<LocationService>(),
+          ),
+          child: const TripMapPage(),
+        ),
       ),
       GoRoute(
         path: Pages.tackScreen,

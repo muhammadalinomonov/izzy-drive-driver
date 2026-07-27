@@ -208,5 +208,17 @@
       "failed": "Xatolik",
       "unknown": "Noma'lum"
     }
+  },
+  "tripMap": {
+    "title": "Manzillar",
+    "searchBarHint": "Qayerga borasiz?",
+    "yourLocation": "Sizning joylashuvingiz",
+    "originHint": "Manzilni yozing...",
+    "destination": "Yetkazish manzili",
+    "destinationHint": "Manzilni yozing...",
+    "map": "Xarita",
+    "continue": "Davom ettirish",
+    "noResults": "Bu manzil bo'yicha hech narsa topilmadi.",
+    "noRecents": "So'nggi manzillaringiz shu yerda ko'rinadi."
   }
 }

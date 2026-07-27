@@ -20,6 +20,7 @@ class Pages {
   static const String forgotPasswordEmail = '/forgotPasswordEmail';
   static const String resetPassword = '/resetPassword';
   static const String phoneOtp = '/phoneOtp';
+  static const String tripMap = '/tripMap';
   static const String notifications = '/notifications';
   static const String notificationDetail = '/notificationDetail';
 }

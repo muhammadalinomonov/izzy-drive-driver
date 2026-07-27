@@ -6,6 +6,7 @@ import 'package:taxi_app/src/core/network/toll_dio.dart';
 import 'package:taxi_app/src/core/network/toll_session.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
 import 'package:taxi_app/src/core/utils/json_safe.dart';
+import 'package:taxi_app/src/features/trips/data/model/place_model.dart';
 import 'package:taxi_app/src/features/trips/data/model/trip_model.dart';
 
 class TripsDataSource {
@@ -53,6 +54,66 @@ class TripsDataSource {
       );
     } catch (e) {
       return NetworkResponse<TripPage>(errorText: e.toString());
+    }
+  }
+
+  /// Shortest `q` the backend accepts - anything less answers
+  /// 422 VALIDATION_FAILED ("The q field must be at least 3 characters."),
+  /// verified against the live API.
+  static const int minQueryLength = 3;
+
+  /// `GET mobile/places` - server-side geocoding for route endpoints.
+  ///
+  /// [cancelToken] lets the caller abort a still-flying request when newer
+  /// input arrives; a cancelled call reports `errorCode: REQUEST_CANCELLED`
+  /// so the bloc can ignore it rather than render it as a failure.
+  Future<NetworkResponse<List<PlaceModel>>> searchPlaces(
+    String query, {
+    CancelToken? cancelToken,
+  }) async {
+    if (!TollSession.hasToken) {
+      return NetworkResponse<List<PlaceModel>>(
+        errorText: 'Toll account is not connected.',
+        errorCode: 'TOLL_SESSION_MISSING',
+      );
+    }
+    final trimmed = query.trim();
+    if (trimmed.length < minQueryLength) {
+      // Don't spend a round-trip on input the backend will reject anyway.
+      return NetworkResponse<List<PlaceModel>>(
+        errorText: 'Query too short.',
+        errorCode: 'QUERY_TOO_SHORT',
+      );
+    }
+    try {
+      final response = await client.get(
+        TollApiConstants.places,
+        queryParameters: {'q': trimmed},
+        cancelToken: cancelToken,
+      );
+      if (response.isSuccess) {
+        final data = toMap(toMap(response.data)['data']);
+        return NetworkResponse<List<PlaceModel>>(
+          data: toList(data['items'], (e) => PlaceModel.fromJson(toMap(e))),
+        );
+      }
+      return NetworkResponse<List<PlaceModel>>(
+        errorText: _errorMessage(response.data),
+        errorCode: _errorCode(response.data),
+      );
+    } on DioException catch (e) {
+      if (CancelToken.isCancel(e)) {
+        return NetworkResponse<List<PlaceModel>>(
+          errorText: 'cancelled',
+          errorCode: 'REQUEST_CANCELLED',
+        );
+      }
+      return NetworkResponse<List<PlaceModel>>(
+        errorText: _errorMessage(e.response?.data, 'Network error'),
+        errorCode: _errorCode(e.response?.data),
+      );
+    } catch (e) {
+      return NetworkResponse<List<PlaceModel>>(errorText: e.toString());
     }
   }
 

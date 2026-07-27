@@ -208,5 +208,17 @@
       "failed": "Failed",
       "unknown": "Unknown"
     }
+  },
+  "tripMap": {
+    "title": "Locations",
+    "searchBarHint": "Where to?",
+    "yourLocation": "Your Location",
+    "originHint": "Write address...",
+    "destination": "Delivery Address",
+    "destinationHint": "Write address...",
+    "map": "Map",
+    "continue": "Continue",
+    "noResults": "Nothing found for this address.",
+    "noRecents": "Your recent locations will appear here."
   }
 }
