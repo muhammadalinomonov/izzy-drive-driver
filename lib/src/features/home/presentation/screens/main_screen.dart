@@ -226,11 +226,12 @@ class _AppBottomNav extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 60,
+          height: 52,
           child: Row(
             children: List.generate(items.length, (i) {
               final item = items[i];
               final isActive = i == currentIndex;
+              final color = isActive ? AppColor.kPrimaryColor : AppColor.grey;
               return Expanded(
                 child: InkWell(
                   onTap: () => onTap(i),
@@ -241,24 +242,19 @@ class _AppBottomNav extends StatelessWidget {
                     children: [
                       SvgPicture.asset(
                         item.icon,
-                        width: 20,
-                        height: 20,
-                        colorFilter: ColorFilter.mode(
-                          isActive ? AppColor.kPrimaryColor : AppColor.grey,
-                          BlendMode.srcIn,
-                        ),
+                        width: 18,
+                        height: 18,
+                        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 4),
                       Text(
                         item.label,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 11,
                           fontWeight: isActive
                               ? FontWeight.w600
                               : FontWeight.w400,
-                          color: isActive
-                              ? AppColor.black
-                              : const Color(0xFF6B7073),
+                          color: color,
                           letterSpacing: 0,
                           height: 1.0,
                         ),

@@ -135,7 +135,12 @@ class TripsDataSource {
       );
     }
     try {
-      final response = await client.post(
+      // Computed once and reused across retries below - the endpoint uses it
+      // to de-dupe resubmits of the exact same request, so a fresh key per
+      // attempt would defeat that guarantee (and could double-price a trip).
+      final idempotencyKey =
+          'mobile-route-${DateTime.now().millisecondsSinceEpoch}';
+      final response = await _postWithRetry(
         TollApiConstants.tollRoutes,
         data: {
           'origin': {'lat': origin.lat, 'lng': origin.lng},
@@ -148,13 +153,7 @@ class TripsDataSource {
           if (waypoints != null && waypoints.isNotEmpty)
             'waypoints': waypoints.map((w) => {'lat': w.lat, 'lng': w.lng}).toList(),
         },
-        // Lets a resubmit of the exact same request short-circuit server-side
-        // instead of pricing the same trip twice; unique per attempt so a
-        // genuinely new request (different locations/time) is never blocked.
-        options: Options(headers: {
-          'Idempotency-Key':
-              'mobile-route-${DateTime.now().millisecondsSinceEpoch}',
-        }),
+        options: Options(headers: {'Idempotency-Key': idempotencyKey}),
       );
       if (response.isSuccess) {
         return NetworkResponse<TripModel>(
@@ -172,6 +171,32 @@ class TripsDataSource {
       );
     } catch (e) {
       return NetworkResponse<TripModel>(errorText: e.toString());
+    }
+  }
+
+  /// 502/503/504 and connection-level failures are transient (the toll API
+  /// is fronted by Cloudflare, which answers 502 whenever its origin is
+  /// briefly overloaded) - worth a couple of quick retries before surfacing
+  /// an error to the driver. Anything else (4xx, validation errors, auth
+  /// failures) is not retried and propagates immediately.
+  static const _retryableStatusCodes = {502, 503, 504};
+
+  Future<Response> _postWithRetry(
+    String path, {
+    required Map<String, dynamic> data,
+    required Options options,
+    int maxAttempts = 3,
+  }) async {
+    for (var attempt = 1;; attempt++) {
+      try {
+        return await client.post(path, data: data, options: options);
+      } on DioException catch (e) {
+        final retryable = _retryableStatusCodes.contains(e.response?.statusCode) ||
+            e.type == DioExceptionType.connectionError ||
+            e.type == DioExceptionType.connectionTimeout;
+        if (!retryable || attempt >= maxAttempts) rethrow;
+        await Future.delayed(Duration(milliseconds: 500 * attempt));
+      }
     }
   }
 
