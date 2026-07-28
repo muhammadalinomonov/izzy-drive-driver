@@ -1,6 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
+import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/location_service.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
 import 'package:taxi_app/src/features/trips/data/model/trip_model.dart';
@@ -118,23 +120,32 @@ class _EndpointsState extends State<_Endpoints> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _Point(color: AppColor.kPrimaryColor, label: _origin),
+        _Point(
+          icon: AppIcons.tripOrigin,
+          color: AppColor.kPrimaryColor,
+          label: _origin,
+        ),
         Padding(
-          padding: const EdgeInsets.only(left: 4),
+          padding: const EdgeInsets.only(left: 8),
           child: SizedBox(
             height: 14,
             child: VerticalDivider(color: AppColor.grey2, width: 1, thickness: 1),
           ),
         ),
-        _Point(color: AppColor.red, label: _destination),
+        _Point(
+          icon: AppIcons.tripDestination,
+          color: AppColor.red,
+          label: _destination,
+        ),
       ],
     );
   }
 }
 
 class _Point extends StatelessWidget {
-  const _Point({required this.color, required this.label});
+  const _Point({required this.icon, required this.color, required this.label});
 
+  final String icon;
   final Color color;
   final String label;
 
@@ -142,10 +153,13 @@ class _Point extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Container(
-          width: 9,
-          height: 9,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        SizedBox(
+          width: 16,
+          height: 16,
+          child: SvgPicture.asset(
+            icon,
+            colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+          ),
         ),
         const SizedBox(width: 10),
         Expanded(
