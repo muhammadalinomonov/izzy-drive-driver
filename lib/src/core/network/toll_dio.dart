@@ -1,7 +1,6 @@
-import 'dart:developer';
-
 import 'package:chucker_flutter/chucker_flutter.dart';
 import 'package:dio/dio.dart';
+import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:taxi_app/src/core/network/toll_api_constants.dart';
 import 'package:taxi_app/src/core/network/toll_session.dart';
 
@@ -52,14 +51,13 @@ class TollDioSettings {
         ),
       )
       ..add(
-        LogInterceptor(
+        PrettyDioLogger(
           requestBody: true,
           responseBody: true,
           error: true,
           request: true,
           requestHeader: true,
           responseHeader: false,
-          logPrint: (obj) => log('$obj'),
         ),
       )
       ..add(ChuckerDioInterceptor());

@@ -1,17 +1,17 @@
-import 'dart:typed_data';
-import 'dart:ui' as ui;
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
+import 'package:taxi_app/src/core/components/app_snack_bar.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/features/trips/data/model/place_model.dart';
 import 'package:taxi_app/src/features/trips/presentation/bloc/trip_map/trip_map_bloc.dart';
+import 'package:taxi_app/src/features/trips/presentation/pages/route_overview_page.dart';
+import 'package:taxi_app/src/features/trips/presentation/utils/marker_icon.dart';
 import 'package:taxi_app/src/features/trips/presentation/widgets/location_fields_card.dart';
 import 'package:taxi_app/src/features/trips/presentation/widgets/place_list_tile.dart';
+import 'package:taxi_app/src/routes/pages.dart';
 
 /// Trip planning entry point (docs/ui/2.png + 3.png): a full-screen Mapbox map
 /// with a draggable sheet holding the origin/destination fields, recent
@@ -111,31 +111,6 @@ class _TripMapPageState extends State<TripMapPage> {
     map.compass.updateSettings(mapbox.CompassSettings(enabled: false));
   }
 
-  /// Rasterizes a marker SVG (docs/icons/currner_point_marker.svg,
-  /// finish_marker.svg) into raw PNG bytes.
-  ///
-  /// Deliberately NOT `iconImage: 'marker-15'`: Maki sprite names are not
-  /// guaranteed to exist in the Standard style, and a missing sprite fails
-  /// silently - no marker, no error. Compositing our own bytes always renders.
-  Future<Uint8List> _markerPng(String asset, {double height = 96}) async {
-    final pictureInfo = await vg.loadPicture(SvgAssetLoader(asset), null);
-    final scale = height / pictureInfo.size.height;
-    final width = pictureInfo.size.width * scale;
-
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-    canvas.scale(scale);
-    canvas.drawPicture(pictureInfo.picture);
-
-    final image = await recorder.endRecording().toImage(
-          width.round(),
-          height.round(),
-        );
-    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-    pictureInfo.picture.dispose();
-    return bytes!.buffer.asUint8List();
-  }
-
   Future<void> _syncMarker(TripMapField field, PlaceModel place) async {
     final map = _map;
     if (map == null) return;
@@ -146,7 +121,7 @@ class _TripMapPageState extends State<TripMapPage> {
     );
 
     final isOrigin = field == TripMapField.origin;
-    final png = await _markerPng(
+    final png = await rasterizeMarkerSvg(
       isOrigin
           ? 'assets/icons/currner_point_marker.svg'
           : 'assets/icons/finish_marker.svg',
@@ -225,11 +200,12 @@ class _TripMapPageState extends State<TripMapPage> {
   }
 
   void _onContinue() {
-    final state = context.read<TripMapBloc>().state;
-    if (!state.canContinue) return;
-    // Route drawing is a later task (see docs/tasks.md); hand the chosen pair
-    // back to the caller for now.
-    context.pop({'origin': state.origin, 'destination': state.destination});
+    final bloc = context.read<TripMapBloc>();
+    if (!bloc.state.canContinue ||
+        bloc.state.continueStatus == TripMapContinueStatus.loading) {
+      return;
+    }
+    bloc.add(const TripMapContinuePressed());
   }
 
   @override
@@ -242,7 +218,9 @@ class _TripMapPageState extends State<TripMapPage> {
             p.selectionTick != c.selectionTick ||
             p.origin != c.origin ||
             p.destination != c.destination ||
-            p.activeField != c.activeField,
+            p.activeField != c.activeField ||
+            p.continueTick != c.continueTick ||
+            p.continueStatus != c.continueStatus,
         listener: (context, state) {
           _onStateChanged(context, state);
           final place = state.lastSelected;
@@ -250,6 +228,24 @@ class _TripMapPageState extends State<TripMapPage> {
               state.lastSelectedField != TripMapField.none &&
               state.selectionTick > 0) {
             _syncMarker(state.lastSelectedField, place);
+          }
+          if (state.continueStatus == TripMapContinueStatus.failure &&
+              state.continueError.isNotEmpty) {
+            AppSnackBar.showError(context, state.continueError);
+          }
+          final route = state.createdRoute;
+          if (route != null &&
+              state.continueTick > 0 &&
+              state.origin != null &&
+              state.destination != null) {
+            context.push(
+              Pages.routeOverview,
+              extra: RouteOverviewArgs(
+                trip: route,
+                origin: state.origin!,
+                destination: state.destination!,
+              ),
+            );
           }
         },
         builder: (context, state) {
@@ -423,7 +419,9 @@ class _Sheet extends StatelessWidget {
                 ),
               ),
               _ContinueBar(
-                enabled: state.canContinue,
+                enabled: state.canContinue &&
+                    state.continueStatus != TripMapContinueStatus.loading,
+                loading: state.continueStatus == TripMapContinueStatus.loading,
                 onPressed: onContinue,
               ),
             ],
@@ -532,9 +530,14 @@ class _Message extends StatelessWidget {
 }
 
 class _ContinueBar extends StatelessWidget {
-  const _ContinueBar({required this.enabled, required this.onPressed});
+  const _ContinueBar({
+    required this.enabled,
+    required this.loading,
+    required this.onPressed,
+  });
 
   final bool enabled;
+  final bool loading;
   final VoidCallback onPressed;
 
   @override
@@ -555,14 +558,23 @@ class _ContinueBar extends StatelessWidget {
                 borderRadius: BorderRadius.circular(28),
               ),
             ),
-            child: Text(
-              'tripMap.continue'.tr(),
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
+            child: loading
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.4,
+                      valueColor: AlwaysStoppedAnimation(Colors.white),
+                    ),
+                  )
+                : Text(
+                    'tripMap.continue'.tr(),
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
           ),
         ),
       ),

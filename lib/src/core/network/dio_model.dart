@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:chucker_flutter/chucker_flutter.dart';
 import 'package:dio/dio.dart';
+import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:taxi_app/src/core/network/auth_session.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
 
@@ -101,11 +101,10 @@ class DioSettings {
           },
         ),
       )
-      ..add(LogInterceptor(
+      ..add(PrettyDioLogger(
         requestBody: true,
         responseBody: true,
         error: true,
-        logPrint: (obj) => log('$obj'),
         request: true,
         requestHeader: true,
         responseHeader: false,

@@ -116,4 +116,72 @@ WARNING: We will continue after searching drawing route and other features NOTE
 
 3. Task
 
-After selecting current and finish points, 
+After the user has selected both the **Current Location** and **Destination**, enable the **Continue** button at the bottom of the screen. The button should remain disabled until both locations have been selected.
+
+When the user presses **Continue**, send a request to calculate the route using:
+
+`POST /api/v1/mobile/toll-routes`
+
+Use the selected current location as the route origin and the destination as the route destination. Follow the request and response format described in `docs/mobile-api.md`.
+
+Before entering navigation, manage the navigation session using the following APIs:
+
+* `POST /api/v1/mobile/navigation-sessions` — Create or update the current navigation session using the selected route and navigation information.
+* `GET /api/v1/mobile/navigation-sessions/current` — Retrieve the active navigation session whenever the navigation screen is opened or the app resumes, allowing the user to continue an existing navigation session.
+* `POST /api/v1/mobile/navigation-sessions/{navigationSession}/cancel` — Cancel the active navigation session when the user exits navigation, cancels the trip, or finishes the route.
+
+All request and response models for these endpoints are described in `docs/mobile-api.md`. Reuse the existing networking architecture, repositories, API client, models, and state management already used throughout the project.
+
+While the route is being calculated, display a loading state over the map or inside the bottom sheet. Once the API responds, transition to the route overview screen matching the design shown in `docs/ui/8.png`.
+
+Display all routes returned by the API, including the primary recommended route and any alternative routes. The selected route should be visually emphasized, while alternative routes should be displayed using a secondary style so users can easily distinguish them. The user should be able to switch between available routes, and selecting a different route should immediately update the highlighted route, route summary, toll information, fuel stations, and all related map data.
+
+Display all toll stations and fuel stations returned by the API as markers on the map using the following assets:
+
+* `gas_station_marker.svg` for fuel stations.
+* `toll_marker.svg` for toll stations.
+
+Automatically adjust the MapBox camera so the entire selected route is visible, including the origin and destination.
+
+Display a draggable bottom sheet matching the design in `docs/ui/8.png`. The bottom sheet should present a complete summary of the selected route, including distance, estimated travel time, toll costs, and any additional route information returned by the API.
+
+Below the route summary, display the route services using the following icons from the `docs/ui` folder:
+
+* `ic_fuel.svg` for fuel stations.
+* `ic_toll.svg` for toll stations.
+* `ic_location.svg` for locations or route waypoints.
+
+At the bottom of the sheet, display a prominent **Start** button.
+
+When the user taps **Start**, begin **Driving Mode**.
+
+The Driving Mode UI should match the design shown in `docs/ui/9.png`.
+
+Before entering Driving Mode, create or update the navigation session using `POST /api/v1/mobile/navigation-sessions`. If an active navigation session already exists, synchronize it appropriately according to the API documentation.
+
+Driving Mode should provide a real-time navigation experience:
+
+* Continuously track the user's GPS location.
+* Center the MapBox camera on the user's current position.
+* Rotate and follow the user's heading while driving.
+* Keep the selected route highlighted throughout navigation.
+* Display remaining distance and estimated arrival time.
+* Continue displaying toll stations and fuel stations along the route.
+* Smoothly animate location updates as the user moves.
+* Recalculate the route if supported by the existing architecture or API.
+
+Whenever the navigation screen is opened, resumed, or restored after the application returns from the background, call:
+
+`GET /api/v1/mobile/navigation-sessions/current`
+
+If an active navigation session exists, restore the navigation state, selected route, current progress, and continue Driving Mode without requiring the user to start over.
+
+When the user taps **Cancel Navigation**, leaves Driving Mode, or completes the trip, call:
+
+`POST /api/v1/mobile/navigation-sessions/{navigationSession}/cancel`
+
+After successfully canceling the session, clear all navigation-related state and return the user to the route planning screen.
+
+Implement proper loading, empty, offline, and error states for all API requests. Handle network failures gracefully and preserve navigation state whenever possible.
+
+Follow all request and response specifications defined in `docs/mobile-api.md`. Keep the implementation modular, maintainable, and consistent with the existing project architecture. Match the layouts, spacing, typography, animations, icons, and overall behavior shown in `docs/ui/8.png` for the route overview and `docs/ui/9.png` for Driving Mode as closely as possible.

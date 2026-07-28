@@ -86,13 +86,54 @@ class TripVehicle {
   }
 }
 
+/// A single toll gantry/booth along a route alternative (`toll_markers[]`).
+///
+/// The only per-station coordinates the toll API exposes - there is no
+/// equivalent array for fuel stations, only an aggregate `costs.fuel` amount,
+/// so fuel has no on-map marker (see route overview page docs).
+class TripTollMarker {
+  final String id;
+  final int sequence;
+  final String name;
+  final TripCoordinate coordinate;
+  final TripMoney? amount;
+
+  const TripTollMarker({
+    required this.id,
+    required this.sequence,
+    required this.name,
+    required this.coordinate,
+    required this.amount,
+  });
+
+  factory TripTollMarker.fromJson(Map<String, dynamic> json) {
+    final amountRaw = json['amount'];
+    return TripTollMarker(
+      id: toStr(json['id']),
+      sequence: toInt(json['sequence']),
+      name: toStr(json['name']),
+      coordinate: TripCoordinate.fromJson(toMap(json['coordinate'])),
+      amount: amountRaw == null ? null : TripMoney.fromJson(toMap(amountRaw)),
+    );
+  }
+}
+
 class TripAlternative {
   final String id;
   final List<String> labels;
   final int distanceMeters;
   final int durationSeconds;
   final TripMoney? toll;
+  final TripMoney? fuel;
+  final TripMoney? operating;
+  final TripMoney? driverTime;
   final TripMoney? total;
+  final TripMoney? generalized;
+  final String polyline;
+  final String polylineFormat;
+  final List<TripTollMarker> tollMarkers;
+  final List<String> warnings;
+  final String recommendationReason;
 
   const TripAlternative({
     required this.id,
@@ -100,7 +141,16 @@ class TripAlternative {
     required this.distanceMeters,
     required this.durationSeconds,
     required this.toll,
+    required this.fuel,
+    required this.operating,
+    required this.driverTime,
     required this.total,
+    required this.generalized,
+    required this.polyline,
+    required this.polylineFormat,
+    required this.tollMarkers,
+    required this.warnings,
+    required this.recommendationReason,
   });
 
   factory TripAlternative.fromJson(Map<String, dynamic> json) {
@@ -117,9 +167,24 @@ class TripAlternative {
       distanceMeters: toInt(json['distance_meters']),
       durationSeconds: toInt(json['duration_seconds']),
       toll: money('toll'),
+      fuel: money('fuel'),
+      operating: money('operating'),
+      driverTime: money('driver_time'),
       total: money('total'),
+      generalized: money('generalized'),
+      polyline: toStr(json['polyline']),
+      polylineFormat: toStr(json['polyline_format'], 'encoded_polyline'),
+      tollMarkers: toList(
+        json['toll_markers'],
+        (e) => TripTollMarker.fromJson(toMap(e)),
+      ),
+      warnings: toList(json['warnings'], (e) => toStr(e)),
+      recommendationReason: toStr(json['recommendation_reason']),
     );
   }
+
+  /// Distance in miles, as shown throughout `docs/ui/8.png` and `9.png`.
+  double get distanceMiles => distanceMeters / 1609.344;
 }
 
 enum TripStatus {

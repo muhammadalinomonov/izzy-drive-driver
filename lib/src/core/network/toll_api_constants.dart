@@ -31,9 +31,26 @@ class TollApiConstants {
   static const String vehicles = 'mobile/vehicles';
   static const String places = 'mobile/places';
 
-  // Toll routes (trip history)
+  // Toll routes (trip history + route calculation)
   static const String tollRoutes = 'mobile/toll-routes';
 
   static String tollRouteDetail(String routeRequestId) =>
       'mobile/toll-routes/$routeRequestId';
+
+  // Navigation sessions
+  static const String navigationSessions = 'mobile/navigation-sessions';
+  static const String navigationSessionsCurrent =
+      'mobile/navigation-sessions/current';
+
+  static String navigationSessionLocations(String navigationSessionId) =>
+      'mobile/navigation-sessions/$navigationSessionId/locations';
+
+  static String navigationSessionReroute(String navigationSessionId) =>
+      'mobile/navigation-sessions/$navigationSessionId/reroute';
+
+  static String navigationSessionComplete(String navigationSessionId) =>
+      'mobile/navigation-sessions/$navigationSessionId/complete';
+
+  static String navigationSessionCancel(String navigationSessionId) =>
+      'mobile/navigation-sessions/$navigationSessionId/cancel';
 }

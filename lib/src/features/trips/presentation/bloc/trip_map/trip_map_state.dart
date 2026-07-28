@@ -7,6 +7,9 @@ enum TripMapFieldStatus { initial, loading, success, failure }
 
 enum TripMapSearchStatus { idle, loading, success, empty, failure }
 
+/// State of the `POST /toll-routes` call fired by Continue.
+enum TripMapContinueStatus { idle, loading, failure }
+
 class TripMapState extends Equatable {
   final TripMapField activeField;
   final TripMapFieldStatus originStatus;
@@ -30,6 +33,16 @@ class TripMapState extends Equatable {
   /// would not return to the place after the driver panned away.
   final int selectionTick;
 
+  final TripMapContinueStatus continueStatus;
+  final String continueError;
+
+  /// The route request created by the last successful Continue. The page
+  /// listens on [continueTick] (not this field alone) to navigate, since
+  /// re-pricing the exact same origin/destination pair would otherwise
+  /// produce an equal [TripModel] and skip the emit.
+  final TripModel? createdRoute;
+  final int continueTick;
+
   const TripMapState({
     this.activeField = TripMapField.none,
     this.originStatus = TripMapFieldStatus.initial,
@@ -43,6 +56,10 @@ class TripMapState extends Equatable {
     this.lastSelected,
     this.lastSelectedField = TripMapField.none,
     this.selectionTick = 0,
+    this.continueStatus = TripMapContinueStatus.idle,
+    this.continueError = '',
+    this.createdRoute,
+    this.continueTick = 0,
   });
 
   /// Suggestions replace the history list only while a search is live.
@@ -67,6 +84,10 @@ class TripMapState extends Equatable {
     Object? lastSelected = _sentinel,
     TripMapField? lastSelectedField,
     int? selectionTick,
+    TripMapContinueStatus? continueStatus,
+    String? continueError,
+    Object? createdRoute = _sentinel,
+    int? continueTick,
   }) {
     return TripMapState(
       activeField: activeField ?? this.activeField,
@@ -85,6 +106,12 @@ class TripMapState extends Equatable {
           : lastSelected as PlaceModel?,
       lastSelectedField: lastSelectedField ?? this.lastSelectedField,
       selectionTick: selectionTick ?? this.selectionTick,
+      continueStatus: continueStatus ?? this.continueStatus,
+      continueError: continueError ?? this.continueError,
+      createdRoute: identical(createdRoute, _sentinel)
+          ? this.createdRoute
+          : createdRoute as TripModel?,
+      continueTick: continueTick ?? this.continueTick,
     );
   }
 
@@ -102,5 +129,9 @@ class TripMapState extends Equatable {
         lastSelected,
         lastSelectedField,
         selectionTick,
+        continueStatus,
+        continueError,
+        createdRoute,
+        continueTick,
       ];
 }

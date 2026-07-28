@@ -41,8 +41,12 @@ import 'package:taxi_app/src/features/notifications/data/source/notifications_da
 import 'package:taxi_app/src/features/notifications/presentation/bloc/notifications_bloc.dart';
 import 'package:taxi_app/src/features/trips/data/repo/trips_repo_impl.dart';
 import 'package:taxi_app/src/features/trips/data/source/trips_data_source.dart';
+import 'package:taxi_app/src/features/trips/presentation/bloc/navigation/navigation_bloc.dart';
+import 'package:taxi_app/src/features/trips/presentation/bloc/route_overview/route_overview_bloc.dart';
 import 'package:taxi_app/src/features/trips/presentation/bloc/trip_map/trip_map_bloc.dart';
 import 'package:taxi_app/src/features/trips/presentation/bloc/trips_bloc.dart';
+import 'package:taxi_app/src/features/trips/presentation/pages/driving_mode_page.dart';
+import 'package:taxi_app/src/features/trips/presentation/pages/route_overview_page.dart';
 import 'package:taxi_app/src/features/trips/presentation/pages/trip_map_page.dart';
 import 'package:taxi_app/src/features/notifications/presentation/pages/notification_detail_page.dart';
 import 'package:taxi_app/src/features/notifications/presentation/pages/notifications_page.dart';
@@ -199,6 +203,34 @@ class Routes {
           ),
           child: const TripMapPage(),
         ),
+      ),
+      GoRoute(
+        path: Pages.routeOverview,
+        builder: (context, state) {
+          final args = state.extra as RouteOverviewArgs;
+          return BlocProvider(
+            create: (_) => RouteOverviewBloc(
+              trip: args.trip,
+              repo: TripsRepoImpl(dataSource: TripsDataSource()),
+              locationService: serviceLocator<LocationService>(),
+            ),
+            child: RouteOverviewPage(args: args),
+          );
+        },
+      ),
+      GoRoute(
+        path: Pages.drivingMode,
+        builder: (context, state) {
+          final args = state.extra as DrivingModeArgs;
+          return BlocProvider(
+            create: (_) => NavigationBloc(
+              initialSession: args.session,
+              repo: TripsRepoImpl(dataSource: TripsDataSource()),
+              locationService: serviceLocator<LocationService>(),
+            ),
+            child: DrivingModePage(args: args),
+          );
+        },
       ),
       GoRoute(
         path: Pages.tackScreen,

@@ -57,3 +57,9 @@ class TripMapPlaceSelected extends TripMapEvent {
 class TripMapSearchDismissed extends TripMapEvent {
   const TripMapSearchDismissed();
 }
+
+/// "Continue" tapped with both locations selected - prices the trip via
+/// `POST /toll-routes`.
+class TripMapContinuePressed extends TripMapEvent {
+  const TripMapContinuePressed();
+}

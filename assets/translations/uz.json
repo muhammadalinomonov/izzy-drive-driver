@@ -220,5 +220,18 @@
     "continue": "Davom ettirish",
     "noResults": "Bu manzil bo'yicha hech narsa topilmadi.",
     "noRecents": "So'nggi manzillaringiz shu yerda ko'rinadi."
+  },
+  "routeOverview": {
+    "recommended": "Tavsiya etilgan",
+    "alternative": "Muqobil {index}",
+    "start": "Boshlash",
+    "calculatingRoute": "Marshrut hisoblanmoqda...",
+    "noRoutes": "Bu safar uchun marshrut topilmadi."
+  },
+  "drivingMode": {
+    "cancel": "Navigatsiyani bekor qilish",
+    "arriving": "Yetib kelinmoqda",
+    "resuming": "Safar davom ettirilmoqda...",
+    "rerouting": "Marshrut qayta qurilmoqda..."
   }
 }

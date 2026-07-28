@@ -21,6 +21,8 @@ class Pages {
   static const String resetPassword = '/resetPassword';
   static const String phoneOtp = '/phoneOtp';
   static const String tripMap = '/tripMap';
+  static const String routeOverview = '/routeOverview';
+  static const String drivingMode = '/drivingMode';
   static const String notifications = '/notifications';
   static const String notificationDetail = '/notificationDetail';
 }

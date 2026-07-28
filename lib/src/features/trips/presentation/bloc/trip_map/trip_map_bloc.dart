@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:taxi_app/src/core/location_service.dart';
 import 'package:taxi_app/src/features/trips/data/model/place_model.dart';
+import 'package:taxi_app/src/features/trips/data/model/trip_model.dart';
 import 'package:taxi_app/src/features/trips/data/source/recent_places_store.dart';
 import 'package:taxi_app/src/features/trips/data/source/trips_data_source.dart';
 import 'package:taxi_app/src/features/trips/domain/repo/trips_repo.dart';
@@ -34,6 +35,7 @@ class TripMapBloc extends Bloc<TripMapEvent, TripMapState> {
     on<TripMapSearchRequested>(_onSearchRequested);
     on<TripMapPlaceSelected>(_onPlaceSelected);
     on<TripMapSearchDismissed>(_onSearchDismissed);
+    on<TripMapContinuePressed>(_onContinuePressed);
   }
 
   @override
@@ -194,6 +196,35 @@ class TripMapBloc extends Bloc<TripMapEvent, TripMapState> {
       searchStatus: TripMapSearchStatus.idle,
       errorMessage: '',
     ));
+  }
+
+  Future<void> _onContinuePressed(
+    TripMapContinuePressed event,
+    Emitter<TripMapState> emit,
+  ) async {
+    final origin = state.origin;
+    final destination = state.destination;
+    if (origin == null || destination == null) return;
+
+    emit(state.copyWith(continueStatus: TripMapContinueStatus.loading));
+    final response = await repo.createRoute(
+      origin: origin.coordinate,
+      destination: destination.coordinate,
+    );
+
+    if (response.errorText.isEmpty && response.data != null) {
+      emit(state.copyWith(
+        continueStatus: TripMapContinueStatus.idle,
+        createdRoute: response.data,
+        continueTick: state.continueTick + 1,
+        errorMessage: '',
+      ));
+    } else {
+      emit(state.copyWith(
+        continueStatus: TripMapContinueStatus.failure,
+        continueError: response.errorText,
+      ));
+    }
   }
 
   void _cancelPending() {

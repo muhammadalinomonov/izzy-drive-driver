@@ -49,6 +49,13 @@ class AppIcons {
   static const String tripDestination = 'assets/icons/ic_finish_dest.svg';
   static const String tripDot = 'assets/icons/ic_dot.svg';
 
+  // Route overview / driving mode (docs/ui/8.png, 9.png)
+  static const String tollMarker = 'assets/icons/toll_marker.svg';
+  static const String routeFuel = 'assets/icons/ic_fuel.svg';
+  static const String routeToll = 'assets/icons/ic_toll.svg';
+  static const String routeLocation = 'assets/icons/ic_location.svg';
+  static const String gpsRecenter = 'assets/icons/ic_gps_recenter.svg';
+
   // Profile menu icons
   static const String memberList = 'assets/icons/member_list_1.svg';
   static const String timePast = 'assets/icons/time_past_1.svg';

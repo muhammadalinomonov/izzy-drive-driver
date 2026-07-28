@@ -29,6 +29,18 @@ class LocationService {
     }
   }
 
+  /// Continuous GPS updates for Driving Mode. Distance-filtered (not
+  /// time-filtered) so the stream only fires on meaningful movement instead
+  /// of flooding the camera/progress-reporting logic while stationary.
+  Stream<Position> watchPosition({int distanceFilterMeters = 15}) {
+    return Geolocator.getPositionStream(
+      locationSettings: LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: distanceFilterMeters,
+      ),
+    );
+  }
+
   Future<String?> getAddressFromLatLng(
     double latitude,
     double longitude,

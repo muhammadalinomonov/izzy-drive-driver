@@ -6,6 +6,7 @@ import 'package:taxi_app/src/core/network/toll_dio.dart';
 import 'package:taxi_app/src/core/network/toll_session.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
 import 'package:taxi_app/src/core/utils/json_safe.dart';
+import 'package:taxi_app/src/features/trips/data/model/navigation_session_model.dart';
 import 'package:taxi_app/src/features/trips/data/model/place_model.dart';
 import 'package:taxi_app/src/features/trips/data/model/trip_model.dart';
 
@@ -114,6 +115,254 @@ class TripsDataSource {
       );
     } catch (e) {
       return NetworkResponse<List<PlaceModel>>(errorText: e.toString());
+    }
+  }
+
+  /// `POST mobile/toll-routes` — prices a trip and returns every route
+  /// alternative (toll, fuel, time) for the driver's currently-assigned
+  /// truck. The response is the same `RouteRequest` shape as [fetchPage]'s
+  /// items, so it's parsed with the same [TripModel].
+  Future<NetworkResponse<TripModel>> createRoute({
+    required TripCoordinate origin,
+    required TripCoordinate destination,
+    DateTime? departureAt,
+    List<TripCoordinate>? waypoints,
+  }) async {
+    if (!TollSession.hasToken) {
+      return NetworkResponse<TripModel>(
+        errorText: 'Toll account is not connected.',
+        errorCode: 'TOLL_SESSION_MISSING',
+      );
+    }
+    try {
+      final response = await client.post(
+        TollApiConstants.tollRoutes,
+        data: {
+          'origin': {'lat': origin.lat, 'lng': origin.lng},
+          'destination': {'lat': destination.lat, 'lng': destination.lng},
+          // Despite docs/mobile-api.md marking this optional, the live
+          // backend answers 422 VALIDATION_FAILED ("departure_at field is
+          // required") without it - confirmed against the running API, so a
+          // default of "now" is always sent rather than trusting the doc.
+          'departure_at': (departureAt ?? DateTime.now()).toUtc().toIso8601String(),
+          if (waypoints != null && waypoints.isNotEmpty)
+            'waypoints': waypoints.map((w) => {'lat': w.lat, 'lng': w.lng}).toList(),
+        },
+        // Lets a resubmit of the exact same request short-circuit server-side
+        // instead of pricing the same trip twice; unique per attempt so a
+        // genuinely new request (different locations/time) is never blocked.
+        options: Options(headers: {
+          'Idempotency-Key':
+              'mobile-route-${DateTime.now().millisecondsSinceEpoch}',
+        }),
+      );
+      if (response.isSuccess) {
+        return NetworkResponse<TripModel>(
+          data: TripModel.fromJson(toMap(toMap(response.data)['data'])),
+        );
+      }
+      return NetworkResponse<TripModel>(
+        errorText: _errorMessage(response.data),
+        errorCode: _errorCode(response.data),
+      );
+    } on DioException catch (e) {
+      return NetworkResponse<TripModel>(
+        errorText: _errorMessage(e.response?.data, 'Network error'),
+        errorCode: _errorCode(e.response?.data),
+      );
+    } catch (e) {
+      return NetworkResponse<TripModel>(errorText: e.toString());
+    }
+  }
+
+  /// `POST mobile/navigation-sessions` — starts (or, per the API doc,
+  /// re-issues) guidance for a chosen route alternative.
+  Future<NetworkResponse<NavigationSessionModel>> createNavigationSession({
+    required String routeRequestId,
+    required String routeAlternativeId,
+    TripCoordinate? currentLocation,
+  }) async {
+    if (!TollSession.hasToken) {
+      return NetworkResponse<NavigationSessionModel>(
+        errorText: 'Toll account is not connected.',
+        errorCode: 'TOLL_SESSION_MISSING',
+      );
+    }
+    try {
+      final response = await client.post(
+        TollApiConstants.navigationSessions,
+        data: {
+          'route_request_id': routeRequestId,
+          'route_alternative_id': routeAlternativeId,
+          if (currentLocation != null)
+            'current_location': {
+              'lat': currentLocation.lat,
+              'lng': currentLocation.lng,
+            },
+        },
+      );
+      if (response.isSuccess) {
+        return NetworkResponse<NavigationSessionModel>(
+          data: NavigationSessionModel.fromJson(
+            toMap(toMap(response.data)['data']),
+          ),
+        );
+      }
+      return NetworkResponse<NavigationSessionModel>(
+        errorText: _errorMessage(response.data),
+        errorCode: _errorCode(response.data),
+      );
+    } on DioException catch (e) {
+      // A driver only ever has one active session (§5.1) - if one is already
+      // running, the current one IS the answer to "start navigating", so
+      // hand it back instead of surfacing a 409 as a failure.
+      if (e.response?.statusCode == 409 &&
+          _errorCode(e.response?.data) == 'NAVIGATION_ALREADY_ACTIVE') {
+        final current = await getCurrentNavigationSession();
+        if (current.data != null) {
+          return NetworkResponse<NavigationSessionModel>(data: current.data);
+        }
+        return NetworkResponse<NavigationSessionModel>(
+          errorText: _errorMessage(e.response?.data, 'Network error'),
+          errorCode: _errorCode(e.response?.data),
+        );
+      }
+      return NetworkResponse<NavigationSessionModel>(
+        errorText: _errorMessage(e.response?.data, 'Network error'),
+        errorCode: _errorCode(e.response?.data),
+      );
+    } catch (e) {
+      return NetworkResponse<NavigationSessionModel>(errorText: e.toString());
+    }
+  }
+
+  /// `GET mobile/navigation-sessions/current` — the driver's in-progress
+  /// session, if any. `data: null` with no error means "nothing active",
+  /// per §5.2 - not a failure.
+  Future<NetworkResponse<NavigationSessionModel?>> getCurrentNavigationSession() async {
+    if (!TollSession.hasToken) {
+      return NetworkResponse<NavigationSessionModel?>(
+        errorText: 'Toll account is not connected.',
+        errorCode: 'TOLL_SESSION_MISSING',
+      );
+    }
+    try {
+      final response = await client.get(TollApiConstants.navigationSessionsCurrent);
+      if (response.isSuccess) {
+        final data = toMap(response.data)['data'];
+        return NetworkResponse<NavigationSessionModel?>(
+          data: data == null ? null : NavigationSessionModel.fromJson(toMap(data)),
+        );
+      }
+      return NetworkResponse<NavigationSessionModel?>(
+        errorText: _errorMessage(response.data),
+        errorCode: _errorCode(response.data),
+      );
+    } on DioException catch (e) {
+      return NetworkResponse<NavigationSessionModel?>(
+        errorText: _errorMessage(e.response?.data, 'Network error'),
+        errorCode: _errorCode(e.response?.data),
+      );
+    } catch (e) {
+      return NetworkResponse<NavigationSessionModel?>(errorText: e.toString());
+    }
+  }
+
+  /// `POST mobile/navigation-sessions/{id}/locations` — reports one GPS fix
+  /// during active Driving Mode and receives back updated progress/guidance.
+  Future<NetworkResponse<NavigationSessionModel>> sendNavigationLocation(
+    String navigationSessionId, {
+    required DateTime occurredAt,
+    required double latitude,
+    required double longitude,
+    double? speedMph,
+    double? headingDegrees,
+    double? accuracyMeters,
+  }) async {
+    return _postNavigationAction(
+      TollApiConstants.navigationSessionLocations(navigationSessionId),
+      data: {
+        'occurred_at': occurredAt.toUtc().toIso8601String(),
+        'latitude': latitude,
+        'longitude': longitude,
+        if (speedMph != null) 'speed_mph': speedMph,
+        if (headingDegrees != null) 'heading_degrees': headingDegrees,
+        if (accuracyMeters != null) 'accuracy_meters': accuracyMeters,
+      },
+    );
+  }
+
+  /// `POST mobile/navigation-sessions/{id}/reroute` — rebuilds guidance from
+  /// [currentLocation] (or the last saved fix) when the driver goes off-route.
+  Future<NetworkResponse<NavigationSessionModel>> rerouteNavigationSession(
+    String navigationSessionId, {
+    TripCoordinate? currentLocation,
+  }) {
+    return _postNavigationAction(
+      TollApiConstants.navigationSessionReroute(navigationSessionId),
+      data: currentLocation == null
+          ? const {}
+          : {
+              'current_location': {
+                'lat': currentLocation.lat,
+                'lng': currentLocation.lng,
+              },
+            },
+    );
+  }
+
+  /// `POST mobile/navigation-sessions/{id}/complete` — the driver reached the
+  /// destination. Distinct from [cancelNavigationSession]: per §5.5/§5.6 the
+  /// API treats these as different outcomes (`cancel` explicitly does not
+  /// mean arrival).
+  Future<NetworkResponse<NavigationSessionModel>> completeNavigationSession(
+    String navigationSessionId,
+  ) {
+    return _postNavigationAction(
+      TollApiConstants.navigationSessionComplete(navigationSessionId),
+    );
+  }
+
+  /// `POST mobile/navigation-sessions/{id}/cancel` — the driver stopped
+  /// before reaching the destination.
+  Future<NetworkResponse<NavigationSessionModel>> cancelNavigationSession(
+    String navigationSessionId,
+  ) {
+    return _postNavigationAction(
+      TollApiConstants.navigationSessionCancel(navigationSessionId),
+    );
+  }
+
+  Future<NetworkResponse<NavigationSessionModel>> _postNavigationAction(
+    String path, {
+    Map<String, dynamic>? data,
+  }) async {
+    if (!TollSession.hasToken) {
+      return NetworkResponse<NavigationSessionModel>(
+        errorText: 'Toll account is not connected.',
+        errorCode: 'TOLL_SESSION_MISSING',
+      );
+    }
+    try {
+      final response = await client.post(path, data: data);
+      if (response.isSuccess) {
+        return NetworkResponse<NavigationSessionModel>(
+          data: NavigationSessionModel.fromJson(
+            toMap(toMap(response.data)['data']),
+          ),
+        );
+      }
+      return NetworkResponse<NavigationSessionModel>(
+        errorText: _errorMessage(response.data),
+        errorCode: _errorCode(response.data),
+      );
+    } on DioException catch (e) {
+      return NetworkResponse<NavigationSessionModel>(
+        errorText: _errorMessage(e.response?.data, 'Network error'),
+        errorCode: _errorCode(e.response?.data),
+      );
+    } catch (e) {
+      return NetworkResponse<NavigationSessionModel>(errorText: e.toString());
     }
   }
 

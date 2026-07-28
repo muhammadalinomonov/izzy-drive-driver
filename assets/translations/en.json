@@ -220,5 +220,18 @@
     "continue": "Continue",
     "noResults": "Nothing found for this address.",
     "noRecents": "Your recent locations will appear here."
+  },
+  "routeOverview": {
+    "recommended": "Recommended",
+    "alternative": "Alternative {index}",
+    "start": "Start",
+    "calculatingRoute": "Calculating your route...",
+    "noRoutes": "No routes were returned for this trip."
+  },
+  "drivingMode": {
+    "cancel": "Cancel Navigation",
+    "arriving": "Arriving",
+    "resuming": "Resuming your trip...",
+    "rerouting": "Rerouting..."
   }
 }
