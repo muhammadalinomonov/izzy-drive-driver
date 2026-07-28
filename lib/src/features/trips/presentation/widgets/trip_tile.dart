@@ -1,6 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
+import 'package:taxi_app/src/core/location_service.dart';
+import 'package:taxi_app/src/core/service_locater.dart';
 import 'package:taxi_app/src/features/trips/data/model/trip_model.dart';
 
 /// One row of the trip-history list: origin -> destination, when it ran, and
@@ -55,20 +57,68 @@ class TripTile extends StatelessWidget {
   }
 }
 
-class _Endpoints extends StatelessWidget {
+/// Caches reverse-geocoded labels by coordinate so scrolling back over
+/// already-resolved tiles doesn't re-hit the platform geocoder.
+final Map<String, String> _addressCache = {};
+
+class _Endpoints extends StatefulWidget {
   const _Endpoints({required this.trip});
 
   final TripModel trip;
+
+  @override
+  State<_Endpoints> createState() => _EndpointsState();
+}
+
+class _EndpointsState extends State<_Endpoints> {
+  late String _origin = _cached(widget.trip.origin) ?? 'trips.origin'.tr();
+  late String _destination =
+      _cached(widget.trip.destination) ?? 'trips.destination'.tr();
+
+  @override
+  void initState() {
+    super.initState();
+    _resolve(widget.trip.origin, (label) => setState(() => _origin = label));
+    _resolve(
+      widget.trip.destination,
+      (label) => setState(() => _destination = label),
+    );
+  }
+
+  static String? _cached(TripCoordinate? point) {
+    if (point == null) return null;
+    return _addressCache[_key(point)];
+  }
+
+  static String _key(TripCoordinate point) =>
+      '${point.lat.toStringAsFixed(5)},${point.lng.toStringAsFixed(5)}';
+
+  /// The history endpoint returns raw coordinates, not geocoded names — there
+  /// is no reverse-geocode field in the toll-route payload. Resolve a human
+  /// label on-device via the platform geocoder, falling back to trimmed
+  /// lat/lng if the lookup fails.
+  Future<void> _resolve(TripCoordinate? point, void Function(String) apply) async {
+    if (point == null) return;
+    final cached = _cached(point);
+    if (cached != null) return;
+
+    final address = await serviceLocator<LocationService>()
+        .getAddressFromLatLng(point.lat, point.lng);
+    if (!mounted) return;
+
+    final label = (address == null || address.trim().isEmpty)
+        ? '${point.lat.toStringAsFixed(4)}, ${point.lng.toStringAsFixed(4)}'
+        : address;
+    _addressCache[_key(point)] = label;
+    apply(label);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _Point(
-          color: AppColor.kPrimaryColor,
-          label: _format(trip.origin, 'trips.origin'.tr()),
-        ),
+        _Point(color: AppColor.kPrimaryColor, label: _origin),
         Padding(
           padding: const EdgeInsets.only(left: 4),
           child: SizedBox(
@@ -76,20 +126,9 @@ class _Endpoints extends StatelessWidget {
             child: VerticalDivider(color: AppColor.grey2, width: 1, thickness: 1),
           ),
         ),
-        _Point(
-          color: AppColor.red,
-          label: _format(trip.destination, 'trips.destination'.tr()),
-        ),
+        _Point(color: AppColor.red, label: _destination),
       ],
     );
-  }
-
-  /// The history endpoint returns raw coordinates, not geocoded names — there
-  /// is no reverse-geocode field in the toll-route payload. Show trimmed
-  /// lat/lng so the row is still identifiable.
-  static String _format(TripCoordinate? point, String fallback) {
-    if (point == null) return fallback;
-    return '${point.lat.toStringAsFixed(4)}, ${point.lng.toStringAsFixed(4)}';
   }
 }
 

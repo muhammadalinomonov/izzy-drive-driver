@@ -55,9 +55,16 @@ class LocationService {
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
 
-        String fullAddress =
-            '${place.name}, ${place.street}, ${place.subLocality}, '
-            '${place.locality}, ${place.administrativeArea}, ${place.country}, ${place.postalCode}';
+        final parts = [
+          place.name,
+          place.street,
+          place.subLocality,
+          place.locality,
+          place.administrativeArea,
+          place.country,
+          place.postalCode,
+        ].where((p) => p != null && p.trim().isNotEmpty).toSet().join(', ');
+        final fullAddress = parts.isEmpty ? null : parts;
 
         print('Full Address: $fullAddress');
         return fullAddress;
