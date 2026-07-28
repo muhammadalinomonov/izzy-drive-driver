@@ -115,11 +115,11 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                       child: Icon(
                         Icons.local_shipping_rounded,
                         color: AppColor.blueMain,
-                        size: 58,
+                        size: 50,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 24),
                   FadeTransition(
                     opacity: _textFade,
                     child: SlideTransition(
@@ -137,7 +137,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                 softWrap: false,
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 32,
+                                  fontSize: 28,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: -0.3,
                                 ),
@@ -151,7 +151,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.8),
-                                fontSize: 14,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w400,
                                 letterSpacing: 0.2,
                               ),
@@ -170,8 +170,8 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
               bottom: MediaQuery.paddingOf(context).bottom + 40,
               child: const Center(
                 child: SizedBox(
-                  width: 26,
-                  height: 26,
+                  width: 24,
+                  height: 24,
                   child: CircularProgressIndicator(
                     color: Colors.white,
                     strokeWidth: 2.2,

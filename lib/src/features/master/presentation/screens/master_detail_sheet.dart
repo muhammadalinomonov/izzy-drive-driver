@@ -43,7 +43,7 @@ class _MasterDetailSheetState extends State<MasterDetailSheet> {
       builder: (context, scrollController) => Container(
         width: context.sizeOf.width,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           color: AppColor.lightBlue,
         ),
         child: BlocBuilder<MasterBloc, MasterState>(
@@ -103,7 +103,7 @@ class _MasterDetailSheetState extends State<MasterDetailSheet> {
                             Text(
                               master.fullName ?? '',
                               style: context.textTheme.bodyLarge!.copyWith(
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -111,7 +111,7 @@ class _MasterDetailSheetState extends State<MasterDetailSheet> {
                             Text(
                               'Registred data ${MyFunctions.formatDateWithRelative(master.createdAt)}',
                               style: context.textTheme.bodyMedium!.copyWith(
-                                fontSize: 12,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w400,
                                 color: AppColor.grey,
                               ),
@@ -189,7 +189,7 @@ class _MasterDetailSheetState extends State<MasterDetailSheet> {
                                     child: Text(
                                       'ALL COMMENTS',
                                       style: TextStyle(
-                                        fontSize: 14,
+                                        fontSize: 13,
                                         fontWeight: FontWeight.w600,
                                         color: AppColor.kPrimaryColor,
                                         letterSpacing: 0.5,
@@ -317,7 +317,7 @@ class _StatColumn extends StatelessWidget {
         Text(
           label,
           style: context.textTheme.bodyMedium!.copyWith(
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: FontWeight.w400,
             color: AppColor.darkGrey,
           ),
@@ -325,7 +325,7 @@ class _StatColumn extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           value,
-          style: context.textTheme.bodyLarge!.copyWith(fontSize: 22, fontWeight: FontWeight.w500),
+          style: context.textTheme.bodyLarge!.copyWith(fontSize: 20, fontWeight: FontWeight.w500),
         ),
       ],
     );
@@ -371,9 +371,9 @@ class _MasterDetailSkeleton extends StatelessWidget {
                         const SizedBox(height: 16),
                         const _SkeletonBox(width: 87, height: 87, radius: 87),
                         const SizedBox(height: 13),
-                        const _SkeletonBox(width: 160, height: 18, radius: 6),
+                        const _SkeletonBox(width: 160, height: 16, radius: 6),
                         const SizedBox(height: 8),
-                        const _SkeletonBox(width: 200, height: 12, radius: 6),
+                        const _SkeletonBox(width: 200, height: 11, radius: 6),
                         const SizedBox(height: 23),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -27,7 +27,7 @@ class AddressChip extends StatelessWidget {
           Text(
             shown,
             style: const TextStyle(
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w500,
               letterSpacing: -0.3,
               color: Colors.black,

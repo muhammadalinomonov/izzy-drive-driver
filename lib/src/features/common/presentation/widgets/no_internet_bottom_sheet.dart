@@ -61,14 +61,14 @@ class _NoInternetBottomSheetState extends State<NoInternetBottomSheet> {
       canPop: false,
       child: Container(
         padding: EdgeInsets.only(
-          left: 24,
-          right: 24,
+          left: 20,
+          right: 20,
           top: 12,
-          bottom: MediaQuery.of(context).padding.bottom + 24,
+          bottom: MediaQuery.of(context).padding.bottom + 20,
         ),
         decoration: BoxDecoration(
           color: AppColor.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -81,23 +81,23 @@ class _NoInternetBottomSheetState extends State<NoInternetBottomSheet> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 32),
-            Icon(Icons.wifi_off_rounded, size: 56, color: AppColor.red),
-            const SizedBox(height: 20),
+            const SizedBox(height: 28),
+            Icon(Icons.wifi_off_rounded, size: 48, color: AppColor.red),
+            const SizedBox(height: 18),
             const Text(
               'No internet connection',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Text(
               'Please check your Wi-Fi or mobile data, then press the button below.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: AppColor.grey, height: 1.4),
+              style: TextStyle(fontSize: 13, color: AppColor.grey, height: 1.4),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
-              height: 52,
+              height: 50,
               child: ElevatedButton(
                 onPressed: _checking ? null : _onCheckPressed,
                 style: ElevatedButton.styleFrom(
@@ -121,7 +121,7 @@ class _NoInternetBottomSheetState extends State<NoInternetBottomSheet> {
                     : const Text(
                         'Try again',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

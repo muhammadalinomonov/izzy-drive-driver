@@ -56,7 +56,7 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                 width: double.infinity,
                                 margin: const EdgeInsets.only(bottom: 8),
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 32,
+                                  vertical: 24,
                                   horizontal: 16,
                                 ),
                                 decoration: BoxDecoration(
@@ -70,8 +70,8 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Container(
-                                      width: 64,
-                                      height: 64,
+                                      width: 56,
+                                      height: 56,
                                       decoration: BoxDecoration(
                                         color: Color(0xFF3366FF),
                                         shape: BoxShape.circle,
@@ -79,10 +79,10 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                       child: Icon(
                                         Icons.check,
                                         color: Colors.white,
-                                        size: 40,
+                                        size: 32,
                                       ),
                                     ),
-                                    const SizedBox(height: 20),
+                                    const SizedBox(height: 16),
                                     Text(
                                       'Successfully completed!',
                                       style: context.textS.titleLarge?.copyWith(
@@ -99,14 +99,14 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                       ),
                                       textAlign: TextAlign.center,
                                     ),
-                                    const SizedBox(height: 24),
+                                    const SizedBox(height: 20),
                                   ],
                                 ),
                               ),
                               Container(
                                 width: double.infinity,
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 32,
+                                  vertical: 24,
                                   horizontal: 16,
                                 ),
                                 decoration: BoxDecoration(
@@ -136,7 +136,7 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                                 ? Icons.star
                                                 : Icons.star_border,
                                             color: Color(0xFFFFC107),
-                                            size: 32,
+                                            size: 28,
                                           ),
                                         );
                                       }),
@@ -199,8 +199,8 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                           ),
                                           contentPadding:
                                               const EdgeInsets.symmetric(
-                                                horizontal: 16,
-                                                vertical: 16,
+                                                horizontal: 14,
+                                                vertical: 14,
                                               ),
                                         ),
                                         style: context.textS.bodyMedium,
@@ -270,7 +270,7 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                         children: [
                                           AvatarImage(
                                             imageUrl: worker.avatarUrl,
-                                            size: 48,
+                                            size: 44,
                                           ),
                                           const SizedBox(width: 12),
                                           Column(
@@ -502,7 +502,7 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                         ),
                                         decoration: BoxDecoration(
                                           color: Color(0xFFE8F1FF),
-                                          borderRadius: BorderRadius.circular(24),
+                                          borderRadius: BorderRadius.circular(20),
                                         ),
                                         child: Row(
                                           children: [
@@ -543,7 +543,7 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
+                            borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -553,10 +553,10 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                                 child: Column(
                                   children: [
                                     CircleAvatar(
-                                      radius: 28,
+                                      radius: 25,
                                       backgroundColor: AppColor.lightBlue,
                                       child: Padding(
-                                        padding: const EdgeInsets.all(14),
+                                        padding: const EdgeInsets.all(12),
                                         child: SvgPicture.asset(AppIcons.phone),
                                       ),
                                     ),
@@ -568,10 +568,10 @@ class _WorkerInfoPageState extends State<WorkerInfoPage> {
                               Column(
                                 children: [
                                   CircleAvatar(
-                                    radius: 28,
+                                    radius: 25,
                                     backgroundColor: AppColor.lightBlue,
                                     child: Padding(
-                                      padding: const EdgeInsets.all(14),
+                                      padding: const EdgeInsets.all(12),
                                       child: SvgPicture.asset(AppIcons.x),
                                     ),
                                   ),

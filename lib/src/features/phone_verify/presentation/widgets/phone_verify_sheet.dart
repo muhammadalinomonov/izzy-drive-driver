@@ -137,15 +137,15 @@ class _PhoneVerifySheetState extends State<_PhoneVerifySheet> {
       context: context,
       showPhoneCode: true,
       countryListTheme: CountryListThemeData(
-        flagSize: 22,
+        flagSize: 20,
         backgroundColor: AppColor.white,
         textStyle: context.textS.titleSmall!.copyWith(
           fontWeight: FontWeight.w500,
         ),
         bottomSheetHeight: 600,
         borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
+          topLeft: Radius.circular(18),
+          topRight: Radius.circular(18),
         ),
         inputDecoration: InputDecoration(
           hintText: LocaleKeys.phoneVerify_entry_searchCountry.tr(),
@@ -209,8 +209,8 @@ class _PhoneVerifySheetState extends State<_PhoneVerifySheet> {
           decoration: BoxDecoration(
             color: AppColor.white,
             borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
+              topLeft: Radius.circular(18),
+              topRight: Radius.circular(18),
             ),
           ),
           child: Padding(
@@ -235,14 +235,14 @@ class _PhoneVerifySheetState extends State<_PhoneVerifySheet> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Image.asset('assets/images/phone.png', width: 53, height: 75),
+                Image.asset('assets/images/phone.png', width: 46, height: 64),
                 const SizedBox(height: 12),
                 Text(
                   LocaleKeys.phoneVerify_entry_lastStep.tr(),
                   style: context.textS.bodyMedium!.copyWith(
                     color: AppColor.kPrimaryColor,
                     fontWeight: FontWeight.w500,
-                    fontSize: 14,
+                    fontSize: 13,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -252,7 +252,7 @@ class _PhoneVerifySheetState extends State<_PhoneVerifySheet> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 18),
                 _PhoneInput(
                   controller: _phoneController,
                   country: _selected,
@@ -274,7 +274,7 @@ class _PhoneVerifySheetState extends State<_PhoneVerifySheet> {
                     );
                   },
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 18),
                 BlocBuilder<PhoneVerifyBloc, PhoneVerifyState>(
                   buildWhen: (p, c) => p.sendStatus != c.sendStatus,
                   builder: (context, state) {
@@ -325,16 +325,16 @@ class _PhoneInput extends StatelessWidget {
             behavior: HitTestBehavior.opaque,
             onTap: onPickCountry,
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 14),
+              padding: const EdgeInsets.symmetric(vertical: 12),
               child: Row(
                 children: [
                   Icon(
                     Icons.keyboard_arrow_down_rounded,
                     color: AppColor.grey,
-                    size: 22,
+                    size: 20,
                   ),
                   const SizedBox(width: 4),
-                  Text(country.flagEmoji, style: const TextStyle(fontSize: 22)),
+                  Text(country.flagEmoji, style: const TextStyle(fontSize: 20)),
                   const SizedBox(width: 6),
                   Text(
                     '(+${country.phoneCode})',
@@ -370,7 +370,7 @@ class _PhoneInput extends StatelessWidget {
                   fontWeight: FontWeight.w400,
                 ),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
           ),
@@ -389,7 +389,7 @@ class _SheetErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: AppColor.red.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
@@ -398,7 +398,7 @@ class _SheetErrorBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.error_rounded, color: AppColor.red, size: 20),
+          Icon(Icons.error_rounded, color: AppColor.red, size: 18),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -406,7 +406,7 @@ class _SheetErrorBanner extends StatelessWidget {
               style: context.textS.bodyMedium!.copyWith(
                 color: AppColor.red,
                 fontWeight: FontWeight.w500,
-                fontSize: 13,
+                fontSize: 12,
                 height: 1.3,
               ),
             ),

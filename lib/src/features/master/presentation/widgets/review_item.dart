@@ -48,7 +48,7 @@ class ReviewItem extends StatelessWidget {
                   Text(
                     name,
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -115,7 +115,7 @@ class ReviewItem extends StatelessWidget {
         Text(
           MyFunctions.relativeDate(date),
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: FontWeight.w400,
             color: AppColor.grey,
           ),

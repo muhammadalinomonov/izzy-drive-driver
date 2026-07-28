@@ -23,7 +23,7 @@ class OrderInformationWidget extends StatelessWidget {
         children: [
           Text(
             'Order details',
-            style: context.textTheme.bodyMedium!.copyWith(fontSize: 16, fontWeight: FontWeight.w600),
+            style: context.textTheme.bodyMedium!.copyWith(fontSize: 15, fontWeight: FontWeight.w600),
           ),
           SizedBox(height: 12),
           InfoItem(title: 'Order placed', info: createdAt),
@@ -39,7 +39,7 @@ class OrderInformationWidget extends StatelessWidget {
               Text(
                 'Payment type',
                 style: context.textTheme.bodySmall!.copyWith(
-                  fontSize: 12,
+                  fontSize: 11,
                   color: AppColor.grey2,
                   fontWeight: FontWeight.w400,
                 ),
@@ -47,11 +47,11 @@ class OrderInformationWidget extends StatelessWidget {
               SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(Icons.payments_outlined, size: 20, color: AppColor.kPrimaryColor),
+                  Icon(Icons.payments_outlined, size: 18, color: AppColor.kPrimaryColor),
                   SizedBox(width: 4),
                   Text(
                     'Cash'.tr(),
-                    style: context.textTheme.bodySmall!.copyWith(fontSize: 14, fontWeight: FontWeight.w500),
+                    style: context.textTheme.bodySmall!.copyWith(fontSize: 13, fontWeight: FontWeight.w500),
                   ),
                   Spacer(),
                   // SvgPicture.asset(AppIcons.circularCheck, width: 20, height: 20),

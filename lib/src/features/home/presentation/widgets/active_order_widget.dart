@@ -47,14 +47,14 @@ class ActiveOrderWidget extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 52,
-            height: 52,
+            width: 48,
+            height: 48,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: accent.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Image.asset(AppImages.key, width: 32, height: 32),
+            child: Image.asset(AppImages.key, width: 28, height: 28),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -95,7 +95,7 @@ class ActiveOrderWidget extends StatelessWidget {
                 Text(
                   'No. $orderId',
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: Colors.black,
                   ),
@@ -104,7 +104,7 @@ class ActiveOrderWidget extends StatelessWidget {
                 Text(
                   status.orderDescription,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     color: AppColor.grey,
                   ),
                   maxLines: 2,
@@ -115,14 +115,14 @@ class ActiveOrderWidget extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Container(
-            width: 32,
-            height: 32,
+            width: 30,
+            height: 30,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: AppColor.lightBlue,
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.arrow_forward_ios_rounded, size: 14, color: accent),
+            child: Icon(Icons.arrow_forward_ios_rounded, size: 13, color: accent),
           ),
         ],
       ),

@@ -113,7 +113,7 @@ class _CancelReasonSheetState extends State<_CancelReasonSheet> {
         constraints: BoxConstraints(maxHeight: maxHeight),
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: SafeArea(
           top: false,
@@ -242,7 +242,7 @@ class _Header extends StatelessWidget {
                 Text(
                   'Cancel order'.tr(),
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.w700,
                     letterSpacing: -0.2,
                   ),
@@ -251,7 +251,7 @@ class _Header extends StatelessWidget {
                 Text(
                   'Tell us why'.tr(),
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: FontWeight.w400,
                     color: AppColor.grey,
                   ),
@@ -315,8 +315,8 @@ class _ReasonTile extends StatelessWidget {
               children: [
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 160),
-                  width: 36,
-                  height: 36,
+                  width: 34,
+                  height: 34,
                   decoration: BoxDecoration(
                     color: selected ? accent : Colors.white,
                     borderRadius: BorderRadius.circular(12),
@@ -332,7 +332,7 @@ class _ReasonTile extends StatelessWidget {
                   child: Text(
                     label,
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize: 14,
                       fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                       color: selected ? AppColor.black : AppColor.black,
                     ),
@@ -401,11 +401,11 @@ class _OtherTextField extends StatelessWidget {
         minLines: 2,
         textInputAction: TextInputAction.done,
         inputFormatters: [LengthLimitingTextInputFormatter(_kOtherMaxLength)],
-        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         decoration: InputDecoration(
           isDense: true,
           hintText: 'Tell us why'.tr(),
-          hintStyle: TextStyle(color: AppColor.grey, fontSize: 14),
+          hintStyle: TextStyle(color: AppColor.grey, fontSize: 13),
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
@@ -451,14 +451,14 @@ class _Footer extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 6),
                     child: Text(
                       'Please select a reason'.tr(),
-                      style: TextStyle(color: AppColor.grey, fontSize: 12.5),
+                      style: TextStyle(color: AppColor.grey, fontSize: 11.5),
                     ),
                   )
                 : const SizedBox.shrink(),
           ),
           SizedBox(
             width: double.infinity,
-            height: 54,
+            height: 50,
             child: ElevatedButton(
               onPressed: canConfirm ? onConfirm : null,
               style: ElevatedButton.styleFrom(
@@ -474,7 +474,7 @@ class _Footer extends StatelessWidget {
               child: Text(
                 'Confirm'.tr(),
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: FontWeight.w600,
                   letterSpacing: -0.1,
                 ),
@@ -501,13 +501,13 @@ class _ErrorView extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 56,
-            height: 56,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
               color: AppColor.red.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.error_outline, color: AppColor.red, size: 28),
+            child: Icon(Icons.error_outline, color: AppColor.red, size: 22),
           ),
           const SizedBox(height: 12),
           Text(
@@ -515,7 +515,7 @@ class _ErrorView extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               color: AppColor.grey,
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -524,11 +524,11 @@ class _ErrorView extends StatelessWidget {
             onPressed: onRetry,
             style: TextButton.styleFrom(
               foregroundColor: AppColor.kPrimaryColor,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             ),
             child: Text(
               'common.retry'.tr(),
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
             ),
           ),
         ],

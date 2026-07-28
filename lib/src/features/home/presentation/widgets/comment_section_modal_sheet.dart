@@ -23,7 +23,7 @@ void showCommentSectionModalSheet(BuildContext context) {
               return Container(
                 decoration: BoxDecoration(
                   color: AppColor.lightBlue, // White background
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.08),
@@ -57,7 +57,7 @@ void showCommentSectionModalSheet(BuildContext context) {
                             ),
                           ),
                           ProfileSection(),
-                          SizedBox(height: 18),
+                          SizedBox(height: 16),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
@@ -74,10 +74,10 @@ void showCommentSectionModalSheet(BuildContext context) {
                         width: double.infinity,
                         margin: EdgeInsets.only(top: 8),
                         padding: EdgeInsets.only(
-                          left: 20,
-                          right: 20,
+                          left: 16,
+                          right: 16,
                           bottom: 0,
-                          top: 18,
+                          top: 16,
                         ),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(16),
@@ -131,7 +131,7 @@ void showCommentSectionModalSheet(BuildContext context) {
                                     style: TextStyle(
                                       color: AppColor.kPrimaryColor,
                                       fontWeight: FontWeight.w700,
-                                      fontSize: 16,
+                                      fontSize: 15,
                                       letterSpacing: 0.2,
                                     ),
                                   ),
@@ -178,7 +178,7 @@ class _CommentCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            AvatarImage(imageUrl: comment.avatarUrl, size: 40),
+            AvatarImage(imageUrl: comment.avatarUrl, size: 36),
             SizedBox(width: 10),
             Text(
               comment.name,
@@ -192,7 +192,7 @@ class _CommentCard extends StatelessWidget {
                 5,
                 (i) => Icon(
                   Icons.star,
-                  size: 18,
+                  size: 16,
                   color: i < comment.stars ? Colors.amber : Colors.grey[300],
                 ),
               ),
@@ -234,7 +234,7 @@ class _ProfileStat extends StatelessWidget {
           value,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
-            fontSize: 20,
+            fontSize: 18,
           ),
         ),
         SizedBox(height: 2),
@@ -242,7 +242,7 @@ class _ProfileStat extends StatelessWidget {
           title,
           style: Theme.of(
             context,
-          ).textTheme.bodySmall?.copyWith(color: AppColor.grey, fontSize: 13),
+          ).textTheme.bodySmall?.copyWith(color: AppColor.grey, fontSize: 12),
         ),
       ],
     );

@@ -26,12 +26,12 @@ class OutputItem extends StatelessWidget {
             mainAxisSize: MainAxisSize.max,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: context.textTheme.headlineLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w400)),
+              Text(title, style: context.textTheme.headlineLarge!.copyWith(fontSize: 13, fontWeight: FontWeight.w400)),
               SizedBox(height: 2),
               Text(
                 date,
                 style: context.textTheme.headlineLarge!.copyWith(
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: FontWeight.w400,
                   color: AppColor.grey,
                 ),
@@ -39,7 +39,7 @@ class OutputItem extends StatelessWidget {
             ],
           ),
         ),
-        Text(price, style: context.textTheme.headlineLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w400)),
+        Text(price, style: context.textTheme.headlineLarge!.copyWith(fontSize: 13, fontWeight: FontWeight.w400)),
       ],
     );
   }

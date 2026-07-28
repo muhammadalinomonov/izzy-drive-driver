@@ -14,7 +14,7 @@ class EmailConfirmationWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(18),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         color: AppColor.white,
@@ -23,11 +23,11 @@ class EmailConfirmationWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           SvgPicture.asset(AppIcons.gmail),
-          SizedBox(height: 30),
+          SizedBox(height: 24),
           Text(
             LocaleKeys.auth_emailConfirmation_title.tr(),
             style: context.textS.titleLarge!.copyWith(
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -40,7 +40,7 @@ class EmailConfirmationWidget extends StatelessWidget {
               fontWeight: FontWeight.w400,
             ),
           ),
-          SizedBox(height: 30),
+          SizedBox(height: 24),
           AppButton(
             title: LocaleKeys.auth_emailConfirmation_understood.tr(),
             onTap: () => context.pop(),

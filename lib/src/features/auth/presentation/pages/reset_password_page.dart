@@ -105,7 +105,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                         fontWeight: FontWeight.w400,
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 24),
                     AuthInputWidget(
                       hint: LocaleKeys.auth_resetPassword_newPasswordHint.tr(),
                       label: LocaleKeys.auth_resetPassword_newPasswordLabel.tr(),
@@ -114,7 +114,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                       controller: _passwordController,
                       validator: AppValidators.password,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
                     AuthInputWidget(
                       hint: LocaleKeys.auth_resetPassword_confirmPasswordHint.tr(),
                       label: LocaleKeys.auth_resetPassword_confirmPasswordLabel.tr(),
@@ -123,7 +123,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                       controller: _confirmController,
                       validator: AppValidators.password,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
                     BlocBuilder<ForgotPasswordBloc, ForgotPasswordState>(
                       buildWhen: (p, c) => p.resetStatus != c.resetStatus,
                       builder: (context, state) {

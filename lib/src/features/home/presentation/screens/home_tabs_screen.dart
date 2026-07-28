@@ -63,9 +63,9 @@ class _HomeTabsScreenState extends State<HomeTabsScreen>
           dividerColor: Colors.transparent,
           labelColor: AppColor.black,
           unselectedLabelColor: AppColor.black,
-          labelStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+          labelStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           unselectedLabelStyle:
-              const TextStyle(fontSize: 17, fontWeight: FontWeight.w400),
+              const TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
           splashFactory: NoSplash.splashFactory,
           overlayColor: WidgetStateProperty.all(Colors.transparent),
           tabs: [
@@ -95,12 +95,12 @@ class _TabLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Tab(
-      height: 46,
+      height: 44,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           // Multi-color artwork - intentionally not tinted, matching 1.png.
-          SvgPicture.asset(icon, width: 22, height: 22),
+          SvgPicture.asset(icon, width: 20, height: 20),
           const SizedBox(width: 8),
           Text(label),
         ],

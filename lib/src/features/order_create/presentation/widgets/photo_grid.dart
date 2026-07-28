@@ -116,7 +116,7 @@ class _AddTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColor.lightGrey, style: BorderStyle.solid),
         ),
-        child: Icon(Icons.add, size: 32, color: AppColor.grey),
+        child: Icon(Icons.add, size: 26, color: AppColor.grey),
       ),
     );
   }

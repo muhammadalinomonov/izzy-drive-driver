@@ -169,7 +169,7 @@ class _PhoneOtpPageState extends State<PhoneOtpPage> {
                       style: context.textS.bodyMedium!.copyWith(
                         color: AppColor.grey,
                         fontWeight: FontWeight.w400,
-                        fontSize: 14,
+                        fontSize: 13,
                       ),
                     ),
                   ),
@@ -190,7 +190,7 @@ class _PhoneOtpPageState extends State<PhoneOtpPage> {
                     const SizedBox(height: 10),
                     Center(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Text(
                           // Backend localized response (masalan "Kod noto'g'ri")
                           // bo'sh bo'lmasa o'sha ko'rsatiladi. Aks holda lokal
@@ -201,12 +201,12 @@ class _PhoneOtpPageState extends State<PhoneOtpPage> {
                               : state.errorMessage,
                           textAlign: TextAlign.center,
                           style: context.textS.bodySmall!
-                              .copyWith(color: AppColor.red, fontSize: 12),
+                              .copyWith(color: AppColor.red, fontSize: 11),
                         ),
                       ),
                     ),
                   ],
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 16),
                   _ResendRow(
                     secondsLeft: _secondsLeft,
                     isLoading: isResending,
@@ -239,7 +239,7 @@ class _OtpHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 280,
+      height: 260,
       child: Stack(
         children: [
           // Auth sahifalardagi bilan bir xil gradient: yon-bo'yi joylashgan
@@ -278,14 +278,14 @@ class _OtpHeader extends StatelessWidget {
                 const SizedBox(height: 4),
                 Padding(
                   padding: const EdgeInsets.only(left: 8),
-                  child: Image.asset('assets/images/mail_with_1_badge.png', width: 75, height: 60),
+                  child: Image.asset('assets/images/mail_with_1_badge.png', width: 64, height: 51),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
                 Padding(
                   padding: const EdgeInsets.only(left: 8),
                   child: Text(
                     LocaleKeys.phoneVerify_otp_title.tr(),
-                    style: context.textS.headlineSmall!.copyWith(fontWeight: FontWeight.w700, fontSize: 24),
+                    style: context.textS.headlineSmall!.copyWith(fontWeight: FontWeight.w700, fontSize: 20),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -296,7 +296,7 @@ class _OtpHeader extends StatelessWidget {
                     style: context.textS.bodyMedium!.copyWith(
                       color: AppColor.grey,
                       fontWeight: FontWeight.w400,
-                      fontSize: 14,
+                      fontSize: 13,
                       height: 1.4,
                     ),
                   ),
@@ -336,7 +336,7 @@ class _ResendRow extends StatelessWidget {
               style: context.textS.bodyMedium!.copyWith(
                 color: AppColor.grey,
                 fontWeight: FontWeight.w400,
-                fontSize: 14,
+                fontSize: 13,
               ),
             ),
             const SizedBox(width: 8),
@@ -355,7 +355,7 @@ class _ResendRow extends StatelessWidget {
                     style: context.textS.bodyMedium!.copyWith(
                       color: AppColor.black,
                       fontWeight: FontWeight.w500,
-                      fontSize: 14,
+                      fontSize: 13,
                     ),
                   ),
                 ],
@@ -367,7 +367,7 @@ class _ResendRow extends StatelessWidget {
               style: context.textS.bodyMedium!.copyWith(
                 color: AppColor.black,
                 fontWeight: FontWeight.w700,
-                fontSize: 14,
+                fontSize: 13,
               ),
             ),
         ],
@@ -402,8 +402,8 @@ class _OtpInput extends StatefulWidget {
 }
 
 class _OtpInputState extends State<_OtpInput> {
-  static const double _boxSize = 48;
-  static const double _gap = 18;
+  static const double _boxSize = 44;
+  static const double _gap = 14;
   static const Color _bgNormal = Color(0xFFEFF3F6);
   static const Color _bgError = Color(0x0DFC0000);
   static const Color _textNormal = Color(0xFF000000);
@@ -501,7 +501,7 @@ class _OtpInputState extends State<_OtpInput> {
                   child: Text(
                     char,
                     style: TextStyle(
-                      fontSize: filled ? 18 : 16,
+                      fontSize: filled ? 16 : 15,
                       fontWeight: filled ? FontWeight.w500 : FontWeight.w400,
                       color: filled ? filledColor : _hint,
                       height: 1,

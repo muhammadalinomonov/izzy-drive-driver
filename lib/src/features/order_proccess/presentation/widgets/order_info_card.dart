@@ -21,23 +21,23 @@ class OrderInfoCard extends StatelessWidget {
         children: [
           Text(
             'Order details',
-            style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 16, fontWeight: FontWeight.w600),
+            style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 15, fontWeight: FontWeight.w600),
           ),
           SizedBox(height: 12),
           Text(
             'Order placed',
-            style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 12, fontWeight: FontWeight.w400),
+            style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 11, fontWeight: FontWeight.w400),
           ),
           SizedBox(height: 4),
           Text(
             MyFunctions.formatDateTime(currentOrder.acceptedAt),
-            style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w500),
+            style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 13, fontWeight: FontWeight.w500),
           ),
           Divider(color: AppColor.lightBlue),
           if (currentOrder.status.isMechanicDone || currentOrder.status.isCompleted) ...[
             Text(
               'Time spent',
-              style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 12, fontWeight: FontWeight.w400),
+              style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 11, fontWeight: FontWeight.w400),
             ),
             SizedBox(height: 4),
             Builder(
@@ -48,7 +48,7 @@ class OrderInfoCard extends StatelessWidget {
                 final difference = completedAt.difference(acceptedAt);
                 return Text(
                   MyFunctions.formatDuration(difference.inMinutes),
-                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w500),
+                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 13, fontWeight: FontWeight.w500),
                 );
               },
             ),
@@ -56,12 +56,12 @@ class OrderInfoCard extends StatelessWidget {
           ],
           Text(
             'Where to',
-            style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 12, fontWeight: FontWeight.w400),
+            style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 11, fontWeight: FontWeight.w400),
           ),
           SizedBox(height: 4),
           Text(
             currentOrder.currentAddress.address,
-            style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w500),
+            style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 13, fontWeight: FontWeight.w500),
           ),
 
 
@@ -69,12 +69,12 @@ class OrderInfoCard extends StatelessWidget {
             Divider(color: AppColor.lightBlue),
             Text(
               'Payment type',
-              style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 12, fontWeight: FontWeight.w400),
+              style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 11, fontWeight: FontWeight.w400),
             ),
             SizedBox(height: 4),
             Text(
               'Cash',
-              style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w500),
+              style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 13, fontWeight: FontWeight.w500),
             ),
           ],
         ],

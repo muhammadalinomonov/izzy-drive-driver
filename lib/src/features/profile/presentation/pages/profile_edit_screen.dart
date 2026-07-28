@@ -93,29 +93,29 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                 children: [
                   Text(
                     'My information',
-                    style: context.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w600, fontSize: 20),
+                    style: context.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w600, fontSize: 18),
                   ),
-                  SizedBox(height: 24),
+                  SizedBox(height: 20),
                   AuthInputWidget(
                     hint: '',
                     label: 'E-mail',
                     readOnly: true,
                     controller: _emailController,
                   ),
-                  SizedBox(height: 24),
+                  SizedBox(height: 20),
                   AuthInputWidget(
                     hint: '',
                     label: 'Name',
                     readOnly: true,
                     controller: TextEditingController(text: state.profile?.fullName),
                   ),
-                  SizedBox(height: 24),
+                  SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         'Change password',
-                        style: context.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w500, fontSize: 16),
+                        style: context.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w500, fontSize: 15),
                       ),
                       CupertinoSwitch(
                         value: canEditPassword,
@@ -127,7 +127,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 24),
+                  SizedBox(height: 20),
 
                   Opacity(
                     opacity: canEditPassword ? 1 : .5,
@@ -143,7 +143,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                           validator: AppValidators.password,
                           obscureText: true,
                         ),
-                        SizedBox(height: 24),
+                        SizedBox(height: 20),
                         AuthInputWidget(
                           readOnly: !canEditPassword,
                           hint: 'Enter password',
@@ -153,7 +153,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                           validator: AppValidators.password,
                           obscureText: true,
                         ),
-                        SizedBox(height: 24),
+                        SizedBox(height: 20),
                         AuthInputWidget(
                           readOnly: !canEditPassword,
                           hint: 'Enter password',

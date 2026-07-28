@@ -67,7 +67,7 @@ class _CreateOutputSheetState extends State<CreateOutputSheet> {
               SizedBox(height: 12),
               Text(
                 'Expense name',
-                style: context.textTheme.headlineLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w400),
+                style: context.textTheme.headlineLarge!.copyWith(fontSize: 13, fontWeight: FontWeight.w400),
               ),
               SizedBox(height: 8),
               TextField(
@@ -86,14 +86,14 @@ class _CreateOutputSheetState extends State<CreateOutputSheet> {
                   contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                   hintText: 'Enter expense name',
                   hintStyle: context.textTheme.headlineLarge!.copyWith(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w400,
                     color: Colors.grey,
                   ),
                 ),
               ),
-              SizedBox(height: 24),
-              Text('Date', style: context.textTheme.headlineLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w400)),
+              SizedBox(height: 20),
+              Text('Date', style: context.textTheme.headlineLarge!.copyWith(fontSize: 13, fontWeight: FontWeight.w400)),
               SizedBox(height: 8),
               Container(
                 height: 48,
@@ -106,7 +106,7 @@ class _CreateOutputSheetState extends State<CreateOutputSheet> {
                           ? MyFunctions.formatDateTime(selectedDate.toString(), format: 'dd.MM.yyyy')
                           : 'Select date',
                       style: context.textTheme.headlineLarge!.copyWith(
-                        fontSize: 16,
+                        fontSize: 15,
                         fontWeight: FontWeight.w400,
                         color: selectedDate == null ? Colors.grey : null,
                       ),
@@ -131,10 +131,10 @@ class _CreateOutputSheetState extends State<CreateOutputSheet> {
                   ],
                 ),
               ),
-              SizedBox(height: 24),
+              SizedBox(height: 20),
               Text(
                 'Amount',
-                style: context.textTheme.headlineLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w400),
+                style: context.textTheme.headlineLarge!.copyWith(fontSize: 13, fontWeight: FontWeight.w400),
               ),
               SizedBox(height: 8),
               TextField(
@@ -154,7 +154,7 @@ class _CreateOutputSheetState extends State<CreateOutputSheet> {
                   contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                   hintText: 'Enter amount',
                   hintStyle: context.textTheme.headlineLarge!.copyWith(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w400,
                     color: Colors.grey,
                   ),

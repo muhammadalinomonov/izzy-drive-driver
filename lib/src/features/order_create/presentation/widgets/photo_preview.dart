@@ -108,7 +108,7 @@ class _PhotoPreviewPageState extends State<_PhotoPreviewPage> {
                 onTap: _close,
                 child: const Padding(
                   padding: EdgeInsets.all(8),
-                  child: Icon(Icons.close_rounded, color: Colors.white, size: 22),
+                  child: Icon(Icons.close_rounded, color: Colors.white, size: 20),
                 ),
               ),
             ),
@@ -127,13 +127,13 @@ class _PhotoPreviewPageState extends State<_PhotoPreviewPage> {
                     ),
                     decoration: BoxDecoration(
                       color: Colors.black54,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(18),
                     ),
                     child: Text(
                       '${_currentIndex + 1} / ${widget.photos.length}',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
                     ),

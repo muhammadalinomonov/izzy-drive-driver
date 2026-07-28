@@ -34,7 +34,7 @@ class AppButton extends StatelessWidget {
         backgroundColor:
             backGroundColor ??
             AppColor.kPrimaryColor, // Or use AppColor.primary if defined
-        minimumSize: Size(double.infinity, 48), // Full width, height 64
+        minimumSize: Size(double.infinity, 48), // Full width, height 48
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(50), // Fully rounded
         ),

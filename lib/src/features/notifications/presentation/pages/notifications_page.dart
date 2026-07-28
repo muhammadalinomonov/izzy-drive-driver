@@ -55,7 +55,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         leading: IconButton(
-          icon: SvgPicture.asset(AppIcons.back, width: 24, height: 24),
+          icon: SvgPicture.asset(AppIcons.back, width: 20, height: 20),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -203,8 +203,8 @@ class _EmptyView extends StatelessWidget {
             child: Column(
               children: [
                 Container(
-                  width: 80,
-                  height: 80,
+                  width: 72,
+                  height: 72,
                   decoration: BoxDecoration(
                     color: AppColor.lightBlue,
                     shape: BoxShape.circle,
@@ -212,8 +212,8 @@ class _EmptyView extends StatelessWidget {
                   child: Center(
                     child: SvgPicture.asset(
                       AppIcons.bell,
-                      width: 32,
-                      height: 32,
+                      width: 28,
+                      height: 28,
                       colorFilter: ColorFilter.mode(AppColor.kPrimaryColor, BlendMode.srcIn),
                     ),
                   ),
@@ -221,7 +221,7 @@ class _EmptyView extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   'notifications.emptyTitle'.tr(),
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 6),
                 Padding(
@@ -229,7 +229,7 @@ class _EmptyView extends StatelessWidget {
                   child: Text(
                     'notifications.emptySubtitle'.tr(),
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 13, color: AppColor.grey),
+                    style: TextStyle(fontSize: 12, color: AppColor.grey),
                   ),
                 ),
               ],
@@ -255,12 +255,12 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48, color: AppColor.darkGrey),
+            Icon(Icons.error_outline, size: 40, color: AppColor.darkGrey),
             const SizedBox(height: 12),
             Text(
               message.isEmpty ? 'common.somethingWentWrong'.tr() : message,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: AppColor.grey),
+              style: TextStyle(fontSize: 13, color: AppColor.grey),
             ),
             const SizedBox(height: 12),
             FilledButton(

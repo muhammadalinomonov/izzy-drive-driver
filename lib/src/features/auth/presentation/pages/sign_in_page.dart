@@ -148,9 +148,9 @@ class _SignInPageState extends State<SignInPage> {
                               width: double.infinity,
                               padding: const EdgeInsets.fromLTRB(
                                 16,
-                                24,
+                                20,
                                 16,
-                                24,
+                                20,
                               ),
                               decoration: BoxDecoration(
                                 color: AppColor.white,

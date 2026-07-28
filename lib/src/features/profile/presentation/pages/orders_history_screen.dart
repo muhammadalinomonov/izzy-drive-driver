@@ -43,7 +43,7 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen> {
             'Order history',
             style: context.textTheme.bodyLarge!.copyWith(
               fontWeight: FontWeight.w600,
-              fontSize: 20,
+              fontSize: 18,
             ),
           ),
         ),
@@ -110,8 +110,8 @@ class _OrdersHistoryEmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 120,
-              height: 120,
+              width: 100,
+              height: 100,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppColor.lightBlue,
@@ -119,18 +119,18 @@ class _OrdersHistoryEmptyState extends StatelessWidget {
               alignment: Alignment.center,
               child: SvgPicture.asset(
                 AppIcons.timePast,
-                width: 52,
-                height: 52,
+                width: 44,
+                height: 44,
                 colorFilter: ColorFilter.mode(AppColor.darkGrey, BlendMode.srcIn),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             Text(
               'No orders yet',
               textAlign: TextAlign.center,
               style: context.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
-                fontSize: 18,
+                fontSize: 16,
                 color: AppColor.black,
               ),
             ),

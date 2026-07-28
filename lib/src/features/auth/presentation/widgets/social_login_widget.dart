@@ -28,7 +28,7 @@ class SocialLoginWidget extends StatelessWidget {
         fixedSize: size,
         backgroundColor: AppColor.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: 10),
         side: BorderSide(color: AppColor.grey.withAlpha(10), width: 2),
       ),
       child: Row(

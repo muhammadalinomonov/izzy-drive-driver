@@ -107,7 +107,7 @@ class ApplePayInfoRow extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               'Apple Pay',
-              style: context.textTheme.bodySmall!.copyWith(fontSize: 14, fontWeight: FontWeight.w500),
+              style: context.textTheme.bodySmall!.copyWith(fontSize: 13, fontWeight: FontWeight.w500),
             ),
             const Spacer(),
             // SvgPicture.asset(AppIcons.circularCheck, width: 20, height: 20),

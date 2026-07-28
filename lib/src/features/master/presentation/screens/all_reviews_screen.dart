@@ -19,7 +19,7 @@ class AllReviewsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text(
           'Reviews',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -30,7 +30,7 @@ class AllReviewsScreen extends StatelessWidget {
           ? Center(
               child: Text(
                 'No reviews yet',
-                style: TextStyle(color: AppColor.grey, fontSize: 14),
+                style: TextStyle(color: AppColor.grey, fontSize: 13),
               ),
             )
           : ListView.separated(
@@ -40,7 +40,7 @@ class AllReviewsScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 final review = reviews[index];
                 return Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: AppColor.white,
                     borderRadius: BorderRadius.circular(16),

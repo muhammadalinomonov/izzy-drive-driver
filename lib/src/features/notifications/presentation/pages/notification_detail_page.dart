@@ -34,7 +34,7 @@ class _NotificationDetailPageState extends State<NotificationDetailPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         leading: IconButton(
-          icon: SvgPicture.asset(AppIcons.back, width: 24, height: 24),
+          icon: SvgPicture.asset(AppIcons.back, width: 20, height: 20),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -58,14 +58,14 @@ class _NotificationDetailPageState extends State<NotificationDetailPage> {
                       ? response!.errorText
                       : 'common.somethingWentWrong'.tr(),
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, color: AppColor.grey),
+                  style: TextStyle(fontSize: 13, color: AppColor.grey),
                 ),
               ),
             );
           }
           final n = response.data!;
           return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 36),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -79,16 +79,16 @@ class _NotificationDetailPageState extends State<NotificationDetailPage> {
                       errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                 ],
                 Text(
                   n.title,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, height: 1.3),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, height: 1.3),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   _formatTime(n.createdAt),
-                  style: TextStyle(fontSize: 12, color: AppColor.darkGrey),
+                  style: TextStyle(fontSize: 11, color: AppColor.darkGrey),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -122,7 +122,7 @@ class _DetailSkeleton extends StatelessWidget {
       highlightColor: const Color(0xFFF7F9FB),
       period: const Duration(milliseconds: 1400),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

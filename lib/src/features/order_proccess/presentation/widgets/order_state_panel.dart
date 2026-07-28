@@ -83,14 +83,14 @@ class _StatusCard extends StatelessWidget {
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
           bottomLeft: Radius.circular(12),
           bottomRight: Radius.circular(12),
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(28, 12, 28, 24),
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
         child: Column(
           children: [
             // Drag handle.
@@ -100,7 +100,7 @@ class _StatusCard extends StatelessWidget {
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.black,
-                fontSize: 20,
+                fontSize: 18,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w600,
                 height: 1.4,
@@ -112,7 +112,7 @@ class _StatusCard extends StatelessWidget {
               infoLabel,
               style: const TextStyle(
                 color: _kSubtitle,
-                fontSize: 12,
+                fontSize: 11,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w400,
                 letterSpacing: -0.30,
@@ -124,7 +124,7 @@ class _StatusCard extends StatelessWidget {
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.black,
-                fontSize: 18,
+                fontSize: 16,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w600,
                 height: 1.4,
@@ -170,7 +170,7 @@ class _MasterCard extends StatelessWidget {
                   'Master'.tr(),
                   style: const TextStyle(
                     color: Colors.black,
-                    fontSize: 16,
+                    fontSize: 15,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w600,
                     letterSpacing: -0.30,
@@ -190,7 +190,7 @@ class _MasterCard extends StatelessWidget {
                             fullName,
                             style: const TextStyle(
                               color: Colors.black,
-                              fontSize: 14,
+                              fontSize: 13,
                               fontFamily: 'Inter',
                               fontWeight: FontWeight.w600,
                               letterSpacing: -0.30,
@@ -202,7 +202,7 @@ class _MasterCard extends StatelessWidget {
                               truckInfo,
                               style: const TextStyle(
                                 color: _kSubtitle,
-                                fontSize: 12,
+                                fontSize: 11,
                                 fontFamily: 'Inter',
                                 fontWeight: FontWeight.w400,
                                 letterSpacing: -0.30,
@@ -259,7 +259,7 @@ class _MoreButton extends StatelessWidget {
             'More'.tr(),
             style: const TextStyle(
               color: Colors.black,
-              fontSize: 13,
+              fontSize: 12,
               fontFamily: 'Inter',
               fontWeight: FontWeight.w500,
               letterSpacing: -0.30,

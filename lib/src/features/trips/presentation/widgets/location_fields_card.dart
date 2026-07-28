@@ -60,7 +60,7 @@ class LocationFieldsCard extends StatelessWidget {
             icon: _FieldIcon(
               asset: AppIcons.tripDestination,
               active: activeField == TripMapField.destination,
-              size: 22,
+              size: 20,
             ),
             label: 'tripMap.destination'.tr(),
             hint: 'tripMap.destinationHint'.tr(),
@@ -129,7 +129,7 @@ class _Field extends StatelessWidget {
                   onChanged: onChanged,
                   textInputAction: TextInputAction.search,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w500,
                     color: AppColor.black,
                   ),
@@ -142,7 +142,7 @@ class _Field extends StatelessWidget {
                     focusedBorder: InputBorder.none,
                     hintText: hint,
                     hintStyle: TextStyle(
-                      fontSize: 16,
+                      fontSize: 15,
                       color: AppColor.lightGreyBlue,
                     ),
                   ),
@@ -202,7 +202,7 @@ class _MapChip extends StatelessWidget {
 /// field is the active search target - which is how 3.png shows the focused
 /// destination flag.
 class _FieldIcon extends StatelessWidget {
-  const _FieldIcon({required this.asset, required this.active, this.size = 24});
+  const _FieldIcon({required this.asset, required this.active, this.size = 20});
 
   final String asset;
   final bool active;

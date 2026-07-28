@@ -159,22 +159,22 @@ class _EmptyView extends StatelessWidget {
             child: Column(
               children: [
                 Container(
-                  width: 80,
-                  height: 80,
+                  width: 72,
+                  height: 72,
                   decoration: BoxDecoration(
                     color: AppColor.lightBlue,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.route_outlined,
-                    size: 34,
+                    size: 30,
                     color: AppColor.kPrimaryColor,
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'trips.emptyTitle'.tr(),
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 6),
                 Padding(
@@ -219,7 +219,7 @@ class _ErrorView extends StatelessWidget {
           children: [
             Icon(
               notConnected ? Icons.link_off : Icons.error_outline,
-              size: 48,
+              size: 40,
               color: AppColor.darkGrey,
             ),
             const SizedBox(height: 12),
@@ -228,7 +228,7 @@ class _ErrorView extends StatelessWidget {
                   ? 'trips.notConnected'.tr()
                   : (message.isEmpty ? 'common.somethingWentWrong'.tr() : message),
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: AppColor.grey),
+              style: TextStyle(fontSize: 13, color: AppColor.grey),
             ),
             if (!notConnected) ...[
               const SizedBox(height: 12),

@@ -114,12 +114,12 @@ class _OtpVerificationSheetState extends State<_OtpVerificationSheet> {
         return Padding(
           padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
           child: Container(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
             decoration: BoxDecoration(
               color: AppColor.white,
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
+                topLeft: Radius.circular(18),
+                topRight: Radius.circular(18),
               ),
             ),
             child: Column(
@@ -134,14 +134,14 @@ class _OtpVerificationSheetState extends State<_OtpVerificationSheet> {
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const SizedBox(height: 20),
-                Icon(Icons.email_outlined,
-                    size: 56, color: AppColor.kPrimaryColor),
                 const SizedBox(height: 16),
+                Icon(Icons.email_outlined,
+                    size: 46, color: AppColor.kPrimaryColor),
+                const SizedBox(height: 14),
                 Text(
                   LocaleKeys.auth_otp_confirmAccountTitle.tr(),
                   style: context.textS.titleLarge!.copyWith(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -151,15 +151,15 @@ class _OtpVerificationSheetState extends State<_OtpVerificationSheet> {
                   textAlign: TextAlign.center,
                   style: context.textS.bodySmall!.copyWith(
                     color: AppColor.grey,
-                    fontSize: 14,
+                    fontSize: 13,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
                 OtpPinField(
                   key: ValueKey('otp-$_resetCounter'),
                   maxLength: 6,
                   fieldWidth: 44,
-                  fieldHeight: 52,
+                  fieldHeight: 48,
                   keyboardType: TextInputType.number,
                   otpPinFieldStyle: OtpPinFieldStyle(
                     defaultFieldBorderColor: AppColor.lightGrey,
@@ -171,7 +171,7 @@ class _OtpVerificationSheetState extends State<_OtpVerificationSheet> {
                   onCodeChanged: (value) => setState(() => _otp = value),
                   onSubmit: (value) => setState(() => _otp = value),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 _ResendRow(
                   secondsLeft: _secondsLeft,
                   isLoading: isResending,
@@ -186,7 +186,7 @@ class _OtpVerificationSheetState extends State<_OtpVerificationSheet> {
                         );
                   },
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 AppButton(
                   title: LocaleKeys.auth_otp_confirm.tr(),
                   isLoading: isVerifying,
@@ -216,7 +216,7 @@ class _OtpVerificationSheetState extends State<_OtpVerificationSheet> {
                     LocaleKeys.auth_otp_cancel.tr(),
                     style: context.textS.bodySmall!.copyWith(
                       color: AppColor.grey,
-                      fontSize: 14,
+                      fontSize: 13,
                     ),
                   ),
                 ),
@@ -250,7 +250,7 @@ class _ResendRow extends StatelessWidget {
           LocaleKeys.auth_otp_didntReceive.tr(),
           style: context.textS.bodySmall!.copyWith(
             color: AppColor.grey,
-            fontSize: 14,
+            fontSize: 13,
           ),
         ),
         if (isLoading)
@@ -271,7 +271,7 @@ class _ResendRow extends StatelessWidget {
               style: context.textS.titleSmall!.copyWith(
                 color: canResend ? AppColor.kPrimaryColor : AppColor.grey,
                 fontWeight: FontWeight.w600,
-                fontSize: 14,
+                fontSize: 13,
               ),
             ),
           ),

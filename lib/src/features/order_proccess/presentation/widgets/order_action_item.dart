@@ -29,17 +29,17 @@ class OrderActionItem extends StatelessWidget {
           behavior: HitTestBehavior.opaque,
           onTap: onTap,
           child: SizedBox(
-            height: 50,
-            width: 50,
+            height: 46,
+            width: 46,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
                 Container(
-                  height: 48,
-                  width: 48,
+                  height: 44,
+                  width: 44,
                   decoration: BoxDecoration(shape: BoxShape.circle, color: AppColor.lightBlue),
                   alignment: Alignment.center,
-                  child: Center(child: SvgPicture.asset(icon, width: 19, height: 19)),
+                  child: Center(child: SvgPicture.asset(icon, width: 18, height: 18)),
                 ),
                 if (count > 0)
                   Positioned(
@@ -74,7 +74,7 @@ class OrderActionItem extends StatelessWidget {
           ),
         ),
         SizedBox(height: 8),
-        Text(text, style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w500, fontSize: 12)),
+        Text(text, style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w500, fontSize: 11)),
       ],
     );
   }

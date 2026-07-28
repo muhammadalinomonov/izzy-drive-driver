@@ -141,19 +141,19 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                         const Text(
                           "Truck information",
                           style: TextStyle(
-                            fontSize: 28,
+                            fontSize: 24,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(height: 12),
                         const Text(
                           "We recommend filling in your truck information - it will help you keep track of your records!",
-                          style: TextStyle(fontSize: 16, color: Colors.black54),
+                          style: TextStyle(fontSize: 14, color: Colors.black54),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   Container(
                     decoration: BoxDecoration(
                       color: AppColor.white,
@@ -163,24 +163,24 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                       ),
                     ),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 16.0,
+                      horizontal: 14.0,
+                      vertical: 14.0,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 28),
+                        const SizedBox(height: 20),
                         const Text(
                           "Truck photo",
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Container(
                           width: double.infinity,
-                          height: 180,
+                          height: 160,
                           decoration: BoxDecoration(
                             border: Border.all(
                               color: Colors.grey.shade300,
@@ -230,14 +230,14 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                                     children: [
                                       Icon(
                                         Icons.add_photo_alternate_outlined,
-                                        size: 48,
+                                        size: 40,
                                         color: Colors.blue.shade700,
                                       ),
                                       const SizedBox(height: 12),
                                       const Text(
                                         "Tap to add a photo",
                                         style: TextStyle(
-                                          fontSize: 16,
+                                          fontSize: 14,
                                           color: Colors.black45,
                                         ),
                                       ),
@@ -245,11 +245,11 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                                   ),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 20),
                         const Text(
                           "Truck make",
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -301,11 +301,11 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                             );
                           },
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
                         const Text(
                           "Truck model",
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -346,7 +346,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                             );
                           },
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
                         AuthInputWidget(
                           hint: 'Enter',
                           label: 'Production year',
@@ -354,21 +354,21 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                           textInputAction: TextInputAction.next,
                           controller: _yearController,
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
                         AuthInputWidget(
                           hint: 'Address',
                           label: 'Address',
                           textInputAction: TextInputAction.next,
                           controller: _addressController,
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
                         AuthInputWidget(
                           hint: 'License number',
                           label: 'License number',
                           textInputAction: TextInputAction.done,
                           controller: _licenseController,
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 24),
                         AppButton(
                           isLoading: isCreatingProccess,
                           title: "Save",
@@ -430,14 +430,14 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                             child: Text(
                               'Skip for now',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 15,
                                 fontWeight: FontWeight.w600,
                                 color: AppColor.kPrimaryColor,
                               ),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
@@ -476,7 +476,7 @@ class TruckDropDownWidget extends StatelessWidget {
         baseColor: Colors.grey.shade300,
         highlightColor: Colors.grey.shade100,
         child: Container(
-          height: 52,
+          height: 48,
           decoration: BoxDecoration(
             color: Colors.grey.shade100,
             borderRadius: BorderRadius.circular(14),
@@ -512,19 +512,19 @@ class TruckDropDownWidget extends StatelessWidget {
                 ? AppColor.kPrimaryColor
                 : AppColor.lightGreyBlue,
           ),
-          iconSize: 26,
+          iconSize: 22,
           style: const TextStyle(
             color: Colors.black87,
-            fontSize: 16,
+            fontSize: 15,
             fontWeight: FontWeight.w500,
           ),
           hint: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14),
+            padding: const EdgeInsets.symmetric(vertical: 12),
             child: Text(
               hint,
               style: TextStyle(
                 color: AppColor.lightGreyBlue,
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -533,11 +533,11 @@ class TruckDropDownWidget extends StatelessWidget {
               .map(
                 (item) => Container(
                   alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   child: DefaultTextStyle(
                     style: const TextStyle(
                       color: Colors.black87,
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w500,
                     ),
                     child: item.child,

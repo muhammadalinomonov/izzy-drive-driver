@@ -16,7 +16,7 @@ class ServiceScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           'Services',
-          style: context.textS.titleLarge?.copyWith(fontSize: 20, fontWeight: FontWeight.w500),
+          style: context.textS.titleLarge?.copyWith(fontSize: 18, fontWeight: FontWeight.w500),
         ),
         centerTitle: false,
         elevation: 0,
@@ -45,10 +45,10 @@ class ServiceScreen extends StatelessWidget {
                 _CategoryTile(icon: 'assets/images/grocery.png', label: 'Grocery'),
               ],
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             // Search pill
             const _SearchPill(),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             // Service cards
             const _ServiceCard(
               category: 'Food',
@@ -58,7 +58,7 @@ class ServiceScreen extends StatelessWidget {
               rating: '4.6',
               time: '20-25 min.',
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             _ServiceCard(
               category: 'Activities',
               categoryColor: AppColor.blueMain,
@@ -67,7 +67,7 @@ class ServiceScreen extends StatelessWidget {
               rating: '4.6',
               time: '20-25 min.',
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             // const _ServiceCard(
             //   category: 'Grocery',
             //   categoryColor: Color(0xFF00C23D),
@@ -138,11 +138,11 @@ class _SearchPill extends StatelessWidget {
       ),
       child: Row(
         children: [
-          SvgPicture.asset(AppIcons.search, width: 24, height: 24),
+          SvgPicture.asset(AppIcons.search, width: 22, height: 22),
           const SizedBox(width: 16),
           const Text(
             'Search',
-            style: TextStyle(fontSize: 16, color: Colors.black, fontWeight: FontWeight.w500),
+            style: TextStyle(fontSize: 15, color: Colors.black, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -189,7 +189,7 @@ class _ServiceCard extends StatelessWidget {
                   width: double.infinity,
                   color: AppColor.lightBlue,
                   alignment: Alignment.center,
-                  child: Icon(Icons.image_outlined, color: AppColor.grey, size: 40),
+                  child: Icon(Icons.image_outlined, color: AppColor.grey, size: 34),
                 ),
               ),
             ),
@@ -207,7 +207,7 @@ class _ServiceCard extends StatelessWidget {
                 child: Text(
                   category,
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: FontWeight.w500,
                     color: Colors.white,
                   ),
@@ -219,7 +219,7 @@ class _ServiceCard extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           title,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.black),
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.black),
         ),
         const SizedBox(height: 6),
         Row(
@@ -228,7 +228,7 @@ class _ServiceCard extends StatelessWidget {
             const SizedBox(width: 2),
             Text(
               rating,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.black),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.black),
             ),
             const SizedBox(width: 10),
             Container(
@@ -244,7 +244,7 @@ class _ServiceCard extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               time,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Color(0xFF303130)),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Color(0xFF303130)),
             ),
           ],
         ),

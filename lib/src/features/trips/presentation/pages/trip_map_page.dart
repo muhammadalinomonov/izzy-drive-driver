@@ -354,7 +354,7 @@ class _Sheet extends StatelessWidget {
         return Container(
           decoration: BoxDecoration(
             color: AppColor.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withAlpha(28),
@@ -389,7 +389,7 @@ class _Sheet extends StatelessWidget {
                             Text(
                               'tripMap.title'.tr(),
                               style: TextStyle(
-                                fontSize: 22,
+                                fontSize: 20,
                                 fontWeight: FontWeight.w600,
                                 color: AppColor.black,
                               ),
@@ -522,7 +522,7 @@ class _Message extends StatelessWidget {
         child: Text(
           text,
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 14, color: AppColor.grey),
+          style: TextStyle(fontSize: 13, color: AppColor.grey),
         ),
       ),
     );
@@ -548,20 +548,20 @@ class _ContinueBar extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
         child: SizedBox(
           width: double.infinity,
-          height: 54,
+          height: 50,
           child: FilledButton(
             onPressed: enabled ? onPressed : null,
             style: FilledButton.styleFrom(
               backgroundColor: AppColor.kPrimaryColor,
               disabledBackgroundColor: AppColor.grey2,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(25),
               ),
             ),
             child: loading
                 ? const SizedBox(
-                    width: 22,
-                    height: 22,
+                    width: 20,
+                    height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.4,
                       valueColor: AlwaysStoppedAnimation(Colors.white),
@@ -570,7 +570,7 @@ class _ContinueBar extends StatelessWidget {
                 : Text(
                     'tripMap.continue'.tr(),
                     style: const TextStyle(
-                      fontSize: 17,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
@@ -598,9 +598,9 @@ class _CircleButton extends StatelessWidget {
         customBorder: const CircleBorder(),
         onTap: onTap,
         child: SizedBox(
-          width: 46,
-          height: 46,
-          child: Icon(icon, size: 24, color: AppColor.black),
+          width: 44,
+          height: 44,
+          child: Icon(icon, size: 20, color: AppColor.black),
         ),
       ),
     );

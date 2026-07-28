@@ -407,15 +407,15 @@ class _BackFab extends StatelessWidget {
       top: MediaQuery.paddingOf(context).top + 12,
       left: 16,
       child: SizedBox(
-        height: 50,
-        width: 50,
+        height: 44,
+        width: 44,
         child: FloatingActionButton(
           heroTag: 'picker_back',
           elevation: 1,
           backgroundColor: Colors.white,
           shape: const CircleBorder(),
           onPressed: onPressed,
-          child: const Icon(Icons.arrow_back, color: Colors.black, size: 25),
+          child: const Icon(Icons.arrow_back, color: Colors.black, size: 20),
         ),
       ),
     );
@@ -432,8 +432,8 @@ class _MyLocationFab extends StatelessWidget {
       bottom: 220,
       right: 16,
       child: SizedBox(
-        height: 50,
-        width: 50,
+        height: 44,
+        width: 44,
         child: FloatingActionButton(
           heroTag: 'picker_mylocation',
           elevation: 1,
@@ -443,7 +443,7 @@ class _MyLocationFab extends StatelessWidget {
           child: Icon(
             Icons.location_on_outlined,
             color: AppColor.blueMain,
-            size: 25,
+            size: 20,
           ),
         ),
       ),
@@ -471,13 +471,13 @@ class _MapModeSheet extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.fromLTRB(
           16,
-          18,
           16,
-          MediaQuery.paddingOf(context).bottom + 18,
+          16,
+          MediaQuery.paddingOf(context).bottom + 16,
         ),
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
           boxShadow: [
             BoxShadow(
               offset: Offset(0, -4),
@@ -496,7 +496,7 @@ class _MapModeSheet extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14,
-                  vertical: 14,
+                  vertical: 12,
                 ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEFF3F6),
@@ -504,14 +504,14 @@ class _MapModeSheet extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    SvgPicture.asset(AppIcons.truck, width: 20, height: 20),
+                    SvgPicture.asset(AppIcons.truck, width: 18, height: 18),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         address.isEmpty ? 'No place selected' : address,
                         style: const TextStyle(
                           color: Colors.black,
-                          fontSize: 14,
+                          fontSize: 13,
                           fontWeight: FontWeight.w500,
                           letterSpacing: -0.30,
                         ),
@@ -528,7 +528,7 @@ class _MapModeSheet extends StatelessWidget {
               width: double.infinity,
               child: MaterialButton(
                 onPressed: address.isEmpty ? null : onContinue,
-                padding: const EdgeInsets.symmetric(vertical: 15),
+                padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(50),
                 ),
@@ -539,7 +539,7 @@ class _MapModeSheet extends StatelessWidget {
                 highlightElevation: 0,
                 child: const Text(
                   'Continue',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -591,7 +591,7 @@ class _ListModeSheet extends StatelessWidget {
               ),
               decoration: const BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -641,7 +641,7 @@ class _ListModeSheet extends StatelessWidget {
                           const Text(
                             'My location',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 15,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -663,7 +663,7 @@ class _ListModeSheet extends StatelessWidget {
                       onPressed: state.selectedAddress.isEmpty
                           ? null
                           : onConfirm,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(50),
                       ),
@@ -675,7 +675,7 @@ class _ListModeSheet extends StatelessWidget {
                       child: const Text(
                         'Choose',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -713,7 +713,7 @@ class _SuggestionsList extends StatelessWidget {
         child: Text(
           'Enter an address or choose "My location"',
           textAlign: TextAlign.center,
-          style: TextStyle(color: AppColor.grey, fontSize: 14),
+          style: TextStyle(color: AppColor.grey, fontSize: 13),
         ),
       );
     }
@@ -734,7 +734,7 @@ class _SuggestionsList extends StatelessWidget {
                 Expanded(
                   child: Text(
                     loc.formatted,
-                    style: const TextStyle(fontSize: 15),
+                    style: const TextStyle(fontSize: 14),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),

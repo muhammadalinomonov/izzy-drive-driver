@@ -23,11 +23,11 @@ class OrderHistoryItem extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(date, style: context.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w600, fontSize: 16)),
+                Text(date, style: context.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w600, fontSize: 15)),
                 SizedBox(height: 4),
                 Text(
                   address,
-                  style: context.textTheme.bodyMedium!.copyWith(fontSize: 12, fontWeight: FontWeight.w400),
+                  style: context.textTheme.bodyMedium!.copyWith(fontSize: 11, fontWeight: FontWeight.w400),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -35,7 +35,7 @@ class OrderHistoryItem extends StatelessWidget {
             ),
           ),
           SizedBox(width: 40),
-          Text('\$$price', style: context.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w400, fontSize: 14)),
+          Text('\$$price', style: context.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w400, fontSize: 13)),
         ],
       ),
     );

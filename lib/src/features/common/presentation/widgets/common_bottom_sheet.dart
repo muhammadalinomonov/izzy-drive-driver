@@ -23,16 +23,16 @@ class CommonBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         color: AppColor.lightBlue,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: EdgeInsets.only(left: 14, top: 12, bottom: 18, right: 14),
+            padding: EdgeInsets.only(left: 14, top: 12, bottom: 16, right: 14),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24), bottom: Radius.circular(12)),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20), bottom: Radius.circular(12)),
               color: AppColor.white,
             ),
             child: Column(
@@ -48,7 +48,7 @@ class CommonBottomSheet extends StatelessWidget {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     title,
-                    style: context.textTheme.headlineLarge!.copyWith(fontWeight: FontWeight.w600, fontSize: 20),
+                    style: context.textTheme.headlineLarge!.copyWith(fontWeight: FontWeight.w600, fontSize: 18),
                   ),
                 ),
               ],

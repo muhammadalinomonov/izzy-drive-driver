@@ -97,7 +97,7 @@ class _OrderInfoScreenState extends State<OrderInfoScreen> {
             child: Column(
               children: [
                 Container(
-                  padding: EdgeInsets.only(left: 12, bottom: 18, right: 12),
+                  padding: EdgeInsets.only(left: 12, bottom: 16, right: 12),
                   width: MediaQuery.sizeOf(context).width,
                   decoration: BoxDecoration(
                     color: AppColor.white,
@@ -117,7 +117,7 @@ class _OrderInfoScreenState extends State<OrderInfoScreen> {
                       SizedBox(height: 12),
                       Text(
                         state.currentOrder.status.orderDescription,
-                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 20, fontWeight: FontWeight.w600),
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 18, fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
@@ -132,7 +132,7 @@ class _OrderInfoScreenState extends State<OrderInfoScreen> {
                     children: [
                       Text(
                         'Master',
-                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 16, fontWeight: FontWeight.w600),
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 15, fontWeight: FontWeight.w600),
                       ),
                       SizedBox(height: 8),
                       Row(
@@ -147,7 +147,7 @@ class _OrderInfoScreenState extends State<OrderInfoScreen> {
                             state.currentOrder.selectedMechanic.fullName,
                             style: Theme.of(
                               context,
-                            ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w600, fontSize: 14),
+                            ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w600, fontSize: 13),
                           ),
                           Spacer(),
                           GestureDetector(
@@ -174,7 +174,7 @@ class _OrderInfoScreenState extends State<OrderInfoScreen> {
                                 'More',
                                 style: Theme.of(
                                   context,
-                                ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w500, fontSize: 13),
+                                ).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w500, fontSize: 12),
                               ),
                             ),
                           ),

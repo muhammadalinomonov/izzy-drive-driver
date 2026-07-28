@@ -108,11 +108,11 @@ class _FinishedOrderScreenState extends State<FinishedOrderScreen> with TickerPr
             margin: const EdgeInsets.symmetric(horizontal: 16),
             width: context.sizeOf.width,
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(50), color: AppColor.blueMain),
-            padding: const EdgeInsets.symmetric(vertical: 14),
+            padding: const EdgeInsets.symmetric(vertical: 12),
             child: Text(
               'Finish'.tr(),
               style: context.textTheme.bodyLarge!.copyWith(
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: FontWeight.w600,
                 color: AppColor.white,
               ),
@@ -183,23 +183,23 @@ class _SuccessHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: context.sizeOf.width,
-      padding: EdgeInsets.only(top: context.padding.top + 18, left: 27, right: 27, bottom: 22),
+      padding: EdgeInsets.only(top: context.padding.top + 18, left: 24, right: 24, bottom: 18),
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(18)),
       ),
       child: Column(
         children: [
           SizedBox(
-            width: 120,
-            height: 120,
+            width: 104,
+            height: 104,
             // Lottie animatsiya - JSON fayl `assets/lottie/success.json`
             // joyiga qo'yiladi. Yo'q bo'lsa eski check + pulse fallback'i
             // ko'rsatiladi.
             child: Lottie.asset(
               'assets/lottie/success.json',
-              width: 120,
-              height: 120,
+              width: 104,
+              height: 104,
               fit: BoxFit.contain,
               repeat: false,
               errorBuilder: (context, error, stackTrace) {
@@ -211,7 +211,7 @@ class _SuccessHeader extends StatelessWidget {
           Text(
             'Successfully completed!'.tr(),
             style: context.textTheme.bodyMedium!.copyWith(
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.w700,
               letterSpacing: -0.3,
             ),
@@ -220,7 +220,7 @@ class _SuccessHeader extends StatelessWidget {
           Text(
             'Please rate the master, this helps us improve!'.tr(),
             style: context.textTheme.bodySmall!.copyWith(
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: FontWeight.w400,
               color: AppColor.grey,
             ),
@@ -319,12 +319,12 @@ class _RateCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       width: context.sizeOf.width,
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: AppColor.white),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text('Rate'.tr(), style: context.textTheme.bodyMedium!.copyWith(fontSize: 16, fontWeight: FontWeight.w600)),
+          Text('Rate'.tr(), style: context.textTheme.bodyMedium!.copyWith(fontSize: 15, fontWeight: FontWeight.w600)),
           const SizedBox(height: 10),
           // Stars - default 0 selected.
           Row(
@@ -339,8 +339,8 @@ class _RateCard extends StatelessWidget {
                   padding: EdgeInsets.only(right: index == 4 ? 0 : 10),
                   child: SvgPicture.asset(
                     AppIcons.star,
-                    width: 32,
-                    height: 32,
+                    width: 28,
+                    height: 28,
                     colorFilter: ColorFilter.mode(filled ? AppColor.yellow : AppColor.lightGreyBlue, BlendMode.srcIn),
                   ),
                 ),
@@ -381,7 +381,7 @@ class _RateCard extends StatelessWidget {
                               child: Text(
                                 t.tr(),
                                 style: context.textTheme.bodyLarge!.copyWith(
-                                  fontSize: 14,
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                   color: active ? AppColor.white : Colors.black,
                                 ),
@@ -419,7 +419,7 @@ class _RateCard extends StatelessWidget {
                               Text(
                                 'Leave a comment'.tr(),
                                 style: context.textTheme.bodyLarge!.copyWith(
-                                  fontSize: 14,
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                   color: commentExpanded
                                       ? AppColor.white
@@ -443,7 +443,7 @@ class _RateCard extends StatelessWidget {
                                     hintText: 'Write your thoughts...'.tr(),
                                     hintStyle: context.textTheme.bodyLarge!
                                         .copyWith(
-                                      fontSize: 14,
+                                      fontSize: 13,
                                       fontWeight: FontWeight.w400,
                                       color: AppColor.grey,
                                     ),
@@ -482,7 +482,7 @@ class _RateCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   mechanicName,
-                  style: context.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w600, fontSize: 14),
+                  style: context.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w600, fontSize: 13),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -495,7 +495,7 @@ class _RateCard extends StatelessWidget {
                   decoration: BoxDecoration(borderRadius: BorderRadius.circular(50), color: AppColor.lightBlue),
                   child: Text(
                     'More'.tr(),
-                    style: context.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w500, fontSize: 13),
+                    style: context.textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w500, fontSize: 12),
                   ),
                 ),
               ),

@@ -338,7 +338,7 @@ class _TopBar extends StatelessWidget {
               width: 36,
               height: 36,
               child: Center(
-                child: SvgPicture.asset(AppIcons.back, width: 24, height: 24),
+                child: SvgPicture.asset(AppIcons.back, width: 20, height: 20),
               ),
             ),
           ),
@@ -355,7 +355,7 @@ class _TopBar extends StatelessWidget {
                 'Cancel'.tr(),
                 style: const TextStyle(
                   color: _kCancelText,
-                  fontSize: 14,
+                  fontSize: 13,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w500,
                   letterSpacing: -0.30,
@@ -394,7 +394,7 @@ class _HeaderCard extends StatelessWidget {
             _formatTimeAgo(order.createdAt),
             style: const TextStyle(
               color: _kCaption,
-              fontSize: 14,
+              fontSize: 13,
               fontFamily: 'Inter',
               fontWeight: FontWeight.w400,
               letterSpacing: -0.30,
@@ -405,7 +405,7 @@ class _HeaderCard extends StatelessWidget {
             order.orderTitle,
             style: const TextStyle(
               color: Colors.black,
-              fontSize: 24,
+              fontSize: 20,
               fontFamily: 'Inter',
               fontWeight: FontWeight.w500,
               letterSpacing: -0.30,
@@ -415,7 +415,7 @@ class _HeaderCard extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              SvgPicture.asset(AppIcons.location, width: 20, height: 20),
+              SvgPicture.asset(AppIcons.location, width: 18, height: 18),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -454,7 +454,7 @@ class _OfferAmountBox extends StatefulWidget {
 class _OfferAmountBoxState extends State<_OfferAmountBox> {
   static const TextStyle _priceStyle = TextStyle(
     color: Colors.black,
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: 'Inter',
     fontWeight: FontWeight.w500,
     height: 1.4,
@@ -526,7 +526,7 @@ class _OfferAmountBoxState extends State<_OfferAmountBox> {
             'Offer amount'.tr(),
             style: const TextStyle(
               color: Colors.black,
-              fontSize: 16,
+              fontSize: 15,
               fontFamily: 'Inter',
               fontWeight: FontWeight.w500,
               height: 1.2,
@@ -673,7 +673,7 @@ class _OffersCard extends StatelessWidget {
               '${'Offers'.tr()}: ${offers.length}',
               style: const TextStyle(
                 color: Colors.black,
-                fontSize: 18,
+                fontSize: 16,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w500,
                 letterSpacing: -0.30,
@@ -722,13 +722,13 @@ class _EmptyOffers extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 72,
-              height: 72,
+              width: 64,
+              height: 64,
               decoration: BoxDecoration(
                 color: _kInputBg,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.hourglass_empty, size: 36, color: _kSubtitle),
+              child: const Icon(Icons.hourglass_empty, size: 30, color: _kSubtitle),
             ),
             const SizedBox(height: 16),
             Text(
@@ -736,7 +736,7 @@ class _EmptyOffers extends StatelessWidget {
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.black,
-                fontSize: 16,
+                fontSize: 15,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w600,
                 letterSpacing: -0.30,
@@ -850,7 +850,7 @@ class _OfferTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: _kSubtitle,
-                      fontSize: 12,
+                      fontSize: 11,
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w400,
                       height: 1.4,
@@ -873,7 +873,7 @@ class _OfferTile extends StatelessWidget {
                 '\$${orderPrice.toStringAsFixed(0)}',
                 style: const TextStyle(
                   color: _kMuted,
-                  fontSize: 12,
+                  fontSize: 11,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w400,
                   letterSpacing: -0.30,
@@ -886,7 +886,7 @@ class _OfferTile extends StatelessWidget {
               '\$${offer.proposedPrice.toStringAsFixed(0)}',
               style: const TextStyle(
                 color: Colors.black,
-                fontSize: 16,
+                fontSize: 15,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w600,
                 letterSpacing: -0.30,
@@ -940,7 +940,7 @@ class _OfferTile extends StatelessWidget {
                 'Choose'.tr(),
                 style: const TextStyle(
                   color: _kPrimary,
-                  fontSize: 14,
+                  fontSize: 13,
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w600,
                   height: 1.4,
@@ -1103,12 +1103,12 @@ class _ErrorView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 60, color: Colors.red[300]),
+          Icon(Icons.error_outline, size: 50, color: Colors.red[300]),
           const SizedBox(height: 16),
           Text(
             'An error occurred'.tr(),
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
               color: Colors.grey[700],
             ),
@@ -1118,7 +1118,7 @@ class _ErrorView extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Text(
               '${'Error'.tr()}: $message',
-              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              style: TextStyle(color: Colors.grey[600], fontSize: 13),
               textAlign: TextAlign.center,
             ),
           ),
@@ -1133,7 +1133,7 @@ class _ErrorView extends StatelessWidget {
               'Try again'.tr(),
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 14,
+                fontSize: 13,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w600,
               ),
@@ -1166,11 +1166,11 @@ class _LoadingSkeleton extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: const [
-              _SkeletonBox(width: 100, height: 14),
+              _SkeletonBox(width: 100, height: 13),
               SizedBox(height: 10),
-              _SkeletonBox(width: 240, height: 22),
+              _SkeletonBox(width: 240, height: 20),
               SizedBox(height: 10),
-              _SkeletonBox(width: 200, height: 16),
+              _SkeletonBox(width: 200, height: 15),
               SizedBox(height: 16),
               _SkeletonBox(width: double.infinity, height: 58, radius: 12),
             ],
@@ -1191,7 +1191,7 @@ class _LoadingSkeleton extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const _SkeletonBox(width: 120, height: 18),
+                const _SkeletonBox(width: 120, height: 16),
                 const SizedBox(height: 18),
                 for (int i = 0; i < 3; i++) ...[
                   Row(
@@ -1204,7 +1204,7 @@ class _LoadingSkeleton extends StatelessWidget {
                           children: [
                             _SkeletonBox(width: 140, height: 14),
                             SizedBox(height: 6),
-                            _SkeletonBox(width: 200, height: 12),
+                            _SkeletonBox(width: 200, height: 11),
                           ],
                         ),
                       ),

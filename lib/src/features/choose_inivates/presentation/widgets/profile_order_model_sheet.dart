@@ -92,7 +92,7 @@ class _SheetContent extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         color: _kBg,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         boxShadow: [
           BoxShadow(
             color: Color(0x14000000),
@@ -208,7 +208,7 @@ class ProfileSection extends StatelessWidget {
               mechanic.mechanicName,
               style: const TextStyle(
                 color: Colors.black,
-                fontSize: 18,
+                fontSize: 16,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w600,
                 letterSpacing: -0.30,
@@ -220,7 +220,7 @@ class ProfileSection extends StatelessWidget {
               '${_formatRegisteredDate(state.proposal!.orderInfo.createdAt)}',
               style: const TextStyle(
                 color: _kSubtitle,
-                fontSize: 12,
+                fontSize: 11,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w400,
                 letterSpacing: -0.30,
@@ -250,8 +250,8 @@ class _ProfileCard extends StatelessWidget {
         // Sheet top bilan birga 24px rounded - drag handle ham shu cardning
         // ichida.
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
           bottomLeft: Radius.circular(12),
           bottomRight: Radius.circular(12),
         ),
@@ -279,7 +279,7 @@ class _ProfileCard extends StatelessWidget {
             mechanic.mechanicName,
             style: const TextStyle(
               color: Colors.black,
-              fontSize: 18,
+              fontSize: 16,
               fontFamily: 'Inter',
               fontWeight: FontWeight.w600,
               height: 1.4,
@@ -291,7 +291,7 @@ class _ProfileCard extends StatelessWidget {
           DefaultTextStyle(
             style: const TextStyle(
               color: _kSubtitle,
-              fontSize: 12,
+              fontSize: 11,
               fontFamily: 'Inter',
               fontWeight: FontWeight.w400,
               height: 1.4,
@@ -353,7 +353,7 @@ class _StatColumn extends StatelessWidget {
           label,
           style: const TextStyle(
             color: _kMuted,
-            fontSize: 14,
+            fontSize: 13,
             fontFamily: 'Inter',
             fontWeight: FontWeight.w400,
             letterSpacing: -0.30,
@@ -364,7 +364,7 @@ class _StatColumn extends StatelessWidget {
           value,
           style: const TextStyle(
             color: Colors.black,
-            fontSize: 22,
+            fontSize: 20,
             fontFamily: 'Inter',
             fontWeight: FontWeight.w500,
             letterSpacing: -0.30,
@@ -390,9 +390,9 @@ class _ProfileCardSkeleton extends StatelessWidget {
         children: [
           _SkBox(width: 87, height: 87, radius: 50),
           SizedBox(height: 14),
-          _SkBox(width: 160, height: 18),
+          _SkBox(width: 160, height: 16),
           SizedBox(height: 8),
-          _SkBox(width: 220, height: 12),
+          _SkBox(width: 220, height: 11),
           SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -414,9 +414,9 @@ class _SkStat extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Column(
       children: [
-        _SkBox(width: 70, height: 12),
+        _SkBox(width: 70, height: 11),
         SizedBox(height: 8),
-        _SkBox(width: 50, height: 22),
+        _SkBox(width: 50, height: 20),
       ],
     );
   }
@@ -501,7 +501,7 @@ class _Field extends StatelessWidget {
           label,
           style: const TextStyle(
             color: _kMuted,
-            fontSize: 12,
+            fontSize: 11,
             fontFamily: 'Inter',
             fontWeight: FontWeight.w400,
             letterSpacing: -0.30,
@@ -512,7 +512,7 @@ class _Field extends StatelessWidget {
           value,
           style: const TextStyle(
             color: Colors.black,
-            fontSize: 16,
+            fontSize: 15,
             fontFamily: 'Inter',
             fontWeight: FontWeight.w500,
             height: 1.4,
@@ -525,7 +525,7 @@ class _Field extends StatelessWidget {
             italicSuffix!,
             style: const TextStyle(
               color: _kCaption,
-              fontSize: 12,
+              fontSize: 11,
               fontFamily: 'Inter',
               fontStyle: FontStyle.italic,
               fontWeight: FontWeight.w400,
@@ -597,14 +597,14 @@ class _PayRow extends StatelessWidget {
       onTap: onTap,
       child: Row(
         children: [
-          Icon(icon, size: 24, color: Colors.black),
+          Icon(icon, size: 20, color: Colors.black),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               label,
               style: const TextStyle(
                 color: Colors.black,
-                fontSize: 16,
+                fontSize: 15,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w500,
                 height: 1.4,
@@ -616,8 +616,8 @@ class _PayRow extends StatelessWidget {
           // gray circle.
           if (selected)
             Container(
-              width: 24,
-              height: 24,
+              width: 22,
+              height: 22,
               decoration: const BoxDecoration(
                 color: _kPrimary,
                 shape: BoxShape.circle,
@@ -626,8 +626,8 @@ class _PayRow extends StatelessWidget {
             )
           else
             Container(
-              width: 24,
-              height: 24,
+              width: 22,
+              height: 22,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(width: 1.5, color: _kBorder),
@@ -714,8 +714,8 @@ class _BottomActionCard extends StatelessWidget {
                   child: Center(
                     child: isLoading
                         ? const SizedBox(
-                            width: 22,
-                            height: 22,
+                            width: 20,
+                            height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2.4,
                               valueColor: AlwaysStoppedAnimation(Colors.white),
@@ -725,7 +725,7 @@ class _BottomActionCard extends StatelessWidget {
                             'Call'.tr(),
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 16,
+                              fontSize: 15,
                               fontFamily: 'Inter',
                               fontWeight: FontWeight.w600,
                               height: 1.4,
@@ -763,7 +763,7 @@ class _OfferColumn extends StatelessWidget {
           label,
           style: const TextStyle(
             color: _kSubtitle,
-            fontSize: 12,
+            fontSize: 11,
             fontFamily: 'Inter',
             fontWeight: FontWeight.w400,
             height: 1.4,
@@ -775,7 +775,7 @@ class _OfferColumn extends StatelessWidget {
           value,
           style: TextStyle(
             color: valueColor,
-            fontSize: 18,
+            fontSize: 16,
             fontFamily: 'Inter',
             fontWeight: FontWeight.w600,
             height: 1.4,

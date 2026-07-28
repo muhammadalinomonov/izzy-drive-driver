@@ -49,7 +49,7 @@ class OrderReviewSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       decoration: BoxDecoration(
         color: const Color(0xFFEFF3F6),
         borderRadius: BorderRadius.circular(18),
@@ -63,7 +63,7 @@ class OrderReviewSheet extends StatelessWidget {
                 child: Text(
                   "Let's review..",
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.w600,
                     letterSpacing: -0.3,
                     color: Colors.black,
@@ -80,7 +80,7 @@ class OrderReviewSheet extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           if (state.messages.isNotEmpty)
             _ReviewSection(
               label: 'Description or audio',
@@ -99,29 +99,29 @@ class OrderReviewSheet extends StatelessWidget {
             child: Text(
               _formattedPrice,
               style: const TextStyle(
-                fontSize: 15,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
                 color: Colors.black,
                 letterSpacing: -0.3,
               ),
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           const Text(
             'If everything looks right, tap "Send" - or type "send" in the chat.',
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 12,
               color: Color(0xFF6B7073),
               fontStyle: FontStyle.italic,
               height: 1.4,
               letterSpacing: -0.2,
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           const Text(
             'I want to add:',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: FontWeight.w500,
               color: Colors.black,
               letterSpacing: -0.3,
@@ -133,7 +133,7 @@ class OrderReviewSheet extends StatelessWidget {
           _EditAction(label: 'Add more details', onTap: onAddDetails),
           const SizedBox(height: 8),
           _EditAction(label: 'Change the price', onTap: onChangePrice),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -146,7 +146,7 @@ class OrderReviewSheet extends StatelessWidget {
                 disabledBackgroundColor:
                     AppColor.kPrimaryColor.withValues(alpha: 0.5),
                 disabledForegroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 14),
                 shape:
                     RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
                 elevation: 0,
@@ -160,7 +160,7 @@ class OrderReviewSheet extends StatelessWidget {
                     )
                   : const Text(
                       'Send',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                     ),
             ),
           ),
@@ -184,7 +184,7 @@ class _ReviewSection extends StatelessWidget {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: FontWeight.w500,
             color: Color(0xFF6B7073),
             letterSpacing: -0.3,
@@ -212,7 +212,7 @@ class _AudioOrTextSummary extends StatelessWidget {
           widgets.add(Text(
             m.text,
             style: const TextStyle(
-              fontSize: 14,
+              fontSize: 13,
               height: 1.4,
               color: Colors.black,
             ),
@@ -352,7 +352,7 @@ class _MiniAudioState extends State<_MiniAudio> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -370,7 +370,7 @@ class _MiniAudioState extends State<_MiniAudio> {
               child: Icon(
                 _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                 color: Colors.white,
-                size: 24,
+                size: 20,
               ),
             ),
           ),
@@ -405,7 +405,7 @@ class _MiniAudioState extends State<_MiniAudio> {
           Text(
             widget.label,
             style: const TextStyle(
-              fontSize: 13,
+              fontSize: 12,
               color: Color(0xFF6B7073),
               fontWeight: FontWeight.w500,
               fontFeatures: [FontFeature.tabularFigures()],
@@ -437,8 +437,8 @@ class _PhotosSummary extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: SizedBox(
-              width: 80,
-              height: 80,
+              width: 72,
+              height: 72,
               child: Image.file(photos[i], fit: BoxFit.cover),
             ),
           ),
@@ -461,7 +461,7 @@ class _EditAction extends StatelessWidget {
       borderRadius: BorderRadius.circular(50),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(50),
@@ -469,7 +469,7 @@ class _EditAction extends StatelessWidget {
         child: Text(
           label,
           style: const TextStyle(
-            fontSize: 14,
+            fontSize: 13,
             color: Colors.black,
             letterSpacing: -0.3,
           ),

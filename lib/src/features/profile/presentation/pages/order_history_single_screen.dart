@@ -102,7 +102,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                               Text(
                                 'Order details',
                                 style: context.textTheme.bodyMedium!.copyWith(
-                                  fontSize: 16,
+                                  fontSize: 15,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -110,7 +110,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                               Text(
                                 'Order placed',
                                 style: context.textTheme.bodyMedium!.copyWith(
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w400,
                                   color: AppColor.grey,
                                 ),
@@ -118,7 +118,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                               Text(
                                 MyFunctions.formatDateTime(state.orderHistoryDetail.acceptedAt),
                                 style: context.textTheme.bodyMedium!.copyWith(
-                                  fontSize: 14,
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -126,7 +126,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                               Text(
                                 'Time spent',
                                 style: context.textTheme.bodyMedium!.copyWith(
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w400,
                                   color: AppColor.grey,
                                 ),
@@ -138,7 +138,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                                       state.orderHistoryDetail.completedTime.hours * 60,
                                 ),
                                 style: context.textTheme.bodyMedium!.copyWith(
-                                  fontSize: 14,
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -148,7 +148,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                                 Text(
                                   'Estimated work time'.tr(),
                                   style: context.textTheme.bodyMedium!.copyWith(
-                                    fontSize: 12,
+                                    fontSize: 11,
                                     fontWeight: FontWeight.w400,
                                     color: AppColor.grey,
                                   ),
@@ -156,7 +156,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                                 Text(
                                   '~${state.orderHistoryDetail.workTimeEstimateMin} min',
                                   style: context.textTheme.bodyMedium!.copyWith(
-                                    fontSize: 14,
+                                    fontSize: 13,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -165,7 +165,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                               Text(
                                 'Destination',
                                 style: context.textTheme.bodyMedium!.copyWith(
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w400,
                                   color: AppColor.grey,
                                 ),
@@ -173,7 +173,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                               Text(
                                 state.orderHistoryDetail.address,
                                 style: context.textTheme.bodyMedium!.copyWith(
-                                  fontSize: 14,
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -181,7 +181,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                               Text(
                                 'Payment type',
                                 style: context.textTheme.bodyMedium!.copyWith(
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w400,
                                   color: AppColor.grey,
                                 ),
@@ -189,7 +189,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                               Text(
                                 'Cash',
                                 style: context.textTheme.bodyMedium!.copyWith(
-                                  fontSize: 14,
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -208,7 +208,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                               Text(
                                 'Master',
                                 style: context.textTheme.bodyMedium!.copyWith(
-                                  fontSize: 16,
+                                  fontSize: 15,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -229,7 +229,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                                         Text(
                                           state.orderHistoryDetail.mechanicInfo.mechanicName,
                                           style: context.textTheme.bodyMedium!.copyWith(
-                                            fontSize: 14,
+                                            fontSize: 13,
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
@@ -238,7 +238,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                                           Text(
                                             state.orderHistoryDetail.mechanicInfo.phoneNumber,
                                             style: context.textTheme.bodySmall!.copyWith(
-                                              fontSize: 12,
+                                              fontSize: 11,
                                               fontWeight: FontWeight.w400,
                                               color: AppColor.grey,
                                             ),
@@ -270,7 +270,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
                                       child: Text(
                                         'More',
                                         style: context.textTheme.bodyMedium!.copyWith(
-                                          fontSize: 13,
+                                          fontSize: 12,
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),

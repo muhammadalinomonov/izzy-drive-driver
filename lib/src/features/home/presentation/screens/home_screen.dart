@@ -93,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     title: Text(
                       'Home'.tr(),
                       style: context.textS.titleLarge?.copyWith(
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -234,10 +234,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
                       OtherOpportunitiesWidget(),
                       const HowItWorksWidget(),
-                      const SizedBox(height: 25),
+                      const SizedBox(height: 20),
                       BannerWidget(),
                     ],
                   ),
@@ -481,7 +481,7 @@ class LastLocationWidget extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(fontSize: 14, color: Colors.black),
+                    style: const TextStyle(fontSize: 13, color: Colors.black),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -489,7 +489,7 @@ class LastLocationWidget extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       subtitle,
-                      style: TextStyle(fontSize: 12, color: AppColor.grey),
+                      style: TextStyle(fontSize: 11, color: AppColor.grey),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -520,7 +520,7 @@ class HowItWorksWidget extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppColor.lightBlue,
           borderRadius: BorderRadius.circular(16),
@@ -531,12 +531,12 @@ class HowItWorksWidget extends StatelessWidget {
             Text(
               'How it works'.tr(),
               style: const TextStyle(
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: Colors.black,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             _HowItWorksStep(
               number: '1',
               title: 'Set your location'.tr(),
@@ -577,13 +577,13 @@ class _HowItWorksStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
+      padding: EdgeInsets.only(bottom: isLast ? 0 : 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 28,
-            height: 28,
+            width: 26,
+            height: 26,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: AppColor.kPrimaryColor,
@@ -594,7 +594,7 @@ class _HowItWorksStep extends StatelessWidget {
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w700,
-                fontSize: 13,
+                fontSize: 12,
               ),
             ),
           ),
@@ -606,7 +606,7 @@ class _HowItWorksStep extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: Colors.black,
                   ),
@@ -614,7 +614,7 @@ class _HowItWorksStep extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 13, color: AppColor.grey),
+                  style: TextStyle(fontSize: 12, color: AppColor.grey),
                 ),
               ],
             ),
@@ -645,12 +645,12 @@ class OtherOpportunitiesWidget extends StatelessWidget {
           Text(
             'Other opportunities'.tr(),
             style: const TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.w500,
               color: Colors.black,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Row(
             children: [
               _OpportunityCard(
@@ -757,7 +757,7 @@ class _OpportunityCard extends StatelessWidget {
                         Text(
                           label,
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             color: Colors.black,
                           ),
                         ),
@@ -841,7 +841,7 @@ class _GymCard extends StatelessWidget {
                         child: Text(
                           name,
                           style: const TextStyle(
-                            fontSize: 13,
+                            fontSize: 12,
                             fontWeight: FontWeight.w500,
                             color: Colors.black,
                           ),

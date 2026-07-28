@@ -12,8 +12,8 @@ class OrderStatusRowItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 50,
-      width: 50,
+      height: 46,
+      width: 46,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
@@ -25,8 +25,8 @@ class OrderStatusRowItem extends StatelessWidget {
       ),
       child: SvgPicture.asset(
         icon,
-        width: 24,
-        height: 24,
+        width: 20,
+        height: 20,
         colorFilter: ColorFilter.mode(
           isDone
               ? AppColor.blueMain

@@ -103,7 +103,7 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
                         fontWeight: FontWeight.w400,
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 24),
                     AuthInputWidget(
                       hint: LocaleKeys.auth_forgotPassword_emailHint.tr(),
                       label: LocaleKeys.auth_forgotPassword_emailLabel.tr(),
@@ -111,7 +111,7 @@ class _ForgotPasswordEmailPageState extends State<ForgotPasswordEmailPage> {
                       validator: AppValidators.email,
                       textInputType: TextInputType.emailAddress,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
                     BlocBuilder<ForgotPasswordBloc, ForgotPasswordState>(
                       buildWhen: (p, c) =>
                           p.requestOtpStatus != c.requestOtpStatus,

@@ -33,7 +33,7 @@ class SubOrdersCard extends StatelessWidget {
         children: [
           Text(
             'Services',
-            style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 16, fontWeight: FontWeight.w600),
+            style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 15, fontWeight: FontWeight.w600),
           ),
           SubOrderItem(
             name: currentOrder.orderTitle,
@@ -72,7 +72,7 @@ class SubOrdersCard extends StatelessWidget {
                   'Total amount',
                   style: Theme.of(
                     context,
-                  ).textTheme.bodyLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w400, color: AppColor.darkBlue),
+                  ).textTheme.bodyLarge!.copyWith(fontSize: 13, fontWeight: FontWeight.w400, color: AppColor.darkBlue),
                 ),
                 Spacer(),
                 SvgPicture.asset(AppIcons.check),
@@ -80,7 +80,7 @@ class SubOrdersCard extends StatelessWidget {
                   ' \$${currentOrder.totalPrice}',
                   style: Theme.of(
                     context,
-                  ).textTheme.bodyLarge!.copyWith(fontSize: 16, fontWeight: FontWeight.w500, color: AppColor.blueMain),
+                  ).textTheme.bodyLarge!.copyWith(fontSize: 15, fontWeight: FontWeight.w500, color: AppColor.blueMain),
                 ),
               ],
             ),

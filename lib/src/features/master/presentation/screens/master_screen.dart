@@ -42,7 +42,7 @@ class _MasterScreenState extends State<MasterScreen> {
         surfaceTintColor: Colors.transparent,
         title: Text(
           'Masters'.tr(),
-          style: context.textS.titleLarge?.copyWith(fontSize: 20, fontWeight: FontWeight.w500),
+          style: context.textS.titleLarge?.copyWith(fontSize: 18, fontWeight: FontWeight.w500),
         ),
         centerTitle: false,
         actions: [
@@ -168,7 +168,7 @@ class _MasterCard extends StatelessWidget {
     final distanceLabel = masterDistanceLabel(master);
     final hasDistance = distanceLabel != '-';
     return Container(
-      decoration: BoxDecoration(color: AppColor.lightBlue, borderRadius: BorderRadius.circular(24)),
+      decoration: BoxDecoration(color: AppColor.lightBlue, borderRadius: BorderRadius.circular(20)),
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
       child: Column(
         children: [
@@ -227,7 +227,7 @@ class _MasterCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             master.fullName ?? '',
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black),
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -235,7 +235,7 @@ class _MasterCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             master.experience != null ? '${master.experience} ${"years experience".tr()}' : '',
-            style: TextStyle(fontSize: 12, color: AppColor.grey),
+            style: TextStyle(fontSize: 11, color: AppColor.grey),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -254,7 +254,7 @@ class _MasterCard extends StatelessWidget {
                 Flexible(
                   child: Text(
                     distanceLabel,
-                    style: TextStyle(fontSize: 12, color: AppColor.grey, fontWeight: FontWeight.w500),
+                    style: TextStyle(fontSize: 11, color: AppColor.grey, fontWeight: FontWeight.w500),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -285,7 +285,7 @@ class _MasterCard extends StatelessWidget {
               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(50)),
               child: Text(
                 'More'.tr(),
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black),
               ),
             ),
           ),
@@ -315,7 +315,7 @@ class _MastersGridSkeleton extends StatelessWidget {
         ),
         itemCount: 6,
         itemBuilder: (_, __) => Container(
-          decoration: BoxDecoration(color: const Color(0xFFEFF3F6), borderRadius: BorderRadius.circular(24)),
+          decoration: BoxDecoration(color: const Color(0xFFEFF3F6), borderRadius: BorderRadius.circular(20)),
         ),
       ),
     );
@@ -331,18 +331,18 @@ class _MastersEmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.engineering_outlined, size: 60, color: AppColor.grey),
+          Icon(Icons.engineering_outlined, size: 50, color: AppColor.grey),
           const SizedBox(height: 16),
           Text(
             'No masters found'.tr(),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black),
           ),
           const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Text(
               'There are no masters available near you right now. Pull down to refresh.'.tr(),
-              style: TextStyle(color: AppColor.grey, fontSize: 14),
+              style: TextStyle(color: AppColor.grey, fontSize: 13),
               textAlign: TextAlign.center,
             ),
           ),
@@ -363,18 +363,18 @@ class _MastersErrorState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 60, color: Colors.red[300]),
+          Icon(Icons.error_outline, size: 50, color: Colors.red[300]),
           const SizedBox(height: 16),
           Text(
             'An error occurred'.tr(),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black),
           ),
           const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Text(
               message?.isNotEmpty == true ? message! : 'Something went wrong. Pull down to try again.'.tr(),
-              style: TextStyle(color: AppColor.grey, fontSize: 14),
+              style: TextStyle(color: AppColor.grey, fontSize: 13),
               textAlign: TextAlign.center,
             ),
           ),
@@ -386,7 +386,7 @@ class _MastersErrorState extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
             child: Text(
               'Try again'.tr(),
-              style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
             ),
           ),
         ],

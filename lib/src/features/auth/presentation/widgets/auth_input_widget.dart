@@ -81,7 +81,7 @@ class _AuthInputWidgetState extends State<AuthInputWidget> with SingleTickerProv
           obscuringCharacter: '*',
           decoration: InputDecoration(
             isDense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             hintText: widget.hint,
             hintStyle: context.textS.titleMedium!.copyWith(color: AppColor.lightGreyBlue, fontWeight: FontWeight.w400),
             fillColor: AppColor.lightBlue,

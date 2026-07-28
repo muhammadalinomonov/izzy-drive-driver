@@ -18,22 +18,22 @@ class TripSearchBar extends StatelessWidget {
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
         child: Container(
-          height: 52,
+          height: 48,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
             color: AppColor.lightBlue,
-            borderRadius: BorderRadius.circular(26),
+            borderRadius: BorderRadius.circular(24),
           ),
           child: Row(
             children: [
-              Icon(Icons.search, size: 22, color: AppColor.grey),
+              Icon(Icons.search, size: 20, color: AppColor.grey),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'tripMap.searchBarHint'.tr(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 16, color: AppColor.lightGreyBlue),
+                  style: TextStyle(fontSize: 15, color: AppColor.lightGreyBlue),
                 ),
               ),
             ],

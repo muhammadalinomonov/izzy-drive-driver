@@ -17,13 +17,13 @@ class InfoItem extends StatelessWidget {
         Text(
           title,
           style: context.textTheme.bodySmall!.copyWith(
-            fontSize: 12,
+            fontSize: 11,
             color: AppColor.grey2,
             fontWeight: FontWeight.w400,
           ),
         ),
         SizedBox(height: 4),
-        Text(info, style: context.textTheme.bodySmall!.copyWith(fontSize: 14, fontWeight: FontWeight.w500)),
+        Text(info, style: context.textTheme.bodySmall!.copyWith(fontSize: 13, fontWeight: FontWeight.w500)),
       ],
     );
   }

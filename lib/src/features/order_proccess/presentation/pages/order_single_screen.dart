@@ -289,20 +289,20 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Container(height: 4, width: 42, color: AppColor.grey2),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 18),
                             Text(
                               state.currentOrder.status.orderDescription,
                               style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                                fontSize: 20, fontWeight: FontWeight.w600,
+                                fontSize: 18, fontWeight: FontWeight.w600,
                               ),
                               textAlign: TextAlign.center,
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 20),
                             const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 42),
+                              padding: EdgeInsets.symmetric(horizontal: 36),
                               child: OrderStatusRow(),
                             ),
-                            const SizedBox(height: 40),
+                            const SizedBox(height: 32),
                             Align(
                               alignment: Alignment.centerLeft,
                               child: Padding(
@@ -310,7 +310,7 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
                                 child: Text(
                                   'Master',
                                   style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                                    fontWeight: FontWeight.w600, fontSize: 16,
+                                    fontWeight: FontWeight.w600, fontSize: 15,
                                   ),
                                 ),
                               ),
@@ -329,7 +329,7 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
                                   Text(
                                     state.currentOrder.selectedMechanic.fullName,
                                     style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                                      fontWeight: FontWeight.w600, fontSize: 14,
+                                      fontWeight: FontWeight.w600, fontSize: 13,
                                     ),
                                   ),
                                   const Spacer(),
@@ -360,7 +360,7 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
                                       child: Text(
                                         'More',
                                         style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                                          fontWeight: FontWeight.w500, fontSize: 13,
+                                          fontWeight: FontWeight.w500, fontSize: 12,
                                         ),
                                       ),
                                     ),

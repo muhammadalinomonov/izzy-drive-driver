@@ -126,7 +126,7 @@ class _OutputsScreenState extends State<OutputsScreen> {
                                 Text(
                                   'Total expenses',
                                   style: context.textTheme.headlineLarge!.copyWith(
-                                    fontSize: 14,
+                                    fontSize: 13,
                                     fontWeight: FontWeight.w400,
                                     color: AppColor.darkBlue,
                                   ),
@@ -135,7 +135,7 @@ class _OutputsScreenState extends State<OutputsScreen> {
                                 Text(
                                   '\$${state.totalAmount}',
                                   style: context.textTheme.headlineLarge!.copyWith(
-                                    fontSize: 16,
+                                    fontSize: 15,
                                     fontWeight: FontWeight.w500,
                                     color: AppColor.blueMain,
                                   ),

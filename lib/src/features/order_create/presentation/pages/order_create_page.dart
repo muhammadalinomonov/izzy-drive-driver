@@ -583,7 +583,7 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
       child: Row(
         children: [
-          IconButton(onPressed: onBack, icon: SvgPicture.asset(AppIcons.back, width: 20, height: 20)),
+          IconButton(onPressed: onBack, icon: SvgPicture.asset(AppIcons.back, width: 18, height: 18)),
           Expanded(
             child: Center(child: AddressChip(address: address)),
           ),
@@ -633,7 +633,7 @@ class _ChatTranscript extends StatelessWidget {
         'What is your problem?',
         style: Theme.of(
           context,
-        ).textTheme.headlineSmall?.copyWith(fontSize: 24, fontWeight: FontWeight.w500, letterSpacing: -0.3),
+        ).textTheme.headlineSmall?.copyWith(fontSize: 20, fontWeight: FontWeight.w500, letterSpacing: -0.3),
       ),
       const SizedBox(height: 16),
     ];
@@ -702,7 +702,7 @@ class _BotBubble extends StatelessWidget {
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.78),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: const BoxDecoration(
             color: Color(0xFFEFF3F6),
             borderRadius: BorderRadius.only(
@@ -714,7 +714,7 @@ class _BotBubble extends StatelessWidget {
           ),
           child: Text(
             text,
-            style: const TextStyle(color: Colors.black, fontSize: 15, height: 1.4, letterSpacing: -0.3),
+            style: const TextStyle(color: Colors.black, fontSize: 14, height: 1.4, letterSpacing: -0.3),
           ),
         ),
       ),
@@ -868,7 +868,7 @@ class _AudioReplyState extends State<_AudioReply> {
       constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.78),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(color: const Color(0xFFEFF3F6), borderRadius: BorderRadius.circular(28)),
+        decoration: BoxDecoration(color: const Color(0xFFEFF3F6), borderRadius: BorderRadius.circular(24)),
         // mainAxisSize.max + Expanded waveform = bubble always spans its full
         // maxWidth allowance, so even a one-second clip renders a generous,
         // Telegram-style waveform instead of a stub.
@@ -882,7 +882,7 @@ class _AudioReplyState extends State<_AudioReply> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(color: AppColor.kPrimaryColor, shape: BoxShape.circle),
-                child: Icon(_isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded, color: Colors.white, size: 26),
+                child: Icon(_isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded, color: Colors.white, size: 22),
               ),
             ),
             const SizedBox(width: 12),
@@ -896,7 +896,7 @@ class _AudioReplyState extends State<_AudioReply> {
             Text(
               _format(displayedTime),
               style: const TextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w500,
                 color: Color(0xFF6B7073),
                 fontFeatures: [FontFeature.tabularFigures()],
@@ -1057,7 +1057,7 @@ class _TextReply extends StatelessWidget {
             bottomRight: Radius.circular(18),
           ),
         ),
-        child: Text(text, style: const TextStyle(color: Colors.black, fontSize: 15, height: 1.35, letterSpacing: -0.3)),
+        child: Text(text, style: const TextStyle(color: Colors.black, fontSize: 14, height: 1.35, letterSpacing: -0.3)),
       ),
     );
   }
@@ -1102,7 +1102,7 @@ class _PriceReply extends StatelessWidget {
       decoration: BoxDecoration(color: const Color(0xFFEFF3F6), borderRadius: BorderRadius.circular(50)),
       child: Text(
         _formatted,
-        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black, letterSpacing: -0.3),
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black, letterSpacing: -0.3),
       ),
     );
   }
@@ -1125,7 +1125,7 @@ class _SubmitButton extends StatelessWidget {
           foregroundColor: Colors.white,
           disabledBackgroundColor: AppColor.kPrimaryColor.withValues(alpha: 0.5),
           disabledForegroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
           elevation: 0,
         ),
@@ -1135,7 +1135,7 @@ class _SubmitButton extends StatelessWidget {
                 height: 20,
                 child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
               )
-            : const Text('Send', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            : const Text('Send', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
       ),
     );
   }
@@ -1228,7 +1228,7 @@ class _BottomInputBar extends StatelessWidget {
                   active: true,
                   child: _SquareIconButton(
                     onPressed: onLockedSend,
-                    icon: const Icon(Icons.send_rounded, color: Colors.white, size: 22),
+                    icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
                     background: AppColor.kPrimaryColor,
                     iconColor: Colors.white,
                   ),
@@ -1252,7 +1252,7 @@ class _BottomInputBar extends StatelessWidget {
                   children: [
                     _SquareIconButton(
                       onPressed: onAttachPressed,
-                      icon: SvgPicture.asset(AppIcons.paperclip, width: 22, height: 22),
+                      icon: SvgPicture.asset(AppIcons.paperclip, width: 20, height: 20),
                       background: const Color(0xFFEFF3F6),
                       iconColor: AppColor.kPrimaryColor,
                     ),
@@ -1265,7 +1265,7 @@ class _BottomInputBar extends StatelessWidget {
               ? _RecordingInfoPill(elapsed: recordingElapsed, willCancel: willCancel)
               : Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14),
-                  decoration: BoxDecoration(color: const Color(0xFFEFF3F6), borderRadius: BorderRadius.circular(24)),
+                  decoration: BoxDecoration(color: const Color(0xFFEFF3F6), borderRadius: BorderRadius.circular(20)),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -1276,7 +1276,7 @@ class _BottomInputBar extends StatelessWidget {
                           child: Text(
                             '\$',
                             style: TextStyle(
-                              fontSize: 15,
+                              fontSize: 14,
                               letterSpacing: -0.3,
                               color: Colors.black,
                               fontWeight: FontWeight.w500,
@@ -1299,10 +1299,10 @@ class _BottomInputBar extends StatelessWidget {
                             hintText: isPriceStep ? 'Enter price' : 'Text or voice message',
                             border: InputBorder.none,
                             hintStyle: const TextStyle(color: Color(0xFFC5CACD)),
-                            contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                            contentPadding: const EdgeInsets.symmetric(vertical: 10),
                             isDense: true,
                           ),
-                          style: const TextStyle(fontSize: 15, letterSpacing: -0.3),
+                          style: const TextStyle(fontSize: 14, letterSpacing: -0.3),
                         ),
                       ),
                     ],
@@ -1368,7 +1368,7 @@ class _SendMicSlot extends StatelessWidget {
         child: SizedBox(
           width: 44,
           height: 44,
-          child: Center(child: Icon(icon, color: Colors.white, size: 22)),
+          child: Center(child: Icon(icon, color: Colors.white, size: 20)),
         ),
       ),
     );
@@ -1393,7 +1393,7 @@ class _LockHintBadge extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: const [BoxShadow(color: Color(0x29000000), blurRadius: 10, offset: Offset(0, 2))],
       ),
-      child: Icon(Icons.lock_outline_rounded, size: 20, color: iconColor),
+      child: Icon(Icons.lock_outline_rounded, size: 18, color: iconColor),
     );
   }
 }
@@ -1413,7 +1413,7 @@ class _CancelPill extends StatelessWidget {
         height: 44,
         decoration: const BoxDecoration(color: Color(0xFFEFF3F6), shape: BoxShape.circle),
         alignment: Alignment.center,
-        child: const Icon(Icons.close_rounded, color: Colors.red, size: 22),
+        child: const Icon(Icons.close_rounded, color: Colors.red, size: 20),
       ),
     );
   }
@@ -1454,8 +1454,8 @@ class _RecordingInfoPillState extends State<_RecordingInfoPill> with SingleTicke
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(color: const Color(0xFFEFF3F6), borderRadius: BorderRadius.circular(24)),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(color: const Color(0xFFEFF3F6), borderRadius: BorderRadius.circular(20)),
       child: Row(
         children: [
           _PulsingRecordingDot(controller: _pulseController),
@@ -1469,7 +1469,7 @@ class _RecordingInfoPillState extends State<_RecordingInfoPill> with SingleTicke
             _label,
             style: const TextStyle(
               fontWeight: FontWeight.w600,
-              fontSize: 14,
+              fontSize: 13,
               letterSpacing: -0.3,
               fontFeatures: [FontFeature.tabularFigures()],
             ),
@@ -2027,7 +2027,7 @@ class _MicHoldTooltipState extends State<_MicHoldTooltip> with SingleTickerProvi
                                 widget.message,
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 13.5,
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                   height: 1.3,
                                 ),

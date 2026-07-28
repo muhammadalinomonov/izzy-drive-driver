@@ -184,7 +184,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 Text(
                                   fullName.isEmpty ? 'No user name' : fullName,
                                   style: const TextStyle(
-                                    fontSize: 18,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.black,
                                     height: 1.3,
@@ -194,7 +194,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 Text(
                                   email.isEmpty ? 'no email' : email,
                                   style: TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 13,
                                     color: AppColor.grey,
                                     letterSpacing: -0.3,
                                     height: 1.3,
@@ -303,7 +303,7 @@ class _VehicleCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: Colors.black,
                           height: 1.3,
@@ -314,7 +314,7 @@ class _VehicleCard extends StatelessWidget {
                       Text(
                         amount,
                         style: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 13,
                           color: Colors.black,
                           height: 1.3,
                           letterSpacing: -0.3,
@@ -574,14 +574,14 @@ class _ProfileMenuItem extends StatelessWidget {
                 if (svgIcon != null)
                   SvgPicture.asset(
                     svgIcon!,
-                    width: 24,
-                    height: 24,
+                    width: 22,
+                    height: 22,
                     colorFilter: iconColor != null
                         ? ColorFilter.mode(iconColor!, BlendMode.srcIn)
                         : null,
                   )
                 else
-                  Icon(icon, size: 24, color: materialIconColor),
+                  Icon(icon, size: 22, color: materialIconColor),
                 const SizedBox(width: 18),
                 Expanded(
                   child: Text(
@@ -598,7 +598,7 @@ class _ProfileMenuItem extends StatelessWidget {
                 trailing ??
                     Icon(
                       Icons.chevron_right_rounded,
-                      size: 24,
+                      size: 22,
                       color: AppColor.grey,
                     ),
               ],
@@ -787,7 +787,7 @@ class _AvatarSourceSheet extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(18),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -804,7 +804,7 @@ class _AvatarSourceSheet extends StatelessWidget {
                   Text(
                     'Choose photo source',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: AppColor.black,
                       letterSpacing: -0.3,
@@ -834,13 +834,13 @@ class _AvatarSourceSheet extends StatelessWidget {
               child: InkWell(
                 onTap: () => Navigator.of(context).pop(),
                 child: SizedBox(
-                  height: 52,
+                  height: 50,
                   width: double.infinity,
                   child: Center(
                     child: Text(
                       'Cancel',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 15,
                         fontWeight: FontWeight.w600,
                         color: AppColor.black,
                         letterSpacing: -0.3,
@@ -877,7 +877,7 @@ class _SourceTile extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: SizedBox(
-          height: 56,
+          height: 52,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
@@ -897,7 +897,7 @@ class _SourceTile extends StatelessWidget {
                   child: Text(
                     label,
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: AppColor.black,
                       letterSpacing: -0.3,

@@ -22,7 +22,7 @@ class LanguageItem extends StatelessWidget {
             Text(
               language,
               style: context.textTheme.headlineLarge!.copyWith(
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: FontWeight.w500,
                 color: isSelected ? AppColor.black : AppColor.grey,
               ),
