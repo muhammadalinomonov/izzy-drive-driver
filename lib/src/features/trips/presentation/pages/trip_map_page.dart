@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
@@ -110,55 +111,28 @@ class _TripMapPageState extends State<TripMapPage> {
     map.compass.updateSettings(mapbox.CompassSettings(enabled: false));
   }
 
-  /// Draws a circular pin as raw PNG bytes.
+  /// Rasterizes a marker SVG (docs/icons/currner_point_marker.svg,
+  /// finish_marker.svg) into raw PNG bytes.
   ///
   /// Deliberately NOT `iconImage: 'marker-15'`: Maki sprite names are not
   /// guaranteed to exist in the Standard style, and a missing sprite fails
   /// silently - no marker, no error. Compositing our own bytes always renders.
-  /// The glyph is painted from the bundled MaterialIcons font.
-  Future<Uint8List> _markerPng(IconData icon, Color background) async {
-    const size = 96.0;
+  Future<Uint8List> _markerPng(String asset, {double height = 96}) async {
+    final pictureInfo = await vg.loadPicture(SvgAssetLoader(asset), null);
+    final scale = height / pictureInfo.size.height;
+    final width = pictureInfo.size.width * scale;
+
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
-
-    canvas.drawCircle(
-      const Offset(size / 2, size / 2),
-      size / 2 - 3,
-      Paint()..color = background,
-    );
-    canvas.drawCircle(
-      const Offset(size / 2, size / 2),
-      size / 2 - 3,
-      Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 5,
-    );
-
-    final painter = TextPainter(
-      text: TextSpan(
-        text: String.fromCharCode(icon.codePoint),
-        style: TextStyle(
-          fontSize: size * 0.5,
-          fontFamily: icon.fontFamily,
-          package: icon.fontPackage,
-          color: Colors.white,
-        ),
-      ),
-      // Prefixed: easy_localization re-exports intl's TextDirection, which
-      // shadows dart:ui's and has no `ltr`.
-      textDirection: ui.TextDirection.ltr,
-    )..layout();
-    painter.paint(
-      canvas,
-      Offset((size - painter.width) / 2, (size - painter.height) / 2),
-    );
+    canvas.scale(scale);
+    canvas.drawPicture(pictureInfo.picture);
 
     final image = await recorder.endRecording().toImage(
-          size.toInt(),
-          size.toInt(),
+          width.round(),
+          height.round(),
         );
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+    pictureInfo.picture.dispose();
     return bytes!.buffer.asUint8List();
   }
 
@@ -173,8 +147,9 @@ class _TripMapPageState extends State<TripMapPage> {
 
     final isOrigin = field == TripMapField.origin;
     final png = await _markerPng(
-      isOrigin ? Icons.my_location : Icons.flag,
-      isOrigin ? AppColor.darkBlue : AppColor.kPrimaryColor,
+      isOrigin
+          ? 'assets/icons/currner_point_marker.svg'
+          : 'assets/icons/finish_marker.svg',
     );
     if (!mounted) return;
 
@@ -188,7 +163,8 @@ class _TripMapPageState extends State<TripMapPage> {
       mapbox.PointAnnotationOptions(
         geometry: point,
         image: png,
-        iconSize: 0.6,
+        iconSize: 1.5,
+        iconAnchor: mapbox.IconAnchor.BOTTOM,
       ),
     );
     if (!mounted) return;
