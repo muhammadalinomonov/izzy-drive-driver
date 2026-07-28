@@ -39,7 +39,7 @@ class SubOrderProposalSheet extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.viewInsetsOf(context).bottom + 24),
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -49,14 +49,14 @@ class SubOrderProposalSheet extends StatelessWidget {
           Text(
             'New extra work proposal',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontSize: 18,
+                  fontSize: 17,
                   fontWeight: FontWeight.w700,
                 ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: AppColor.lightBlue,
               borderRadius: BorderRadius.circular(12),
@@ -68,7 +68,7 @@ class SubOrderProposalSheet extends StatelessWidget {
                   subOrder.title ?? 'Extra work',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w600,
-                        fontSize: 16,
+                        fontSize: 15,
                       ),
                 ),
                 const SizedBox(height: 8),
@@ -76,13 +76,13 @@ class SubOrderProposalSheet extends StatelessWidget {
                   children: [
                     Text(
                       'Price: ',
-                      style: TextStyle(color: AppColor.grey, fontSize: 14),
+                      style: TextStyle(color: AppColor.grey, fontSize: 13),
                     ),
                     Text(
                       '\$${subOrder.price}',
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
-                        fontSize: 16,
+                        fontSize: 15,
                       ),
                     ),
                   ],
@@ -97,7 +97,7 @@ class SubOrderProposalSheet extends StatelessWidget {
                 child: OutlinedButton(
                   onPressed: () => _respond(context, 'cancelled'),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     side: BorderSide(color: AppColor.grey),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -105,7 +105,7 @@ class SubOrderProposalSheet extends StatelessWidget {
                   ),
                   child: const Text(
                     'Reject',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                   ),
                 ),
               ),
@@ -116,14 +116,14 @@ class SubOrderProposalSheet extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColor.kPrimaryColor,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: const Text(
                     'Accept',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),

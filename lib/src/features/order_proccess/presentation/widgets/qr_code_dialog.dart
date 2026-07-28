@@ -31,13 +31,13 @@ class _BookingSuccessDialogState extends State<BookingSuccessDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(18),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -52,7 +52,7 @@ class _BookingSuccessDialogState extends State<BookingSuccessDialog> {
                   child: const Icon(
                     Icons.close,
                     color: Colors.grey,
-                    size: 24,
+                    size: 20,
                   ),
                 ),
               ),
@@ -76,7 +76,7 @@ class _BookingSuccessDialogState extends State<BookingSuccessDialog> {
 
             // QR Code
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -100,7 +100,7 @@ class _BookingSuccessDialogState extends State<BookingSuccessDialog> {
               onTap: _copied ? null : _copyCode,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                 decoration: BoxDecoration(
                   color: _copied ? const Color(0xFFE8F5E9) : Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(8),
@@ -111,7 +111,7 @@ class _BookingSuccessDialogState extends State<BookingSuccessDialog> {
                     Text(
                       widget.bookingCode,
                       style: const TextStyle(
-                        fontSize: 24,
+                        fontSize: 22,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 2,
                         color: Colors.black87,

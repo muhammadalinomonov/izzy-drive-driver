@@ -38,12 +38,12 @@ class SubOrderItem extends StatelessWidget {
                   '$name ',
                   style: Theme.of(
                     context,
-                  ).textTheme.bodyLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w400, color: AppColor.grey),
+                  ).textTheme.bodyLarge!.copyWith(fontSize: 13, fontWeight: FontWeight.w400, color: AppColor.grey),
                 ),
                 Expanded(child: Divider(color: AppColor.lightBlue)),
                 Text(
                   ' $price',
-                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w500),
+                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 13, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
@@ -67,7 +67,7 @@ class SubOrderItem extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: Theme.of(
                           context,
-                        ).textTheme.bodyLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w600),
+                        ).textTheme.bodyLarge!.copyWith(fontSize: 13, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
@@ -86,7 +86,7 @@ class SubOrderItem extends StatelessWidget {
                         'Accept',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                          fontSize: 14,
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: AppColor.white,
                         ),
@@ -108,7 +108,7 @@ class SubOrderItem extends StatelessWidget {
             '$name ',
             style: Theme.of(
               context,
-            ).textTheme.bodyLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w400, color: AppColor.grey),
+            ).textTheme.bodyLarge!.copyWith(fontSize: 13, fontWeight: FontWeight.w400, color: AppColor.grey),
           ),
           Expanded(child: Divider(color: AppColor.lightBlue)),
           if (status == 'cancelled')
@@ -124,7 +124,7 @@ class SubOrderItem extends StatelessWidget {
             ),
           Text(
             ' $price',
-            style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 14, fontWeight: FontWeight.w500),
+            style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 13, fontWeight: FontWeight.w500),
           ),
         ],
       ),

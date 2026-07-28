@@ -93,21 +93,21 @@ class _AwaitingMechanicSheetState extends State<AwaitingMechanicSheet>
             const SizedBox(height: 16),
             // Tepada yumshoq indeterminate progress strip.
             _ProgressStrip(controller: _stripController),
-            const SizedBox(height: 22),
+            const SizedBox(height: 18),
             // Avatar + pulse rings.
             _PulseAvatar(
               controller: _pulseController,
               imageUrl: widget.mechanicPhoto,
               name: widget.mechanicName,
             ),
-            const SizedBox(height: 22),
+            const SizedBox(height: 18),
             Text(
               widget.mechanicName.isEmpty
                   ? 'Master selected'.tr()
                   : widget.mechanicName,
               style: const TextStyle(
                 color: Colors.black,
-                fontSize: 18,
+                fontSize: 16,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w600,
                 letterSpacing: -0.30,
@@ -121,7 +121,7 @@ class _AwaitingMechanicSheetState extends State<AwaitingMechanicSheet>
                   'Waiting for the master to accept'.tr(),
                   style: const TextStyle(
                     color: _kSubtitle,
-                    fontSize: 14,
+                    fontSize: 13,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w500,
                     letterSpacing: -0.30,
@@ -137,13 +137,13 @@ class _AwaitingMechanicSheetState extends State<AwaitingMechanicSheet>
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: _kMuted,
-                fontSize: 12,
+                fontSize: 11,
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w400,
                 letterSpacing: -0.30,
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 16),
             // Aylana Cancel tugmasi (X icon) + matn pastda - Figma'dagidek.
             _CircleCancelButton(onTap: widget.onCancel),
           ],
@@ -165,8 +165,8 @@ class _PulseAvatar extends StatelessWidget {
   final String? imageUrl;
   final String name;
 
-  static const double _avatarSize = 64;
-  static const double _maxRingSize = 152;
+  static const double _avatarSize = 58;
+  static const double _maxRingSize = 138;
 
   @override
   Widget build(BuildContext context) {
@@ -312,9 +312,9 @@ class _CircleCancelButton extends StatelessWidget {
             customBorder: const CircleBorder(),
             onTap: onTap,
             child: const SizedBox(
-              width: 48,
-              height: 48,
-              child: Icon(Icons.close, size: 22, color: Colors.black),
+              width: 44,
+              height: 44,
+              child: Icon(Icons.close, size: 20, color: Colors.black),
             ),
           ),
         ),
@@ -323,7 +323,7 @@ class _CircleCancelButton extends StatelessWidget {
           'Cancel'.tr(),
           style: const TextStyle(
             color: Colors.black,
-            fontSize: 12,
+            fontSize: 11,
             fontFamily: 'Inter',
             fontWeight: FontWeight.w500,
             letterSpacing: -0.30,
