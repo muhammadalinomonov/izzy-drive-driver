@@ -318,7 +318,10 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
           }
           final session = state.session;
           if (session != null && state.startTick > 0) {
-            context.push(
+            // Once navigation is running the overview is a dead end - backing
+            // out of driving mode goes to the trip list, not back to a route
+            // whose session has already started.
+            context.pushReplacement(
               Pages.drivingMode,
               extra: DrivingModeArgs(
                 session: session,
