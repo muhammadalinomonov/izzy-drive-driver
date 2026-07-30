@@ -769,7 +769,7 @@ class _OfferTile extends StatelessWidget {
 
   void _openDetail(BuildContext context) {
     showOrderDetailBottomSheet(context, offer.id.toString(), () {
-      context.push(Pages.proccessOrder);
+      context.push(Pages.processOrder);
     });
   }
 

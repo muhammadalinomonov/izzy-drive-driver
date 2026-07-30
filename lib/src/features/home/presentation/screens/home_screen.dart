@@ -208,14 +208,14 @@ class _HomeScreenState extends State<HomeScreen> {
                               return GestureDetector(
                                 onTap: () {
                                   if (state.currentOrder.status.isPending) {
-                                    context.push(Pages.invatesPage);
+                                    context.push(Pages.invitesPage);
                                   } else if (state
                                       .currentOrder
                                       .status
                                       .isMechanicDone) {
                                     context.push(Pages.finishedOrder);
                                   } else {
-                                    context.push(Pages.proccessOrder);
+                                    context.push(Pages.processOrder);
                                   }
                                 },
                                 child: ActiveOrderWidget(

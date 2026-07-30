@@ -433,7 +433,7 @@ class _OrderCreatePageState extends State<OrderCreatePage> {
       OrderSubmitted(
         onSuccess: (_) {
           if (!mounted) return;
-          context.go(Pages.invatesPage);
+          context.go(Pages.invitesPage);
         },
         onError: (msg) {
           if (!mounted) return;

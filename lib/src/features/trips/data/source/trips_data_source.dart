@@ -58,6 +58,39 @@ class TripsDataSource {
     }
   }
 
+  /// `GET mobile/toll-routes/{id}` — full detail for one route request,
+  /// including per-alternative toll markers that [fetchPage]'s list items
+  /// may omit (per docs/mobile-api.md §4.1).
+  Future<NetworkResponse<TripModel>> fetchById(String routeRequestId) async {
+    if (!TollSession.hasToken) {
+      return NetworkResponse<TripModel>(
+        errorText: 'Toll account is not connected.',
+        errorCode: 'TOLL_SESSION_MISSING',
+      );
+    }
+    try {
+      final response = await client.get(
+        TollApiConstants.tollRouteDetail(routeRequestId),
+      );
+      if (response.isSuccess) {
+        return NetworkResponse<TripModel>(
+          data: TripModel.fromJson(toMap(toMap(response.data)['data'])),
+        );
+      }
+      return NetworkResponse<TripModel>(
+        errorText: _errorMessage(response.data),
+        errorCode: _errorCode(response.data),
+      );
+    } on DioException catch (e) {
+      return NetworkResponse<TripModel>(
+        errorText: _errorMessage(e.response?.data, 'Network error'),
+        errorCode: _errorCode(e.response?.data),
+      );
+    } catch (e) {
+      return NetworkResponse<TripModel>(errorText: e.toString());
+    }
+  }
+
   /// Shortest `q` the backend accepts - anything less answers
   /// 422 VALIDATION_FAILED ("The q field must be at least 3 characters."),
   /// verified against the live API.

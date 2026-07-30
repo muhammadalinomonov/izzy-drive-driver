@@ -10,10 +10,14 @@ import 'package:taxi_app/src/features/trips/data/model/trip_model.dart';
 /// One row of the trip-history list: origin -> destination, when it ran, and
 /// the recommended alternative's distance / duration / toll.
 class TripTile extends StatelessWidget {
-  const TripTile({super.key, required this.trip, this.onTap});
+  const TripTile({super.key, required this.trip, this.onTap, this.loading = false});
 
   final TripModel trip;
   final VoidCallback? onTap;
+
+  /// True while the full route detail (`GET toll-routes/{id}`) for this tile
+  /// is being fetched, e.g. after tapping it to open Route Overview.
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
@@ -22,37 +26,54 @@ class TripTile extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColor.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColor.grey2),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: _Endpoints(trip: trip)),
-                  _StatusChip(status: trip.status),
-                ],
+        onTap: loading ? null : onTap,
+        child: Stack(
+          children: [
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColor.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColor.grey2),
               ),
-              if (alternative != null) ...[
-                const SizedBox(height: 12),
-                Divider(color: AppColor.grey2, height: 1),
-                const SizedBox(height: 10),
-                _Metrics(alternative: alternative),
-              ],
-              if (trip.vehicle != null || trip.departureAt != null) ...[
-                const SizedBox(height: 10),
-                _Footer(trip: trip),
-              ],
-            ],
-          ),
+              child: Opacity(
+                opacity: loading ? 0.5 : 1,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: _Endpoints(trip: trip)),
+                        _StatusChip(status: trip.status),
+                      ],
+                    ),
+                    if (alternative != null) ...[
+                      const SizedBox(height: 12),
+                      Divider(color: AppColor.grey2, height: 1),
+                      const SizedBox(height: 10),
+                      _Metrics(alternative: alternative),
+                    ],
+                    if (trip.vehicle != null || trip.departureAt != null) ...[
+                      const SizedBox(height: 10),
+                      _Footer(trip: trip),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            if (loading)
+              const Positioned.fill(
+                child: Center(
+                  child: SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator.adaptive(strokeWidth: 2.2),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );

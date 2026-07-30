@@ -16,6 +16,8 @@ abstract class TripsRepo {
     CancelToken? cancelToken,
   });
 
+  Future<NetworkResponse<TripModel>> fetchById(String routeRequestId);
+
   Future<NetworkResponse<TripModel>> createRoute({
     required TripCoordinate origin,
     required TripCoordinate destination,

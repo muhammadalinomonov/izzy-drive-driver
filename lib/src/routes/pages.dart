@@ -10,8 +10,8 @@ class Pages {
   static const String profile = '/profile';
   static const String editProfile = '/edit_profile';
   static const String workerInfo = '/workerInfo';
-  static const String invatesPage = '/invatesPage';
-  static const String proccessOrder = '/proccessOrder';
+  static const String invitesPage = '/invitesPage';
+  static const String processOrder = '/processOrder';
   static const String finishedOrder = '/finishedOrder';
   static const String orderInfo = '/orderInfo';
   static const String ordersHistory = '/ordersHistory';

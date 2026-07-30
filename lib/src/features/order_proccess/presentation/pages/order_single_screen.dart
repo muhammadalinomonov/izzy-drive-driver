@@ -197,7 +197,7 @@ class _OrderSingleScreenState extends State<OrderSingleScreen> with WidgetsBindi
                 p.currentOrder.status.isMechanicSelected &&
                 c.currentOrder.status.isPending,
             listener: (context, state) {
-              if (context.mounted) context.go(Pages.invatesPage);
+              if (context.mounted) context.go(Pages.invitesPage);
             },
           ),
         ],

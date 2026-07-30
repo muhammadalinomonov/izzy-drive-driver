@@ -211,10 +211,10 @@ class PushNotifications {
       case 'order-completed':
       case 'new-suborder':
       case 'update-order-price':
-        Routes.router.go(Pages.proccessOrder);
+        Routes.router.go(Pages.processOrder);
         break;
       case 'new-proposal':
-        Routes.router.go(Pages.invatesPage);
+        Routes.router.go(Pages.invitesPage);
         break;
       default:
         break;

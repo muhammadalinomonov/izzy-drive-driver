@@ -29,6 +29,11 @@ class TripsRepoImpl extends TripsRepo {
   }
 
   @override
+  Future<NetworkResponse<TripModel>> fetchById(String routeRequestId) {
+    return dataSource.fetchById(routeRequestId);
+  }
+
+  @override
   Future<NetworkResponse<TripModel>> createRoute({
     required TripCoordinate origin,
     required TripCoordinate destination,

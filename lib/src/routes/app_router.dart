@@ -88,6 +88,7 @@ class Routes {
   }
 
   static final GoRouter router = GoRouter(
+    debugLogDiagnostics: true,
     initialLocation: Pages.splash,
     observers: [ChuckerFlutter.navigatorObserver],
     refreshListenable: AuthSession.tick,
@@ -240,7 +241,7 @@ class Routes {
         ),
       ),
       GoRoute(
-        path: Pages.invatesPage,
+        path: Pages.invitesPage,
         builder: (context, state) {
           return MultiBlocProvider(
             providers: [
@@ -269,7 +270,7 @@ class Routes {
       ),
 
       GoRoute(
-        path: Pages.proccessOrder,
+        path: Pages.processOrder,
         builder: (context, state) => const OrderSingleScreen(),
       ),
       GoRoute(path: Pages.orderInfo, builder: (context, state) => const OrderInfoScreen()),

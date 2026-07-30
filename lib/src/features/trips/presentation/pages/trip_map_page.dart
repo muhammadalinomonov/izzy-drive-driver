@@ -238,7 +238,7 @@ class _TripMapPageState extends State<TripMapPage> {
               state.continueTick > 0 &&
               state.origin != null &&
               state.destination != null) {
-            context.push(
+            context.pushReplacement(
               Pages.routeOverview,
               extra: RouteOverviewArgs(
                 trip: route,

@@ -185,3 +185,19 @@ After successfully canceling the session, clear all navigation-related state and
 Implement proper loading, empty, offline, and error states for all API requests. Handle network failures gracefully and preserve navigation state whenever possible.
 
 Follow all request and response specifications defined in `docs/mobile-api.md`. Keep the implementation modular, maintainable, and consistent with the existing project architecture. Match the layouts, spacing, typography, animations, icons, and overall behavior shown in `docs/ui/8.png` for the route overview and `docs/ui/9.png` for Driving Mode as closely as possible.
+
+----------------------------------------------------------------------------------------------------
+
+4. Task
+
+On the **Trips** page, display the user's route history. When the user taps a history item, navigate to the existing **Route Overview** screen.
+
+Load the selected route details by calling:
+
+`GET /api/v1/mobile/toll-routes/{routeRequest}`
+
+where `{routeRequest}` is the selected history item's ID. Follow the API specification in `docs/mobile-api.md`.
+
+While loading, show a loading state. Once the data is received, populate the existing Route Overview screen with the returned route information, including the map, selected route, alternative routes, toll stations, fuel stations, and route summary. Do not create a new Route Overview screen—reuse the existing implementation and shared business logic used for newly calculated routes.
+
+Handle loading, empty, and error states appropriately, and keep the implementation consistent with the existing architecture.
