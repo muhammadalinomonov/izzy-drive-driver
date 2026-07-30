@@ -57,6 +57,11 @@ class AppIcons {
   static const String routeToll = 'assets/icons/ic_toll.svg';
   static const String routeMile = 'assets/icons/ic_mile.svg';
   static const String routeLocation = 'assets/icons/ic_location.svg';
+
+  // Waypoint-timeline bullets: a coloured dot on a matching halo, drawn
+  // as-authored (red for toll gantries, blue for fuel stations).
+  static const String tollLeading = 'assets/icons/ic_toll_leading.svg';
+  static const String fuelLeading = 'assets/icons/ic_fuel_leading.svg';
   static const String gpsRecenter = 'assets/icons/ic_gps_recenter.svg';
 
   // Profile menu icons

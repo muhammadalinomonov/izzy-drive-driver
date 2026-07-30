@@ -229,7 +229,9 @@
     "noRoutes": "Bu safar uchun marshrut topilmadi.",
     "fuel": "Yoqilgʻi",
     "toll": "Toll",
-    "mile": "Mil"
+    "mile": "Mil",
+    "fuelStation": "Yoqilgʻi shoxobchasi",
+    "inMiles": "{miles} mil keyin"
   },
   "drivingMode": {
     "cancel": "Navigatsiyani bekor qilish",

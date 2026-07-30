@@ -501,27 +501,30 @@ class _WaypointList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _WaypointRow(
-            icon: AppIcons.routeLocation,
+          _EndpointRow(
+            icon: AppIcons.tripOrigin,
             title: args.origin.fieldLabel,
+            lineAbove: false,
           ),
-          // The toll API gives each toll marker's name/coordinate/amount but
-          // no distance-from-start, so the row shows only the amount, not
-          // "in X mi" as in docs/ui/8.png.
+          // The toll API returns each marker's name/coordinate/amount but no
+          // distance-from-start, so `distanceMiles` stays null and the row
+          // drops the "in X mi" segment shown in docs/ui/toll-fuel-list.png.
+          // Fuel stops are not in the payload at all - see _StopKind.
           for (final toll in alternative.tollMarkers)
-            _WaypointRow(
-              icon: AppIcons.routeToll,
+            _StopRow(
+              kind: _StopKind.toll,
               title: toll.name,
-              badge: 'Toll',
-              trailing: toll.amount?.formatted,
+              distanceMiles: null,
+              trailing: toll.amount == null ? null : '-${toll.amount!.formatted}',
             ),
-          _WaypointRow(
+          _EndpointRow(
             icon: AppIcons.tripDestination,
             title: args.destination.fieldLabel,
+            lineBelow: false,
           ),
         ],
       ),
@@ -529,78 +532,282 @@ class _WaypointList extends StatelessWidget {
   }
 }
 
-class _WaypointRow extends StatelessWidget {
-  const _WaypointRow({
+/// A stop on the route. `fuel` is wired up because the design calls for it,
+/// but nothing feeds it yet: the toll API exposes fuel only as one aggregate
+/// cost per alternative, never as a list of stations.
+enum _StopKind {
+  toll(AppIcons.tollLeading, 'routeOverview.toll'),
+  // Kept so the row renders correctly the moment the API starts returning
+  // fuel stops; remove if that never lands.
+  // ignore: unused_field
+  fuel(AppIcons.fuelLeading, 'routeOverview.fuelStation');
+
+  const _StopKind(this.icon, this.badgeKey);
+
+  final String icon;
+  final String badgeKey;
+}
+
+/// The origin / destination rows: no badge, no price, just the emphasized
+/// address against the timeline.
+class _EndpointRow extends StatelessWidget {
+  const _EndpointRow({
     required this.icon,
     required this.title,
-    this.badge,
-    this.trailing,
+    this.lineAbove = true,
+    this.lineBelow = true,
   });
 
   final String icon;
   final String title;
-  final String? badge;
+  final bool lineAbove;
+  final bool lineBelow;
+
+  @override
+  Widget build(BuildContext context) {
+    return _TimelineRow(
+      icon: icon,
+      iconSize: 18,
+      tintIcon: true,
+      lineAbove: lineAbove,
+      lineBelow: lineBelow,
+      child: Text(
+        title,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          color: AppColor.black,
+        ),
+      ),
+    );
+  }
+}
+
+/// A toll gantry or fuel station: address, then a badge + optional distance,
+/// a dashed leader filling the gap, and the price on the right.
+class _StopRow extends StatelessWidget {
+  const _StopRow({
+    required this.kind,
+    required this.title,
+    required this.distanceMiles,
+    required this.trailing,
+  });
+
+  final _StopKind kind;
+  final String title;
+  final double? distanceMiles;
   final String? trailing;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
+    return _TimelineRow(
+      icon: kind.icon,
+      iconSize: 16,
+      lineAbove: true,
+      lineBelow: true,
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          SvgPicture.asset(
-            icon,
-            width: 18,
-            height: 18,
-            colorFilter: ColorFilter.mode(AppColor.darkGrey, BlendMode.srcIn),
+          Text(
+            title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColor.black,
+            ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColor.lightBlue,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  kind.badgeKey.tr(),
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: FontWeight.w500,
                     color: AppColor.black,
                   ),
                 ),
-                if (badge != null) ...[
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColor.grey2,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      badge!,
-                      style: TextStyle(fontSize: 10, color: AppColor.darkGrey),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          if (trailing != null)
-            Text(
-              trailing!,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AppColor.grey,
               ),
-            ),
+              if (distanceMiles != null) ...[
+                const SizedBox(width: 10),
+                Text(
+                  'routeOverview.inMiles'.tr(
+                    namedArgs: {'miles': distanceMiles!.toStringAsFixed(0)},
+                  ),
+                  style: TextStyle(fontSize: 13, color: AppColor.grey),
+                ),
+              ],
+              const Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  child: _DashedLeader(),
+                ),
+              ),
+              if (trailing != null)
+                Text(
+                  trailing!,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColor.black,
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
     );
   }
+}
+
+/// One row of the timeline: a leading icon centred on the row with the dashed
+/// connector running through the gutter to the rows above and below.
+class _TimelineRow extends StatelessWidget {
+  const _TimelineRow({
+    required this.icon,
+    required this.iconSize,
+    required this.lineAbove,
+    required this.lineBelow,
+    required this.child,
+    this.tintIcon = false,
+  });
+
+  final String icon;
+  final double iconSize;
+  final bool lineAbove;
+  final bool lineBelow;
+  final bool tintIcon;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    // IntrinsicHeight lets the gutter stretch to whatever the content column
+    // ends up being, so the connector meets the next row's dash exactly.
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 20,
+            child: CustomPaint(
+              painter: _ConnectorPainter(
+                above: lineAbove,
+                below: lineBelow,
+                gap: iconSize / 2 + 4,
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  icon,
+                  width: iconSize,
+                  height: iconSize,
+                  colorFilter: tintIcon
+                      ? ColorFilter.mode(AppColor.darkGrey, BlendMode.srcIn)
+                      : null,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: child,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The dashed vertical connector, drawn in the gutter behind the row icon.
+class _ConnectorPainter extends CustomPainter {
+  const _ConnectorPainter({
+    required this.above,
+    required this.below,
+    required this.gap,
+  });
+
+  final bool above;
+  final bool below;
+
+  /// Half-height of the hole left around the icon.
+  final double gap;
+
+  static const double _dash = 5;
+  static const double _space = 5;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColor.lightGreyBlue
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round;
+    final x = size.width / 2;
+    final centre = size.height / 2;
+    if (above) _dashes(canvas, paint, x, centre - gap, 0);
+    if (below) _dashes(canvas, paint, x, centre + gap, size.height);
+  }
+
+  /// Walks from `start` towards `end` in either direction.
+  void _dashes(Canvas canvas, Paint paint, double x, double start, double end) {
+    final step = end > start ? _dash + _space : -(_dash + _space);
+    final dash = end > start ? _dash : -_dash;
+    var y = start;
+    while (end > start ? y < end : y > end) {
+      final to = end > start ? (y + dash).clamp(y, end) : (y + dash).clamp(end, y);
+      canvas.drawLine(Offset(x, y), Offset(x, to), paint);
+      y += step;
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ConnectorPainter old) =>
+      old.above != above || old.below != below || old.gap != gap;
+}
+
+/// The dashed rule that fills the space between a stop's badge and its price.
+class _DashedLeader extends StatelessWidget {
+  const _DashedLeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(height: 1, child: CustomPaint(painter: _LeaderPainter()));
+  }
+}
+
+class _LeaderPainter extends CustomPainter {
+  static const double _dash = 4;
+  static const double _space = 4;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColor.grey2
+      ..strokeWidth = 1;
+    final y = size.height / 2;
+    for (var x = 0.0; x < size.width; x += _dash + _space) {
+      canvas.drawLine(
+        Offset(x, y),
+        Offset((x + _dash).clamp(0, size.width), y),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_LeaderPainter oldDelegate) => false;
 }
 
 /// The fuel / toll / mile stats and the start button (docs/ui/over_view_bottom.svg).

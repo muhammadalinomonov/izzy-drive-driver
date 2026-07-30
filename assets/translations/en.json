@@ -229,7 +229,9 @@
     "noRoutes": "No routes were returned for this trip.",
     "fuel": "Fuel",
     "toll": "Toll",
-    "mile": "Mile"
+    "mile": "Mile",
+    "fuelStation": "Fuel Station",
+    "inMiles": "in {miles} mi"
   },
   "drivingMode": {
     "cancel": "Cancel Navigation",
