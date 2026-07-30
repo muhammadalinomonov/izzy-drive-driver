@@ -201,6 +201,31 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
     );
   }
 
+  /// Tapping a toll/fuel row in the sheet centres the map on that stop.
+  Future<void> _focusStop(TripCoordinate coordinate) async {
+    final map = _map;
+    if (map == null) return;
+    // Drop the sheet back to its collapsed size first, otherwise the point
+    // we are flying to lands behind it.
+    if (_sheetController.isAttached && _sheetController.size > _collapsed) {
+      await _sheetController.animateTo(
+        _collapsed,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+      if (!mounted) return;
+    }
+    await map.flyTo(
+      mapbox.CameraOptions(
+        center: mapbox.Point(
+          coordinates: mapbox.Position(coordinate.lng, coordinate.lat),
+        ),
+        zoom: 14,
+      ),
+      mapbox.MapAnimationOptions(duration: 700),
+    );
+  }
+
   void _onAlternativeSelected(String alternativeId) {
     context.read<RouteOverviewBloc>().add(RouteOverviewAlternativeSelected(alternativeId));
   }
@@ -293,6 +318,7 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
                   args: widget.args,
                   state: state,
                   onAlternativeSelected: _onAlternativeSelected,
+                  onStopSelected: _focusStop,
                   onStart: _onStart,
                 ),
               ],
@@ -313,6 +339,7 @@ class _RouteSheet extends StatelessWidget {
     required this.args,
     required this.state,
     required this.onAlternativeSelected,
+    required this.onStopSelected,
     required this.onStart,
   });
 
@@ -323,6 +350,7 @@ class _RouteSheet extends StatelessWidget {
   final RouteOverviewArgs args;
   final RouteOverviewState state;
   final ValueChanged<String> onAlternativeSelected;
+  final ValueChanged<TripCoordinate> onStopSelected;
   final VoidCallback onStart;
 
   @override
@@ -380,7 +408,11 @@ class _RouteSheet extends StatelessWidget {
                             onSelected: onAlternativeSelected,
                           ),
                           Divider(color: AppColor.grey2, height: 1),
-                          _WaypointList(args: args, alternative: state.selectedAlternative!),
+                          _WaypointList(
+                            args: args,
+                            alternative: state.selectedAlternative!,
+                            onStopSelected: onStopSelected,
+                          ),
                         ],
                       ),
               ),
@@ -493,10 +525,15 @@ class _AlternativeChip extends StatelessWidget {
 }
 
 class _WaypointList extends StatelessWidget {
-  const _WaypointList({required this.args, required this.alternative});
+  const _WaypointList({
+    required this.args,
+    required this.alternative,
+    required this.onStopSelected,
+  });
 
   final RouteOverviewArgs args;
   final TripAlternative alternative;
+  final ValueChanged<TripCoordinate> onStopSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -520,6 +557,7 @@ class _WaypointList extends StatelessWidget {
               title: toll.name,
               distanceMiles: null,
               trailing: toll.amount == null ? null : '-${toll.amount!.formatted}',
+              onTap: () => onStopSelected(toll.coordinate),
             ),
           _EndpointRow(
             icon: AppIcons.tripDestination,
@@ -593,79 +631,92 @@ class _StopRow extends StatelessWidget {
     required this.title,
     required this.distanceMiles,
     required this.trailing,
+    required this.onTap,
   });
 
   final _StopKind kind;
   final String title;
   final double? distanceMiles;
   final String? trailing;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return _TimelineRow(
-      icon: kind.icon,
-      iconSize: 16,
-      lineAbove: true,
-      lineBelow: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            title,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppColor.black,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Row(
+    // The sheet paints its own white background, so the splash needs a local
+    // Material above it to be visible at all.
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: _TimelineRow(
+          icon: kind.icon,
+          iconSize: 16,
+          lineAbove: true,
+          lineBelow: true,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColor.lightBlue,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  kind.badgeKey.tr(),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: AppColor.black,
-                  ),
+              Text(
+                title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppColor.black,
                 ),
               ),
-              if (distanceMiles != null) ...[
-                const SizedBox(width: 10),
-                Text(
-                  'routeOverview.inMiles'.tr(
-                    namedArgs: {'miles': distanceMiles!.toStringAsFixed(0)},
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColor.lightBlue,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      kind.badgeKey.tr(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColor.black,
+                      ),
+                    ),
                   ),
-                  style: TextStyle(fontSize: 13, color: AppColor.grey),
-                ),
-              ],
-              const Expanded(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: _DashedLeader(),
-                ),
+                  if (distanceMiles != null) ...[
+                    const SizedBox(width: 10),
+                    Text(
+                      'routeOverview.inMiles'.tr(
+                        namedArgs: {'miles': distanceMiles!.toStringAsFixed(0)},
+                      ),
+                      style: TextStyle(fontSize: 13, color: AppColor.grey),
+                    ),
+                  ],
+                  const Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: _DashedLeader(),
+                    ),
+                  ),
+                  if (trailing != null)
+                    Text(
+                      trailing!,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColor.black,
+                      ),
+                    ),
+                ],
               ),
-              if (trailing != null)
-                Text(
-                  trailing!,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColor.black,
-                  ),
-                ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
