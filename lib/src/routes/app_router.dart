@@ -212,6 +212,8 @@ class Routes {
           return BlocProvider(
             create: (_) => RouteOverviewBloc(
               trip: args.trip,
+              origin: args.origin,
+              destination: args.destination,
               repo: TripsRepoImpl(dataSource: TripsDataSource()),
               locationService: serviceLocator<LocationService>(),
             ),

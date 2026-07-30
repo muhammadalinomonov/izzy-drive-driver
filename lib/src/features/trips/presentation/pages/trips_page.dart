@@ -3,11 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:taxi_app/src/core/components/app_snack_bar.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
-import 'package:taxi_app/src/core/location_service.dart';
-import 'package:taxi_app/src/core/service_locater.dart';
-import 'package:taxi_app/src/features/trips/data/model/place_model.dart';
 import 'package:taxi_app/src/features/trips/data/model/trip_model.dart';
 import 'package:taxi_app/src/features/trips/presentation/bloc/trips_bloc.dart';
 import 'package:taxi_app/src/features/trips/presentation/pages/route_overview_page.dart';
@@ -28,10 +24,6 @@ class TripsPage extends StatefulWidget {
 
 class _TripsPageState extends State<TripsPage> {
   final _scrollController = ScrollController();
-
-  /// Id of the history item currently loading its full detail
-  /// (`GET toll-routes/{id}`) before opening Route Overview. Null when idle.
-  String? _openingTripId;
 
   @override
   void initState() {
@@ -74,58 +66,12 @@ class _TripsPageState extends State<TripsPage> {
     context.read<TripsBloc>().add(const TripsRefreshed());
   }
 
-  /// Opens the existing Route Overview screen for a history item. The list
-  /// endpoint's `toll_markers` may be empty (see docs/mobile-api.md §4.1), so
-  /// the full detail is re-fetched by id before navigating.
-  Future<void> _openRouteDetail(TripModel trip) async {
-    if (_openingTripId != null) return;
-    setState(() => _openingTripId = trip.id);
-
-    final repo = context.read<TripsBloc>().repo;
-    final response = await repo.fetchById(trip.id);
-    if (!mounted) return;
-    setState(() => _openingTripId = null);
-
-    if (response.errorText.isNotEmpty || response.data == null) {
-      AppSnackBar.showError(
-        context,
-        response.errorText.isEmpty
-            ? 'common.somethingWentWrong'.tr()
-            : response.errorText,
-      );
-      return;
-    }
-
-    final detail = response.data!;
-    final results = await Future.wait([
-      _placeFor(detail.origin, 'trips.origin'.tr()),
-      _placeFor(detail.destination, 'trips.destination'.tr()),
-    ]);
-    if (!mounted) return;
-
-    context.push(
-      Pages.routeOverview,
-      extra: RouteOverviewArgs(
-        trip: detail,
-        origin: results[0],
-        destination: results[1],
-      ),
-    );
-  }
-
-  /// The toll-route payload only carries raw coordinates, not a geocoded
-  /// label - reverse-geocode on-device (same source as [TripTile]'s
-  /// endpoint labels), falling back to the trimmed lat/lng.
-  Future<PlaceModel> _placeFor(TripCoordinate? point, String fallbackLabel) async {
-    if (point == null) {
-      return PlaceModel.fromCoordinate(label: fallbackLabel, lat: 0, lng: 0);
-    }
-    final address = await serviceLocator<LocationService>()
-        .getAddressFromLatLng(point.lat, point.lng);
-    final label = (address == null || address.trim().isEmpty)
-        ? '${point.lat.toStringAsFixed(4)}, ${point.lng.toStringAsFixed(4)}'
-        : address;
-    return PlaceModel.fromCoordinate(label: label, lat: point.lat, lng: point.lng);
+  /// Opens Route Overview for a history item straight away. The list
+  /// endpoint's `toll_markers` may be empty (see docs/mobile-api.md §4.1) and
+  /// its endpoints carry no labels, so the overview fetches the full detail
+  /// behind its own loading state rather than holding the tap here.
+  void _openRouteDetail(TripModel trip) {
+    context.push(Pages.routeOverview, extra: RouteOverviewArgs.pending(trip));
   }
 
   @override
@@ -174,7 +120,6 @@ class _TripsPageState extends State<TripsPage> {
                 final trip = state.items[index];
                 return TripTile(
                   trip: trip,
-                  loading: trip.id == _openingTripId,
                   onTap: () => _openRouteDetail(trip),
                 );
               },

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -20,14 +22,23 @@ import 'package:taxi_app/src/routes/pages.dart';
 /// the human-readable labels the driver searched for).
 class RouteOverviewArgs {
   final TripModel trip;
-  final PlaceModel origin;
-  final PlaceModel destination;
+  final PlaceModel? origin;
+  final PlaceModel? destination;
 
+  /// From the planner, where the route was just calculated and both endpoints
+  /// were picked by hand.
   const RouteOverviewArgs({
     required this.trip,
-    required this.origin,
-    required this.destination,
+    required PlaceModel this.origin,
+    required PlaceModel this.destination,
   });
+
+  /// From the history list: navigate on tap and let the page fetch the full
+  /// detail and geocode the endpoints behind its own loading state. [trip] is
+  /// the list item, which is enough to place the initial camera.
+  const RouteOverviewArgs.pending(this.trip)
+      : origin = null,
+        destination = null;
 }
 
 /// Route overview (docs/ui/8.png): a full-screen map showing every priced
@@ -48,6 +59,9 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
   static const double _half = 0.48;
   static const double _expanded = 0.85;
 
+  /// Both zoom buttons plus the gap between them.
+  static const double _zoomStackHeight = 44 + 12 + 44;
+
   final _sheetController = DraggableScrollableController();
 
   /// Mirrors the sheet's current extent so the zoom buttons can ride just
@@ -58,12 +72,52 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
   mapbox.PolylineAnnotationManager? _lines;
   mapbox.PointAnnotationManager? _markers;
 
-  /// Only re-fit the camera when the alternative actually changes, not on
-  /// every rebuild the bloc triggers.
-  String? _renderedAlternativeId;
+  /// Only re-draw and re-fit the camera when something the map actually shows
+  /// changed, not on every rebuild the bloc triggers.
+  String? _renderedKey;
+
+  /// Centre for the very first frame, before any route is drawn. The camera is
+  /// re-fitted to the whole route as soon as the detail lands.
+  late final mapbox.Position _initialCenter = _centerFor(widget.args);
+
+  @override
+  void initState() {
+    super.initState();
+    _sheetController.addListener(_onSheetMoved);
+    context.read<RouteOverviewBloc>().add(
+          RouteOverviewStarted(
+            originFallbackLabel: 'trips.origin'.tr(),
+            destinationFallbackLabel: 'trips.destination'.tr(),
+          ),
+        );
+  }
+
+  static mapbox.Position _centerFor(RouteOverviewArgs args) {
+    final point = args.origin?.coordinate ?? args.trip.origin;
+    // Geographic centre of the US - a history row with no origin coordinate
+    // is a broken record, not a location worth guessing at.
+    if (point == null) return mapbox.Position(-95.7129, 37.0902);
+    return mapbox.Position(point.lng, point.lat);
+  }
+
+  /// Everything `_renderRoute` draws from. Identity is enough: the models are
+  /// immutable and replaced wholesale when the detail arrives.
+  static String _renderKey(RouteOverviewState state) {
+    return '${identityHashCode(state.trip)}|${state.selectedAlternativeId}'
+        '|${identityHashCode(state.origin)}|${identityHashCode(state.destination)}';
+  }
+
+  /// The controller is a ChangeNotifier over the sheet's live size, so this
+  /// fires on every frame of a drag, a fling, and the programmatic animateTo
+  /// in _focusStop / _snapHeader alike.
+  void _onSheetMoved() {
+    if (!_sheetController.isAttached) return;
+    _sheetExtent.value = _sheetController.size;
+  }
 
   @override
   void dispose() {
+    _sheetController.removeListener(_onSheetMoved);
     _sheetController.dispose();
     _sheetExtent.dispose();
     super.dispose();
@@ -82,8 +136,11 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
   Future<void> _renderRoute(RouteOverviewState state) async {
     final map = _map;
     if (map == null) return;
-    if (_renderedAlternativeId == state.selectedAlternativeId) return;
-    _renderedAlternativeId = state.selectedAlternativeId;
+    // Nothing to draw until the detail (and with it the endpoints) landed.
+    if (!state.isReady) return;
+    final key = _renderKey(state);
+    if (_renderedKey == key) return;
+    _renderedKey = key;
 
     _lines ??= await map.annotations.createPolylineAnnotationManager();
     _markers ??= await map.annotations.createPointAnnotationManager();
@@ -127,14 +184,14 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
 
     final originPoint = mapbox.Point(
       coordinates: mapbox.Position(
-        widget.args.origin.coordinate.lng,
-        widget.args.origin.coordinate.lat,
+        state.origin!.coordinate.lng,
+        state.origin!.coordinate.lat,
       ),
     );
     final destinationPoint = mapbox.Point(
       coordinates: mapbox.Position(
-        widget.args.destination.coordinate.lng,
-        widget.args.destination.coordinate.lat,
+        state.destination!.coordinate.lng,
+        state.destination!.coordinate.lat,
       ),
     );
 
@@ -234,13 +291,23 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
     context.read<RouteOverviewBloc>().add(const RouteOverviewStartPressed());
   }
 
+  void _onRetry() {
+    context.read<RouteOverviewBloc>().add(
+          RouteOverviewStarted(
+            originFallbackLabel: 'trips.origin'.tr(),
+            destinationFallbackLabel: 'trips.destination'.tr(),
+          ),
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColor.white,
       body: BlocConsumer<RouteOverviewBloc, RouteOverviewState>(
         listenWhen: (p, c) =>
-            p.selectedAlternativeId != c.selectedAlternativeId ||
+            _renderKey(p) != _renderKey(c) ||
+            p.loadStatus != c.loadStatus ||
             p.startTick != c.startTick ||
             p.startStatus != c.startStatus,
         listener: (context, state) {
@@ -255,74 +322,74 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
               Pages.drivingMode,
               extra: DrivingModeArgs(
                 session: session,
-                destinationLabel: widget.args.destination.fieldLabel,
+                destinationLabel: state.destination?.fieldLabel ?? '',
               ),
             );
           }
         },
         builder: (context, state) {
-          return NotificationListener<DraggableScrollableNotification>(
-            onNotification: (notification) {
-              _sheetExtent.value = notification.extent;
-              return false;
-            },
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                mapbox.MapWidget(
-                  key: const ValueKey('routeOverviewMap'),
-                  styleUri: mapbox.MapboxStyles.STANDARD,
-                  onMapCreated: _onMapCreated,
-                  cameraOptions: mapbox.CameraOptions(
-                    center: mapbox.Point(
-                      coordinates: mapbox.Position(
-                        widget.args.origin.coordinate.lng,
-                        widget.args.origin.coordinate.lat,
-                      ),
-                    ),
-                    zoom: 10.0,
-                  ),
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              mapbox.MapWidget(
+                key: const ValueKey('routeOverviewMap'),
+                styleUri: mapbox.MapboxStyles.STANDARD,
+                onMapCreated: _onMapCreated,
+                cameraOptions: mapbox.CameraOptions(
+                  center: mapbox.Point(coordinates: _initialCenter),
+                  zoom: 10.0,
                 ),
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Align(
-                      alignment: Alignment.topLeft,
-                      child: _CircleButton(
-                        icon: Icons.arrow_back,
-                        onTap: () => context.pop(),
-                      ),
+              ),
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: _CircleButton(
+                      icon: Icons.arrow_back,
+                      onTap: () => context.pop(),
                     ),
                   ),
                 ),
-                ValueListenableBuilder<double>(
-                  valueListenable: _sheetExtent,
-                  builder: (context, extent, child) => Positioned(
+              ),
+              ValueListenableBuilder<double>(
+                valueListenable: _sheetExtent,
+                builder: (context, extent, child) {
+                  final size = MediaQuery.sizeOf(context);
+                  final topInset = MediaQuery.paddingOf(context).top;
+                  // Riding the sheet all the way to _expanded would push the
+                  // pair off the top on shorter screens, so stop them just
+                  // below the status bar.
+                  final ceiling = math.max(
+                    16.0,
+                    size.height - topInset - 16 - _zoomStackHeight,
+                  );
+                  return Positioned(
                     right: 16,
-                    bottom: MediaQuery.sizeOf(context).height * extent + 16,
+                    bottom: (size.height * extent + 16).clamp(16.0, ceiling),
                     child: child!,
-                  ),
-                  child: Column(
-                    children: [
-                      _CircleButton(icon: Icons.add, onTap: () => _zoomBy(1)),
-                      const SizedBox(height: 12),
-                      _CircleButton(icon: Icons.remove, onTap: () => _zoomBy(-1)),
-                    ],
-                  ),
+                  );
+                },
+                child: Column(
+                  children: [
+                    _CircleButton(icon: Icons.add, onTap: () => _zoomBy(1)),
+                    const SizedBox(height: 12),
+                    _CircleButton(icon: Icons.remove, onTap: () => _zoomBy(-1)),
+                  ],
                 ),
-                _RouteSheet(
-                  controller: _sheetController,
-                  collapsed: _collapsed,
-                  half: _half,
-                  expanded: _expanded,
-                  args: widget.args,
-                  state: state,
-                  onAlternativeSelected: _onAlternativeSelected,
-                  onStopSelected: _focusStop,
-                  onStart: _onStart,
-                ),
-              ],
-            ),
+              ),
+              _RouteSheet(
+                controller: _sheetController,
+                collapsed: _collapsed,
+                half: _half,
+                expanded: _expanded,
+                state: state,
+                onAlternativeSelected: _onAlternativeSelected,
+                onStopSelected: _focusStop,
+                onStart: _onStart,
+                onRetry: _onRetry,
+              ),
+            ],
           );
         },
       ),
@@ -336,22 +403,22 @@ class _RouteSheet extends StatelessWidget {
     required this.collapsed,
     required this.half,
     required this.expanded,
-    required this.args,
     required this.state,
     required this.onAlternativeSelected,
     required this.onStopSelected,
     required this.onStart,
+    required this.onRetry,
   });
 
   final DraggableScrollableController controller;
   final double collapsed;
   final double half;
   final double expanded;
-  final RouteOverviewArgs args;
   final RouteOverviewState state;
   final ValueChanged<String> onAlternativeSelected;
   final ValueChanged<TripCoordinate> onStopSelected;
   final VoidCallback onStart;
+  final VoidCallback onRetry;
 
   /// Translates a drag on the pinned header into a sheet resize. Deltas are
   /// in pixels; the controller works in fractions of the screen height.
@@ -376,6 +443,61 @@ class _RouteSheet extends StatelessWidget {
       nearest,
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeOut,
+    );
+  }
+
+  /// The sheet content proper: a spinner while the history tap's detail is
+  /// still in flight, then the waypoint list (or the reason there isn't one).
+  Widget _buildBody(ScrollController scrollController) {
+    if (state.loadStatus == RouteOverviewLoadStatus.loading) {
+      return _centered(
+        scrollController,
+        const CircularProgressIndicator.adaptive(),
+      );
+    }
+    if (state.loadStatus == RouteOverviewLoadStatus.failure) {
+      return _centered(
+        scrollController,
+        _SheetMessage(
+          text: state.loadError.isEmpty
+              ? 'common.somethingWentWrong'.tr()
+              : state.loadError,
+          onRetry: onRetry,
+        ),
+      );
+    }
+    if (!state.hasAlternatives) {
+      return _centered(
+        scrollController,
+        _SheetMessage(text: 'routeOverview.noRoutes'.tr()),
+      );
+    }
+    return ListView(
+      controller: scrollController,
+      padding: EdgeInsets.zero,
+      children: [
+        _WaypointList(
+          origin: state.origin!,
+          destination: state.destination!,
+          alternative: state.selectedAlternative!,
+          onStopSelected: onStopSelected,
+        ),
+      ],
+    );
+  }
+
+  /// Centres [child] in the sheet while still handing the sheet's scroll
+  /// controller a scrollable, so dragging the body keeps resizing the sheet.
+  Widget _centered(ScrollController scrollController, Widget child) {
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        controller: scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Center(child: child),
+        ),
+      ),
     );
   }
 
@@ -425,7 +547,7 @@ class _RouteSheet extends StatelessWidget {
                     ),
                     // Pinned: switching alternatives has to stay reachable
                     // however far down the waypoint list the driver scrolls.
-                    if (state.hasAlternatives) ...[
+                    if (state.isReady && state.hasAlternatives) ...[
                       _AlternativeTabs(
                         trip: state.trip,
                         selectedId: state.selectedAlternativeId,
@@ -436,31 +558,8 @@ class _RouteSheet extends StatelessWidget {
                   ],
                 ),
               ),
-              Expanded(
-                child: !state.hasAlternatives
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 32),
-                          child: Text(
-                            'routeOverview.noRoutes'.tr(),
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 13, color: AppColor.grey),
-                          ),
-                        ),
-                      )
-                    : ListView(
-                        controller: scrollController,
-                        padding: EdgeInsets.zero,
-                        children: [
-                          _WaypointList(
-                            args: args,
-                            alternative: state.selectedAlternative!,
-                            onStopSelected: onStopSelected,
-                          ),
-                        ],
-                      ),
-              ),
-              if (state.hasAlternatives)
+              Expanded(child: _buildBody(scrollController)),
+              if (state.isReady && state.hasAlternatives)
                 _PinnedFooter(
                   alternative: state.selectedAlternative!,
                   loading: state.startStatus == RouteOverviewStartStatus.loading,
@@ -568,14 +667,51 @@ class _AlternativeChip extends StatelessWidget {
   }
 }
 
+/// Centered message inside the sheet - "no routes", or the load error with a
+/// retry for the history flow that fetches its own detail.
+class _SheetMessage extends StatelessWidget {
+  const _SheetMessage({required this.text, this.onRetry});
+
+  final String text;
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              text,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: AppColor.grey),
+            ),
+            if (onRetry != null) ...[
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: onRetry,
+                child: Text('common.retry'.tr()),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _WaypointList extends StatelessWidget {
   const _WaypointList({
-    required this.args,
+    required this.origin,
+    required this.destination,
     required this.alternative,
     required this.onStopSelected,
   });
 
-  final RouteOverviewArgs args;
+  final PlaceModel origin;
+  final PlaceModel destination;
   final TripAlternative alternative;
   final ValueChanged<TripCoordinate> onStopSelected;
 
@@ -588,7 +724,7 @@ class _WaypointList extends StatelessWidget {
         children: [
           _EndpointRow(
             icon: AppIcons.tripOrigin,
-            title: args.origin.fieldLabel,
+            title: origin.fieldLabel,
             lineAbove: false,
           ),
           // The toll API returns each marker's name/coordinate/amount but no
@@ -605,7 +741,7 @@ class _WaypointList extends StatelessWidget {
             ),
           _EndpointRow(
             icon: AppIcons.tripDestination,
-            title: args.destination.fieldLabel,
+            title: destination.fieldLabel,
             lineBelow: false,
           ),
         ],

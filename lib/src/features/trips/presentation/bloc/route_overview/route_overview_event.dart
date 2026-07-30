@@ -7,6 +7,23 @@ sealed class RouteOverviewEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+/// Page opened (and the retry button). Only does work when the route arrived
+/// without its endpoint labels - i.e. from the history list, where the tap
+/// navigates immediately and the full detail is fetched here. Carries the
+/// fallback labels so the localization stays in the UI layer.
+class RouteOverviewStarted extends RouteOverviewEvent {
+  final String originFallbackLabel;
+  final String destinationFallbackLabel;
+
+  const RouteOverviewStarted({
+    required this.originFallbackLabel,
+    required this.destinationFallbackLabel,
+  });
+
+  @override
+  List<Object?> get props => [originFallbackLabel, destinationFallbackLabel];
+}
+
 /// A tab in the alternatives row was tapped - purely local, all alternatives
 /// already arrived in the `POST /toll-routes` response that created [trip].
 class RouteOverviewAlternativeSelected extends RouteOverviewEvent {

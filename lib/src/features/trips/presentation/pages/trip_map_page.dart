@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,7 +33,15 @@ class _TripMapPageState extends State<TripMapPage> {
   static const double _half = 0.55;
   static const double _expanded = 0.92;
 
+  /// Both zoom buttons plus the gap between them.
+  static const double _zoomStackHeight = 44 + 12 + 44;
+
   final _sheetController = DraggableScrollableController();
+
+  /// Mirrors the sheet's current extent so the zoom buttons can ride just
+  /// above it instead of hiding underneath when the driver drags it up.
+  final _sheetExtent = ValueNotifier<double>(_half);
+
   final _originController = TextEditingController();
   final _destinationController = TextEditingController();
   final _originFocus = FocusNode();
@@ -50,7 +60,16 @@ class _TripMapPageState extends State<TripMapPage> {
     super.initState();
     _originFocus.addListener(_onFocusChanged);
     _destinationFocus.addListener(_onFocusChanged);
+    _sheetController.addListener(_onSheetMoved);
     context.read<TripMapBloc>().add(const TripMapStarted());
+  }
+
+  /// The controller is a ChangeNotifier over the sheet's live size, so this
+  /// fires on every frame of a drag, a fling, and the programmatic
+  /// animateTo calls in _expandSheet / _showWholeMap alike.
+  void _onSheetMoved() {
+    if (!_sheetController.isAttached) return;
+    _sheetExtent.value = _sheetController.size;
   }
 
   @override
@@ -61,7 +80,9 @@ class _TripMapPageState extends State<TripMapPage> {
     _destinationFocus.dispose();
     _originController.dispose();
     _destinationController.dispose();
+    _sheetController.removeListener(_onSheetMoved);
     _sheetController.dispose();
+    _sheetExtent.dispose();
     super.dispose();
   }
 
@@ -273,9 +294,24 @@ class _TripMapPageState extends State<TripMapPage> {
                   ),
                 ),
               ),
-              Positioned(
-                right: 16,
-                top: MediaQuery.sizeOf(context).height * 0.28,
+              ValueListenableBuilder<double>(
+                valueListenable: _sheetExtent,
+                builder: (context, extent, child) {
+                  final size = MediaQuery.sizeOf(context);
+                  final topInset = MediaQuery.paddingOf(context).top;
+                  // Riding the sheet all the way to _expanded would push the
+                  // pair off the top of the screen, so stop them just below
+                  // the status bar.
+                  final ceiling = math.max(
+                    16.0,
+                    size.height - topInset - 16 - _zoomStackHeight,
+                  );
+                  return Positioned(
+                    right: 16,
+                    bottom: (size.height * extent + 16).clamp(16.0, ceiling),
+                    child: child!,
+                  );
+                },
                 child: Column(
                   children: [
                     _CircleButton(icon: Icons.add, onTap: () => _zoomBy(1)),
@@ -401,7 +437,8 @@ class _Sheet extends StatelessWidget {
                               originFocus: originFocus,
                               destinationFocus: destinationFocus,
                               activeField: state.activeField,
-                              originLoading: state.originStatus ==
+                              originLoading:
+                                  state.originStatus ==
                                   TripMapFieldStatus.loading,
                               onChanged: onQueryChanged,
                               onFocused: onFieldTapped,
@@ -411,15 +448,13 @@ class _Sheet extends StatelessWidget {
                         ),
                       ),
                     ),
-                    _ListSection(
-                      state: state,
-                      onSelectPlace: onSelectPlace,
-                    ),
+                    _ListSection(state: state, onSelectPlace: onSelectPlace),
                   ],
                 ),
               ),
               _ContinueBar(
-                enabled: state.canContinue &&
+                enabled:
+                    state.canContinue &&
                     state.continueStatus != TripMapContinueStatus.loading,
                 loading: state.continueStatus == TripMapContinueStatus.loading,
                 onPressed: onContinue,
@@ -444,26 +479,26 @@ class _ListSection extends StatelessWidget {
     if (state.isSearching) {
       return switch (state.searchStatus) {
         TripMapSearchStatus.loading => const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 28),
-              child: Center(child: CircularProgressIndicator.adaptive()),
-            ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 28),
+            child: Center(child: CircularProgressIndicator.adaptive()),
           ),
+        ),
         TripMapSearchStatus.empty => SliverToBoxAdapter(
-            child: _Message(text: 'tripMap.noResults'.tr()),
-          ),
+          child: _Message(text: 'tripMap.noResults'.tr()),
+        ),
         TripMapSearchStatus.failure => SliverToBoxAdapter(
-            child: _Message(
-              text: state.errorMessage.isEmpty
-                  ? 'common.somethingWentWrong'.tr()
-                  : state.errorMessage,
-            ),
+          child: _Message(
+            text: state.errorMessage.isEmpty
+                ? 'common.somethingWentWrong'.tr()
+                : state.errorMessage,
           ),
+        ),
         _ => _PlaceSliver(
-            places: state.suggestions,
-            isHistory: false,
-            onSelectPlace: onSelectPlace,
-          ),
+          places: state.suggestions,
+          isHistory: false,
+          onSelectPlace: onSelectPlace,
+        ),
       };
     }
 
