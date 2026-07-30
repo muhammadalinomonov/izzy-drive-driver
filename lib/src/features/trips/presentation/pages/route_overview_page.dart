@@ -353,6 +353,32 @@ class _RouteSheet extends StatelessWidget {
   final ValueChanged<TripCoordinate> onStopSelected;
   final VoidCallback onStart;
 
+  /// Translates a drag on the pinned header into a sheet resize. Deltas are
+  /// in pixels; the controller works in fractions of the screen height.
+  void _onHeaderDrag(BuildContext context, DragUpdateDetails details) {
+    if (!controller.isAttached) return;
+    final height = MediaQuery.sizeOf(context).height;
+    if (height <= 0) return;
+    controller.jumpTo(
+      (controller.size - details.primaryDelta! / height).clamp(collapsed, expanded),
+    );
+  }
+
+  /// Matches the sheet's own `snapSizes` once the drag is released.
+  void _snapHeader() {
+    if (!controller.isAttached) return;
+    final current = controller.size;
+    var nearest = collapsed;
+    for (final target in [collapsed, half, expanded]) {
+      if ((target - current).abs() < (nearest - current).abs()) nearest = target;
+    }
+    controller.animateTo(
+      nearest,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
@@ -377,13 +403,37 @@ class _RouteSheet extends StatelessWidget {
           ),
           child: Column(
             children: [
-              const SizedBox(height: 10),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColor.grey2,
-                  borderRadius: BorderRadius.circular(2),
+              // The header sits outside the scrollable, so it no longer drags
+              // the sheet on its own - DraggableScrollableSheet only resizes
+              // from the scrollable wired to its controller. Forward vertical
+              // drags by hand so the handle and tabs stay grabbable.
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onVerticalDragUpdate: (details) => _onHeaderDrag(context, details),
+                onVerticalDragEnd: (_) => _snapHeader(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 10),
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColor.grey2,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    // Pinned: switching alternatives has to stay reachable
+                    // however far down the waypoint list the driver scrolls.
+                    if (state.hasAlternatives) ...[
+                      _AlternativeTabs(
+                        trip: state.trip,
+                        selectedId: state.selectedAlternativeId,
+                        onSelected: onAlternativeSelected,
+                      ),
+                      Divider(color: AppColor.grey2, height: 1),
+                    ],
+                  ],
                 ),
               ),
               Expanded(
@@ -402,12 +452,6 @@ class _RouteSheet extends StatelessWidget {
                         controller: scrollController,
                         padding: EdgeInsets.zero,
                         children: [
-                          _AlternativeTabs(
-                            trip: state.trip,
-                            selectedId: state.selectedAlternativeId,
-                            onSelected: onAlternativeSelected,
-                          ),
-                          Divider(color: AppColor.grey2, height: 1),
                           _WaypointList(
                             args: args,
                             alternative: state.selectedAlternative!,
