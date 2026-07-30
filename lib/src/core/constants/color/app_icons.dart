@@ -51,8 +51,11 @@ class AppIcons {
 
   // Route overview / driving mode (docs/ui/8.png, 9.png)
   static const String tollMarker = 'assets/icons/toll_marker.svg';
+  // The three stat icons ship pre-tinted at 34x32 with their own rounded
+  // background baked in, so they are drawn as-authored, not colour-filtered.
   static const String routeFuel = 'assets/icons/ic_fuel.svg';
   static const String routeToll = 'assets/icons/ic_toll.svg';
+  static const String routeMile = 'assets/icons/ic_mile.svg';
   static const String routeLocation = 'assets/icons/ic_location.svg';
   static const String gpsRecenter = 'assets/icons/ic_gps_recenter.svg';
 

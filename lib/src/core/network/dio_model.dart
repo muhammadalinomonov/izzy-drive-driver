@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:chucker_flutter/chucker_flutter.dart';
 import 'package:dio/dio.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:taxi_app/src/core/network/auth_session.dart';
+import 'package:taxi_app/src/core/network/log_filter.dart';
 import 'package:taxi_app/src/core/network/token_service.dart';
 
 class DioSettings {
@@ -108,8 +108,11 @@ class DioSettings {
         request: true,
         requestHeader: true,
         responseHeader: false,
+        // `drivers/current-order/` is polled on a timer, so logging it
+        // floods the console and buries every other request. Skip it.
+        filter: (options, _) => !isLogMuted(options.path),
       ))
-      ..add(ChuckerDioInterceptor());
+      ..add(FilteredChuckerDioInterceptor());
   }
 
   /// Posts to `accounts/refresh/` (Simple JWT `TokenRefreshView`):

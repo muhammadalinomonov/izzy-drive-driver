@@ -226,7 +226,10 @@
     "alternative": "Alternative {index}",
     "start": "Start",
     "calculatingRoute": "Calculating your route...",
-    "noRoutes": "No routes were returned for this trip."
+    "noRoutes": "No routes were returned for this trip.",
+    "fuel": "Fuel",
+    "toll": "Toll",
+    "mile": "Mile"
   },
   "drivingMode": {
     "cancel": "Cancel Navigation",

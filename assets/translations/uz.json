@@ -226,7 +226,10 @@
     "alternative": "Muqobil {index}",
     "start": "Boshlash",
     "calculatingRoute": "Marshrut hisoblanmoqda...",
-    "noRoutes": "Bu safar uchun marshrut topilmadi."
+    "noRoutes": "Bu safar uchun marshrut topilmadi.",
+    "fuel": "Yoqilgʻi",
+    "toll": "Toll",
+    "mile": "Mil"
   },
   "drivingMode": {
     "cancel": "Navigatsiyani bekor qilish",

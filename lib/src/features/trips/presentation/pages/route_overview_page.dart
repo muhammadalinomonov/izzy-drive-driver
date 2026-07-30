@@ -50,6 +50,10 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
 
   final _sheetController = DraggableScrollableController();
 
+  /// Mirrors the sheet's current extent so the zoom buttons can ride just
+  /// above it instead of hiding underneath when the driver drags it up.
+  final _sheetExtent = ValueNotifier<double>(_half);
+
   mapbox.MapboxMap? _map;
   mapbox.PolylineAnnotationManager? _lines;
   mapbox.PointAnnotationManager? _markers;
@@ -61,6 +65,7 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
   @override
   void dispose() {
     _sheetController.dispose();
+    _sheetExtent.dispose();
     super.dispose();
   }
 
@@ -186,6 +191,16 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
     await map.flyTo(camera, mapbox.MapAnimationOptions(duration: 700));
   }
 
+  Future<void> _zoomBy(double delta) async {
+    final map = _map;
+    if (map == null) return;
+    final camera = await map.getCameraState();
+    await map.easeTo(
+      mapbox.CameraOptions(zoom: camera.zoom + delta),
+      mapbox.MapAnimationOptions(duration: 220),
+    );
+  }
+
   void _onAlternativeSelected(String alternativeId) {
     context.read<RouteOverviewBloc>().add(RouteOverviewAlternativeSelected(alternativeId));
   }
@@ -221,46 +236,67 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
           }
         },
         builder: (context, state) {
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              mapbox.MapWidget(
-                key: const ValueKey('routeOverviewMap'),
-                styleUri: mapbox.MapboxStyles.STANDARD,
-                onMapCreated: _onMapCreated,
-                cameraOptions: mapbox.CameraOptions(
-                  center: mapbox.Point(
-                    coordinates: mapbox.Position(
-                      widget.args.origin.coordinate.lng,
-                      widget.args.origin.coordinate.lat,
+          return NotificationListener<DraggableScrollableNotification>(
+            onNotification: (notification) {
+              _sheetExtent.value = notification.extent;
+              return false;
+            },
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                mapbox.MapWidget(
+                  key: const ValueKey('routeOverviewMap'),
+                  styleUri: mapbox.MapboxStyles.STANDARD,
+                  onMapCreated: _onMapCreated,
+                  cameraOptions: mapbox.CameraOptions(
+                    center: mapbox.Point(
+                      coordinates: mapbox.Position(
+                        widget.args.origin.coordinate.lng,
+                        widget.args.origin.coordinate.lat,
+                      ),
                     ),
-                  ),
-                  zoom: 10.0,
-                ),
-              ),
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    child: _CircleButton(
-                      icon: Icons.arrow_back,
-                      onTap: () => context.pop(),
-                    ),
+                    zoom: 10.0,
                   ),
                 ),
-              ),
-              _RouteSheet(
-                controller: _sheetController,
-                collapsed: _collapsed,
-                half: _half,
-                expanded: _expanded,
-                args: widget.args,
-                state: state,
-                onAlternativeSelected: _onAlternativeSelected,
-                onStart: _onStart,
-              ),
-            ],
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: _CircleButton(
+                        icon: Icons.arrow_back,
+                        onTap: () => context.pop(),
+                      ),
+                    ),
+                  ),
+                ),
+                ValueListenableBuilder<double>(
+                  valueListenable: _sheetExtent,
+                  builder: (context, extent, child) => Positioned(
+                    right: 16,
+                    bottom: MediaQuery.sizeOf(context).height * extent + 16,
+                    child: child!,
+                  ),
+                  child: Column(
+                    children: [
+                      _CircleButton(icon: Icons.add, onTap: () => _zoomBy(1)),
+                      const SizedBox(height: 12),
+                      _CircleButton(icon: Icons.remove, onTap: () => _zoomBy(-1)),
+                    ],
+                  ),
+                ),
+                _RouteSheet(
+                  controller: _sheetController,
+                  collapsed: _collapsed,
+                  half: _half,
+                  expanded: _expanded,
+                  args: widget.args,
+                  state: state,
+                  onAlternativeSelected: _onAlternativeSelected,
+                  onStart: _onStart,
+                ),
+              ],
+            ),
           );
         },
       ),
@@ -345,15 +381,14 @@ class _RouteSheet extends StatelessWidget {
                           ),
                           Divider(color: AppColor.grey2, height: 1),
                           _WaypointList(args: args, alternative: state.selectedAlternative!),
-                          Divider(color: AppColor.grey2, height: 1),
-                          _ServicesRow(alternative: state.selectedAlternative!),
                         ],
                       ),
               ),
               if (state.hasAlternatives)
-                _StartBar(
+                _PinnedFooter(
+                  alternative: state.selectedAlternative!,
                   loading: state.startStatus == RouteOverviewStartStatus.loading,
-                  onPressed: onStart,
+                  onStart: onStart,
                 ),
             ],
           ),
@@ -377,30 +412,29 @@ class _AlternativeTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var alternativeIndex = 0;
-    return SizedBox(
-      height: 64,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        itemCount: trip.alternatives.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (context, index) {
-          final alt = trip.alternatives[index];
-          final isRecommended = alt.id == trip.recommendedAlternativeId;
-          if (!isRecommended) alternativeIndex++;
-          final label = isRecommended
-              ? 'routeOverview.recommended'.tr()
-              : 'routeOverview.alternative'.tr(namedArgs: {'index': '$alternativeIndex'});
-          final selected = alt.id == selectedId;
-          return _AlternativeChip(
-            label: label,
-            distanceMiles: alt.distanceMiles,
-            total: alt.total,
-            selected: selected,
-            onTap: () => onSelected(alt.id),
-          );
-        },
-      ),
+    final chips = <Widget>[];
+    for (final alt in trip.alternatives) {
+      final isRecommended = alt.id == trip.recommendedAlternativeId;
+      if (!isRecommended) alternativeIndex++;
+      final label = isRecommended
+          ? 'routeOverview.recommended'.tr()
+          : 'routeOverview.alternative'.tr(namedArgs: {'index': '$alternativeIndex'});
+      if (chips.isNotEmpty) chips.add(const SizedBox(width: 10));
+      chips.add(_AlternativeChip(
+        label: label,
+        distanceMiles: alt.distanceMiles,
+        total: alt.total,
+        selected: alt.id == selectedId,
+        onTap: () => onSelected(alt.id),
+      ));
+    }
+    // Sized by its content instead of a fixed height: the chip stacks two
+    // lines of text, which overflows a hard-coded box as soon as a label
+    // wraps or the device text scale is bumped up.
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(children: chips),
     );
   }
 }
@@ -569,99 +603,150 @@ class _WaypointRow extends StatelessWidget {
   }
 }
 
-class _ServicesRow extends StatelessWidget {
-  const _ServicesRow({required this.alternative});
+/// The fuel / toll / mile stats and the start button (docs/ui/over_view_bottom.svg).
+/// Pinned below the scrollable part of the sheet, with the upward shadow the
+/// design uses to separate it from the content that scrolls under it.
+class _PinnedFooter extends StatelessWidget {
+  const _PinnedFooter({
+    required this.alternative,
+    required this.loading,
+    required this.onStart,
+  });
 
   final TripAlternative alternative;
+  final bool loading;
+  final VoidCallback onStart;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _ServiceStat(
-            icon: AppIcons.routeFuel,
-            value: alternative.fuel == null ? '-' : '-${alternative.fuel!.formatted}',
-          ),
-          _ServiceStat(
-            icon: AppIcons.routeToll,
-            value: alternative.toll == null ? '-' : '-${alternative.toll!.formatted}',
-          ),
-          _ServiceStat(
-            icon: AppIcons.routeLocation,
-            value: '${alternative.distanceMiles.toStringAsFixed(0)} mi',
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColor.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(20),
+            blurRadius: 12,
+            offset: const Offset(0, -4),
           ),
         ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 11),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  _ServiceStat(
+                    icon: AppIcons.routeFuel,
+                    label: 'routeOverview.fuel'.tr(),
+                    value: alternative.fuel == null
+                        ? '-'
+                        : '-${alternative.fuel!.formatted}',
+                  ),
+                  _ServiceStat(
+                    icon: AppIcons.routeToll,
+                    label: 'routeOverview.toll'.tr(),
+                    value: alternative.toll == null
+                        ? '-'
+                        : '-${alternative.toll!.formatted}',
+                  ),
+                  _ServiceStat(
+                    icon: AppIcons.routeMile,
+                    label: 'routeOverview.mile'.tr(),
+                    value: '${alternative.distanceMiles.toStringAsFixed(0)} mi',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: FilledButton(
+                  onPressed: loading ? null : onStart,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColor.kPrimaryColor,
+                    disabledBackgroundColor: AppColor.kPrimaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                  ),
+                  child: loading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.2,
+                            valueColor: AlwaysStoppedAnimation(Colors.white),
+                          ),
+                        )
+                      : Text(
+                          'routeOverview.start'.tr(),
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
 class _ServiceStat extends StatelessWidget {
-  const _ServiceStat({required this.icon, required this.value});
+  const _ServiceStat({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   final String icon;
+  final String label;
   final String value;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SvgPicture.asset(icon, width: 20, height: 20),
-        const SizedBox(width: 8),
-        Text(
-          value,
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColor.black),
-        ),
-      ],
-    );
-  }
-}
-
-class _StartBar extends StatelessWidget {
-  const _StartBar({required this.loading, required this.onPressed});
-
-  final bool loading;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-        child: SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: FilledButton(
-            onPressed: loading ? null : onPressed,
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColor.kPrimaryColor,
-              disabledBackgroundColor: AppColor.kPrimaryColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-            ),
-            child: loading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.2,
-                      valueColor: AlwaysStoppedAnimation(Colors.white),
-                    ),
-                  )
-                : Text(
-                    'routeOverview.start'.tr(),
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
+    // Each stat takes an equal share of the row rather than sizing to its
+    // text: the localized labels are much longer than the English ones
+    // ("Пошлина" vs "Toll") and would otherwise overflow the row.
+    return Expanded(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SvgPicture.asset(icon, width: 34, height: 32),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 13, color: AppColor.grey),
+                ),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColor.black,
                   ),
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
