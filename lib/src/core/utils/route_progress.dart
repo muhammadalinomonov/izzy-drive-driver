@@ -101,19 +101,10 @@ RouteProgress? snapToRoute(
   );
 }
 
-/// The polyline cut in two at the driver's snapped position: the part already
-/// driven and the part still ahead. Rendered as two separate Mapbox polyline
-/// annotations so the trail behind the vehicle can be greyed out.
-typedef RouteSplit = ({List<LatLng> driven, List<LatLng> remaining});
-
-RouteSplit splitAt(List<LatLng> points, RouteProgress progress) {
-  final driven = <LatLng>[
-    for (int i = 0; i <= progress.segmentIndex; i++) points[i],
-    progress.splitPoint,
-  ];
-  final remaining = <LatLng>[
-    progress.splitPoint,
-    for (int i = progress.segmentIndex + 1; i < points.length; i++) points[i],
-  ];
-  return (driven: driven, remaining: remaining);
-}
+// A `splitAt` helper returning the two half-routes used to live here. It was
+// dropped because splitting per GPS fix is both too slow and too coarse: it
+// copied the whole route twice a second, and the boundary only moved at fix
+// rate while the marker glided at 60 fps, so the seam visibly jumped. The
+// driving page now splits at the animated marker position each frame, holding
+// the bulk of the line in two static polylines and rebuilding only the two
+// short connectors that meet at the vehicle.

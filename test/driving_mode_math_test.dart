@@ -215,39 +215,6 @@ void main() {
     });
   });
 
-  group('splitAt', () {
-    const points = [LatLng(0, 0), LatLng(0, 0.01), LatLng(0, 0.02)];
-    final cum = CumulativeDistances.fromPoints(points);
-
-    test('driven ends and remaining starts at the same split point', () {
-      final progress = snapToRoute(const LatLng(0, 0.005), points, cum)!;
-      final split = splitAt(points, progress);
-
-      expect(split.driven.last.longitude,
-          closeTo(split.remaining.first.longitude, 1e-12));
-      expect(split.driven.last.latitude,
-          closeTo(split.remaining.first.latitude, 1e-12));
-    });
-
-    test('the two halves cover the whole route length', () {
-      final progress = snapToRoute(const LatLng(0, 0.013), points, cum)!;
-      final split = splitAt(points, progress);
-
-      double lengthOf(List<LatLng> line) {
-        var total = 0.0;
-        for (var i = 0; i < line.length - 1; i++) {
-          total += haversine(line[i], line[i + 1]);
-        }
-        return total;
-      }
-
-      expect(
-        lengthOf(split.driven) + lengthOf(split.remaining),
-        closeTo(cum.total, 1),
-      );
-    });
-  });
-
   group('KalmanFilter', () {
     test('returns the first sample unchanged', () {
       final filter = KalmanFilter();

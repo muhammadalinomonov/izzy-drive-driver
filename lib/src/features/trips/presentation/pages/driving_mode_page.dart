@@ -6,8 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
+import 'package:taxi_app/src/core/utils/geo_math.dart';
 import 'package:taxi_app/src/core/utils/polyline_codec.dart';
-import 'package:taxi_app/src/core/utils/route_progress.dart';
 import 'package:taxi_app/src/features/trips/data/model/navigation_session_model.dart';
 import 'package:taxi_app/src/features/trips/data/model/trip_model.dart';
 import 'package:taxi_app/src/features/trips/presentation/bloc/navigation/navigation_bloc.dart';
@@ -76,9 +76,27 @@ class _DrivingModePageState extends State<DrivingModePage>
   /// upright. One manager cannot do both.
   mapbox.PointAnnotationManager? _driverMarkers;
 
-  mapbox.PolylineAnnotation? _drivenLine;
-  mapbox.PolylineAnnotation? _remainingLine;
+  // The active route is drawn as four polylines, ported from Quadrix:
+  //
+  //   driven-main  │ driven-conn │ remaining-conn │ remaining-main
+  //    static O(1) │ 2 pts, 60fps│  2 pts, 60fps  │   static O(1)
+  //
+  // The two connectors meet at the vehicle and are the only geometry rebuilt
+  // per frame - 4 coordinates across the platform channel. The mains carry the
+  // bulk of the route and are rebuilt only when the vehicle crosses into the
+  // next segment, which is well under 1 Hz.
+  mapbox.PolylineAnnotation? _drivenMain;
+  mapbox.PolylineAnnotation? _drivenConn;
+  mapbox.PolylineAnnotation? _remainingConn;
+  mapbox.PolylineAnnotation? _remainingMain;
   mapbox.PointAnnotation? _driverMarker;
+
+  /// Segment the split currently sits on. -1 forces a rebuild of the mains.
+  int _splitSegIdx = -1;
+
+  /// Identity of the route the cached split belongs to, so a reroute
+  /// invalidates it.
+  List<LatLng>? _splitRouteIdentity;
 
   MarkerAnimator? _animator;
   DrivingSession? _session;
@@ -97,13 +115,23 @@ class _DrivingModePageState extends State<DrivingModePage>
   /// Zoom the buttons have asked for.
   double _targetZoom = DrivingCamera.defaultZoom;
 
-  /// Annotation and camera updates cross a platform channel, so a frame is
-  /// skipped while the previous call is still in flight rather than queueing
+  /// Annotation and camera updates cross a platform channel, so a whole frame
+  /// is skipped while the previous one is still in flight rather than queueing
   /// work the channel can't drain. Dropping frames degrades gracefully;
   /// queueing them compounds into lag.
-  bool _markerBusy = false;
-  bool _cameraBusy = false;
-  bool _splitBusy = false;
+  ///
+  /// One guard for the entire frame, not one per update: the marker, the split
+  /// connectors and the camera all describe the same instant, and letting them
+  /// land independently tears - the seam under the vehicle drifts away from
+  /// the puck it is supposed to be welded to.
+  bool _frameBusy = false;
+
+  /// Set while an animated recenter is running, so the per-frame camera writes
+  /// don't cancel it mid-flight.
+  bool _recentering = false;
+
+  /// Guards the async camera read used to adopt a pinch-zoom.
+  bool _zoomAdoptBusy = false;
 
   DrivingTelemetry? _telemetry;
   String? _sessionError;
@@ -228,9 +256,14 @@ class _DrivingModePageState extends State<DrivingModePage>
     await _markers!.deleteAll();
     await _driverMarkers!.deleteAll();
     if (!mounted) return;
-    _drivenLine = null;
-    _remainingLine = null;
+    _drivenMain = null;
+    _drivenConn = null;
+    _remainingConn = null;
+    _remainingMain = null;
     _driverMarker = null;
+    // Force the split cache to rebuild against the new geometry.
+    _splitSegIdx = -1;
+    _splitRouteIdentity = null;
 
     final points = decodePolyline(session.route.polyline);
 
@@ -238,22 +271,45 @@ class _DrivingModePageState extends State<DrivingModePage>
     // detection and the split all key off it.
     _session?.setRoute(points);
 
-    if (points.isNotEmpty) {
-      _remainingLine = await _lines!.create(mapbox.PolylineAnnotationOptions(
-        geometry: mapbox.LineString(coordinates: _toPositions(points)),
-        lineColor: AppColor.kPrimaryColor.toARGB32(),
-        lineWidth: 6,
+    if (points.length >= 2) {
+      // The session densifies the route on install, so split against the same
+      // point list the snapping and telemetry use - not the raw decode.
+      final routePoints = _session?.routePoints ?? points;
+      final zero = _toPositions([routePoints.first, routePoints.first]);
+      final drivenColor = AppColor.grey2.toARGB32();
+      final remainingColor = AppColor.kPrimaryColor.toARGB32();
+      const width = 6.0;
+
+      // Creation order is draw order: the mains go down first, then the two
+      // connectors, so the short seam segments sit on top where they meet.
+      _drivenMain = await _lines!.create(mapbox.PolylineAnnotationOptions(
+        geometry: mapbox.LineString(coordinates: zero),
+        lineColor: drivenColor,
+        lineWidth: width,
       ));
       if (!mounted) return;
 
-      // Drawn first so it stacks beneath the active route. Seeded degenerate
-      // (a single repeated point) and grown as the driver advances.
-      _drivenLine = await _lines!.create(mapbox.PolylineAnnotationOptions(
-        geometry: mapbox.LineString(
-          coordinates: _toPositions([points.first, points.first]),
-        ),
-        lineColor: AppColor.grey2.toARGB32(),
-        lineWidth: 6,
+      // Seeded with the whole route: before the first fix nothing is driven.
+      _remainingMain = await _lines!.create(mapbox.PolylineAnnotationOptions(
+        geometry: mapbox.LineString(coordinates: _toPositions(routePoints)),
+        lineColor: remainingColor,
+        lineWidth: width,
+      ));
+      if (!mounted) return;
+
+      // Connectors start collapsed to a point, which renders as nothing under
+      // the default butt cap, and come alive on the first frame with telemetry.
+      _drivenConn = await _lines!.create(mapbox.PolylineAnnotationOptions(
+        geometry: mapbox.LineString(coordinates: zero),
+        lineColor: drivenColor,
+        lineWidth: width,
+      ));
+      if (!mounted) return;
+
+      _remainingConn = await _lines!.create(mapbox.PolylineAnnotationOptions(
+        geometry: mapbox.LineString(coordinates: zero),
+        lineColor: remainingColor,
+        lineWidth: width,
       ));
       if (!mounted) return;
     }
@@ -321,17 +377,30 @@ class _DrivingModePageState extends State<DrivingModePage>
 
   void _onMarkerTick() {
     final snapshot = _animator?.snapshot.value;
-    if (snapshot == null) return;
-    _updateDriverMarker(snapshot);
-    if (_cameraFollowing) _updateCamera(snapshot);
+    if (snapshot == null || _frameBusy) return;
+    _pumpFrame(snapshot);
+  }
+
+  /// One frame of driving output: puck, split seam, camera - in that order,
+  /// under a single in-flight guard so they can never land out of step.
+  Future<void> _pumpFrame(MarkerSnapshot snapshot) async {
+    _frameBusy = true;
+    try {
+      await _updateDriverMarker(snapshot);
+      await _updateSplit(snapshot.position);
+      if (_cameraFollowing && !_recentering) await _updateCamera(snapshot);
+    } catch (_) {
+      // Managers and the map can be torn down mid-frame on navigation away.
+    } finally {
+      _frameBusy = false;
+    }
   }
 
   Future<void> _updateDriverMarker(MarkerSnapshot snapshot) async {
     final markers = _driverMarkers;
     final marker = _driverMarker;
-    if (markers == null || marker == null || _markerBusy) return;
+    if (markers == null || marker == null) return;
 
-    _markerBusy = true;
     marker.geometry = mapbox.Point(
       coordinates: mapbox.Position(
         snapshot.position.longitude,
@@ -339,24 +408,131 @@ class _DrivingModePageState extends State<DrivingModePage>
       ),
     );
     marker.iconRotate = snapshot.bearingDeg;
-    try {
-      await markers.update(marker);
-    } catch (_) {
-      // The manager can be torn down mid-flight on navigation away.
-    } finally {
-      _markerBusy = false;
+    await markers.update(marker);
+  }
+
+  /// Splits the route at the *animated marker*, not at the last GPS fix.
+  ///
+  /// This is the fix for the seam jumping: the marker glides at 60 fps between
+  /// fixes, so splitting at fix rate left the boundary a whole second behind
+  /// it, snapping forward each time a fix landed. Ported from Quadrix's
+  /// `_buildPolylines`.
+  Future<void> _updateSplit(LatLng markerPos) async {
+    final lines = _lines;
+    final session = _session;
+    final drivenConn = _drivenConn;
+    final remainingConn = _remainingConn;
+    if (lines == null ||
+        session == null ||
+        drivenConn == null ||
+        remainingConn == null) {
+      return;
     }
+
+    final telemetry = session.telemetry.value;
+    final points = session.routePoints;
+    final total = session.routeLengthMeters;
+
+    // Only split mid-route. At either end there is nothing to divide, and a
+    // degenerate split would put both connectors on top of each other.
+    final canSplit = telemetry != null &&
+        points.length >= 2 &&
+        telemetry.travelledRouteMeters > 0 &&
+        telemetry.travelledRouteMeters < total &&
+        telemetry.segmentIndex < points.length - 1;
+    if (!canSplit) return;
+
+    // While on-route, follow the marker. Once off-route, freeze the seam at
+    // the last confirmed on-route point so it can't slide down a parallel road.
+    final splitPos = telemetry.isOnRoute || telemetry.routeSplitPoint == null
+        ? markerPos
+        : telemetry.routeSplitPoint!;
+
+    // Fast path: check the cached segment still contains the split (one
+    // segmentT call, a couple of multiplies) before paying for a scan.
+    final int segIdx;
+    if (!identical(_splitRouteIdentity, points) || _splitSegIdx < 0) {
+      segIdx = _findSegment(splitPos, points, telemetry.segmentIndex);
+    } else {
+      final t = segmentT(
+        splitPos,
+        points[_splitSegIdx],
+        points[_splitSegIdx + 1],
+      );
+      segIdx = (t >= 0 && t <= 1)
+          ? _splitSegIdx
+          : _findSegment(splitPos, points, telemetry.segmentIndex);
+    }
+
+    // Rebuild the bulk polylines only when the vehicle crosses a segment.
+    if (segIdx != _splitSegIdx || !identical(_splitRouteIdentity, points)) {
+      _splitSegIdx = segIdx;
+      _splitRouteIdentity = points;
+
+      final drivenMain = _drivenMain;
+      if (drivenMain != null) {
+        final pts = points.sublist(0, segIdx + 1);
+        drivenMain.geometry = mapbox.LineString(
+          // A one-point line is invalid; collapse it onto the start instead.
+          coordinates: _toPositions(
+            pts.length >= 2 ? pts : [points.first, points.first],
+          ),
+        );
+        await lines.update(drivenMain);
+      }
+
+      final remainingMain = _remainingMain;
+      if (remainingMain != null) {
+        final pts = points.sublist(segIdx + 1);
+        remainingMain.geometry = mapbox.LineString(
+          coordinates: _toPositions(
+            pts.length >= 2 ? pts : [points.last, points.last],
+          ),
+        );
+        await lines.update(remainingMain);
+      }
+    }
+
+    // The only geometry that crosses the channel every frame: 4 coordinates.
+    drivenConn.geometry = mapbox.LineString(
+      coordinates: _toPositions([points[segIdx], splitPos]),
+    );
+    await lines.update(drivenConn);
+
+    remainingConn.geometry = mapbox.LineString(
+      coordinates: _toPositions([splitPos, points[segIdx + 1]]),
+    );
+    await lines.update(remainingConn);
+  }
+
+  /// Index of the route segment closest to [pos] by perpendicular distance.
+  ///
+  /// Scans at most 16 segments ending at [gpsSegIdx], so cost is O(1) whatever
+  /// the route length - the marker is never far from where the last fix put it.
+  int _findSegment(LatLng pos, List<LatLng> points, int gpsSegIdx) {
+    final lo = (gpsSegIdx - 15).clamp(0, points.length - 2);
+    final hi = gpsSegIdx.clamp(0, points.length - 2);
+    int best = hi;
+    double minDist = double.infinity;
+    for (int k = lo; k <= hi; k++) {
+      final d = haversine(pos, projectOnSegment(pos, points[k], points[k + 1]));
+      if (d < minDist) {
+        minDist = d;
+        best = k;
+      }
+    }
+    return best;
   }
 
   Future<void> _updateCamera(MarkerSnapshot snapshot) async {
     final map = _map;
-    if (map == null || _cameraBusy) return;
+    if (map == null) return;
 
     // Low-pass the heading so the map swings smoothly instead of snapping at
     // every route waypoint. Alpha scales with speed: faster driving needs a
     // snappier camera to keep up through highway curves, while a slow crawl
     // wants heavy damping so GPS-derived heading noise doesn't wobble the map.
-    final speedMps = _telemetry?.speedMps ?? 0;
+    final speedMps = _session?.telemetry.value?.speedMps ?? 0;
     final alpha = (0.12 + (speedMps / 30) * 0.13).clamp(0.12, 0.25);
     _cameraBearing = MarkerAnimator.interpolateBearing(
       _cameraBearing,
@@ -372,18 +548,11 @@ class _DrivingModePageState extends State<DrivingModePage>
       _currentZoom = _targetZoom;
     }
 
-    _cameraBusy = true;
-    try {
-      await map.setCamera(DrivingCamera.optionsFor(
-        position: snapshot.position,
-        smoothedBearing: _cameraBearing,
-        zoom: _currentZoom,
-      ));
-    } catch (_) {
-      // Ignore: the map can be disposed between frames.
-    } finally {
-      _cameraBusy = false;
-    }
+    await map.setCamera(DrivingCamera.optionsFor(
+      position: snapshot.position,
+      smoothedBearing: _cameraBearing,
+      zoom: _currentZoom,
+    ));
   }
 
   void _zoomBy(double delta) {
@@ -405,22 +574,28 @@ class _DrivingModePageState extends State<DrivingModePage>
     // Following: the marker tick normally glides the zoom in. But the tick
     // only fires while the marker is animating, so parked at a light a tap
     // would otherwise do nothing until the vehicle moved again - apply it
-    // directly in that case.
+    // directly in that case, through the same guard the pump uses so the two
+    // can't write the camera at once.
     final snapshot = _animator?.snapshot.value;
-    if (_animator?.isAnimating != true && snapshot != null) {
+    if (_animator?.isAnimating != true &&
+        snapshot != null &&
+        !_frameBusy &&
+        !_recentering) {
       _currentZoom = next;
-      _updateCamera(snapshot);
+      _frameBusy = true;
+      _updateCamera(snapshot)
+          .catchError((_) {})
+          .whenComplete(() => _frameBusy = false);
     }
   }
 
   // ── Per-fix path: polyline split + readout ─────────────────────────────
 
+  /// Telemetry now only feeds the readout. The polyline split moved onto the
+  /// 60 fps frame pump, where it can track the marker instead of lagging it.
   void _onTelemetry() {
     final telemetry = _session?.telemetry.value;
     if (telemetry == null || !mounted) return;
-
-    final split = telemetry.split;
-    if (split != null) _applySplit(split);
 
     // Repaint the readout only when it would visibly change.
     final previous = _telemetry;
@@ -431,40 +606,68 @@ class _DrivingModePageState extends State<DrivingModePage>
     if (changed) setState(() => _telemetry = telemetry);
   }
 
-  Future<void> _applySplit(RouteSplit split) async {
-    final lines = _lines;
-    final driven = _drivenLine;
-    final remaining = _remainingLine;
-    if (lines == null || driven == null || remaining == null || _splitBusy) {
-      return;
-    }
-    if (split.driven.length < 2 || split.remaining.length < 2) return;
-
-    _splitBusy = true;
-    driven.geometry = mapbox.LineString(coordinates: _toPositions(split.driven));
-    remaining.geometry =
-        mapbox.LineString(coordinates: _toPositions(split.remaining));
-    try {
-      await lines.update(driven);
-      await lines.update(remaining);
-    } catch (_) {
-      // Manager torn down mid-flight.
-    } finally {
-      _splitBusy = false;
-    }
-  }
-
   // ── User actions ───────────────────────────────────────────────────────
 
-  void _onRecenter() {
-    setState(() => _cameraFollowing = true);
+  /// Restores the whole driving camera, not just the centre.
+  ///
+  /// Recentring position alone left the driver looking at their vehicle
+  /// through whatever zoom and pitch they had panned away to. Quadrix's
+  /// recenter re-applies target, zoom, tilt and bearing together, and resets
+  /// the smoothed bearing first so the next frame doesn't spin in from a
+  /// stale value.
+  Future<void> _onRecenter() async {
     final snapshot = _animator?.snapshot.value;
-    if (snapshot != null) _updateCamera(snapshot);
+    setState(() => _cameraFollowing = true);
+    final map = _map;
+    if (snapshot == null || map == null) return;
+
+    _cameraBearing = snapshot.bearingDeg;
+    _targetZoom = DrivingCamera.defaultZoom;
+    _currentZoom = DrivingCamera.defaultZoom;
+
+    // Animated, so the driver can see where the view travelled from. The frame
+    // pump is held off meanwhile - its per-frame setCamera would cancel the
+    // ease on the very next tick.
+    _recentering = true;
+    try {
+      await map.easeTo(
+        DrivingCamera.optionsFor(
+          position: snapshot.position,
+          smoothedBearing: _cameraBearing,
+          zoom: _currentZoom,
+        ),
+        mapbox.MapAnimationOptions(duration: 450),
+      );
+    } catch (_) {
+      // Map torn down mid-animation.
+    } finally {
+      _recentering = false;
+    }
   }
 
   void _onUserPan(mapbox.MapContentGestureContext _) {
     if (!_cameraFollowing) return;
     setState(() => _cameraFollowing = false);
+  }
+
+  /// Adopts a pinch-zoom into the tracked zoom.
+  ///
+  /// Without this the frame pump writes [_currentZoom] back on the next tick
+  /// and the pinch is undone before the driver lifts their fingers.
+  Future<void> _onUserZoom(mapbox.MapContentGestureContext _) async {
+    final map = _map;
+    if (map == null || _zoomAdoptBusy || _recentering) return;
+    _zoomAdoptBusy = true;
+    try {
+      final camera = await map.getCameraState();
+      final zoom = camera.zoom.clamp(_minZoom, _maxZoom);
+      _currentZoom = zoom;
+      _targetZoom = zoom;
+    } catch (_) {
+      // Map torn down mid-read.
+    } finally {
+      _zoomAdoptBusy = false;
+    }
   }
 
   /// Cancelling ends the trip server-side and pops the screen, so it is
@@ -557,6 +760,7 @@ class _DrivingModePageState extends State<DrivingModePage>
                 styleUri: mapbox.MapboxStyles.STANDARD,
                 onMapCreated: _onMapCreated,
                 onScrollListener: _onUserPan,
+                onZoomListener: _onUserZoom,
                 cameraOptions: mapbox.CameraOptions(
                   center: mapbox.Point(
                     coordinates: mapbox.Position(

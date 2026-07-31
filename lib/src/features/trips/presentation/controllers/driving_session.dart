@@ -26,10 +26,14 @@ typedef DrivingTelemetry = ({
   /// [_snapThresholdM]) and the heading agrees with the route direction.
   bool isOnRoute,
 
-  /// Polyline cut at the driver's snapped position: driven behind, remaining
-  /// ahead. Null until the first on-route fix. Frozen while off-route so the
-  /// trail doesn't rewind on a parallel road.
-  RouteSplit? split,
+  /// Last position confirmed to be on the planned line. The page splits the
+  /// polyline at the *animated marker* while on-route, and freezes it here
+  /// once off-route so the trail can't rewind along a parallel road.
+  ///
+  /// Deliberately a single point rather than the two split lists: recomputing
+  /// those per fix allocated two full copies of the route every second, and
+  /// the page needs a frame-rate split anyway, which a per-fix one can't give.
+  LatLng? routeSplitPoint,
 });
 
 /// How far off the polyline the marker still snaps onto the route. Beyond
@@ -121,7 +125,7 @@ class DrivingSession {
   double _lastRemaining = 0;
   double _lastTravelled = 0;
   int _lastSegIdx = 0;
-  RouteSplit? _lastSplit;
+  LatLng? _lastRouteSplitPoint;
 
   DrivingSession({
     required this.locationService,
@@ -137,6 +141,10 @@ class DrivingSession {
 
   List<LatLng> get routePoints => _routePoints;
 
+  /// Total length of the installed route, in metres. Used by the page to tell
+  /// "mid-route" from "at either end", where splitting the line is pointless.
+  double get routeLengthMeters => _cumulative?.total ?? 0;
+
   /// Installs the route the driver is following. Call on session start and on
   /// every reroute; resets the frozen progress so a new leg starts clean.
   ///
@@ -149,7 +157,7 @@ class DrivingSession {
     _lastRemaining = 0;
     _lastTravelled = 0;
     _lastSegIdx = 0;
-    _lastSplit = null;
+    _lastRouteSplitPoint = null;
   }
 
   /// Starts streaming GPS and resets per-trip smoothing and strike counters.
@@ -430,7 +438,7 @@ class DrivingSession {
       _lastRemaining = routeProgress.remainingMeters;
       _lastTravelled = routeProgress.travelledMeters;
       _lastSegIdx = routeProgress.segmentIndex;
-      _lastSplit = splitAt(_routePoints, routeProgress);
+      _lastRouteSplitPoint = routeProgress.splitPoint;
     }
 
     _telemetry.value = (
@@ -440,7 +448,7 @@ class DrivingSession {
       travelledRouteMeters: _lastTravelled,
       segmentIndex: _lastSegIdx,
       isOnRoute: onRoute,
-      split: _lastSplit,
+      routeSplitPoint: _lastRouteSplitPoint,
     );
   }
 
