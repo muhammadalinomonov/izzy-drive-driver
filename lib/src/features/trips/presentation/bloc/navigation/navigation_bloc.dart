@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
@@ -23,13 +21,17 @@ class NavigationBloc extends Bloc<NavigationEvent, NavigationState> {
   /// rather than an explicit arrival flag, so arrival is inferred locally.
   static const double _arrivalRemainingMeters = 40;
 
-  /// Reporting every GPS tick (as often as every 15m, per
+  /// Reporting every GPS tick (as often as every 3m, per
   /// [LocationService.watchPosition]) would hit `RATE_LIMIT_EXCEEDED`; this
   /// gates how often a fix is actually sent to `.../locations`.
   static const Duration _reportInterval = Duration(seconds: 5);
 
-  StreamSubscription<Position>? _positionSub;
   DateTime? _lastReportedAt;
+
+  /// Guards the two paths that can ask for a reroute - the server's
+  /// `off_route` flag and [DrivingSession]'s local detection - from firing
+  /// overlapping requests for the same divergence.
+  bool _rerouteInFlight = false;
 
   NavigationBloc({
     NavigationSessionModel? initialSession,
@@ -44,20 +46,14 @@ class NavigationBloc extends Bloc<NavigationEvent, NavigationState> {
     on<NavigationStarted>(_onStarted);
     on<NavigationResumeRequested>(_onResumeRequested);
     on<NavigationLocationUpdated>(_onLocationUpdated);
+    on<NavigationRerouteRequested>(_onRerouteRequested);
     on<NavigationCancelPressed>(_onCancelPressed);
-  }
-
-  @override
-  Future<void> close() {
-    _positionSub?.cancel();
-    return super.close();
   }
 
   Future<void> _onStarted(NavigationStarted event, Emitter<NavigationState> emit) async {
     if (state.session == null) {
       await _resolveCurrentSession(emit);
     }
-    _startWatchingPosition();
   }
 
   Future<void> _onResumeRequested(
@@ -88,19 +84,10 @@ class NavigationBloc extends Bloc<NavigationEvent, NavigationState> {
     emit(state.copyWith(status: NavigationPageStatus.active, session: session));
   }
 
-  void _startWatchingPosition() {
-    _positionSub ??= locationService.watchPosition().listen(
-          (position) => add(NavigationLocationUpdated(position)),
-        );
-  }
-
   Future<void> _onLocationUpdated(
     NavigationLocationUpdated event,
     Emitter<NavigationState> emit,
   ) async {
-    // Camera should track every fix even when the server report is throttled.
-    emit(state.copyWith(lastPosition: event.position));
-
     final session = state.session;
     if (session == null || !session.isActive) return;
 
@@ -109,6 +96,13 @@ class NavigationBloc extends Bloc<NavigationEvent, NavigationState> {
       return;
     }
     _lastReportedAt = now;
+
+    // `lastPosition` deliberately rides the throttle rather than every fix.
+    // At a 3 m filter and highway speed the stream delivers ~9 fixes/second,
+    // and emitting each one would rebuild the whole map stack that often. The
+    // marker and camera don't need it: they run off [MarkerAnimator]'s 60 fps
+    // snapshot, which never touches bloc state.
+    emit(state.copyWith(lastPosition: event.position));
 
     final response = await repo.sendNavigationLocation(
       session.id,
@@ -138,20 +132,63 @@ class NavigationBloc extends Bloc<NavigationEvent, NavigationState> {
     }
 
     if (updated.progress.offRoute) {
-      emit(state.copyWith(status: NavigationPageStatus.rerouting, session: updated));
-      final rerouted = await repo.rerouteNavigationSession(
-        session.id,
-        currentLocation:
-            TripCoordinate(lat: event.position.latitude, lng: event.position.longitude),
+      await _reroute(
+        emit,
+        sessionId: session.id,
+        origin: TripCoordinate(
+          lat: event.position.latitude,
+          lng: event.position.longitude,
+        ),
+        fallback: updated,
       );
-      emit(state.copyWith(
-        status: NavigationPageStatus.active,
-        session: rerouted.data ?? updated,
-      ));
       return;
     }
 
     emit(state.copyWith(session: updated));
+  }
+
+  /// Local off-route detection beat the server's flag - reroute now.
+  Future<void> _onRerouteRequested(
+    NavigationRerouteRequested event,
+    Emitter<NavigationState> emit,
+  ) async {
+    final session = state.session;
+    if (session == null || !session.isActive) return;
+    await _reroute(emit, sessionId: session.id, origin: event.origin);
+  }
+
+  /// Single reroute path shared by the server flag and local detection.
+  ///
+  /// The server remains authoritative for the new geometry either way; local
+  /// detection only decides *when* to ask, saving up to a full report interval
+  /// of driving down the wrong road.
+  Future<void> _reroute(
+    Emitter<NavigationState> emit, {
+    required String sessionId,
+    required TripCoordinate origin,
+    NavigationSessionModel? fallback,
+  }) async {
+    if (_rerouteInFlight) {
+      if (fallback != null) emit(state.copyWith(session: fallback));
+      return;
+    }
+    _rerouteInFlight = true;
+    emit(state.copyWith(
+      status: NavigationPageStatus.rerouting,
+      session: fallback ?? state.session,
+    ));
+    try {
+      final rerouted = await repo.rerouteNavigationSession(
+        sessionId,
+        currentLocation: origin,
+      );
+      emit(state.copyWith(
+        status: NavigationPageStatus.active,
+        session: rerouted.data ?? fallback ?? state.session,
+      ));
+    } finally {
+      _rerouteInFlight = false;
+    }
   }
 
   Future<void> _complete(Emitter<NavigationState> emit, NavigationSessionModel session) async {

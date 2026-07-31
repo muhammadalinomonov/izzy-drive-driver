@@ -19,39 +19,48 @@ class TripTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final alternative = trip.primaryAlternative;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColor.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColor.grey2),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: _Endpoints(trip: trip)),
-                  _StatusChip(status: trip.status),
+    final radius = BorderRadius.circular(12);
+
+    // The card surface has to BE the Material, not sit on top of one - an
+    // opaque Container above the InkWell would paint over the splash and the
+    // ripple would only be visible in the margin gutter around the card.
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Material(
+        color: AppColor.white,
+        borderRadius: radius,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: radius,
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: radius,
+              border: Border.all(color: AppColor.grey2),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: _Endpoints(trip: trip)),
+                    _StatusChip(status: trip.status),
+                  ],
+                ),
+                if (alternative != null) ...[
+                  const SizedBox(height: 12),
+                  Divider(color: AppColor.grey2, height: 1),
+                  const SizedBox(height: 10),
+                  _Metrics(alternative: alternative),
                 ],
-              ),
-              if (alternative != null) ...[
-                const SizedBox(height: 12),
-                Divider(color: AppColor.grey2, height: 1),
-                const SizedBox(height: 10),
-                _Metrics(alternative: alternative),
+                if (trip.vehicle != null || trip.departureAt != null) ...[
+                  const SizedBox(height: 10),
+                  _Footer(trip: trip),
+                ],
               ],
-              if (trip.vehicle != null || trip.departureAt != null) ...[
-                const SizedBox(height: 10),
-                _Footer(trip: trip),
-              ],
-            ],
+            ),
           ),
         ),
       ),

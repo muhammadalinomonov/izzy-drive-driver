@@ -20,8 +20,10 @@ class NavigationResumeRequested extends NavigationEvent {
   const NavigationResumeRequested();
 }
 
-/// One GPS fix from [LocationService.watchPosition] - internal, not user
-/// driven.
+/// One GPS fix forwarded by [DrivingSession] - internal, not user driven.
+///
+/// The session owns the GPS subscription (it needs every fix for smoothing and
+/// marker animation); the bloc only throttles them out to the server.
 class NavigationLocationUpdated extends NavigationEvent {
   final Position position;
 
@@ -29,6 +31,18 @@ class NavigationLocationUpdated extends NavigationEvent {
 
   @override
   List<Object?> get props => [position];
+}
+
+/// [DrivingSession] detected the driver off the planned line locally (55 m for
+/// three consecutive fixes). Fires a reroute immediately rather than waiting
+/// for the server's `off_route` flag to come back on the next report cycle.
+class NavigationRerouteRequested extends NavigationEvent {
+  final TripCoordinate origin;
+
+  const NavigationRerouteRequested(this.origin);
+
+  @override
+  List<Object?> get props => [origin.lat, origin.lng];
 }
 
 /// Driver backed out before reaching the destination.

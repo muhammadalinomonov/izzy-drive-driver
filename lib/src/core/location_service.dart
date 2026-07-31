@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -29,16 +30,52 @@ class LocationService {
     }
   }
 
-  /// Continuous GPS updates for Driving Mode. Distance-filtered (not
-  /// time-filtered) so the stream only fires on meaningful movement instead
-  /// of flooding the camera/progress-reporting logic while stationary.
-  Stream<Position> watchPosition({int distanceFilterMeters = 15}) {
-    return Geolocator.getPositionStream(
-      locationSettings: LocationSettings(
-        accuracy: LocationAccuracy.high,
+  /// Continuous GPS updates for Driving Mode, at navigation grade.
+  ///
+  /// Distance-filtered (not time-filtered) so the stream fires on real
+  /// movement rather than ticking while parked. The 3 m filter is deliberately
+  /// tight: [DrivingSession] smooths these fixes through a Kalman filter and
+  /// interpolates the marker between them, so a coarse filter shows up
+  /// directly as a stuttering marker. Server reporting is throttled
+  /// separately, by time, in `NavigationBloc` - this rate never reaches the
+  /// API.
+  ///
+  /// Background behaviour is platform-specific and required: without it the
+  /// stream dies the moment the driver leaves the app, taking progress
+  /// reporting with it.
+  /// - iOS: `allowBackgroundLocationUpdates` plus the automotive activity
+  ///   type, which also stops iOS pausing updates on its own heuristics.
+  ///   Needs the `location` UIBackgroundMode in Info.plist.
+  /// - Android: a foreground-service notification, which the OS requires for
+  ///   sustained background location.
+  Stream<Position> watchPosition({int distanceFilterMeters = 3}) {
+    late final LocationSettings settings;
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      settings = AndroidSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
         distanceFilter: distanceFilterMeters,
-      ),
-    );
+        intervalDuration: const Duration(seconds: 1),
+        foregroundNotificationConfig: const ForegroundNotificationConfig(
+          notificationTitle: 'Easy Drive',
+          notificationText: 'Navigation active',
+        ),
+      );
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+      settings = AppleSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: distanceFilterMeters,
+        activityType: ActivityType.automotiveNavigation,
+        pauseLocationUpdatesAutomatically: false,
+        allowBackgroundLocationUpdates: true,
+        showBackgroundLocationIndicator: true,
+      );
+    } else {
+      settings = LocationSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: distanceFilterMeters,
+      );
+    }
+    return Geolocator.getPositionStream(locationSettings: settings);
   }
 
   Future<String?> getAddressFromLatLng(

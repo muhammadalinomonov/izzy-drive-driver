@@ -7,8 +7,13 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/utils/polyline_codec.dart';
+import 'package:taxi_app/src/core/utils/route_progress.dart';
 import 'package:taxi_app/src/features/trips/data/model/navigation_session_model.dart';
+import 'package:taxi_app/src/features/trips/data/model/trip_model.dart';
 import 'package:taxi_app/src/features/trips/presentation/bloc/navigation/navigation_bloc.dart';
+import 'package:taxi_app/src/features/trips/presentation/controllers/driving_camera.dart';
+import 'package:taxi_app/src/features/trips/presentation/controllers/driving_session.dart';
+import 'package:taxi_app/src/features/trips/presentation/controllers/marker_animator.dart';
 import 'package:taxi_app/src/features/trips/presentation/utils/marker_icon.dart';
 
 /// The session created in Route Overview plus the human-readable destination
@@ -23,6 +28,16 @@ class DrivingModeArgs {
 
 /// Driving Mode (docs/ui/9.png): live turn-by-turn following of the session
 /// started in Route Overview.
+///
+/// Motion runs on two clocks, deliberately:
+/// - **60 fps** - [MarkerAnimator] interpolates the vehicle between GPS fixes
+///   and drives both the marker annotation and the camera. Never touches bloc
+///   state, so no widget rebuilds at frame rate.
+/// - **Per GPS fix** - [DrivingSession] publishes telemetry, which repaints the
+///   driven/remaining polyline split and the distance readout.
+///
+/// The bloc stays on its own slower clock (a throttled server report every 5s)
+/// and remains authoritative for progress, arrival and reroute geometry.
 class DrivingModePage extends StatefulWidget {
   const DrivingModePage({super.key, required this.args});
 
@@ -32,23 +47,103 @@ class DrivingModePage extends StatefulWidget {
   State<DrivingModePage> createState() => _DrivingModePageState();
 }
 
-class _DrivingModePageState extends State<DrivingModePage> with WidgetsBindingObserver {
+class _DrivingModePageState extends State<DrivingModePage>
+    with WidgetsBindingObserver, TickerProviderStateMixin {
+  /// Bounds for the zoom buttons. Below 8 the route stops being legible at
+  /// driving pitch; above 19 Mapbox runs out of tiles on most styles.
+  static const double _minZoom = 8.0;
+  static const double _maxZoom = 19.0;
+
+  /// Per-frame fraction of the remaining zoom difference the camera closes, so
+  /// a button tap eases in over a few frames rather than jumping a whole level.
+  static const double _zoomGlide = 0.25;
+
+  /// Minimum change before the bottom bar is rebuilt, so a 9 Hz fix stream at
+  /// highway speed doesn't drive 9 setState calls a second for a readout that
+  /// only shows tenths of a mile.
+  static const double _distanceRepaintM = 10;
+
   mapbox.MapboxMap? _map;
   mapbox.PolylineAnnotationManager? _lines;
   mapbox.PointAnnotationManager? _markers;
-  String? _renderedSessionId;
+
+  mapbox.PolylineAnnotation? _drivenLine;
+  mapbox.PolylineAnnotation? _remainingLine;
+  mapbox.PointAnnotation? _driverMarker;
+
+  MarkerAnimator? _animator;
+  DrivingSession? _session;
+
+  /// Keyed on the polyline, not the session id: a reroute returns the *same*
+  /// session with new geometry, so an id check would never re-render it.
+  String? _renderedPolyline;
+
   bool _cameraFollowing = true;
+  double _cameraBearing = 0;
+
+  /// Zoom the camera is actually rendering at, eased toward [_targetZoom] on
+  /// the marker tick.
+  double _currentZoom = DrivingCamera.defaultZoom;
+
+  /// Zoom the buttons have asked for.
+  double _targetZoom = DrivingCamera.defaultZoom;
+
+  /// Annotation and camera updates cross a platform channel, so a frame is
+  /// skipped while the previous call is still in flight rather than queueing
+  /// work the channel can't drain. Dropping frames degrades gracefully;
+  /// queueing them compounds into lag.
+  bool _markerBusy = false;
+  bool _cameraBusy = false;
+  bool _splitBusy = false;
+
+  DrivingTelemetry? _telemetry;
+  String? _sessionError;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    context.read<NavigationBloc>().add(const NavigationStarted());
+
+    final session = widget.args.session;
+    final last = session.lastLocation;
+    final initial = last != null
+        ? LatLng(last.latitude, last.longitude)
+        : LatLng(session.destination.lat, session.destination.lng);
+
+    final animator = MarkerAnimator(vsync: this, initial: initial);
+    animator.snapshot.addListener(_onMarkerTick);
+    _animator = animator;
+
+    final bloc = context.read<NavigationBloc>();
+    final session_ = DrivingSession(
+      locationService: bloc.locationService,
+      markerAnimator: animator,
+      onFix: (fix) {
+        if (!mounted) return;
+        bloc.add(NavigationLocationUpdated(fix));
+      },
+      onOffRoute: (origin) {
+        if (!mounted) return;
+        bloc.add(NavigationRerouteRequested(
+          TripCoordinate(lat: origin.latitude, lng: origin.longitude),
+        ));
+      },
+    );
+    session_.telemetry.addListener(_onTelemetry);
+    _session = session_;
+
+    bloc.add(const NavigationStarted());
+    _startSession();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    // Session first: it stops the GPS stream that feeds the animator.
+    _session?.telemetry.removeListener(_onTelemetry);
+    _session?.dispose();
+    _animator?.snapshot.removeListener(_onMarkerTick);
+    _animator?.dispose();
     super.dispose();
   }
 
@@ -58,6 +153,25 @@ class _DrivingModePageState extends State<DrivingModePage> with WidgetsBindingOb
       context.read<NavigationBloc>().add(const NavigationResumeRequested());
     }
   }
+
+  Future<void> _startSession() async {
+    try {
+      await _session?.start();
+      if (mounted && _sessionError != null) {
+        setState(() => _sessionError = null);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _sessionError = _readableError(e));
+    }
+  }
+
+  static String _readableError(Object e) {
+    final text = e.toString();
+    return text.startsWith('Exception: ') ? text.substring(11) : text;
+  }
+
+  // ── Map setup ──────────────────────────────────────────────────────────
 
   void _onMapCreated(mapbox.MapboxMap map) {
     _map = map;
@@ -72,8 +186,8 @@ class _DrivingModePageState extends State<DrivingModePage> with WidgetsBindingOb
 
   Future<void> _renderSession(NavigationSessionModel session) async {
     final map = _map;
-    if (map == null || _renderedSessionId == session.id) return;
-    _renderedSessionId = session.id;
+    if (map == null || _renderedPolyline == session.route.polyline) return;
+    _renderedPolyline = session.route.polyline;
 
     _lines ??= await map.annotations.createPolylineAnnotationManager();
     _markers ??= await map.annotations.createPointAnnotationManager();
@@ -82,20 +196,37 @@ class _DrivingModePageState extends State<DrivingModePage> with WidgetsBindingOb
     await _lines!.deleteAll();
     await _markers!.deleteAll();
     if (!mounted) return;
+    _drivenLine = null;
+    _remainingLine = null;
+    _driverMarker = null;
 
     final points = decodePolyline(session.route.polyline);
+
+    // Hand the route to the session before drawing: snapping, off-route
+    // detection and the split all key off it.
+    _session?.setRoute(points);
+
     if (points.isNotEmpty) {
-      await _lines!.create(mapbox.PolylineAnnotationOptions(
-        geometry: mapbox.LineString(
-          coordinates: points.map((p) => mapbox.Position(p.longitude, p.latitude)).toList(),
-        ),
+      _remainingLine = await _lines!.create(mapbox.PolylineAnnotationOptions(
+        geometry: mapbox.LineString(coordinates: _toPositions(points)),
         lineColor: AppColor.kPrimaryColor.toARGB32(),
         lineWidth: 6,
       ));
-    }
-    if (!mounted) return;
+      if (!mounted) return;
 
-    final destinationPng = await rasterizeMarkerSvg('assets/icons/finish_marker.svg');
+      // Drawn first so it stacks beneath the active route. Seeded degenerate
+      // (a single repeated point) and grown as the driver advances.
+      _drivenLine = await _lines!.create(mapbox.PolylineAnnotationOptions(
+        geometry: mapbox.LineString(
+          coordinates: _toPositions([points.first, points.first]),
+        ),
+        lineColor: AppColor.grey2.toARGB32(),
+        lineWidth: 6,
+      ));
+      if (!mounted) return;
+    }
+
+    final destinationPng = await rasterizeMarkerSvg(AppIcons.tripDestination);
     if (!mounted) return;
     await _markers!.create(mapbox.PointAnnotationOptions(
       geometry: mapbox.Point(
@@ -108,8 +239,8 @@ class _DrivingModePageState extends State<DrivingModePage> with WidgetsBindingOb
     ));
     if (!mounted) return;
 
-    // Same toll-only marker set as route overview - see
-    // route_overview_bloc.dart for why fuel stations have no map pin.
+    // Same toll-only marker set as route overview - see route_overview_bloc.dart
+    // for why fuel stations have no map pin.
     if (session.routeAlternative.tollMarkers.isNotEmpty) {
       final tollPng = await rasterizeMarkerSvg(AppIcons.tollMarker, height: 72);
       if (!mounted) return;
@@ -122,32 +253,196 @@ class _DrivingModePageState extends State<DrivingModePage> with WidgetsBindingOb
           iconSize: 1.1,
           iconAnchor: mapbox.IconAnchor.BOTTOM,
         ));
+        if (!mounted) return;
       }
+    }
+
+    // The vehicle puck goes on last so it draws above the route and the pins.
+    final snapshot = _animator?.snapshot.value;
+    final driverPng = await buildDriverPuck();
+    if (!mounted) return;
+    _driverMarker = await _markers!.create(mapbox.PointAnnotationOptions(
+      geometry: mapbox.Point(
+        coordinates: mapbox.Position(
+          snapshot?.position.longitude ?? session.destination.lng,
+          snapshot?.position.latitude ?? session.destination.lat,
+        ),
+      ),
+      image: driverPng,
+      iconSize: 1.0,
+      iconRotate: snapshot?.bearingDeg ?? 0,
+      // Centre-anchored and rotating in place: the puck marks a point, unlike
+      // the destination/toll pins which sit on their tip.
+      iconAnchor: mapbox.IconAnchor.CENTER,
+    ));
+  }
+
+  static List<mapbox.Position> _toPositions(List<LatLng> points) =>
+      points.map((p) => mapbox.Position(p.longitude, p.latitude)).toList();
+
+  // ── 60 fps path: marker + camera ───────────────────────────────────────
+
+  void _onMarkerTick() {
+    final snapshot = _animator?.snapshot.value;
+    if (snapshot == null) return;
+    _updateDriverMarker(snapshot);
+    if (_cameraFollowing) _updateCamera(snapshot);
+  }
+
+  Future<void> _updateDriverMarker(MarkerSnapshot snapshot) async {
+    final markers = _markers;
+    final marker = _driverMarker;
+    if (markers == null || marker == null || _markerBusy) return;
+
+    _markerBusy = true;
+    marker.geometry = mapbox.Point(
+      coordinates: mapbox.Position(
+        snapshot.position.longitude,
+        snapshot.position.latitude,
+      ),
+    );
+    marker.iconRotate = snapshot.bearingDeg;
+    try {
+      await markers.update(marker);
+    } catch (_) {
+      // The manager can be torn down mid-flight on navigation away.
+    } finally {
+      _markerBusy = false;
     }
   }
 
-  Future<void> _followCamera(NavigationState state) async {
+  Future<void> _updateCamera(MarkerSnapshot snapshot) async {
     final map = _map;
-    final position = state.lastPosition;
-    if (map == null || position == null || !_cameraFollowing) return;
-    await map.easeTo(
-      mapbox.CameraOptions(
-        center: mapbox.Point(coordinates: mapbox.Position(position.longitude, position.latitude)),
-        zoom: 17,
-        bearing: position.heading >= 0 ? position.heading : null,
-      ),
-      mapbox.MapAnimationOptions(duration: 600),
+    if (map == null || _cameraBusy) return;
+
+    // Low-pass the heading so the map swings smoothly instead of snapping at
+    // every route waypoint. Alpha scales with speed: faster driving needs a
+    // snappier camera to keep up through highway curves, while a slow crawl
+    // wants heavy damping so GPS-derived heading noise doesn't wobble the map.
+    final speedMps = _telemetry?.speedMps ?? 0;
+    final alpha = (0.12 + (speedMps / 30) * 0.13).clamp(0.12, 0.25);
+    _cameraBearing = MarkerAnimator.interpolateBearing(
+      _cameraBearing,
+      snapshot.bearingDeg,
+      alpha,
     );
+
+    // Ease toward the button target, then settle exactly so the comparison
+    // can't oscillate on floating-point dust.
+    if ((_currentZoom - _targetZoom).abs() > 0.01) {
+      _currentZoom += (_targetZoom - _currentZoom) * _zoomGlide;
+    } else {
+      _currentZoom = _targetZoom;
+    }
+
+    _cameraBusy = true;
+    try {
+      await map.setCamera(DrivingCamera.optionsFor(
+        position: snapshot.position,
+        smoothedBearing: _cameraBearing,
+        zoom: _currentZoom,
+      ));
+    } catch (_) {
+      // Ignore: the map can be disposed between frames.
+    } finally {
+      _cameraBusy = false;
+    }
   }
+
+  void _zoomBy(double delta) {
+    final next = (_targetZoom + delta).clamp(_minZoom, _maxZoom);
+    if (next == _targetZoom) return;
+    _targetZoom = next;
+
+    if (!_cameraFollowing) {
+      // Free camera: zoom in place and leave the centre where the driver put
+      // it. Eased, because nothing else is animating this view.
+      _currentZoom = next;
+      _map?.easeTo(
+        mapbox.CameraOptions(zoom: next),
+        mapbox.MapAnimationOptions(duration: 200),
+      );
+      return;
+    }
+
+    // Following: the marker tick normally glides the zoom in. But the tick
+    // only fires while the marker is animating, so parked at a light a tap
+    // would otherwise do nothing until the vehicle moved again - apply it
+    // directly in that case.
+    final snapshot = _animator?.snapshot.value;
+    if (_animator?.isAnimating != true && snapshot != null) {
+      _currentZoom = next;
+      _updateCamera(snapshot);
+    }
+  }
+
+  // ── Per-fix path: polyline split + readout ─────────────────────────────
+
+  void _onTelemetry() {
+    final telemetry = _session?.telemetry.value;
+    if (telemetry == null || !mounted) return;
+
+    final split = telemetry.split;
+    if (split != null) _applySplit(split);
+
+    // Repaint the readout only when it would visibly change.
+    final previous = _telemetry;
+    final changed = previous == null ||
+        (previous.remainingRouteMeters - telemetry.remainingRouteMeters).abs() >=
+            _distanceRepaintM ||
+        previous.isOnRoute != telemetry.isOnRoute;
+    if (changed) setState(() => _telemetry = telemetry);
+  }
+
+  Future<void> _applySplit(RouteSplit split) async {
+    final lines = _lines;
+    final driven = _drivenLine;
+    final remaining = _remainingLine;
+    if (lines == null || driven == null || remaining == null || _splitBusy) {
+      return;
+    }
+    if (split.driven.length < 2 || split.remaining.length < 2) return;
+
+    _splitBusy = true;
+    driven.geometry = mapbox.LineString(coordinates: _toPositions(split.driven));
+    remaining.geometry =
+        mapbox.LineString(coordinates: _toPositions(split.remaining));
+    try {
+      await lines.update(driven);
+      await lines.update(remaining);
+    } catch (_) {
+      // Manager torn down mid-flight.
+    } finally {
+      _splitBusy = false;
+    }
+  }
+
+  // ── User actions ───────────────────────────────────────────────────────
 
   void _onRecenter() {
     setState(() => _cameraFollowing = true);
-    final state = context.read<NavigationBloc>().state;
-    _followCamera(state);
+    final snapshot = _animator?.snapshot.value;
+    if (snapshot != null) _updateCamera(snapshot);
+  }
+
+  void _onUserPan(mapbox.MapContentGestureContext _) {
+    if (!_cameraFollowing) return;
+    setState(() => _cameraFollowing = false);
   }
 
   void _onCancel() {
     context.read<NavigationBloc>().add(const NavigationCancelPressed());
+  }
+
+  /// Distance still to drive. Prefers the locally-snapped figure, which
+  /// updates every fix; falls back to the server's, which lands every 5s and
+  /// is the only source while off-route.
+  int _remainingMeters(NavigationSessionModel session) {
+    final telemetry = _telemetry;
+    if (telemetry != null && telemetry.isOnRoute) {
+      return telemetry.remainingRouteMeters.round();
+    }
+    return session.progress.remainingDistanceMeters;
   }
 
   @override
@@ -156,19 +451,22 @@ class _DrivingModePageState extends State<DrivingModePage> with WidgetsBindingOb
       backgroundColor: AppColor.white,
       body: BlocConsumer<NavigationBloc, NavigationState>(
         listenWhen: (p, c) =>
-            p.session?.id != c.session?.id ||
-            p.lastPosition != c.lastPosition ||
+            p.session?.route.polyline != c.session?.route.polyline ||
             p.status != c.status,
         listener: (context, state) {
           final session = state.session;
           if (session != null) _renderSession(session);
-          _followCamera(state);
           if (state.status == NavigationPageStatus.closed) {
             context.pop();
           }
         },
         builder: (context, state) {
           final session = state.session ?? widget.args.session;
+          final error = _sessionError ??
+              (state.status == NavigationPageStatus.error
+                  ? state.errorMessage
+                  : null);
+
           return Stack(
             fit: StackFit.expand,
             children: [
@@ -176,6 +474,7 @@ class _DrivingModePageState extends State<DrivingModePage> with WidgetsBindingOb
                 key: const ValueKey('drivingModeMap'),
                 styleUri: mapbox.MapboxStyles.STANDARD,
                 onMapCreated: _onMapCreated,
+                onScrollListener: _onUserPan,
                 cameraOptions: mapbox.CameraOptions(
                   center: mapbox.Point(
                     coordinates: mapbox.Position(
@@ -188,44 +487,162 @@ class _DrivingModePageState extends State<DrivingModePage> with WidgetsBindingOb
               ),
               if (state.status == NavigationPageStatus.loading)
                 const Center(child: CircularProgressIndicator.adaptive()),
-              if (state.status == NavigationPageStatus.error)
+              if (error != null)
                 _ErrorOverlay(
-                  message: state.errorMessage,
+                  message: error,
                   onBack: () => context.pop(),
-                  onRetry: () =>
-                      context.read<NavigationBloc>().add(const NavigationResumeRequested()),
+                  onRetry: () {
+                    if (_sessionError != null) {
+                      _startSession();
+                    } else {
+                      context
+                          .read<NavigationBloc>()
+                          .add(const NavigationResumeRequested());
+                    }
+                  },
                 ),
-              if (state.status != NavigationPageStatus.error &&
-                  session.route.maneuvers.isNotEmpty)
+              if (error == null && session.route.maneuvers.isNotEmpty)
                 Positioned(
                   top: MediaQuery.paddingOf(context).top + 12,
                   left: 16,
                   right: 76,
                   child: _ManeuverBanner(
-                    maneuver: session.progress.nextManeuver ?? session.route.maneuvers.first,
+                    maneuver:
+                        session.progress.nextManeuver ?? session.route.maneuvers.first,
                     rerouting: state.status == NavigationPageStatus.rerouting,
                   ),
                 ),
               Positioned(
                 top: MediaQuery.paddingOf(context).top + 12,
-                right: 16,
-                child: _CircleButton(icon: AppIcons.gpsRecenter, onTap: _onRecenter),
-              ),
-              Positioned(
-                top: MediaQuery.paddingOf(context).top + 12,
                 left: 16,
                 child: session.route.maneuvers.isEmpty
-                    ? _CircleButton(iconData: Icons.arrow_back, onTap: () => context.pop())
+                    ? _CircleButton(
+                        iconData: Icons.arrow_back,
+                        onTap: () => context.pop(),
+                      )
                     : const SizedBox.shrink(),
               ),
-              _BottomBar(
-                destinationLabel: widget.args.destinationLabel,
-                progress: session.progress,
-                onCancel: _onCancel,
+              // Controls and the bar share one bottom-anchored column, so the
+              // buttons sit a fixed gap above the bar however tall it grows.
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 16, bottom: 12),
+                      child: _MapControls(
+                        onZoomIn: () => _zoomBy(1),
+                        onZoomOut: () => _zoomBy(-1),
+                        onRecenter: _onRecenter,
+                        // Emphasised while the camera is detached, so the way
+                        // back to follow-mode is obvious after a manual pan.
+                        recenterHighlighted: !_cameraFollowing,
+                      ),
+                    ),
+                    _BottomBar(
+                      destinationLabel: widget.args.destinationLabel,
+                      progress: session.progress,
+                      remainingMeters: _remainingMeters(session),
+                      speedMps: _telemetry?.speedMps,
+                      onCancel: _onCancel,
+                    ),
+                  ],
+                ),
               ),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// Bottom-right control stack: zoom in, zoom out, then recenter.
+///
+/// Recenter sits lowest as the closest button to the driver's thumb - it is
+/// the one pressed under way, after a glance-and-pan pulls the camera off the
+/// vehicle.
+class _MapControls extends StatelessWidget {
+  const _MapControls({
+    required this.onZoomIn,
+    required this.onZoomOut,
+    required this.onRecenter,
+    required this.recenterHighlighted,
+  });
+
+  final VoidCallback onZoomIn;
+  final VoidCallback onZoomOut;
+  final VoidCallback onRecenter;
+  final bool recenterHighlighted;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // The two zoom buttons read as one control, so they are joined into a
+        // single rounded slab with a hairline divider rather than floating
+        // apart like the recenter button.
+        Material(
+          color: AppColor.white,
+          elevation: 3,
+          borderRadius: BorderRadius.circular(12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _ZoomButton(
+                icon: Icons.add_rounded,
+                onTap: onZoomIn,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
+              ),
+              Container(width: 24, height: 1, color: AppColor.grey2),
+              _ZoomButton(
+                icon: Icons.remove_rounded,
+                onTap: onZoomOut,
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(12),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        _CircleButton(
+          icon: AppIcons.gpsRecenter,
+          onTap: onRecenter,
+          highlighted: recenterHighlighted,
+        ),
+      ],
+    );
+  }
+}
+
+class _ZoomButton extends StatelessWidget {
+  const _ZoomButton({
+    required this.icon,
+    required this.onTap,
+    required this.borderRadius,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+  final BorderRadius borderRadius;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: borderRadius,
+      onTap: onTap,
+      child: SizedBox(
+        width: 44,
+        height: 44,
+        child: Icon(icon, size: 22, color: AppColor.black),
       ),
     );
   }
@@ -346,20 +763,27 @@ class _BottomBar extends StatelessWidget {
   const _BottomBar({
     required this.destinationLabel,
     required this.progress,
+    required this.remainingMeters,
+    required this.speedMps,
     required this.onCancel,
   });
 
   final String destinationLabel;
   final NavigationProgress progress;
+  final int remainingMeters;
+
+  /// Null until the first fix arrives.
+  final double? speedMps;
   final VoidCallback onCancel;
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: SafeArea(
-        top: false,
-        child: Container(
+    final speed = speedMps;
+    // No Align here: the parent column is already bottom-anchored, and an
+    // Align inside it would stretch the bar to fill the screen.
+    return SafeArea(
+      top: false,
+      child: Container(
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
@@ -402,12 +826,29 @@ class _BottomBar extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    _distance(progress.remainingDistanceMeters),
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColor.black),
+                    _distance(remainingMeters),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColor.black,
+                    ),
                   ),
+                  if (speed != null)
+                    Text(
+                      '${(speed * 2.23694).round()} mph',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColor.black,
+                      ),
+                    ),
                   Text(
                     _duration(progress.remainingDurationSeconds),
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColor.black),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColor.black,
+                    ),
                   ),
                 ],
               ),
@@ -421,8 +862,7 @@ class _BottomBar extends StatelessWidget {
                   valueColor: AlwaysStoppedAnimation(AppColor.kPrimaryColor),
                 ),
               ),
-            ],
-          ),
+          ],
         ),
       ),
     );
@@ -442,17 +882,23 @@ class _BottomBar extends StatelessWidget {
 }
 
 class _CircleButton extends StatelessWidget {
-  const _CircleButton({this.icon, this.iconData, required this.onTap});
+  const _CircleButton({
+    this.icon,
+    this.iconData,
+    required this.onTap,
+    this.highlighted = false,
+  });
 
   /// SVG asset path, mutually exclusive with [iconData].
   final String? icon;
   final IconData? iconData;
   final VoidCallback onTap;
+  final bool highlighted;
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColor.white,
+      color: highlighted ? AppColor.kPrimaryColor : AppColor.white,
       shape: const CircleBorder(),
       elevation: 3,
       child: InkWell(
@@ -463,7 +909,14 @@ class _CircleButton extends StatelessWidget {
           height: 44,
           child: Center(
             child: icon != null
-                ? SvgPicture.asset(icon!, width: 20, height: 20)
+                ? SvgPicture.asset(
+                    icon!,
+                    width: 20,
+                    height: 20,
+                    colorFilter: highlighted
+                        ? const ColorFilter.mode(Colors.white, BlendMode.srcIn)
+                        : null,
+                  )
                 : Icon(iconData, size: 20, color: AppColor.black),
           ),
         ),

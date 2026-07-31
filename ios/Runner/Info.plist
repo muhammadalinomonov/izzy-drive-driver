@@ -43,6 +43,8 @@
 	<string>IzzyDrive Client uses the camera to take photos of your vehicle problem to share with the mechanic.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>IzzyDrive Client uses your location to find nearby mechanics and to share your location with the mechanic assisting you.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>IzzyDrive Client uses your location during Driving Mode to follow your route and report trip progress, including while the app is in the background.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>IzzyDrive Client uses the microphone so you can record and send voice messages to the mechanic.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
@@ -75,6 +77,10 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
+		<!-- Driving Mode keeps reporting progress with the app backgrounded or
+		     the screen off. CLLocationManager throws if
+		     allowsBackgroundLocationUpdates is set without this mode. -->
+		<string>location</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
