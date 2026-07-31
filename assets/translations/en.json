@@ -235,6 +235,10 @@
   },
   "drivingMode": {
     "cancel": "Cancel Navigation",
+    "cancelTitle": "Cancel navigation?",
+    "cancelMessage": "Your route will be cancelled and turn-by-turn directions will stop.",
+    "cancelConfirm": "Cancel route",
+    "cancelDismiss": "Keep driving",
     "arriving": "Arriving",
     "resuming": "Resuming your trip...",
     "rerouting": "Rerouting..."

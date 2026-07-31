@@ -201,13 +201,13 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
     await markers.create(mapbox.PointAnnotationOptions(
       geometry: originPoint,
       image: originPng,
-      iconSize: 1.4,
+      iconSize: 1.7,
       iconAnchor: mapbox.IconAnchor.BOTTOM,
     ));
     await markers.create(mapbox.PointAnnotationOptions(
       geometry: destinationPoint,
       image: destinationPng,
-      iconSize: 1.4,
+      iconSize: 1.7,
       iconAnchor: mapbox.IconAnchor.BOTTOM,
     ));
     if (!mounted) return;

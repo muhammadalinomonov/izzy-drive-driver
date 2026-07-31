@@ -47,6 +47,9 @@ class DrivingModePage extends StatefulWidget {
   State<DrivingModePage> createState() => _DrivingModePageState();
 }
 
+/// Shared with route overview - the same pin marks the trip's end on both maps.
+const String _finishMarkerAsset = 'assets/icons/finish_marker.svg';
+
 class _DrivingModePageState extends State<DrivingModePage>
     with WidgetsBindingObserver, TickerProviderStateMixin {
   /// Bounds for the zoom buttons. Below 8 the route stops being legible at
@@ -66,6 +69,12 @@ class _DrivingModePageState extends State<DrivingModePage>
   mapbox.MapboxMap? _map;
   mapbox.PolylineAnnotationManager? _lines;
   mapbox.PointAnnotationManager? _markers;
+
+  /// The puck lives in its own manager because icon pitch/rotation alignment
+  /// are layer properties, not per-annotation ones. The puck must lie flat on
+  /// the map plane; the destination and toll pins must stay billboarded
+  /// upright. One manager cannot do both.
+  mapbox.PointAnnotationManager? _driverMarkers;
 
   mapbox.PolylineAnnotation? _drivenLine;
   mapbox.PolylineAnnotation? _remainingLine;
@@ -193,8 +202,31 @@ class _DrivingModePageState extends State<DrivingModePage>
     _markers ??= await map.annotations.createPointAnnotationManager();
     if (!mounted) return;
 
+    if (_driverMarkers == null) {
+      final driverLayer = await map.annotations.createPointAnnotationManager();
+      if (!mounted) return;
+      // The Mapbox equivalent of Google Maps' `flat: true`, which is what the
+      // Quadrix marker uses. MAP alignment lays the icon on the map plane and
+      // rotates it with the map, so under the 60 degree driving pitch it
+      // foreshortens into the road instead of standing up facing the camera.
+      // Without this the puck reads as a sticker pasted on the screen.
+      await driverLayer
+          .setIconPitchAlignment(mapbox.IconPitchAlignment.MAP);
+      if (!mounted) return;
+      await driverLayer
+          .setIconRotationAlignment(mapbox.IconRotationAlignment.MAP);
+      if (!mounted) return;
+      // Never let symbol collision hide the vehicle behind a pin or a label.
+      await driverLayer.setIconAllowOverlap(true);
+      if (!mounted) return;
+      await driverLayer.setIconIgnorePlacement(true);
+      if (!mounted) return;
+      _driverMarkers = driverLayer;
+    }
+
     await _lines!.deleteAll();
     await _markers!.deleteAll();
+    await _driverMarkers!.deleteAll();
     if (!mounted) return;
     _drivenLine = null;
     _remainingLine = null;
@@ -226,7 +258,9 @@ class _DrivingModePageState extends State<DrivingModePage>
       if (!mounted) return;
     }
 
-    final destinationPng = await rasterizeMarkerSvg(AppIcons.tripDestination);
+    // finish_marker.svg is the map pin. Not AppIcons.tripDestination, which is
+    // the grey trip-planner *field* icon and renders nearly invisible on a map.
+    final destinationPng = await rasterizeMarkerSvg(_finishMarkerAsset);
     if (!mounted) return;
     await _markers!.create(mapbox.PointAnnotationOptions(
       geometry: mapbox.Point(
@@ -234,7 +268,7 @@ class _DrivingModePageState extends State<DrivingModePage>
             mapbox.Position(session.destination.lng, session.destination.lat),
       ),
       image: destinationPng,
-      iconSize: 1.4,
+      iconSize: 1.7,
       iconAnchor: mapbox.IconAnchor.BOTTOM,
     ));
     if (!mounted) return;
@@ -261,7 +295,7 @@ class _DrivingModePageState extends State<DrivingModePage>
     final snapshot = _animator?.snapshot.value;
     final driverPng = await buildDriverPuck();
     if (!mounted) return;
-    _driverMarker = await _markers!.create(mapbox.PointAnnotationOptions(
+    _driverMarker = await _driverMarkers!.create(mapbox.PointAnnotationOptions(
       geometry: mapbox.Point(
         coordinates: mapbox.Position(
           snapshot?.position.longitude ?? session.destination.lng,
@@ -269,7 +303,10 @@ class _DrivingModePageState extends State<DrivingModePage>
         ),
       ),
       image: driverPng,
-      iconSize: 1.0,
+      // The puck bitmap is mostly shadow padding - only ~62% of it is the disc
+      // - so it is scaled up beyond the pins' factor to land at a comparable
+      // on-screen footprint, since their art fills their bitmap.
+      iconSize: 1.85,
       iconRotate: snapshot?.bearingDeg ?? 0,
       // Centre-anchored and rotating in place: the puck marks a point, unlike
       // the destination/toll pins which sit on their tip.
@@ -290,7 +327,7 @@ class _DrivingModePageState extends State<DrivingModePage>
   }
 
   Future<void> _updateDriverMarker(MarkerSnapshot snapshot) async {
-    final markers = _markers;
+    final markers = _driverMarkers;
     final marker = _driverMarker;
     if (markers == null || marker == null || _markerBusy) return;
 
@@ -430,7 +467,52 @@ class _DrivingModePageState extends State<DrivingModePage>
     setState(() => _cameraFollowing = false);
   }
 
-  void _onCancel() {
+  /// Cancelling ends the trip server-side and pops the screen, so it is
+  /// confirmed first - it is a single tap away from the driver's thumb while
+  /// the vehicle is moving, and there is no undo.
+  Future<void> _onCancel() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColor.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          'drivingMode.cancelTitle'.tr(),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColor.black,
+          ),
+        ),
+        content: Text(
+          'drivingMode.cancelMessage'.tr(),
+          style: TextStyle(fontSize: 13, color: AppColor.black),
+        ),
+        actions: [
+          // Dismiss is the low-emphasis default: the safe outcome should be
+          // the easy one to pick by accident.
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(
+              'drivingMode.cancelDismiss'.tr(),
+              style: TextStyle(color: AppColor.black, fontSize: 13),
+            ),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColor.red),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(
+              'drivingMode.cancelConfirm'.tr(),
+              style: const TextStyle(fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
     context.read<NavigationBloc>().add(const NavigationCancelPressed());
   }
 
@@ -522,6 +604,19 @@ class _DrivingModePageState extends State<DrivingModePage>
                       )
                     : const SizedBox.shrink(),
               ),
+              // Ending the trip is destructive, so it sits top-right - far from
+              // the recenter/zoom cluster the driver reaches for under way, and
+              // in the slot the maneuver banner already reserves.
+              Positioned(
+                top: MediaQuery.paddingOf(context).top + 12,
+                right: 16,
+                child: _CircleButton(
+                  iconData: Icons.close_rounded,
+                  onTap: _onCancel,
+                  iconColor: AppColor.red,
+                  tooltip: 'drivingMode.cancel'.tr(),
+                ),
+              ),
               // Controls and the bar share one bottom-anchored column, so the
               // buttons sit a fixed gap above the bar however tall it grows.
               Positioned(
@@ -548,7 +643,6 @@ class _DrivingModePageState extends State<DrivingModePage>
                       progress: session.progress,
                       remainingMeters: _remainingMeters(session),
                       speedMps: _telemetry?.speedMps,
-                      onCancel: _onCancel,
                     ),
                   ],
                 ),
@@ -765,7 +859,6 @@ class _BottomBar extends StatelessWidget {
     required this.progress,
     required this.remainingMeters,
     required this.speedMps,
-    required this.onCancel,
   });
 
   final String destinationLabel;
@@ -774,7 +867,6 @@ class _BottomBar extends StatelessWidget {
 
   /// Null until the first fix arrives.
   final double? speedMps;
-  final VoidCallback onCancel;
 
   @override
   Widget build(BuildContext context) {
@@ -797,29 +889,17 @@ class _BottomBar extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      destinationLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: AppColor.black,
-                      ),
-                    ),
-                  ),
-                  TextButton.icon(
-                    onPressed: onCancel,
-                    icon: Icon(Icons.close, size: 16, color: AppColor.red),
-                    label: Text(
-                      'drivingMode.cancel'.tr(),
-                      style: TextStyle(color: AppColor.red, fontSize: 12),
-                    ),
-                  ),
-                ],
+              // Cancel used to sit here; it now lives as an icon button in the
+              // top-right, so the label gets the full width.
+              Text(
+                destinationLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppColor.black,
+                ),
               ),
               const SizedBox(height: 8),
               Row(
@@ -887,6 +967,8 @@ class _CircleButton extends StatelessWidget {
     this.iconData,
     required this.onTap,
     this.highlighted = false,
+    this.iconColor,
+    this.tooltip,
   });
 
   /// SVG asset path, mutually exclusive with [iconData].
@@ -895,9 +977,14 @@ class _CircleButton extends StatelessWidget {
   final VoidCallback onTap;
   final bool highlighted;
 
+  /// Overrides the default icon tint. Ignored while [highlighted], which
+  /// inverts the button to a filled treatment.
+  final Color? iconColor;
+  final String? tooltip;
+
   @override
   Widget build(BuildContext context) {
-    return Material(
+    final button = Material(
       color: highlighted ? AppColor.kPrimaryColor : AppColor.white,
       shape: const CircleBorder(),
       elevation: 3,
@@ -917,10 +1004,20 @@ class _CircleButton extends StatelessWidget {
                         ? const ColorFilter.mode(Colors.white, BlendMode.srcIn)
                         : null,
                   )
-                : Icon(iconData, size: 20, color: AppColor.black),
+                : Icon(
+                    iconData,
+                    size: 20,
+                    color: highlighted
+                        ? Colors.white
+                        : (iconColor ?? AppColor.black),
+                  ),
           ),
         ),
       ),
     );
+
+    final label = tooltip;
+    if (label == null) return button;
+    return Tooltip(message: label, child: button);
   }
 }

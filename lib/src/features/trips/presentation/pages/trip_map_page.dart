@@ -159,7 +159,7 @@ class _TripMapPageState extends State<TripMapPage> {
       mapbox.PointAnnotationOptions(
         geometry: point,
         image: png,
-        iconSize: 1.5,
+        iconSize: 1.7,
         iconAnchor: mapbox.IconAnchor.BOTTOM,
       ),
     );

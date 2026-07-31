@@ -235,6 +235,10 @@
   },
   "drivingMode": {
     "cancel": "Navigatsiyani bekor qilish",
+    "cancelTitle": "Navigatsiya bekor qilinsinmi?",
+    "cancelMessage": "Marshrut bekor qilinadi va bosqichma-bosqich yo'l-yo'riq to'xtaydi.",
+    "cancelConfirm": "Marshrutni bekor qilish",
+    "cancelDismiss": "Safarni davom ettirish",
     "arriving": "Yetib kelinmoqda",
     "resuming": "Safar davom ettirilmoqda...",
     "rerouting": "Marshrut qayta qurilmoqda..."
