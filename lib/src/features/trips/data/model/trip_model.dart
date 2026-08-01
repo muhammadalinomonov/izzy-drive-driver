@@ -1,4 +1,5 @@
 import 'package:taxi_app/src/core/utils/json_safe.dart';
+import 'package:taxi_app/src/core/utils/unit_format.dart';
 
 /// Models for `GET mobile/toll-routes` (Quadrix Tolling).
 ///
@@ -184,7 +185,7 @@ class TripAlternative {
   }
 
   /// Distance in miles, as shown throughout `docs/ui/8.png` and `9.png`.
-  double get distanceMiles => distanceMeters / 1609.344;
+  double get distanceMiles => metersToMiles(distanceMeters);
 }
 
 enum TripStatus {

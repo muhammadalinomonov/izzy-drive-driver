@@ -18,3 +18,10 @@ class TripsRefreshed extends TripsEvent {
 class TripsLoadMore extends TripsEvent {
   const TripsLoadMore();
 }
+
+/// Re-checks `GET navigation-sessions/current` so the Continue Route card
+/// appears or disappears. Fired on open, on refresh, and whenever Driving Mode
+/// pops back - a trip completed or cancelled there must clear the card.
+class TripsActiveSessionChecked extends TripsEvent {
+  const TripsActiveSessionChecked();
+}

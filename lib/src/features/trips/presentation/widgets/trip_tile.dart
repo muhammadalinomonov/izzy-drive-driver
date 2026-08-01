@@ -5,6 +5,7 @@ import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/location_service.dart';
 import 'package:taxi_app/src/core/service_locater.dart';
+import 'package:taxi_app/src/core/utils/unit_format.dart';
 import 'package:taxi_app/src/features/trips/data/model/trip_model.dart';
 
 /// One row of the trip-history list: origin -> destination, when it ran, and
@@ -199,12 +200,12 @@ class _Metrics extends StatelessWidget {
       children: [
         _Metric(
           icon: Icons.straighten,
-          value: _distance(alternative.distanceMeters),
+          value: formatMiles(alternative.distanceMeters),
         ),
         const SizedBox(width: 16),
         _Metric(
           icon: Icons.schedule,
-          value: _duration(alternative.durationSeconds),
+          value: formatDuration(alternative.durationSeconds),
         ),
         const Spacer(),
         if (alternative.toll != null)
@@ -218,18 +219,6 @@ class _Metrics extends StatelessWidget {
           ),
       ],
     );
-  }
-
-  static String _distance(int meters) {
-    final miles = meters / 1609.344;
-    return '${miles.toStringAsFixed(miles >= 100 ? 0 : 1)} mi';
-  }
-
-  static String _duration(int seconds) {
-    final hours = seconds ~/ 3600;
-    final minutes = (seconds % 3600) ~/ 60;
-    if (hours == 0) return '${minutes}m';
-    return minutes == 0 ? '${hours}h' : '${hours}h ${minutes}m';
   }
 }
 

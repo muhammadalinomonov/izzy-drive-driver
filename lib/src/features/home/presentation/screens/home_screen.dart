@@ -137,109 +137,48 @@ class _HomeScreenState extends State<HomeScreen> {
                   // pastga siljishi mumkin. Banner ekrandan chiqib ketmasligi
                   // uchun katta buffer qoldiramiz.
                   padding: const EdgeInsets.only(bottom: 180),
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: BlocBuilder<OrdersBloc, OrdersState>(
-                          builder: (context, state) {
-                            if (state.currentOrderStatus.isInProgress ||
-                                state.currentOrderStatus.isInitial) {
-                              return const _HomeTopSkeleton();
-                            } else if ((state.currentOrderStatus.isSuccess &&
-                                    state.currentOrder.id == -1) ||
-                                state.currentOrderStatus.isFailure ||
-                                state.currentOrderStatus.isCanceled) {
-                              return BlocBuilder<
-                                OrdersHistoryBloc,
-                                OrdersHistoryState
-                              >(
-                                builder: (context, state) {
-                                  final recents = _dedupedRecents(
-                                    state.ordersHistory,
-                                  );
-                                  return Column(
-                                    children: [
-                                      SearchInputWidget(
-                                        isReadOnly: true,
-                                        hint: 'Where should the master come?'
-                                            .tr(),
-                                        textInputAction: TextInputAction.search,
-                                        onTap: () {
-                                          context.push(Pages.searchLocation);
-                                        },
-                                      ),
-                                      // Tarix bo'sh bo'lsa hech narsa ko'rsatmaymiz -
-                                      // search inputdan keyin to'g'ridan-to'g'ri "Boshqa
-                                      // imkoniyatlar" boshlanadi.
-                                      if (recents.isNotEmpty) ...[
-                                        const SizedBox(height: 12),
-                                        ...recents.map(
-                                          (addr) => Padding(
-                                            padding: const EdgeInsets.only(
-                                              bottom: 8,
-                                            ),
-                                            child: LastLocationWidget(
-                                              address: addr.address,
-                                              onTap: () {
-                                                if (!ensurePhoneVerified(
-                                                  context,
-                                                )) {
-                                                  return;
-                                                }
-                                                context.push(
-                                                  Pages.orderCreate,
-                                                  extra: {
-                                                    'address': addr.address,
-                                                    'latitude': addr.latitude,
-                                                    'longitude': addr.longitude,
-                                                  },
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  );
-                                },
+                  // Sahifa uchta mustaqil bloc'dan oziqlanadi (order / history
+                  // / banner) va ular har xil vaqtda tugaydi. Har bir seksiyani
+                  // alohida gate qilganda tepadagi va pastdagi skeleton alohida
+                  // yonib-o'chardi - bitta sahifa darajasidagi skeleton bilan
+                  // almashtirildi, shunda butun content bir vaqtda ochiladi.
+                  child: BlocBuilder<OrdersBloc, OrdersState>(
+                    builder: (context, orderState) {
+                      return BlocBuilder<OrdersHistoryBloc, OrdersHistoryState>(
+                        builder: (context, historyState) {
+                          return BlocBuilder<HomeBloc, HomeState>(
+                            builder: (context, homeState) {
+                              if (_isBooting(
+                                orderState,
+                                historyState,
+                                homeState,
+                              )) {
+                                return const _HomeSkeleton();
+                              }
+                              return Column(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                    ),
+                                    child: _buildTopSection(
+                                      context,
+                                      orderState,
+                                      historyState,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  OtherOpportunitiesWidget(),
+                                  const HowItWorksWidget(),
+                                  const SizedBox(height: 20),
+                                  BannerWidget(),
+                                ],
                               );
-                            } else if (state.currentOrderStatus.isSuccess) {
-                              return GestureDetector(
-                                onTap: () {
-                                  if (state.currentOrder.status.isPending) {
-                                    context.push(Pages.invitesPage);
-                                  } else if (state
-                                      .currentOrder
-                                      .status
-                                      .isMechanicDone) {
-                                    context.push(Pages.finishedOrder);
-                                  } else {
-                                    context.push(Pages.processOrder);
-                                  }
-                                },
-                                child: ActiveOrderWidget(
-                                  orderId: state.currentOrder.id,
-                                  status: state.currentOrder.status,
-                                ),
-                              );
-                            } else {
-                              return Center(
-                                child: Text(
-                                  'An error occurred'.tr(),
-                                  style: context.textS.bodyLarge,
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      OtherOpportunitiesWidget(),
-                      const HowItWorksWidget(),
-                      const SizedBox(height: 20),
-                      BannerWidget(),
-                    ],
+                            },
+                          );
+                        },
+                      );
+                    },
                   ),
                 ),
               ),
@@ -247,6 +186,103 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  /// True while the first load is still settling. Silent refreshes (all three
+  /// blocs skip the `loading` emit when they already hold data) never trip
+  /// this, so pull-to-refresh keeps the real content on screen under the
+  /// RefreshIndicator spinner.
+  bool _isBooting(
+    OrdersState order,
+    OrdersHistoryState history,
+    HomeState home,
+  ) {
+    final orderPending =
+        order.currentOrderStatus.isInProgress ||
+        order.currentOrderStatus.isInitial;
+    final historyPending =
+        history.ordersHistoryStatus.isInProgress ||
+        history.ordersHistoryStatus.isInitial;
+    final bannersPending =
+        home.status == HomeStatus.loading || home.status == HomeStatus.initial;
+    return orderPending || historyPending || bannersPending;
+  }
+
+  /// Search + recent addresses, or the active-order card when one is running.
+  Widget _buildTopSection(
+    BuildContext context,
+    OrdersState state,
+    OrdersHistoryState historyState,
+  ) {
+    // Boot loading is handled by the page-level gate; this branch only fires
+    // when the orders bloc re-enters `inProgress` after the page is up
+    // (order reset / cancel), where a top-only skeleton is the right scope.
+    if (state.currentOrderStatus.isInProgress ||
+        state.currentOrderStatus.isInitial) {
+      return const _HomeTopSkeleton();
+    }
+
+    if ((state.currentOrderStatus.isSuccess && state.currentOrder.id == -1) ||
+        state.currentOrderStatus.isFailure ||
+        state.currentOrderStatus.isCanceled) {
+      final recents = _dedupedRecents(historyState.ordersHistory);
+      return Column(
+        children: [
+          SearchInputWidget(
+            isReadOnly: true,
+            hint: 'Where should the master come?'.tr(),
+            textInputAction: TextInputAction.search,
+            onTap: () => context.push(Pages.searchLocation),
+          ),
+          // Tarix bo'sh bo'lsa hech narsa ko'rsatmaymiz - search inputdan
+          // keyin to'g'ridan-to'g'ri "Boshqa imkoniyatlar" boshlanadi.
+          if (recents.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            ...recents.map(
+              (addr) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: LastLocationWidget(
+                  address: addr.address,
+                  onTap: () {
+                    if (!ensurePhoneVerified(context)) return;
+                    context.push(
+                      Pages.orderCreate,
+                      extra: {
+                        'address': addr.address,
+                        'latitude': addr.latitude,
+                        'longitude': addr.longitude,
+                      },
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+        ],
+      );
+    }
+
+    if (state.currentOrderStatus.isSuccess) {
+      return GestureDetector(
+        onTap: () {
+          if (state.currentOrder.status.isPending) {
+            context.push(Pages.invitesPage);
+          } else if (state.currentOrder.status.isMechanicDone) {
+            context.push(Pages.finishedOrder);
+          } else {
+            context.push(Pages.processOrder);
+          }
+        },
+        child: ActiveOrderWidget(
+          orderId: state.currentOrder.id,
+          status: state.currentOrder.status,
+        ),
+      );
+    }
+
+    return Center(
+      child: Text('An error occurred'.tr(), style: context.textS.bodyLarge),
     );
   }
 }
@@ -389,6 +425,39 @@ class BannerWidget extends StatelessWidget {
           );
         }
       },
+    );
+  }
+}
+
+/// Whole-page placeholder used while the first load settles - one shimmer
+/// sweep across search, recents, the info card and the banner, so the page
+/// reads as a single loading state instead of two disconnected patches.
+class _HomeSkeleton extends StatelessWidget {
+  const _HomeSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: const Color(0xFFEFF3F6),
+      highlightColor: const Color(0xFFF7F9FB),
+      period: const Duration(milliseconds: 1400),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Column(
+          children: const [
+            _SkeletonBox(height: 50, radius: 50),
+            SizedBox(height: 12),
+            _SkeletonBox(height: 54),
+            SizedBox(height: 8),
+            _SkeletonBox(height: 54),
+            SizedBox(height: 16),
+            // "How it works" / "Other opportunities" bloki.
+            _SkeletonBox(height: 232, radius: 16),
+            SizedBox(height: 20),
+            _SkeletonBox(height: 137, radius: 16),
+          ],
+        ),
+      ),
     );
   }
 }

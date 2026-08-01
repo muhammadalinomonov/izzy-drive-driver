@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:taxi_app/src/features/trips/data/model/navigation_session_model.dart';
 import 'package:taxi_app/src/features/trips/data/model/trip_model.dart';
 import 'package:taxi_app/src/features/trips/domain/repo/trips_repo.dart';
 
@@ -15,6 +16,24 @@ class TripsBloc extends Bloc<TripsEvent, TripsState> {
     on<TripsLoaded>(_onLoad);
     on<TripsRefreshed>(_onRefresh);
     on<TripsLoadMore>(_onLoadMore);
+    on<TripsActiveSessionChecked>(_onActiveSessionChecked);
+  }
+
+  /// Resolves whether a trip is still running, for the Continue Route card.
+  ///
+  /// Failures are swallowed on purpose: this is a secondary affordance beside
+  /// the trip history, and a dead network shouldn't push an error banner over
+  /// a list that loaded fine. The card simply stays hidden.
+  Future<void> _onActiveSessionChecked(
+    TripsActiveSessionChecked event,
+    Emitter<TripsState> emit,
+  ) async {
+    final response = await repo.getCurrentNavigationSession();
+    if (response.errorText.isNotEmpty) return;
+    final session = response.data;
+    emit(state.copyWith(
+      activeSession: session != null && session.isActive ? session : null,
+    ));
   }
 
   Future<void> _onLoad(TripsLoaded event, Emitter<TripsState> emit) async {

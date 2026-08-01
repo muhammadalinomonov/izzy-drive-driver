@@ -3,6 +3,7 @@ import 'package:taxi_app/src/core/network/network_response.dart';
 import 'package:taxi_app/src/features/trips/data/model/navigation_session_model.dart';
 import 'package:taxi_app/src/features/trips/data/model/place_model.dart';
 import 'package:taxi_app/src/features/trips/data/model/trip_model.dart';
+import 'package:taxi_app/src/features/trips/data/model/vehicle_model.dart';
 
 abstract class TripsRepo {
   Future<NetworkResponse<TripPage>> fetchPage({
@@ -55,4 +56,20 @@ abstract class TripsRepo {
   Future<NetworkResponse<NavigationSessionModel>> cancelNavigationSession(
     String navigationSessionId,
   );
+
+  /// Trucks assigned to the driver. Needed to learn the `vehicle_id` that
+  /// background fleet GPS requires.
+  Future<NetworkResponse<List<VehicleModel>>> fetchVehicles();
+
+  /// Background fleet GPS (docs §6.1) — records the truck's position
+  /// independently of navigation progress.
+  Future<NetworkResponse<bool>> sendFleetLocation({
+    required String vehicleId,
+    required DateTime occurredAt,
+    required double latitude,
+    required double longitude,
+    double? speedMph,
+    double? headingDegrees,
+    double? accuracyMeters,
+  });
 }

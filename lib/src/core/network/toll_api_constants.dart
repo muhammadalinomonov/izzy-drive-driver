@@ -31,6 +31,13 @@ class TollApiConstants {
   static const String vehicles = 'mobile/vehicles';
   static const String places = 'mobile/places';
 
+  /// Background fleet GPS (docs §6.1). Deliberately NOT the navigation
+  /// progress endpoint: per §6.1 this one does **not** advance a session's
+  /// progress, next maneuver or off-route flag, and it requires a
+  /// `vehicle_id`. During an active trip both are posted - this for fleet
+  /// tracking, [navigationSessionLocations] for guidance.
+  static const String locations = 'mobile/locations';
+
   // Toll routes (trip history + route calculation)
   static const String tollRoutes = 'mobile/toll-routes';
 

@@ -3,6 +3,7 @@ import 'package:taxi_app/src/core/network/network_response.dart';
 import 'package:taxi_app/src/features/trips/data/model/navigation_session_model.dart';
 import 'package:taxi_app/src/features/trips/data/model/place_model.dart';
 import 'package:taxi_app/src/features/trips/data/model/trip_model.dart';
+import 'package:taxi_app/src/features/trips/data/model/vehicle_model.dart';
 import 'package:taxi_app/src/features/trips/data/source/trips_data_source.dart';
 import 'package:taxi_app/src/features/trips/domain/repo/trips_repo.dart';
 
@@ -110,5 +111,31 @@ class TripsRepoImpl extends TripsRepo {
     String navigationSessionId,
   ) {
     return dataSource.cancelNavigationSession(navigationSessionId);
+  }
+
+  @override
+  Future<NetworkResponse<List<VehicleModel>>> fetchVehicles() {
+    return dataSource.fetchVehicles();
+  }
+
+  @override
+  Future<NetworkResponse<bool>> sendFleetLocation({
+    required String vehicleId,
+    required DateTime occurredAt,
+    required double latitude,
+    required double longitude,
+    double? speedMph,
+    double? headingDegrees,
+    double? accuracyMeters,
+  }) {
+    return dataSource.sendFleetLocation(
+      vehicleId: vehicleId,
+      occurredAt: occurredAt,
+      latitude: latitude,
+      longitude: longitude,
+      speedMph: speedMph,
+      headingDegrees: headingDegrees,
+      accuracyMeters: accuracyMeters,
+    );
   }
 }

@@ -8,6 +8,7 @@ import 'package:taxi_app/src/core/constants/color/app_color.dart';
 import 'package:taxi_app/src/core/constants/color/app_icons.dart';
 import 'package:taxi_app/src/core/utils/geo_math.dart';
 import 'package:taxi_app/src/core/utils/polyline_codec.dart';
+import 'package:taxi_app/src/core/utils/unit_format.dart';
 import 'package:taxi_app/src/features/trips/data/model/navigation_session_model.dart';
 import 'package:taxi_app/src/features/trips/data/model/trip_model.dart';
 import 'package:taxi_app/src/features/trips/presentation/bloc/navigation/navigation_bloc.dart';
@@ -716,6 +717,8 @@ class _DrivingModePageState extends State<DrivingModePage>
     );
 
     if (confirmed != true || !mounted) return;
+    // The bloc drives the spinner and only closes the screen once the server
+    // has confirmed - see NavigationPageStatus.cancelling.
     context.read<NavigationBloc>().add(const NavigationCancelPressed());
   }
 
@@ -737,10 +740,32 @@ class _DrivingModePageState extends State<DrivingModePage>
       body: BlocConsumer<NavigationBloc, NavigationState>(
         listenWhen: (p, c) =>
             p.session?.route.polyline != c.session?.route.polyline ||
-            p.status != c.status,
+            p.status != c.status ||
+            p.errorMessage != c.errorMessage,
         listener: (context, state) {
           final session = state.session;
           if (session != null) _renderSession(session);
+
+          // A cancel or complete that failed leaves the trip running, so the
+          // message goes in a snackbar over the live map rather than an
+          // overlay that would hide the road.
+          if (state.status == NavigationPageStatus.active &&
+              state.errorMessage.isNotEmpty) {
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
+                  backgroundColor: AppColor.red,
+                  content: Text(state.errorMessage),
+                ),
+              );
+          }
+
+          // The trip is over - stop the GPS pipeline immediately rather than
+          // waiting for dispose, so nothing more is uploaded and the marker
+          // stops chasing a route that no longer applies.
+          if (state.isFinished) _session?.stop();
+
           if (state.status == NavigationPageStatus.closed) {
             context.pop();
           }
@@ -821,6 +846,16 @@ class _DrivingModePageState extends State<DrivingModePage>
                   tooltip: 'drivingMode.cancel'.tr(),
                 ),
               ),
+              // Reporting is down but guidance is not: the route, marker and
+              // local ETA all keep working off the cached route, so this is an
+              // advisory strip rather than an error state.
+              if (state.isOffline && !state.isFinished)
+                Positioned(
+                  top: MediaQuery.paddingOf(context).top + 68,
+                  left: 16,
+                  right: 16,
+                  child: const _OfflineBanner(),
+                ),
               // Controls and the bar share one bottom-anchored column, so the
               // buttons sit a fixed gap above the bar however tall it grows.
               Positioned(
@@ -843,7 +878,12 @@ class _DrivingModePageState extends State<DrivingModePage>
                       ),
                     ),
                     _BottomBar(
-                      destinationLabel: widget.args.destinationLabel,
+                      // Resuming from the Trips card has no place name to
+                      // carry over, so fall back to a neutral label.
+                      destinationLabel:
+                          widget.args.destinationLabel.trim().isEmpty
+                              ? 'drivingMode.destination'.tr()
+                              : widget.args.destinationLabel,
                       progress: session.progress,
                       remainingMeters: _remainingMeters(session),
                       speedMps: _telemetry?.speedMps,
@@ -851,6 +891,22 @@ class _DrivingModePageState extends State<DrivingModePage>
                   ],
                 ),
               ),
+              // Blocking scrim while cancel/complete is in flight: the driver
+              // must not be able to press either twice, and the screen must
+              // not close until the server has actually closed the session.
+              if (state.isBusy)
+                _BusyOverlay(
+                  message: state.status == NavigationPageStatus.cancelling
+                      ? 'drivingMode.cancelling'.tr()
+                      : 'drivingMode.completing'.tr(),
+                ),
+              if (state.status == NavigationPageStatus.completed)
+                _TripCompletedOverlay(
+                  session: state.completedSession ?? session,
+                  onDone: () => context
+                      .read<NavigationBloc>()
+                      .add(const NavigationCompletionAcknowledged()),
+                ),
             ],
           );
         },
@@ -1030,7 +1086,9 @@ class _ManeuverBanner extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  _distanceLabel(maneuver.distanceMeters),
+                  // A turn coming up needs tenths far longer than a trip
+                  // total does, hence the much lower whole-number threshold.
+                  formatMiles(maneuver.distanceMeters, wholeAbove: 10),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -1051,10 +1109,6 @@ class _ManeuverBanner extends StatelessWidget {
     );
   }
 
-  static String _distanceLabel(int meters) {
-    final miles = meters / 1609.344;
-    return '${miles.toStringAsFixed(miles >= 10 ? 0 : 1)} mi';
-  }
 }
 
 class _BottomBar extends StatelessWidget {
@@ -1110,7 +1164,7 @@ class _BottomBar extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    _distance(remainingMeters),
+                    formatMiles(remainingMeters),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -1127,7 +1181,7 @@ class _BottomBar extends StatelessWidget {
                       ),
                     ),
                   Text(
-                    _duration(progress.remainingDurationSeconds),
+                    formatDuration(progress.remainingDurationSeconds),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -1152,17 +1206,6 @@ class _BottomBar extends StatelessWidget {
     );
   }
 
-  static String _distance(int meters) {
-    final miles = meters / 1609.344;
-    return '${miles.toStringAsFixed(miles >= 100 ? 0 : 1)} mi';
-  }
-
-  static String _duration(int seconds) {
-    final hours = seconds ~/ 3600;
-    final minutes = (seconds % 3600) ~/ 60;
-    if (hours == 0) return '${minutes}m';
-    return minutes == 0 ? '${hours}h' : '${hours}h ${minutes}m';
-  }
 }
 
 class _CircleButton extends StatelessWidget {
@@ -1223,5 +1266,207 @@ class _CircleButton extends StatelessWidget {
     final label = tooltip;
     if (label == null) return button;
     return Tooltip(message: label, child: button);
+  }
+}
+
+/// Advisory strip shown when progress reports are failing.
+///
+/// Deliberately not an error overlay: guidance continues off the cached route
+/// and the locally-snapped position, so the trip is still usable - only the
+/// server's view of it is stale.
+class _OfflineBanner extends StatelessWidget {
+  const _OfflineBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColor.black.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.cloud_off_rounded, size: 16, color: Colors.white),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'drivingMode.offline'.tr(),
+              style: const TextStyle(fontSize: 12, color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Blocking scrim for cancel/complete round-trips.
+class _BusyOverlay extends StatelessWidget {
+  const _BusyOverlay({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return AbsorbPointer(
+      child: Container(
+        color: Colors.black.withValues(alpha: 0.45),
+        alignment: Alignment.center,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          decoration: BoxDecoration(
+            color: AppColor.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator.adaptive(),
+              const SizedBox(height: 14),
+              Text(
+                message,
+                style: TextStyle(fontSize: 13, color: AppColor.black),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Trip summary shown after `POST .../complete` succeeds.
+///
+/// Everything here comes from the closed session the API returned, so the
+/// figures are the server's record of the trip rather than the phone's
+/// running estimate.
+class _TripCompletedOverlay extends StatelessWidget {
+  const _TripCompletedOverlay({required this.session, required this.onDone});
+
+  final NavigationSessionModel session;
+  final VoidCallback onDone;
+
+  /// Wall-clock trip length, preferred over the route's *planned* duration
+  /// because it reflects what actually happened. Null until the API reports
+  /// both timestamps.
+  Duration? get _elapsed {
+    final started = session.startedAt;
+    final completed = session.completedAt;
+    if (started == null || completed == null) return null;
+    return completed.difference(started);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final route = session.route;
+    final toll = session.routeAlternative.toll;
+
+    return Container(
+      color: Colors.black.withValues(alpha: 0.55),
+      alignment: Alignment.center,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 28),
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+        decoration: BoxDecoration(
+          color: AppColor.white,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: AppColor.kPrimaryColor.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.check_rounded,
+                size: 32,
+                color: AppColor.kPrimaryColor,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              'drivingMode.tripCompleted'.tr(),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: AppColor.black,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'drivingMode.tripCompletedMessage'.tr(),
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: AppColor.grey),
+            ),
+            const SizedBox(height: 18),
+            // Only rows the API actually populated are shown - an empty
+            // summary is better than one full of zeroes and dashes.
+            if (route.distanceMeters > 0)
+              _SummaryRow(
+                label: 'drivingMode.summaryDistance'.tr(),
+                value: formatMiles(route.distanceMeters),
+              ),
+            if (_elapsed != null)
+              _SummaryRow(
+                label: 'drivingMode.summaryDuration'.tr(),
+                value: formatDuration(_elapsed!.inSeconds),
+              ),
+            if (toll != null)
+              _SummaryRow(
+                label: 'drivingMode.summaryToll'.tr(),
+                value: toll.formatted,
+              ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColor.kPrimaryColor,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                onPressed: onDone,
+                child: Text('drivingMode.done'.tr()),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+}
+
+class _SummaryRow extends StatelessWidget {
+  const _SummaryRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontSize: 13, color: AppColor.grey)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColor.black,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

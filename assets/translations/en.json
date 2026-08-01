@@ -200,6 +200,8 @@
     "tab": "Trips",
     "origin": "Origin",
     "destination": "Destination",
+    "continueRoute": "Continue route",
+    "tripInProgress": "You have a trip in progress",
     "emptyTitle": "No trips yet",
     "emptySubtitle": "Your calculated toll routes will appear here.",
     "notConnected": "Toll account is not connected. Add your Quadrix credentials to see trip history.",
@@ -241,6 +243,16 @@
     "cancelDismiss": "Keep driving",
     "arriving": "Arriving",
     "resuming": "Resuming your trip...",
-    "rerouting": "Rerouting..."
+    "rerouting": "Rerouting...",
+    "cancelling": "Cancelling navigation...",
+    "completing": "Completing your trip...",
+    "destination": "Destination",
+    "offline": "Offline — progress will sync when you reconnect",
+    "tripCompleted": "Trip completed",
+    "tripCompletedMessage": "You've arrived at your destination.",
+    "summaryDistance": "Distance",
+    "summaryDuration": "Duration",
+    "summaryToll": "Tolls",
+    "done": "Done"
   }
 }

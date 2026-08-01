@@ -45,7 +45,20 @@ class NavigationRerouteRequested extends NavigationEvent {
   List<Object?> get props => [origin.lat, origin.lng];
 }
 
-/// Driver backed out before reaching the destination.
+/// Driver backed out before reaching the destination, and has already
+/// confirmed it in the dialog.
 class NavigationCancelPressed extends NavigationEvent {
   const NavigationCancelPressed();
+}
+
+/// Arrival was detected, or the driver retried after a failed completion.
+/// Closes the session with `POST .../complete`, which per docs §5.6 is a
+/// different outcome from cancelling - only this one means "arrived".
+class NavigationCompleteRequested extends NavigationEvent {
+  const NavigationCompleteRequested();
+}
+
+/// Done pressed on the trip summary - tear the screen down.
+class NavigationCompletionAcknowledged extends NavigationEvent {
+  const NavigationCompletionAcknowledged();
 }

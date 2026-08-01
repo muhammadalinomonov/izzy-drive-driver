@@ -4,8 +4,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:taxi_app/src/core/constants/color/app_color.dart';
+import 'package:taxi_app/src/core/utils/unit_format.dart';
+import 'package:taxi_app/src/features/trips/data/model/navigation_session_model.dart';
 import 'package:taxi_app/src/features/trips/data/model/trip_model.dart';
 import 'package:taxi_app/src/features/trips/presentation/bloc/trips_bloc.dart';
+import 'package:taxi_app/src/features/trips/presentation/pages/driving_mode_page.dart';
 import 'package:taxi_app/src/features/trips/presentation/pages/route_overview_page.dart';
 import 'package:taxi_app/src/features/trips/presentation/widgets/trip_search_bar.dart';
 import 'package:taxi_app/src/features/trips/presentation/widgets/trip_tile.dart';
@@ -33,6 +36,7 @@ class _TripsPageState extends State<TripsPage> {
     if (bloc.state.listStatus == TripsListStatus.initial) {
       bloc.add(const TripsLoaded());
     }
+    bloc.add(const TripsActiveSessionChecked());
   }
 
   @override
@@ -53,8 +57,32 @@ class _TripsPageState extends State<TripsPage> {
   }
 
   Future<void> _refresh() async {
-    context.read<TripsBloc>().add(const TripsRefreshed());
+    context.read<TripsBloc>()
+      ..add(const TripsRefreshed())
+      ..add(const TripsActiveSessionChecked());
     await Future.delayed(const Duration(milliseconds: 350));
+  }
+
+  /// Resumes the in-progress trip. The session is already in hand from
+  /// `GET current`, so Driving Mode restores route, progress and map state
+  /// from it - nothing is recalculated.
+  Future<void> _continueRoute(NavigationSessionModel session) async {
+    await context.push(
+      Pages.drivingMode,
+      extra: DrivingModeArgs(
+        session: session,
+        // The session carries only raw coordinates for the destination, and
+        // resuming skips the planning screen that knew the place name. Driving
+        // Mode falls back to a generic label when this is empty.
+        destinationLabel: '',
+      ),
+    );
+    if (!mounted) return;
+    // The trip may have been completed or cancelled in there - re-check so the
+    // card clears, and refresh history since a finished trip belongs in it.
+    context.read<TripsBloc>()
+      ..add(const TripsActiveSessionChecked())
+      ..add(const TripsRefreshed());
   }
 
   /// Opens the planning flow. When it pops with a chosen origin/destination
@@ -87,37 +115,66 @@ class _TripsPageState extends State<TripsPage> {
     );
   }
 
+  /// The Continue Route card, or null when no trip is running.
+  ///
+  /// Built here rather than in the outer column so it can ride inside the
+  /// scroll view: pinned above the list it ate a fixed slice of a short
+  /// screen, and on a phone in a cradle that is most of the history.
+  Widget? _continueCard(TripsState state) {
+    final session = state.activeSession;
+    if (!state.hasActiveSession || session == null) return null;
+    return _ContinueRouteCard(
+      session: session,
+      onTap: () => _continueRoute(session),
+    );
+  }
+
   Widget _buildList() {
     return BlocBuilder<TripsBloc, TripsState>(
         builder: (context, state) {
+          final card = _continueCard(state);
+
           if (state.listStatus == TripsListStatus.loading && state.items.isEmpty) {
-            return const _TripsSkeleton();
+            return _WithHeader(header: card, child: const _TripsSkeleton());
           }
           if (state.listStatus == TripsListStatus.failure && state.items.isEmpty) {
-            return _ErrorView(
-              message: state.errorMessage,
-              errorCode: state.errorCode,
-              onRetry: () => context.read<TripsBloc>().add(const TripsLoaded()),
+            return _WithHeader(
+              header: card,
+              child: _ErrorView(
+                message: state.errorMessage,
+                errorCode: state.errorCode,
+                onRetry: () => context.read<TripsBloc>().add(const TripsLoaded()),
+              ),
             );
           }
           if (state.items.isEmpty) {
-            return _EmptyView(onRefresh: _refresh);
+            return _WithHeader(
+              header: card,
+              child: _EmptyView(onRefresh: _refresh),
+            );
           }
+
+          // The card is item 0 of the list itself, so it scrolls away with the
+          // history instead of holding the top of the viewport.
+          final headerCount = card == null ? 0 : 1;
           return RefreshIndicator.adaptive(
             onRefresh: _refresh,
             child: ListView.builder(
               controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(vertical: 6),
-              itemCount: state.items.length + (state.hasMore ? 1 : 0),
+              itemCount:
+                  headerCount + state.items.length + (state.hasMore ? 1 : 0),
               itemBuilder: (context, index) {
-                if (index >= state.items.length) {
+                if (card != null && index == 0) return card;
+                final itemIndex = index - headerCount;
+                if (itemIndex >= state.items.length) {
                   return const Padding(
                     padding: EdgeInsets.symmetric(vertical: 16),
                     child: Center(child: CircularProgressIndicator.adaptive()),
                   );
                 }
-                final trip = state.items[index];
+                final trip = state.items[itemIndex];
                 return TripTile(
                   trip: trip,
                   onTap: () => _openRouteDetail(trip),
@@ -126,6 +183,29 @@ class _TripsPageState extends State<TripsPage> {
             ),
           );
         },
+    );
+  }
+}
+
+/// Places the Continue Route card above a non-list state.
+///
+/// The skeleton, empty and error views own their own scrolling (or have
+/// nothing to scroll), so the card sits above them rather than being threaded
+/// into their internals.
+class _WithHeader extends StatelessWidget {
+  const _WithHeader({required this.header, required this.child});
+
+  final Widget? header;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (header == null) return child;
+    return Column(
+      children: [
+        header!,
+        Expanded(child: child),
+      ],
     );
   }
 }
@@ -252,6 +332,110 @@ class _ErrorView extends StatelessWidget {
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Resume affordance for an unfinished trip, pinned above the history list.
+///
+/// Shows how far along the trip is so the driver can tell at a glance whether
+/// this is the run they just paused - progress data is already in the session
+/// from `GET current`, so nothing extra is fetched to render it.
+class _ContinueRouteCard extends StatelessWidget {
+  const _ContinueRouteCard({required this.session, required this.onTap});
+
+  final NavigationSessionModel session;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = session.progress;
+    final percent = (progress.percent / 100).clamp(0.0, 1.0);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+      child: Material(
+        color: AppColor.kPrimaryColor,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.navigation_rounded,
+                        color: Colors.white, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'trips.continueRoute'.tr(),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'trips.tripInProgress'.tr(),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      '${progress.percent.round()}%',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    const Icon(Icons.chevron_right_rounded,
+                        color: Colors.white, size: 22),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(3),
+                  child: LinearProgressIndicator(
+                    value: percent,
+                    minHeight: 5,
+                    backgroundColor: Colors.white24,
+                    valueColor: const AlwaysStoppedAnimation(Colors.white),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      formatMiles(progress.remainingDistanceMeters),
+                      style: const TextStyle(fontSize: 12, color: Colors.white),
+                    ),
+                    Text(
+                      formatDuration(progress.remainingDurationSeconds),
+                      style: const TextStyle(fontSize: 12, color: Colors.white),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

@@ -9,6 +9,7 @@ import 'package:taxi_app/src/core/utils/json_safe.dart';
 import 'package:taxi_app/src/features/trips/data/model/navigation_session_model.dart';
 import 'package:taxi_app/src/features/trips/data/model/place_model.dart';
 import 'package:taxi_app/src/features/trips/data/model/trip_model.dart';
+import 'package:taxi_app/src/features/trips/data/model/vehicle_model.dart';
 
 class TripsDataSource {
   TripsDataSource();
@@ -389,6 +390,91 @@ class TripsDataSource {
     return _postNavigationAction(
       TollApiConstants.navigationSessionCancel(navigationSessionId),
     );
+  }
+
+  /// `GET mobile/vehicles` — trucks currently assigned to the driver.
+  ///
+  /// An empty `items` array is not an error (§3.4): a driver with no truck
+  /// assigned simply cannot post fleet GPS.
+  Future<NetworkResponse<List<VehicleModel>>> fetchVehicles() async {
+    if (!TollSession.hasToken) {
+      return NetworkResponse<List<VehicleModel>>(
+        errorText: 'Toll account is not connected.',
+        errorCode: 'TOLL_SESSION_MISSING',
+      );
+    }
+    try {
+      final response = await client.get(TollApiConstants.vehicles);
+      if (response.isSuccess) {
+        final data = toMap(toMap(response.data)['data']);
+        return NetworkResponse<List<VehicleModel>>(
+          data: toList(
+            data['items'],
+            (e) => VehicleModel.fromJson(toMap(e)),
+          ),
+        );
+      }
+      return NetworkResponse<List<VehicleModel>>(
+        errorText: _errorMessage(response.data),
+        errorCode: _errorCode(response.data),
+      );
+    } on DioException catch (e) {
+      return NetworkResponse<List<VehicleModel>>(
+        errorText: _errorMessage(e.response?.data, 'Network error'),
+        errorCode: _errorCode(e.response?.data),
+      );
+    } catch (e) {
+      return NetworkResponse<List<VehicleModel>>(errorText: e.toString());
+    }
+  }
+
+  /// `POST mobile/locations` — background fleet GPS (§6.1).
+  ///
+  /// Separate from [sendNavigationLocation]: this records the truck's position
+  /// whether or not a trip is running, and explicitly does **not** advance
+  /// navigation progress. `occurred_at` doubles as the idempotency key, so a
+  /// retried post of the same fix is safe.
+  Future<NetworkResponse<bool>> sendFleetLocation({
+    required String vehicleId,
+    required DateTime occurredAt,
+    required double latitude,
+    required double longitude,
+    double? speedMph,
+    double? headingDegrees,
+    double? accuracyMeters,
+  }) async {
+    if (!TollSession.hasToken) {
+      return NetworkResponse<bool>(
+        errorText: 'Toll account is not connected.',
+        errorCode: 'TOLL_SESSION_MISSING',
+      );
+    }
+    try {
+      final response = await client.post(
+        TollApiConstants.locations,
+        data: {
+          'vehicle_id': vehicleId,
+          'occurred_at': occurredAt.toUtc().toIso8601String(),
+          'latitude': latitude,
+          'longitude': longitude,
+          if (speedMph != null) 'speed_mph': speedMph,
+          if (headingDegrees != null) 'heading_degrees': headingDegrees,
+          if (accuracyMeters != null) 'accuracy_meters': accuracyMeters,
+        },
+      );
+      if (response.isSuccess) return NetworkResponse<bool>(data: true);
+      return NetworkResponse<bool>(
+        errorText: _errorMessage(response.data),
+        errorCode: _errorCode(response.data),
+      );
+    } on DioException catch (e) {
+      return NetworkResponse<bool>(
+        errorText: _errorMessage(e.response?.data, 'Network error'),
+        errorCode: _errorCode(e.response?.data),
+      );
+    } catch (e) {
+      return NetworkResponse<bool>(errorText: e.toString());
+    }
   }
 
   Future<NetworkResponse<NavigationSessionModel>> _postNavigationAction(

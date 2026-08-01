@@ -200,6 +200,8 @@
     "tab": "Safarlar",
     "origin": "Boshlanish",
     "destination": "Manzil",
+    "continueRoute": "Marshrutni davom ettirish",
+    "tripInProgress": "Sizda tugallanmagan safar bor",
     "emptyTitle": "Hozircha safarlar yo'q",
     "emptySubtitle": "Hisoblangan pullik marshrutlar shu yerda ko'rinadi.",
     "notConnected": "Toll hisobi ulanmagan. Safarlar tarixini ko'rish uchun Quadrix ma'lumotlarini qo'shing.",
@@ -241,6 +243,16 @@
     "cancelDismiss": "Safarni davom ettirish",
     "arriving": "Yetib kelinmoqda",
     "resuming": "Safar davom ettirilmoqda...",
-    "rerouting": "Marshrut qayta qurilmoqda..."
+    "rerouting": "Marshrut qayta qurilmoqda...",
+    "cancelling": "Navigatsiya bekor qilinmoqda...",
+    "completing": "Safar yakunlanmoqda...",
+    "destination": "Manzil",
+    "offline": "Aloqa yo'q — ulanish tiklanganda ma'lumot sinxronlanadi",
+    "tripCompleted": "Safar yakunlandi",
+    "tripCompletedMessage": "Siz manzilga yetib keldingiz.",
+    "summaryDistance": "Masofa",
+    "summaryDuration": "Davomiyligi",
+    "summaryToll": "Pullik yo'llar",
+    "done": "Tayyor"
   }
 }
