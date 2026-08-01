@@ -5,21 +5,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:taxi_app/firebase_options.dart';
-import 'package:taxi_app/src/core/network/token_service.dart';
-import 'package:taxi_app/src/core/service_locater.dart';
-import 'package:taxi_app/src/core/services/connectivity_service.dart';
-import 'package:taxi_app/src/core/theme/app_theme.dart';
-import 'package:taxi_app/src/core/utils/notifications.dart';
-import 'package:taxi_app/src/features/common/presentation/cubits/connectivity/connectivity_cubit.dart';
-import 'package:taxi_app/src/features/common/presentation/widgets/no_internet_bottom_sheet.dart';
-import 'package:taxi_app/src/features/order_proccess/data/order_proccess_source.dart';
-import 'package:taxi_app/src/features/order_proccess/domain/order_repo.dart';
-import 'package:taxi_app/src/features/order_proccess/presentation/bloc/orders_bloc.dart';
-import 'package:taxi_app/src/features/profile/data/repository/profile_repository_impl.dart';
-import 'package:taxi_app/src/features/profile/data/source/profile_data_source.dart';
-import 'package:taxi_app/src/features/profile/presentation/bloc/profile_bloc.dart';
-import 'package:taxi_app/src/core/services/remote_config_service.dart';
-import 'package:taxi_app/src/routes/app_router.dart';
+import 'package:taxi_app/core/network/token_service.dart';
+import 'package:taxi_app/core/service_locater.dart';
+import 'package:taxi_app/core/services/connectivity_service.dart';
+import 'package:taxi_app/core/theme/app_theme.dart';
+import 'package:taxi_app/core/utils/notifications.dart';
+import 'package:taxi_app/features/common/presentation/cubits/connectivity/connectivity_cubit.dart';
+import 'package:taxi_app/features/common/presentation/widgets/no_internet_bottom_sheet.dart';
+import 'package:taxi_app/features/order_proccess/data/order_proccess_source.dart';
+import 'package:taxi_app/features/order_proccess/domain/order_repo.dart';
+import 'package:taxi_app/features/order_proccess/presentation/bloc/orders_bloc.dart';
+import 'package:taxi_app/features/profile/data/repository/profile_repository_impl.dart';
+import 'package:taxi_app/features/profile/data/source/profile_data_source.dart';
+import 'package:taxi_app/features/profile/presentation/bloc/profile_bloc.dart';
+import 'package:taxi_app/core/services/remote_config_service.dart';
+import 'package:taxi_app/routes/app_router.dart';
 
 void main() async {
 

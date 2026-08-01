@@ -1,0 +1,64 @@
+
+import 'package:bloc/bloc.dart';
+import 'package:equatable/equatable.dart';
+import 'package:flutter/animation.dart';
+import 'package:taxi_app/features/truck_info/data/model/driver_info_put_model.dart';
+import 'package:taxi_app/features/truck_info/domain/model/track_model.dart';
+import 'package:taxi_app/features/truck_info/domain/repo/driver_info_repo.dart';
+
+part 'track_info_event.dart';
+part 'track_info_state.dart';
+
+class TrackInfoBloc extends Bloc<TrackInfoEvent, TrackInfoState> {
+  final DriverInfoRepo driverInfoRepo;
+
+  TrackInfoBloc({required this.driverInfoRepo})
+    : super(const TrackInfoState()) {
+    on<GetTrackMarskEvent>((event, emit) async {
+      emit(state.copyWith(marksStatus: TrackInfoStatus.loading));
+      final result = await driverInfoRepo.getTrackMarks();
+      if (result.errorText.isEmpty) {
+        emit(
+          state.copyWith(
+            marksStatus: TrackInfoStatus.success,
+            truckMarkResponse: result.data as TruckMarkResponse,
+          ),
+        );
+      } else {
+        emit(
+          state.copyWith(
+            marksStatus: TrackInfoStatus.error,
+            errorMessage: result.errorText,
+          ),
+        );
+      }
+    });
+    on<GetTrackModelsEvent>((event, emit) async {
+      emit(state.copyWith(modelsStatus: TrackInfoStatus.loading));
+      final result = await driverInfoRepo.getTrackModels(event.id);
+      if (result.errorText.isEmpty) {
+        emit(
+          state.copyWith(
+            modelsStatus: TrackInfoStatus.success,
+            truckModelResponse: result.data as TruckModelResponse,
+          ),
+        );
+      } else {
+        emit(
+          state.copyWith(
+            modelsStatus: TrackInfoStatus.error,
+            errorMessage: result.errorText,
+          ),
+        );
+      }
+    });
+    on<PutDriverInfoEvent>((event, emit) async {
+      final result = await driverInfoRepo.putDriverInfo(event.data);
+      if (result.errorText.isEmpty) {
+        event.onSuccess();
+      } else {
+        event.onError();
+      }
+    });
+  }
+}

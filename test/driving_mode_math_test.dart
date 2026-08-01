@@ -1,11 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:taxi_app/src/core/utils/geo_math.dart';
-import 'package:taxi_app/src/core/utils/kalman_filter.dart';
-import 'package:taxi_app/src/core/utils/polyline_codec.dart';
-import 'package:taxi_app/src/core/utils/route_progress.dart';
-import 'package:taxi_app/src/features/trips/presentation/controllers/marker_animator.dart';
+import 'package:taxi_app/core/utils/geo_math.dart';
+import 'package:taxi_app/core/utils/kalman_filter.dart';
+import 'package:taxi_app/core/utils/polyline_codec.dart';
+import 'package:taxi_app/core/utils/route_progress.dart';
+import 'package:taxi_app/features/trips/presentation/controllers/marker_animator.dart';
 
 /// Covers the pure layer ported from the Quadrix driver app. Everything here
 /// is Flutter-free maths, so it can be asserted exactly rather than eyeballed

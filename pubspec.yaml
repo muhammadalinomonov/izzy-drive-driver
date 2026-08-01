@@ -37,6 +37,14 @@ dependencies:
   cupertino_icons: ^1.0.8
   svg_path_parser: ^1.1.2
   flutter_bloc: ^9.1.1
+  # Imported directly by every bloc/model in the app (`package:bloc/bloc.dart`,
+  # `package:meta/meta.dart`, `package:json_annotation/...`, `package:get_it/...`).
+  # They arrived transitively via flutter_bloc / json_serializable, which the
+  # analyzer flags: a transitive bump could drop them without warning.
+  bloc: ^9.0.0
+  meta: ^1.16.0
+  json_annotation: ^4.9.0
+  get_it: ^8.0.3
   web_socket_channel: ^3.0.3
   equatable: ^2.0.7
   intl: ^0.20.2

@@ -1,0 +1,389 @@
+import 'package:chucker_flutter/chucker_flutter.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:taxi_app/core/location_service.dart';
+import 'package:taxi_app/core/network/auth_session.dart';
+import 'package:taxi_app/core/service_locater.dart';
+import 'package:taxi_app/features/auth/data/repo/auth_repo_impl.dart';
+import 'package:taxi_app/features/auth/data/source/auth_data_source.dart';
+import 'package:taxi_app/features/auth/presentation/bloc/bloc/auth_bloc.dart';
+import 'package:taxi_app/features/auth/presentation/bloc/forgot_password_bloc/forgot_password_bloc.dart';
+import 'package:taxi_app/features/auth/presentation/pages/forgot_password_email_page.dart';
+import 'package:taxi_app/features/auth/presentation/pages/reset_password_page.dart';
+import 'package:taxi_app/features/auth/presentation/pages/sign_in_page.dart';
+import 'package:taxi_app/features/auth/presentation/pages/sign_up_page.dart';
+import 'package:taxi_app/features/common/presentation/pages/splash_screen.dart';
+import 'package:taxi_app/features/choose_inivates/data/repo/active_order_repository_imp.dart';
+import 'package:taxi_app/features/choose_inivates/presentation/bloc/inivites_bloc.dart';
+import 'package:taxi_app/features/choose_inivates/presentation/bloc/proposal_bloc.dart';
+import 'package:taxi_app/features/choose_inivates/presentation/pages/invates_screen.dart';
+import 'package:taxi_app/features/home/data/repository/home_repository_impl.dart';
+import 'package:taxi_app/features/home/data/source/home_data_source.dart';
+import 'package:taxi_app/features/home/presentation/bloc/bloc/home_bloc.dart';
+import 'package:taxi_app/features/home/presentation/screens/home_screen.dart';
+import 'package:taxi_app/features/home/presentation/screens/main_screen.dart';
+import 'package:taxi_app/features/map/presenation/pages/location_picker_screen.dart';
+import 'package:taxi_app/features/order_create/data/repo/order_create_repo_impl.dart';
+import 'package:taxi_app/features/order_create/data/source/order_create_data_source.dart';
+import 'package:taxi_app/features/order_create/presentation/bloc/order_create_bloc.dart';
+import 'package:taxi_app/features/order_create/presentation/pages/order_create_page.dart';
+import 'package:taxi_app/features/phone_verify/data/repo/phone_verify_repo_impl.dart';
+import 'package:taxi_app/features/phone_verify/data/source/phone_verify_data_source.dart';
+import 'package:taxi_app/features/phone_verify/presentation/bloc/phone_verify_bloc.dart';
+import 'package:taxi_app/features/phone_verify/presentation/pages/phone_otp_page.dart';
+import 'package:taxi_app/features/map/presenation/bloc/map_bloc.dart';
+import 'package:taxi_app/features/master/data/repository/master_repository_impl.dart';
+import 'package:taxi_app/features/master/data/source/master_remote_data_source.dart';
+import 'package:taxi_app/features/master/presentation/bloc/master_bloc.dart';
+import 'package:taxi_app/features/notifications/data/repo/notifications_repo_impl.dart';
+import 'package:taxi_app/features/notifications/data/source/notifications_data_source.dart';
+import 'package:taxi_app/features/notifications/presentation/bloc/notifications_bloc.dart';
+import 'package:taxi_app/features/trips/data/repo/trips_repo_impl.dart';
+import 'package:taxi_app/features/trips/data/source/trips_data_source.dart';
+import 'package:taxi_app/features/trips/presentation/bloc/navigation/navigation_bloc.dart';
+import 'package:taxi_app/features/trips/presentation/bloc/route_overview/route_overview_bloc.dart';
+import 'package:taxi_app/features/trips/presentation/bloc/trip_map/trip_map_bloc.dart';
+import 'package:taxi_app/features/trips/presentation/bloc/trips_bloc.dart';
+import 'package:taxi_app/features/trips/presentation/pages/driving_mode_page.dart';
+import 'package:taxi_app/features/trips/presentation/pages/route_overview_page.dart';
+import 'package:taxi_app/features/trips/presentation/pages/trip_map_page.dart';
+import 'package:taxi_app/features/notifications/presentation/pages/notification_detail_page.dart';
+import 'package:taxi_app/features/notifications/presentation/pages/notifications_page.dart';
+import 'package:taxi_app/features/order_proccess/presentation/pages/finished_order_screen.dart';
+import 'package:taxi_app/features/order_proccess/presentation/pages/order_info_screen.dart';
+import 'package:taxi_app/features/order_proccess/presentation/pages/order_single_screen.dart';
+import 'package:taxi_app/features/profile/presentation/pages/order_history_single_screen.dart';
+import 'package:taxi_app/features/profile/presentation/pages/orders_history_screen.dart';
+import 'package:taxi_app/features/profile/presentation/pages/profile_edit_screen.dart';
+import 'package:taxi_app/features/profile/presentation/pages/profile_page.dart';
+import 'package:taxi_app/features/truck_info/data/repo/driver_info_repo_impl.dart';
+import 'package:taxi_app/features/truck_info/data/source/driver_info_source.dart';
+import 'package:taxi_app/features/truck_info/presentation/bloc/bloc/track_info_bloc.dart';
+import 'package:taxi_app/features/truck_info/presentation/screens/track_info.dart';
+import 'package:taxi_app/features/worker_info/presentation/pages/worker_info_page.dart';
+import 'package:taxi_app/routes/pages.dart';
+
+import '../features/choose_inivates/data/source/active_order_source.dart';
+import '../features/map/data/repo/map_repo_imp.dart';
+import '../features/map/data/source/map_data_source.dart';
+
+class Routes {
+  static const Set<String> _authRoutes = {
+    Pages.signIn,
+    Pages.signUp,
+    Pages.forgotPasswordEmail,
+    Pages.resetPassword,
+  };
+
+  // PhoneVerifyBloc - entry sheet va OTP page o'rtasida bo'lishish uchun
+  // singleton. Sheet showPhoneVerifySheet() ichida BlocProvider.value bilan
+  // ulanadi; OTP page route'da xuddi shu instance'ga ulanadi.
+  static PhoneVerifyBloc? _phoneVerifyBloc;
+
+  static PhoneVerifyBloc resolvePhoneVerifyBloc() {
+    return _phoneVerifyBloc ??= PhoneVerifyBloc(
+      repo: PhoneVerifyRepoImpl(dataSource: PhoneVerifyDataSource()),
+    );
+  }
+
+  static final GoRouter router = GoRouter(
+    debugLogDiagnostics: true,
+    initialLocation: Pages.splash,
+    observers: [ChuckerFlutter.navigatorObserver],
+    refreshListenable: AuthSession.tick,
+    redirect: (context, state) {
+      if (state.matchedLocation == Pages.splash) return null;
+      final loggedIn = AuthSession.isLoggedIn;
+      final atAuth = _authRoutes.contains(state.matchedLocation);
+      if (!loggedIn && !atAuth) return Pages.signIn;
+      return null;
+    },
+    routes: [
+      GoRoute(
+        path: Pages.splash,
+        builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: Pages.signIn,
+        builder: (context, state) {
+          return BlocProvider(
+            create: (context) => AuthBloc(
+              authRepo: AuthRepoImpl(authDataSource: AuthDataSource()),
+            ),
+            child: SignInPage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: Pages.signUp,
+        builder: (context, state) {
+          return BlocProvider(
+            create: (context) => AuthBloc(
+              authRepo: AuthRepoImpl(authDataSource: AuthDataSource()),
+            ),
+            child: SignUpPage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: Pages.orderCreate,
+        builder: (context, state) {
+          final extra = (state.extra as Map<String, dynamic>?) ?? const {};
+          return BlocProvider(
+            create: (_) =>
+                OrderCreateBloc(
+                  repo: OrderCreateRepoImpl(
+                    dataSource: OrderCreateDataSource(),
+                  ),
+                )..add(
+                  OrderCreateInitialized(
+                    address: (extra['address'] as String?) ?? '',
+                    latitude: (extra['latitude'] as num?)?.toDouble() ?? 0.0,
+                    longitude: (extra['longitude'] as num?)?.toDouble() ?? 0.0,
+                  ),
+                ),
+            child: const OrderCreatePage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: Pages.workerInfo,
+        builder: (context, state) {
+          return WorkerInfoPage();
+        },
+      ),
+      GoRoute(
+        path: Pages.map,
+        builder: (context, state) {
+          return BlocProvider(
+            create: (context) =>
+                MapBloc(mapRepo: MapRepoImpl(dataSource: MapDataSource())),
+            child: const LocationPickerScreen(),
+          );
+        },
+      ),
+      GoRoute(
+        path: Pages.home,
+        builder: (context, state) {
+          return BlocProvider(
+            create: (context) =>
+                HomeBloc(HomeRepositoryImpl(dataSource: HomeDataSource())),
+            child: HomeScreen(),
+          );
+        },
+      ),
+      GoRoute(
+        path: Pages.main,
+        builder: (context, state) {
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (context) =>
+                    HomeBloc(HomeRepositoryImpl(dataSource: HomeDataSource())),
+              ),
+              BlocProvider(
+                create: (context) => MasterBloc(
+                  MasterRepositoryImpl(MasterRemoteDataSource()),
+                  serviceLocator<LocationService>(),
+                ),
+              ),
+              BlocProvider(
+                create: (_) => AuthBloc(
+                  authRepo: AuthRepoImpl(authDataSource: AuthDataSource()),
+                ),
+              ),
+              BlocProvider(
+                create: (_) => NotificationsBloc(
+                  repo: NotificationsRepoImpl(
+                    dataSource: NotificationsDataSource(),
+                  ),
+                )..add(const UnreadCountRequested()),
+              ),
+              // Provided at the route (not inside HomeTabsScreen) so the trip
+              // list keeps its pages and scroll state across bottom-nav
+              // switches, which rebuild the tab host's subtree.
+              BlocProvider(
+                create: (_) => TripsBloc(
+                  repo: TripsRepoImpl(dataSource: TripsDataSource()),
+                ),
+              ),
+            ],
+            child: MainScreen(),
+          );
+        },
+      ),
+      GoRoute(
+        path: Pages.tripMap,
+        builder: (context, state) => BlocProvider(
+          create: (_) => TripMapBloc(
+            repo: TripsRepoImpl(dataSource: TripsDataSource()),
+            locationService: serviceLocator<LocationService>(),
+          ),
+          child: const TripMapPage(),
+        ),
+      ),
+      GoRoute(
+        path: Pages.routeOverview,
+        builder: (context, state) {
+          final args = state.extra as RouteOverviewArgs;
+          return BlocProvider(
+            create: (_) => RouteOverviewBloc(
+              trip: args.trip,
+              origin: args.origin,
+              destination: args.destination,
+              repo: TripsRepoImpl(dataSource: TripsDataSource()),
+              locationService: serviceLocator<LocationService>(),
+            ),
+            child: RouteOverviewPage(args: args),
+          );
+        },
+      ),
+      GoRoute(
+        path: Pages.drivingMode,
+        builder: (context, state) {
+          final args = state.extra as DrivingModeArgs;
+          return BlocProvider(
+            create: (_) => NavigationBloc(
+              initialSession: args.session,
+              repo: TripsRepoImpl(dataSource: TripsDataSource()),
+              locationService: serviceLocator<LocationService>(),
+            ),
+            child: DrivingModePage(args: args),
+          );
+        },
+      ),
+      GoRoute(
+        path: Pages.tackScreen,
+        builder: (context, state) => BlocProvider(
+          create: (_) => TrackInfoBloc(
+            driverInfoRepo: DriverInfoRepoImpl(
+              driverInfoSource: DriverInfoSource(),
+            ),
+          ),
+          child: TrackInfoScreen(),
+        ),
+      ),
+      GoRoute(
+        path: Pages.invitesPage,
+        builder: (context, state) {
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (context) => InivitesBloc(
+                  activeOrderRepository: ActiveOrderRepositoryImpl(
+                    activeOrderSource: ActiveOrderSource(),
+                  ),
+                )..add(FetchActiveOrderEvent()),
+              ),
+              BlocProvider(
+                create: (context) => ProposalBloc(
+                  HomeRepositoryImpl(dataSource: HomeDataSource()),
+                ),
+              ),
+            ],
+            child: InvatesScreen(),
+          );
+        },
+      ),
+      GoRoute(
+        path: Pages.profile,
+        builder: (context, state) {
+          return ProfilePage();
+        },
+      ),
+      GoRoute(
+        path: Pages.editProfile,
+        builder: (context, state) {
+          return ProfileEditScreen();
+        },
+      ),
+
+      GoRoute(
+        path: Pages.processOrder,
+        builder: (context, state) => const OrderSingleScreen(),
+      ),
+      GoRoute(
+        path: Pages.orderInfo,
+        builder: (context, state) => const OrderInfoScreen(),
+      ),
+      GoRoute(
+        path: Pages.ordersHistory,
+        builder: (context, state) => const OrdersHistoryScreen(),
+      ),
+      GoRoute(
+        path: Pages.orderHistoryDetail,
+        builder: (context, state) =>
+            OrderHistorySingleScreen(orderId: (state.extra as Map)['id']),
+      ),
+      GoRoute(
+        path: Pages.searchLocation,
+        builder: (context, state) => BlocProvider(
+          create: (context) =>
+              MapBloc(mapRepo: MapRepoImpl(dataSource: MapDataSource())),
+          child: const LocationPickerScreen(),
+        ),
+      ),
+
+      GoRoute(
+        path: Pages.finishedOrder,
+        builder: (context, state) => const FinishedOrderScreen(),
+      ),
+      GoRoute(
+        path: Pages.forgotPasswordEmail,
+        builder: (context, state) {
+          return BlocProvider(
+            create: (_) => ForgotPasswordBloc(
+              authRepo: AuthRepoImpl(authDataSource: AuthDataSource()),
+            ),
+            child: const ForgotPasswordEmailPage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: Pages.resetPassword,
+        builder: (context, state) {
+          final extra = (state.extra as Map?) ?? const {};
+          final resetToken = (extra['resetToken'] as String?) ?? '';
+          return BlocProvider(
+            create: (_) => ForgotPasswordBloc(
+              authRepo: AuthRepoImpl(authDataSource: AuthDataSource()),
+              seedResetToken: resetToken,
+            ),
+            child: const ResetPasswordPage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: Pages.phoneOtp,
+        builder: (context, state) => BlocProvider.value(
+          value: resolvePhoneVerifyBloc(),
+          child: const PhoneOtpPage(),
+        ),
+      ),
+      GoRoute(
+        path: Pages.notifications,
+        builder: (context, state) {
+          return BlocProvider(
+            create: (_) => NotificationsBloc(
+              repo: NotificationsRepoImpl(
+                dataSource: NotificationsDataSource(),
+              ),
+            )..add(const NotificationsLoaded()),
+            child: const NotificationsPage(),
+          );
+        },
+      ),
+      GoRoute(
+        path: Pages.notificationDetail,
+        builder: (context, state) {
+          final extra = (state.extra as Map?) ?? const {};
+          final id = (extra['id'] as int?) ?? 0;
+          return NotificationDetailPage(
+            id: id,
+            repo: NotificationsRepoImpl(dataSource: NotificationsDataSource()),
+          );
+        },
+      ),
+    ],
+  );
+}

@@ -29,48 +29,53 @@ iOS-only setup: `cd ios && pod install` after touching native plugins.
 
 ## Architecture (THIS repo's conventions — preserve them)
 
+There is **no `lib/src/` layer** — it was removed and `core/`, `features/` and
+`routes/` now sit directly under `lib/`. Imports read
+`package:taxi_app/features/…`, with no `src` segment.
+
 ```
 lib/
   main.dart                           # WidgetsFlutterBinding + setupLocator + runApp
-  src/
-    core/
-      service_locater.dart            # NOTE: typo "locater" is intentional, kept for git-blame stability
-      network/
-        api_constants.dart
-        dio_model.dart
-        network_response.dart         # final result type — { errorText, data<T> }
-        token_service.dart            # contains StorageRepository (SharedPreferences singleton)
-      exeptions/                      # NOTE: typo "exeptions" is intentional, kept
-      extensions/
-      theme/
-      utils/
-      components/
-      widgets/
-      constants/
-      enums/
-      location_service.dart
-    features/<feature>/
-      data/
-        model/                        # singular — *_model.dart with @JsonSerializable
-        source/                       # singular — *_data_source.dart, calls Dio
-        repo/                         # singular — *_repo_impl.dart extends abstract repo
-      domain/
-        repo/                         # singular — abstract repo only; NO entities, NO usecases
-      presentation/
-        bloc/                         # may be nested as bloc/bloc/ in some features
-        pages/                        # singular — *_page.dart or *_screen.dart
-        widgets/
-    routes/
-      app_router.dart                 # GoRouter — single Routes.router static field
-      pages.dart                      # static String constants for paths
+  firebase_options.dart
+  core/
+    service_locater.dart              # NOTE: typo "locater" is intentional, kept for git-blame stability
+    network/
+      api_constants.dart
+      dio_model.dart
+      network_response.dart           # final result type — { errorText, data<T> }
+      token_service.dart              # contains StorageRepository (SharedPreferences singleton)
+    exeptions/                        # NOTE: typo "exeptions" is intentional, kept
+    extensions/
+    theme/
     utils/
+      unit_format.dart                # miles/duration formatting — single source, see below
+    components/
+    widgets/
+      app_skeleton.dart               # AppSkeleton / SkeletonBox — the ONLY shimmer config
+    constants/
+    enums/
+    location_service.dart
+  features/<feature>/
+    data/
+      model/                          # singular — *_model.dart with @JsonSerializable
+      source/                         # singular — *_data_source.dart, calls Dio
+      repo/                           # singular — *_repo_impl.dart extends abstract repo
+    domain/
+      repo/                           # singular — abstract repo only; NO entities, NO usecases
+    presentation/
+      bloc/                           # may be nested as bloc/bloc/ in some features
+      pages/                          # singular — *_page.dart or *_screen.dart
+      widgets/
+  routes/
+    app_router.dart                   # GoRouter — single Routes.router static field
+    pages.dart                        # static String constants for paths
 ```
 
 ### Conventions to preserve
 
-- **Result type is `NetworkResponse<T>`** (`src/core/network/network_response.dart`) — `{ String errorText, T? data }`. Repos return `Future<NetworkResponse<T>>`. Empty `errorText` = success. **Do NOT introduce `Either<L, R>` / `dartz` / sealed `Failure` types** — this repo doesn't use them, and mixing in one feature creates inconsistency.
+- **Result type is `NetworkResponse<T>`** (`core/network/network_response.dart`) — `{ String errorText, T? data }`. Repos return `Future<NetworkResponse<T>>`. Empty `errorText` = success. **Do NOT introduce `Either<L, R>` / `dartz` / sealed `Failure` types** — this repo doesn't use them, and mixing in one feature creates inconsistency.
 
-- **DI is per-route, not globally registered.** `setupLocator()` (`src/core/service_locater.dart`) only registers shared services (`DioSettings`, `LocationService`). Data sources, repositories, and BLoCs are constructed by hand in `GoRoute.builder` callbacks:
+- **DI is per-route, not globally registered.** `setupLocator()` (`core/service_locater.dart`) only registers shared services (`DioSettings`, `LocationService`). Data sources, repositories, and BLoCs are constructed by hand in `GoRoute.builder` callbacks:
   ```dart
   GoRoute(
     path: Pages.signIn,
@@ -100,13 +105,13 @@ lib/
   ```
   Events carry `onSuccess` / `onError` callbacks. The page does `context.go(Pages.main)` from the callback. **Don't replicate mechanic-app's `authStreamController` pattern** here.
 
-- **Routing is `go_router` only.** `MaterialApp.router(routerConfig: Routes.router)` in `main.dart`. All paths are constants in `src/routes/pages.dart`. Auth gating is done at boot via `initialLocation`:
+- **Routing is `go_router` only.** `MaterialApp.router(routerConfig: Routes.router)` in `main.dart`. All paths are constants in `routes/pages.dart`. Auth gating is done at boot via `initialLocation`:
   ```dart
   initialLocation: StorageRepository.getString('token').isNotEmpty ? Pages.main : Pages.signIn,
   ```
   After login/register/logout, navigate via `context.go(Pages.X)` from the bloc-event callback. **Never push a `MaterialPageRoute` / `CupertinoPageRoute` directly via Navigator** — it would skip GoRouter's stack.
 
-- **Storage** is `StorageRepository` (in `src/core/network/token_service.dart`, despite the file name). Keys are passed as raw strings (`'token'`, etc.) — there's no `StoreKeys` constants file. If you find yourself referencing a key in 3+ places, propose adding constants but don't unilaterally introduce them.
+- **Storage** is `StorageRepository` (in `core/network/token_service.dart`, despite the file name). Keys are passed as raw strings (`'token'`, etc.) — there's no `StoreKeys` constants file. If you find yourself referencing a key in 3+ places, propose adding constants but don't unilaterally introduce them.
 
 - **Models use `json_serializable` + `freezed`-free style.** Run `dart run build_runner build --delete-conflicting-outputs` after editing any annotated model.
 
@@ -129,8 +134,8 @@ When porting features, FCM, auth providers, or anything from `/Users/javoxir/Stu
 
 | mechanic-app | IzzyDrive |
 |---|---|
-| `package:mechanic/...` | `package:taxi_app/src/...` |
-| `lib/features/<f>/...` | `lib/src/features/<f>/...` |
+| `package:mechanic/...` | `package:taxi_app/...` |
+| `lib/features/<f>/...` | `lib/features/<f>/...` |
 | `data/data_sources/<f>_data_source.dart` | `data/source/<f>_data_source.dart` |
 | `data/models/<f>_model.dart` | `data/model/<f>_model.dart` |
 | `data/repositories/<f>_repository_impl.dart` | `data/repo/<f>_repo_impl.dart` |
@@ -162,7 +167,7 @@ When porting features, FCM, auth providers, or anything from `/Users/javoxir/Stu
 - Does the feature exist already in IzzyDrive? Don't blow it away — diff and **only add what's missing**.
 - Does the backend endpoint exist for drivers? `/api/v1/drivers/...` may not have feature parity with `/mechanics/...`. Ask if unsure.
 - Does the UI copy reference "mexanik" / "usta"? Replace with driver-appropriate terms ("haydovchi" / "mijoz").
-- Is there a Pages constant for the route? If not, add one to `src/routes/pages.dart` AND register the route in `app_router.dart`.
+- Is there a Pages constant for the route? If not, add one to `routes/pages.dart` AND register the route in `app_router.dart`.
 
 ## Notes
 

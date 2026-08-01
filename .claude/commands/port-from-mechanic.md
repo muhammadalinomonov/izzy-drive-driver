@@ -60,9 +60,9 @@ When writing the IzzyDrive version, apply these transforms mechanically:
 
 **Imports**
 ```
-package:mechanic/<x>            →  package:taxi_app/src/<x>
-package:mechanic/features/      →  package:taxi_app/src/features/
-package:mechanic/core/          →  package:taxi_app/src/core/
+package:mechanic/<x>            →  package:taxi_app/<x>
+package:mechanic/features/      →  package:taxi_app/features/
+package:mechanic/core/          →  package:taxi_app/core/
 ```
 
 **Folder/file renames** — see the mapping table in CLAUDE.md.

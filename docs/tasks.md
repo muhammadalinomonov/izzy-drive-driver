@@ -201,3 +201,88 @@ where `{routeRequest}` is the selected history item's ID. Follow the API specifi
 While loading, show a loading state. Once the data is received, populate the existing Route Overview screen with the returned route information, including the map, selected route, alternative routes, toll stations, fuel stations, and route summary. Do not create a new Route Overview screen—reuse the existing implementation and shared business logic used for newly calculated routes.
 
 Handle loading, empty, and error states appropriately, and keep the implementation consistent with the existing architecture.
+
+----------------------------------------------------------------------------------------------------
+
+5. Task
+
+## Task 5: Resume Active Navigation Session and Driving Mode Enhancements
+
+Implement support for resuming an active navigation session from the **Trips** page.
+
+If the user has an active navigation session, display a **Continue Route** button (or card) at the top of the Trips page. When the user taps it, retrieve the current navigation session by calling:
+
+`GET /api/v1/mobile/navigation-sessions/current`
+
+Follow the request and response specification in `docs/mobile-api.md`.
+
+If an active session exists, navigate directly to the existing **Driving Mode** page and restore the complete navigation state, including the selected route, current progress, route information, and map state. Do not recalculate the route.
+
+If no active navigation session exists, hide the Continue Route button.
+
+### Driving Mode
+
+Reuse the existing Driving Mode screen and extend it with the following behavior.
+
+#### Location Updates
+
+While navigation is active, continuously upload the driver's current location and navigation data to the server by calling:
+
+`POST /api/v1/mobile/locations`
+
+Upload the required location information at the interval defined by the project or API documentation. Handle temporary network failures gracefully and continue uploading when connectivity is restored.
+
+#### Rerouting
+
+If the driver leaves the current route or rerouting is otherwise required, call:
+
+`POST /api/v1/mobile/navigation-sessions/{navigationSession}/reroute`
+
+Update the displayed route and continue navigation using the rerouted path returned by the API.
+
+#### Cancel Navigation
+
+When the user taps **Cancel Navigation**, display the existing confirmation dialog.
+
+After the user confirms:
+
+* Show a loading indicator.
+* Call the cancel endpoint.
+* Wait for the request to complete successfully.
+* Close the Driving Mode screen.
+* Clear the active navigation state and return the user to the previous screen.
+
+Use:
+
+`POST /api/v1/mobile/navigation-sessions/{navigationSession}/cancel`
+
+#### Complete Navigation
+
+When the driver reaches the destination, automatically detect arrival (or according to the API requirements) and display a **Trip Completed** screen or dialog matching the application's design.
+
+The completion flow should:
+
+* Display a success message indicating that the trip has been completed.
+* Show any available trip summary information returned by the API.
+* Provide a **Done** button to close the completion screen.
+
+When completing the trip, call:
+
+`POST /api/v1/mobile/navigation-sessions/{navigationSession}/complete`
+
+After a successful completion:
+
+* Clear the active navigation session.
+* Stop uploading location updates.
+* Exit Driving Mode.
+* Return the user to the Trips page.
+
+Implement proper loading, success, empty, offline, and error states for all API requests. Follow all request and response models defined in `docs/mobile-api.md`. Reuse the existing networking layer, repositories, models, state management, and Driving Mode implementation. Keep the implementation modular, maintainable, and fully consistent with the existing project architecture.
+
+----------------------------------------------------------------------------------------------------
+
+6. Task
+
+
+
+
