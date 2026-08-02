@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:taxi_app/features/home/domain/repository/home_repository.dart';
@@ -6,6 +7,7 @@ import 'package:taxi_app/features/order_proccess/data/order_proccess_source.dart
 part 'home_event.dart';
 part 'home_state.dart';
 
+@injectable
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   final HomeRepository _repository;
   HomeBloc(this._repository) : super(HomeState(status: HomeStatus.initial)) {

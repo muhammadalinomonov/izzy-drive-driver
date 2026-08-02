@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:dio/dio.dart';
 import 'package:taxi_app/core/extensions/status_code_extension.dart';
 import 'package:taxi_app/core/network/api_constants.dart';
@@ -20,6 +21,7 @@ import 'package:taxi_app/features/phone_verify/data/model/send_otp_response.dart
 //   - otp_invalid               (verify-otp 400 - xato kod, yana urinish bor)
 //   - otp_expired               (verify-otp 400 - verification topilmadi)
 //   - otp_too_many_attempts     (verify-otp 400 - qayta request kerak)
+@lazySingleton
 class PhoneVerifyDataSource {
   final client = serviceLocator.get<DioSettings>().dio;
 

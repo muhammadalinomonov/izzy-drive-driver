@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:dio/dio.dart';
 import 'package:taxi_app/core/extensions/status_code_extension.dart';
 import 'package:taxi_app/core/network/api_constants.dart';
@@ -9,6 +10,7 @@ import 'package:taxi_app/features/master/data/model/review_model.dart';
 
 import '../model/master_model.dart';
 
+@lazySingleton
 class MasterRemoteDataSource {
   MasterRemoteDataSource();
 

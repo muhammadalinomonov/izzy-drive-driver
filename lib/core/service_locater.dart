@@ -1,27 +1,18 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:get_it/get_it.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
-import 'package:taxi_app/core/network/dio_model.dart';
-import 'package:taxi_app/core/network/toll_dio.dart';
-import 'package:taxi_app/core/network/token_service.dart';
-import 'package:taxi_app/core/location_service.dart';
-import 'package:taxi_app/core/services/connectivity_service.dart';
-import 'package:taxi_app/core/services/websocket_service.dart';
+import 'package:taxi_app/core/di/injection.dart';
 
+/// Kept as an alias so the ~30 existing `serviceLocator<T>()` call sites keep
+/// working. New code should prefer [getIt] from `core/di/injection.dart`.
+final serviceLocator = getIt;
 
-final serviceLocator = GetIt.I;
-
+/// App bootstrap: loads secrets, then builds the DI graph.
+///
+/// Registrations themselves are no longer written here — they are generated
+/// from `@injectable` / `@lazySingleton` annotations into
+/// `core/di/injection.config.dart`. Only genuinely global side effects that
+/// aren't dependency registration (dotenv, the Mapbox SDK token) stay.
 Future<void> setupLocator() async {
-  await StorageRepository.getInstance();
-  final connectivityService = ConnectivityService();
-  await connectivityService.init();
-  serviceLocator.registerLazySingleton<ConnectivityService>(() => connectivityService);
-  serviceLocator.registerLazySingleton(DioSettings.new);
-  // Quadrix Tolling backend - separate host + auth scheme, see TollDioSettings.
-  serviceLocator.registerLazySingleton(TollDioSettings.new);
-  serviceLocator.registerLazySingleton(LocationService.new);
-  serviceLocator.registerLazySingleton(WebSocketService.new);
-
   await dotenv.load(fileName: '.env');
   final mapboxToken = dotenv.env['MAPBOX_ACCESS_TOKEN']!;
   assert(
@@ -30,9 +21,13 @@ Future<void> setupLocator() async {
     'is extractable from the shipped app bundle.',
   );
   MapboxOptions.setAccessToken(mapboxToken);
+
+  // Must come after dotenv: @preResolve'd singletons may read config at
+  // construction time.
+  await configureDependencies();
 }
 
-Future resetLocator() async {
-  await serviceLocator.reset();
-  setupLocator();
+Future<void> resetLocator() async {
+  await getIt.reset();
+  await setupLocator();
 }

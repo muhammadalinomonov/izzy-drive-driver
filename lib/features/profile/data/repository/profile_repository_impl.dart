@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'dart:io';
 
 import 'package:taxi_app/core/exeptions/failures.dart';
@@ -11,6 +12,7 @@ import 'package:taxi_app/features/profile/domain/entities/output_entity.dart';
 import '../../domain/repository/profile_repository.dart';
 import '../source/profile_data_source.dart';
 
+@LazySingleton(as: ProfileRepository)
 class ProfileRepositoryImpl implements ProfileRepository {
   final ProfileDataSource dataSource;
 

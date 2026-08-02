@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
@@ -9,6 +10,7 @@ import '../../data/model/search_locations_response.dart';
 part 'map_event.dart';
 part 'map_state.dart';
 
+@injectable
 class MapBloc extends Bloc<MapEvent, MapState> {
   final MapRepo mapRepo;
 

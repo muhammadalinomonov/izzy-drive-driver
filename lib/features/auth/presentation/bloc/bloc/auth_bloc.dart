@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:bloc/bloc.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:equatable/equatable.dart';
@@ -15,6 +16,7 @@ import 'package:taxi_app/features/auth/domain/repo/auth_repo.dart';
 part 'auth_event.dart';
 part 'auth_state.dart';
 
+@injectable
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepo authRepo;
 

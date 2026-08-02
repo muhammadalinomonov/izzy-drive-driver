@@ -1,4 +1,5 @@
 
+import 'package:injectable/injectable.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/animation.dart';
@@ -9,6 +10,7 @@ import 'package:taxi_app/features/truck_info/domain/repo/driver_info_repo.dart';
 part 'track_info_event.dart';
 part 'track_info_state.dart';
 
+@injectable
 class TrackInfoBloc extends Bloc<TrackInfoEvent, TrackInfoState> {
   final DriverInfoRepo driverInfoRepo;
 

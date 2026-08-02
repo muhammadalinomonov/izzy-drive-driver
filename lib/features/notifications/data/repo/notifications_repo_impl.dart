@@ -1,8 +1,10 @@
+import 'package:injectable/injectable.dart';
 import 'package:taxi_app/core/network/network_response.dart';
 import 'package:taxi_app/features/notifications/data/model/notification_model.dart';
 import 'package:taxi_app/features/notifications/data/source/notifications_data_source.dart';
 import 'package:taxi_app/features/notifications/domain/repo/notifications_repo.dart';
 
+@LazySingleton(as: NotificationsRepo)
 class NotificationsRepoImpl extends NotificationsRepo {
   final NotificationsDataSource dataSource;
 

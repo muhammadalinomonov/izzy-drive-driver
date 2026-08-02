@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:taxi_app/features/trips/data/model/navigation_session_model.dart';
@@ -7,6 +8,7 @@ import 'package:taxi_app/features/trips/domain/repo/trips_repo.dart';
 part 'trips_event.dart';
 part 'trips_state.dart';
 
+@injectable
 class TripsBloc extends Bloc<TripsEvent, TripsState> {
   final TripsRepo repo;
 

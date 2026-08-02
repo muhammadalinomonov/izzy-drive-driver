@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
@@ -17,6 +18,7 @@ part 'navigation_state.dart';
 /// The GPS subscription itself belongs to `DrivingSession` (it needs every fix
 /// for smoothing and marker animation); the bloc only receives forwarded fixes
 /// and decides what reaches the server.
+@injectable
 class NavigationBloc extends Bloc<NavigationEvent, NavigationState> {
   final TripsRepo repo;
   final LocationService locationService;
@@ -55,8 +57,11 @@ class NavigationBloc extends Bloc<NavigationEvent, NavigationState> {
   /// overlapping requests for the same divergence.
   bool _rerouteInFlight = false;
 
+  /// [initialSession] is supplied at call time by whoever opened Driving Mode
+  /// (Start, or the resume card), not resolved from the graph. Request via
+  /// `getIt<NavigationBloc>(param1: session)`.
   NavigationBloc({
-    NavigationSessionModel? initialSession,
+    @factoryParam NavigationSessionModel? initialSession,
     required this.repo,
     required this.locationService,
   }) : super(NavigationState(

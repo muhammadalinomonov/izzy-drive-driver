@@ -1,8 +1,10 @@
+import 'package:injectable/injectable.dart';
 import 'package:taxi_app/core/network/network_response.dart';
 import 'package:taxi_app/features/master/domain/repository/master_repository.dart';
 
 import '../source/master_remote_data_source.dart';
 
+@LazySingleton(as: MasterRepository)
 class MasterRepositoryImpl extends MasterRepository {
   final MasterRemoteDataSource remoteDataSource;
 

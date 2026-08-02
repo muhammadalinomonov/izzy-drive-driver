@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:injectable/injectable.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
@@ -10,12 +11,18 @@ import 'package:taxi_app/features/auth/presentation/bloc/bloc/auth_bloc.dart'
 part 'forgot_password_event.dart';
 part 'forgot_password_state.dart';
 
+@injectable
 class ForgotPasswordBloc
     extends Bloc<ForgotPasswordEvent, ForgotPasswordState> {
   final AuthRepo authRepo;
 
-  ForgotPasswordBloc({required this.authRepo, String? seedResetToken})
-      : super(ForgotPasswordState(resetToken: seedResetToken ?? '')) {
+  /// [seedResetToken] is supplied at call time, not resolved from the graph -
+  /// it comes from the OTP screen the user just came through. Request via
+  /// `getIt<ForgotPasswordBloc>(param1: token)`.
+  ForgotPasswordBloc({
+    required this.authRepo,
+    @factoryParam String? seedResetToken,
+  }) : super(ForgotPasswordState(resetToken: seedResetToken ?? '')) {
     on<RequestForgotOtpEvent>(_onRequestOtp);
     on<ResendForgotOtpEvent>(_onResendOtp);
     on<VerifyForgotOtpEvent>(_onVerifyOtp);

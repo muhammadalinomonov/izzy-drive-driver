@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:dio/dio.dart';
 import 'package:taxi_app/core/extensions/status_code_extension.dart';
 import 'package:taxi_app/core/network/api_constants.dart';
@@ -7,6 +8,7 @@ import 'package:taxi_app/core/network/token_service.dart';
 import 'package:taxi_app/core/service_locater.dart';
 import 'package:taxi_app/core/utils/json_safe.dart';
 
+@lazySingleton
 class HomeDataSource {
   final client = serviceLocator.get<DioSettings>().dio;
   Future<NetworkResponse> getBanners() async {

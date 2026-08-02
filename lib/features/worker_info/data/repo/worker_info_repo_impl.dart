@@ -1,6 +1,8 @@
+import 'package:injectable/injectable.dart';
 import '../model/worker_info_model.dart';
 import '../../domain/repo/worker_info_repo.dart';
 
+@LazySingleton(as: WorkerInfoRepo)
 class WorkerInfoRepoImpl implements WorkerInfoRepo {
   final WorkerInfoModel _worker = WorkerInfoModel(
     name: 'Eshonov Fakhriyor',

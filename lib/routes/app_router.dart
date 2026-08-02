@@ -1,11 +1,11 @@
 import 'package:chucker_flutter/chucker_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:taxi_app/core/di/injection.dart';
+import 'package:taxi_app/features/trips/domain/repo/trips_repo.dart';
+import 'package:taxi_app/features/notifications/domain/repo/notifications_repo.dart';
 import 'package:taxi_app/core/location_service.dart';
 import 'package:taxi_app/core/network/auth_session.dart';
-import 'package:taxi_app/core/service_locater.dart';
-import 'package:taxi_app/features/auth/data/repo/auth_repo_impl.dart';
-import 'package:taxi_app/features/auth/data/source/auth_data_source.dart';
 import 'package:taxi_app/features/auth/presentation/bloc/bloc/auth_bloc.dart';
 import 'package:taxi_app/features/auth/presentation/bloc/forgot_password_bloc/forgot_password_bloc.dart';
 import 'package:taxi_app/features/auth/presentation/pages/forgot_password_email_page.dart';
@@ -13,33 +13,20 @@ import 'package:taxi_app/features/auth/presentation/pages/reset_password_page.da
 import 'package:taxi_app/features/auth/presentation/pages/sign_in_page.dart';
 import 'package:taxi_app/features/auth/presentation/pages/sign_up_page.dart';
 import 'package:taxi_app/features/common/presentation/pages/splash_screen.dart';
-import 'package:taxi_app/features/choose_inivates/data/repo/active_order_repository_imp.dart';
 import 'package:taxi_app/features/choose_inivates/presentation/bloc/inivites_bloc.dart';
 import 'package:taxi_app/features/choose_inivates/presentation/bloc/proposal_bloc.dart';
 import 'package:taxi_app/features/choose_inivates/presentation/pages/invates_screen.dart';
-import 'package:taxi_app/features/home/data/repository/home_repository_impl.dart';
-import 'package:taxi_app/features/home/data/source/home_data_source.dart';
 import 'package:taxi_app/features/home/presentation/bloc/bloc/home_bloc.dart';
 import 'package:taxi_app/features/home/presentation/screens/home_screen.dart';
 import 'package:taxi_app/features/home/presentation/screens/main_screen.dart';
 import 'package:taxi_app/features/map/presenation/pages/location_picker_screen.dart';
-import 'package:taxi_app/features/order_create/data/repo/order_create_repo_impl.dart';
-import 'package:taxi_app/features/order_create/data/source/order_create_data_source.dart';
 import 'package:taxi_app/features/order_create/presentation/bloc/order_create_bloc.dart';
 import 'package:taxi_app/features/order_create/presentation/pages/order_create_page.dart';
-import 'package:taxi_app/features/phone_verify/data/repo/phone_verify_repo_impl.dart';
-import 'package:taxi_app/features/phone_verify/data/source/phone_verify_data_source.dart';
 import 'package:taxi_app/features/phone_verify/presentation/bloc/phone_verify_bloc.dart';
 import 'package:taxi_app/features/phone_verify/presentation/pages/phone_otp_page.dart';
 import 'package:taxi_app/features/map/presenation/bloc/map_bloc.dart';
-import 'package:taxi_app/features/master/data/repository/master_repository_impl.dart';
-import 'package:taxi_app/features/master/data/source/master_remote_data_source.dart';
 import 'package:taxi_app/features/master/presentation/bloc/master_bloc.dart';
-import 'package:taxi_app/features/notifications/data/repo/notifications_repo_impl.dart';
-import 'package:taxi_app/features/notifications/data/source/notifications_data_source.dart';
 import 'package:taxi_app/features/notifications/presentation/bloc/notifications_bloc.dart';
-import 'package:taxi_app/features/trips/data/repo/trips_repo_impl.dart';
-import 'package:taxi_app/features/trips/data/source/trips_data_source.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/navigation/navigation_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/route_overview/route_overview_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/trip_map/trip_map_bloc.dart';
@@ -56,16 +43,11 @@ import 'package:taxi_app/features/profile/presentation/pages/order_history_singl
 import 'package:taxi_app/features/profile/presentation/pages/orders_history_screen.dart';
 import 'package:taxi_app/features/profile/presentation/pages/profile_edit_screen.dart';
 import 'package:taxi_app/features/profile/presentation/pages/profile_page.dart';
-import 'package:taxi_app/features/truck_info/data/repo/driver_info_repo_impl.dart';
-import 'package:taxi_app/features/truck_info/data/source/driver_info_source.dart';
 import 'package:taxi_app/features/truck_info/presentation/bloc/bloc/track_info_bloc.dart';
 import 'package:taxi_app/features/truck_info/presentation/screens/track_info.dart';
 import 'package:taxi_app/features/worker_info/presentation/pages/worker_info_page.dart';
 import 'package:taxi_app/routes/pages.dart';
 
-import '../features/choose_inivates/data/source/active_order_source.dart';
-import '../features/map/data/repo/map_repo_imp.dart';
-import '../features/map/data/source/map_data_source.dart';
 
 class Routes {
   static const Set<String> _authRoutes = {
@@ -81,9 +63,7 @@ class Routes {
   static PhoneVerifyBloc? _phoneVerifyBloc;
 
   static PhoneVerifyBloc resolvePhoneVerifyBloc() {
-    return _phoneVerifyBloc ??= PhoneVerifyBloc(
-      repo: PhoneVerifyRepoImpl(dataSource: PhoneVerifyDataSource()),
-    );
+    return _phoneVerifyBloc ??= getIt<PhoneVerifyBloc>();
   }
 
   static final GoRouter router = GoRouter(
@@ -107,9 +87,7 @@ class Routes {
         path: Pages.signIn,
         builder: (context, state) {
           return BlocProvider(
-            create: (context) => AuthBloc(
-              authRepo: AuthRepoImpl(authDataSource: AuthDataSource()),
-            ),
+            create: (context) => getIt<AuthBloc>(),
             child: SignInPage(),
           );
         },
@@ -118,9 +96,7 @@ class Routes {
         path: Pages.signUp,
         builder: (context, state) {
           return BlocProvider(
-            create: (context) => AuthBloc(
-              authRepo: AuthRepoImpl(authDataSource: AuthDataSource()),
-            ),
+            create: (context) => getIt<AuthBloc>(),
             child: SignUpPage(),
           );
         },
@@ -131,11 +107,7 @@ class Routes {
           final extra = (state.extra as Map<String, dynamic>?) ?? const {};
           return BlocProvider(
             create: (_) =>
-                OrderCreateBloc(
-                  repo: OrderCreateRepoImpl(
-                    dataSource: OrderCreateDataSource(),
-                  ),
-                )..add(
+                getIt<OrderCreateBloc>()..add(
                   OrderCreateInitialized(
                     address: (extra['address'] as String?) ?? '',
                     latitude: (extra['latitude'] as num?)?.toDouble() ?? 0.0,
@@ -157,7 +129,7 @@ class Routes {
         builder: (context, state) {
           return BlocProvider(
             create: (context) =>
-                MapBloc(mapRepo: MapRepoImpl(dataSource: MapDataSource())),
+                getIt<MapBloc>(),
             child: const LocationPickerScreen(),
           );
         },
@@ -167,7 +139,7 @@ class Routes {
         builder: (context, state) {
           return BlocProvider(
             create: (context) =>
-                HomeBloc(HomeRepositoryImpl(dataSource: HomeDataSource())),
+                getIt<HomeBloc>(),
             child: HomeScreen(),
           );
         },
@@ -179,33 +151,22 @@ class Routes {
             providers: [
               BlocProvider(
                 create: (context) =>
-                    HomeBloc(HomeRepositoryImpl(dataSource: HomeDataSource())),
+                    getIt<HomeBloc>(),
               ),
               BlocProvider(
-                create: (context) => MasterBloc(
-                  MasterRepositoryImpl(MasterRemoteDataSource()),
-                  serviceLocator<LocationService>(),
-                ),
+                create: (context) => getIt<MasterBloc>(),
               ),
               BlocProvider(
-                create: (_) => AuthBloc(
-                  authRepo: AuthRepoImpl(authDataSource: AuthDataSource()),
-                ),
+                create: (_) => getIt<AuthBloc>(),
               ),
               BlocProvider(
-                create: (_) => NotificationsBloc(
-                  repo: NotificationsRepoImpl(
-                    dataSource: NotificationsDataSource(),
-                  ),
-                )..add(const UnreadCountRequested()),
+                create: (_) => getIt<NotificationsBloc>()..add(const UnreadCountRequested()),
               ),
               // Provided at the route (not inside HomeTabsScreen) so the trip
               // list keeps its pages and scroll state across bottom-nav
               // switches, which rebuild the tab host's subtree.
               BlocProvider(
-                create: (_) => TripsBloc(
-                  repo: TripsRepoImpl(dataSource: TripsDataSource()),
-                ),
+                create: (_) => getIt<TripsBloc>(),
               ),
             ],
             child: MainScreen(),
@@ -215,10 +176,7 @@ class Routes {
       GoRoute(
         path: Pages.tripMap,
         builder: (context, state) => BlocProvider(
-          create: (_) => TripMapBloc(
-            repo: TripsRepoImpl(dataSource: TripsDataSource()),
-            locationService: serviceLocator<LocationService>(),
-          ),
+          create: (_) => getIt<TripMapBloc>(),
           child: const TripMapPage(),
         ),
       ),
@@ -231,8 +189,8 @@ class Routes {
               trip: args.trip,
               origin: args.origin,
               destination: args.destination,
-              repo: TripsRepoImpl(dataSource: TripsDataSource()),
-              locationService: serviceLocator<LocationService>(),
+              repo: getIt<TripsRepo>(),
+              locationService: getIt<LocationService>(),
             ),
             child: RouteOverviewPage(args: args),
           );
@@ -243,11 +201,7 @@ class Routes {
         builder: (context, state) {
           final args = state.extra as DrivingModeArgs;
           return BlocProvider(
-            create: (_) => NavigationBloc(
-              initialSession: args.session,
-              repo: TripsRepoImpl(dataSource: TripsDataSource()),
-              locationService: serviceLocator<LocationService>(),
-            ),
+            create: (_) => getIt<NavigationBloc>(param1: args.session),
             child: DrivingModePage(args: args),
           );
         },
@@ -255,11 +209,7 @@ class Routes {
       GoRoute(
         path: Pages.tackScreen,
         builder: (context, state) => BlocProvider(
-          create: (_) => TrackInfoBloc(
-            driverInfoRepo: DriverInfoRepoImpl(
-              driverInfoSource: DriverInfoSource(),
-            ),
-          ),
+          create: (_) => getIt<TrackInfoBloc>(),
           child: TrackInfoScreen(),
         ),
       ),
@@ -269,16 +219,10 @@ class Routes {
           return MultiBlocProvider(
             providers: [
               BlocProvider(
-                create: (context) => InivitesBloc(
-                  activeOrderRepository: ActiveOrderRepositoryImpl(
-                    activeOrderSource: ActiveOrderSource(),
-                  ),
-                )..add(FetchActiveOrderEvent()),
+                create: (context) => getIt<InivitesBloc>()..add(FetchActiveOrderEvent()),
               ),
               BlocProvider(
-                create: (context) => ProposalBloc(
-                  HomeRepositoryImpl(dataSource: HomeDataSource()),
-                ),
+                create: (context) => getIt<ProposalBloc>(),
               ),
             ],
             child: InvatesScreen(),
@@ -319,7 +263,7 @@ class Routes {
         path: Pages.searchLocation,
         builder: (context, state) => BlocProvider(
           create: (context) =>
-              MapBloc(mapRepo: MapRepoImpl(dataSource: MapDataSource())),
+              getIt<MapBloc>(),
           child: const LocationPickerScreen(),
         ),
       ),
@@ -332,9 +276,7 @@ class Routes {
         path: Pages.forgotPasswordEmail,
         builder: (context, state) {
           return BlocProvider(
-            create: (_) => ForgotPasswordBloc(
-              authRepo: AuthRepoImpl(authDataSource: AuthDataSource()),
-            ),
+            create: (_) => getIt<ForgotPasswordBloc>(),
             child: const ForgotPasswordEmailPage(),
           );
         },
@@ -345,10 +287,7 @@ class Routes {
           final extra = (state.extra as Map?) ?? const {};
           final resetToken = (extra['resetToken'] as String?) ?? '';
           return BlocProvider(
-            create: (_) => ForgotPasswordBloc(
-              authRepo: AuthRepoImpl(authDataSource: AuthDataSource()),
-              seedResetToken: resetToken,
-            ),
+            create: (_) => getIt<ForgotPasswordBloc>(param1: resetToken),
             child: const ResetPasswordPage(),
           );
         },
@@ -364,11 +303,7 @@ class Routes {
         path: Pages.notifications,
         builder: (context, state) {
           return BlocProvider(
-            create: (_) => NotificationsBloc(
-              repo: NotificationsRepoImpl(
-                dataSource: NotificationsDataSource(),
-              ),
-            )..add(const NotificationsLoaded()),
+            create: (_) => getIt<NotificationsBloc>()..add(const NotificationsLoaded()),
             child: const NotificationsPage(),
           );
         },
@@ -380,7 +315,7 @@ class Routes {
           final id = (extra['id'] as int?) ?? 0;
           return NotificationDetailPage(
             id: id,
-            repo: NotificationsRepoImpl(dataSource: NotificationsDataSource()),
+            repo: getIt<NotificationsRepo>(),
           );
         },
       ),

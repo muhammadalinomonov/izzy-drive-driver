@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:dio/dio.dart';
 import 'package:taxi_app/core/extensions/status_code_extension.dart';
 import 'package:taxi_app/core/network/api_constants.dart';
@@ -10,6 +11,7 @@ import 'package:taxi_app/features/order_proccess/data/model/current_order_model.
 
 import '../../profile/data/model/profile_model.dart';
 
+@lazySingleton
 class OrderProccessSource {
   OrderProccessSource();
 

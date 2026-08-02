@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -15,6 +16,7 @@ import 'package:taxi_app/features/profile/data/model/output_model.dart';
 
 import '../model/profile_model.dart';
 
+@lazySingleton
 class ProfileDataSource {
   ProfileDataSource();
 

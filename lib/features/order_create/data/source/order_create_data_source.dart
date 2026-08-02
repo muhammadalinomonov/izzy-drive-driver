@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:dio/dio.dart';
 import 'package:taxi_app/core/extensions/status_code_extension.dart';
 import 'package:taxi_app/core/network/api_constants.dart';
@@ -9,6 +10,7 @@ import 'package:taxi_app/features/order_create/data/model/order_create_request_m
 import 'package:taxi_app/features/order_create/data/model/order_create_response_model.dart';
 import 'package:taxi_app/features/order_create/data/model/question_template_model.dart';
 
+@lazySingleton
 class OrderCreateDataSource {
   OrderCreateDataSource();
 

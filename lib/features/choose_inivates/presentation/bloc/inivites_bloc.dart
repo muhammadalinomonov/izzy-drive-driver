@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
@@ -12,6 +13,7 @@ part 'inivites_event.dart';
 
 part 'inivites_state.dart';
 
+@injectable
 class InivitesBloc extends Bloc<InivitesEvent, InivitesState> {
   final ActiveOrderRepository activeOrderRepository;
   final WebSocketService _ws = serviceLocator<WebSocketService>();

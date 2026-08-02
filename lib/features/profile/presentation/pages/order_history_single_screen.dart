@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:taxi_app/core/di/injection.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:go_router/go_router.dart';
@@ -35,7 +36,7 @@ class _OrderHistorySingleScreenState extends State<OrderHistorySingleScreen> {
   void initState() {
     super.initState();
 
-    _ordersHistoryBloc = OrdersHistoryBloc()..add(GetOrderHistoryDetailEvent(orderId: widget.orderId));
+    _ordersHistoryBloc = getIt<OrdersHistoryBloc>()..add(GetOrderHistoryDetailEvent(orderId: widget.orderId));
   }
 
   @override

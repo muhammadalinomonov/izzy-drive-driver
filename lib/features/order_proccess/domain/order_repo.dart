@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:taxi_app/features/order_proccess/data/order_proccess_source.dart';
 import 'package:taxi_app/features/order_proccess/domain/entities/current_order_entity.dart';
 
@@ -17,6 +18,7 @@ abstract class OrderRepository {
   Future<NetworkResponse<void>> rateMechanic(int rating, String comment, int mechanicId, {String? tag});
 }
 
+@LazySingleton(as: OrderRepository)
 class OrderRepositoryImpl implements OrderRepository {
   final OrderProccessSource orderProccessSource;
 

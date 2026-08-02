@@ -1,10 +1,11 @@
+import 'package:injectable/injectable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:taxi_app/core/location_service.dart';
 import 'package:taxi_app/features/master/data/model/review_model.dart';
 
 import '../../data/model/master_model.dart';
-import '../../data/repository/master_repository_impl.dart';
+import '../../domain/repository/master_repository.dart';
 
 enum MasterStatus { initial, loading, success, failure }
 
@@ -79,8 +80,9 @@ class GetMasterReviews extends MasterEvent {
   GetMasterReviews(this.url);
 }
 
+@injectable
 class MasterBloc extends Bloc<MasterEvent, MasterState> {
-  final MasterRepositoryImpl repository;
+  final MasterRepository repository;
   final LocationService locationService;
 
   MasterBloc(this.repository, this.locationService) : super(MasterState()) {

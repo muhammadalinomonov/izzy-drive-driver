@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:dio/dio.dart';
 import 'package:taxi_app/core/extensions/status_code_extension.dart';
 
@@ -9,6 +10,7 @@ import '../../../../core/service_locater.dart';
 import '../../../../core/utils/json_safe.dart';
 import '../model/active_order.dart';
 
+@lazySingleton
 class ActiveOrderSource {
   final client = serviceLocator.get<DioSettings>().dio;
 

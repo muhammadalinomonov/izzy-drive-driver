@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:taxi_app/features/choose_inivates/presentation/bloc/proposal_event.dart';
 import 'package:taxi_app/features/choose_inivates/presentation/bloc/proposal_state.dart';
@@ -5,6 +6,7 @@ import 'package:taxi_app/features/choose_inivates/presentation/bloc/proposal_sta
 import '../../../home/domain/repository/home_repository.dart';
 import '../../data/model/proposal_model.dart';
 
+@injectable
 class ProposalBloc extends Bloc<ProposalEvent, ProposalState> {
   final HomeRepository homeRepository;
 

@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
@@ -11,6 +12,7 @@ import 'package:taxi_app/features/order_create/domain/repo/order_create_repo.dar
 part 'order_create_event.dart';
 part 'order_create_state.dart';
 
+@injectable
 class OrderCreateBloc extends Bloc<OrderCreateEvent, OrderCreateState> {
   OrderCreateBloc({required this.repo}) : super(const OrderCreateState()) {
     on<OrderCreateInitialized>(_onInitialized);

@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:dio/dio.dart';
 import 'package:taxi_app/core/network/network_response.dart';
 import 'package:taxi_app/features/trips/data/model/navigation_session_model.dart';
@@ -7,6 +8,7 @@ import 'package:taxi_app/features/trips/data/model/vehicle_model.dart';
 import 'package:taxi_app/features/trips/data/source/trips_data_source.dart';
 import 'package:taxi_app/features/trips/domain/repo/trips_repo.dart';
 
+@LazySingleton(as: TripsRepo)
 class TripsRepoImpl extends TripsRepo {
   final TripsDataSource dataSource;
 

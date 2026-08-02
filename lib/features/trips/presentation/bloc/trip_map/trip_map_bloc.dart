@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'dart:async';
 
 import 'package:dio/dio.dart';
@@ -13,6 +14,7 @@ import 'package:taxi_app/features/trips/domain/repo/trips_repo.dart';
 part 'trip_map_event.dart';
 part 'trip_map_state.dart';
 
+@injectable
 class TripMapBloc extends Bloc<TripMapEvent, TripMapState> {
   final TripsRepo repo;
   final LocationService locationService;

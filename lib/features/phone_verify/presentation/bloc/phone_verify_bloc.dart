@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,6 +9,7 @@ import 'package:taxi_app/features/phone_verify/domain/repo/phone_verify_repo.dar
 part 'phone_verify_event.dart';
 part 'phone_verify_state.dart';
 
+@injectable
 class PhoneVerifyBloc extends Bloc<PhoneVerifyEvent, PhoneVerifyState> {
   final PhoneVerifyRepo repo;
 

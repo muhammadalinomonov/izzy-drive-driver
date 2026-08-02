@@ -1,9 +1,11 @@
+import 'package:injectable/injectable.dart';
 import 'package:taxi_app/core/network/network_response.dart';
 import 'package:taxi_app/features/auth/data/model/auth_model.dart';
 import 'package:taxi_app/features/auth/data/model/request_otp_model.dart';
 import 'package:taxi_app/features/auth/data/source/auth_data_source.dart';
 import 'package:taxi_app/features/auth/domain/repo/auth_repo.dart';
 
+@LazySingleton(as: AuthRepo)
 class AuthRepoImpl extends AuthRepo {
   final AuthDataSource authDataSource;
 

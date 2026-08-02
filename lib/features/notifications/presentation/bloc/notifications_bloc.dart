@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,6 +9,7 @@ import 'package:taxi_app/features/notifications/domain/repo/notifications_repo.d
 part 'notifications_event.dart';
 part 'notifications_state.dart';
 
+@injectable
 class NotificationsBloc extends Bloc<NotificationsEvent, NotificationsState> {
   final NotificationsRepo repo;
   late final VoidCallback _pushListener;

@@ -1,20 +1,20 @@
+import 'package:injectable/injectable.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:formz/formz.dart';
 import 'package:meta/meta.dart';
 import 'package:taxi_app/features/order_proccess/domain/entities/current_order_entity.dart';
-import 'package:taxi_app/features/profile/data/repository/profile_repository_impl.dart';
-import 'package:taxi_app/features/profile/data/source/profile_data_source.dart';
 import 'package:taxi_app/features/profile/domain/entities/order_history_entity.dart';
 import 'package:taxi_app/features/profile/domain/repository/profile_repository.dart';
 
 part 'orders_history_event.dart';
 part 'orders_history_state.dart';
 
+@injectable
 class OrdersHistoryBloc extends Bloc<OrdersHistoryEvent, OrdersHistoryState> {
-  final ProfileRepository _profileRepository = ProfileRepositoryImpl(ProfileDataSource());
+  final ProfileRepository _profileRepository;
 
-    OrdersHistoryBloc() : super(OrdersHistoryState()) {
+  OrdersHistoryBloc(this._profileRepository) : super(OrdersHistoryState()) {
     on<GetOrdersHistoryEvent>(_onGetOrdersHistoryEvent);
     on<GetMoreOrdersHistoryEvent>(_onGetMoreOrdersHistoryEvent);
     on<GetOrderHistoryDetailEvent>(_onGetOrderHistoryDetailEvent);

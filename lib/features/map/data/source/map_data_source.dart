@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:taxi_app/core/extensions/status_code_extension.dart';
 import 'package:taxi_app/core/network/api_constants.dart';
 import 'package:taxi_app/core/network/network_response.dart';
@@ -7,6 +8,7 @@ import '../../../../core/network/dio_model.dart';
 import '../model/nearby_masters_response.dart';
 import '../model/search_locations_response.dart'; // Ensure this import exists
 
+@lazySingleton
 class MapDataSource {
   final client = serviceLocator.get<DioSettings>().dio;
 

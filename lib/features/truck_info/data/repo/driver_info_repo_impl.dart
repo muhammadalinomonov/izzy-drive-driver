@@ -1,8 +1,10 @@
+import 'package:injectable/injectable.dart';
 import 'package:taxi_app/core/network/network_response.dart';
 import 'package:taxi_app/features/truck_info/data/model/driver_info_put_model.dart';
 import 'package:taxi_app/features/truck_info/data/source/driver_info_source.dart';
 import 'package:taxi_app/features/truck_info/domain/repo/driver_info_repo.dart';
 
+@LazySingleton(as: DriverInfoRepo)
 class DriverInfoRepoImpl extends DriverInfoRepo {
   final DriverInfoSource _driverInfoSource;
 

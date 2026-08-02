@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
@@ -17,6 +18,7 @@ import '../../data/model/order_accepted.dart';
 part 'orders_event.dart';
 part 'orders_state.dart';
 
+@injectable
 class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
   final OrderRepository orderRepository;
   final WebSocketService _ws = serviceLocator<WebSocketService>();

@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:dio/dio.dart';
 import 'package:taxi_app/core/extensions/status_code_extension.dart';
 import 'package:taxi_app/core/network/api_constants.dart';
@@ -9,6 +10,7 @@ import 'package:taxi_app/core/utils/json_safe.dart';
 import 'package:taxi_app/features/truck_info/data/model/driver_info_put_model.dart';
 import 'package:taxi_app/features/truck_info/domain/model/track_model.dart';
 
+@lazySingleton
 class DriverInfoSource {
   Future<NetworkResponse> getTrackMars() async {
     final client = serviceLocator.get<DioSettings>().dio;

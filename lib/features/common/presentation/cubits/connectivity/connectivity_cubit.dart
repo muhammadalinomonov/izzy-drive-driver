@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
@@ -17,6 +18,7 @@ class ConnectivityState extends Equatable {
   List<Object?> get props => [status];
 }
 
+@injectable
 class ConnectivityCubit extends Cubit<ConnectivityState> {
   final ConnectivityService _service;
   StreamSubscription<bool>? _sub;

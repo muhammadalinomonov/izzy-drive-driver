@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:dio/dio.dart';
 import 'package:taxi_app/core/extensions/status_code_extension.dart';
 import 'package:taxi_app/core/network/api_constants.dart';
@@ -8,6 +9,7 @@ import 'package:taxi_app/core/service_locater.dart';
 import 'package:taxi_app/core/utils/json_safe.dart';
 import 'package:taxi_app/features/cancel_reasons/data/model/cancel_reason_model.dart';
 
+@lazySingleton
 class CancelReasonDataSource {
   CancelReasonDataSource();
 

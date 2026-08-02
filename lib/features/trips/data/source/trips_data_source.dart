@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:dio/dio.dart';
 import 'package:taxi_app/core/extensions/status_code_extension.dart';
 import 'package:taxi_app/core/network/network_response.dart';
@@ -11,6 +12,7 @@ import 'package:taxi_app/features/trips/data/model/place_model.dart';
 import 'package:taxi_app/features/trips/data/model/trip_model.dart';
 import 'package:taxi_app/features/trips/data/model/vehicle_model.dart';
 
+@lazySingleton
 class TripsDataSource {
   TripsDataSource();
 

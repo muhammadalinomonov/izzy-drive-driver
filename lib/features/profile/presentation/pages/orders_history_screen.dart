@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:taxi_app/core/di/injection.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:formz/formz.dart';
@@ -24,7 +25,7 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen> {
 
   @override
   void initState() {
-    _ordersHistoryBloc = OrdersHistoryBloc()..add(GetOrdersHistoryEvent());
+    _ordersHistoryBloc = getIt<OrdersHistoryBloc>()..add(GetOrdersHistoryEvent());
     super.initState();
   }
 
