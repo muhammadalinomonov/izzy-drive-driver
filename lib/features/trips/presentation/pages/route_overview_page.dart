@@ -12,6 +12,7 @@ import 'package:taxi_app/core/constants/color/app_icons.dart';
 import 'package:taxi_app/core/utils/polyline_codec.dart';
 import 'package:taxi_app/features/trips/data/model/place_model.dart';
 import 'package:taxi_app/features/trips/data/model/trip_model.dart';
+import 'package:taxi_app/features/trips/presentation/widgets/marker_info_sheet.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/route_overview/route_overview_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/pages/driving_mode_page.dart';
 import 'package:taxi_app/features/trips/presentation/utils/marker_icon.dart';
@@ -71,6 +72,10 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
   mapbox.MapboxMap? _map;
   mapbox.PolylineAnnotationManager? _lines;
   mapbox.PointAnnotationManager? _markers;
+
+  /// Resolves a tapped toll annotation back to its model for the shared
+  /// marker information sheet.
+  final Map<int, TripTollMarker> _tollByAnnotationId = {};
 
   /// Only re-draw and re-fit the camera when something the map actually shows
   /// changed, not on every rebuild the bloc triggers.
@@ -218,8 +223,9 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
     if (selected.tollMarkers.isNotEmpty) {
       final tollPng = await rasterizeMarkerSvg(AppIcons.tollMarker, height: 72);
       if (!mounted) return;
+      _tollByAnnotationId.clear();
       for (final toll in selected.tollMarkers) {
-        await markers.create(mapbox.PointAnnotationOptions(
+        final created = await markers.create(mapbox.PointAnnotationOptions(
           geometry: mapbox.Point(
             coordinates: mapbox.Position(toll.coordinate.lng, toll.coordinate.lat),
           ),
@@ -227,7 +233,21 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
           iconSize: 1.1,
           iconAnchor: mapbox.IconAnchor.BOTTOM,
         ));
+        if (!mounted) return;
+        _tollByAnnotationId[created.id.hashCode] = toll;
       }
+      // Informational only here: the sheet opens without "To go there", since
+      // this screen must not re-target a route the driver already priced.
+      markers.tapEvents(
+        onTap: (annotation) {
+          final toll = _tollByAnnotationId[annotation.id.hashCode];
+          if (toll == null || !mounted) return;
+          showMarkerInfoSheet(
+            context,
+            info: MarkerInfo.fromTollMarker(toll),
+          );
+        },
+      );
     }
     if (!mounted) return;
 

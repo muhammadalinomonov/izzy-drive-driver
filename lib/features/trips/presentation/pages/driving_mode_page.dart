@@ -16,6 +16,7 @@ import 'package:taxi_app/features/trips/presentation/controllers/driving_camera.
 import 'package:taxi_app/features/trips/presentation/controllers/driving_session.dart';
 import 'package:taxi_app/features/trips/presentation/controllers/marker_animator.dart';
 import 'package:taxi_app/features/trips/presentation/utils/marker_icon.dart';
+import 'package:taxi_app/features/trips/presentation/widgets/marker_info_sheet.dart';
 import 'package:taxi_app/features/trips/presentation/widgets/speedometer.dart';
 import 'package:taxi_app/features/trips/presentation/widgets/trip_info_bar.dart';
 
@@ -93,6 +94,10 @@ class _DrivingModePageState extends State<DrivingModePage>
   mapbox.PolylineAnnotation? _remainingConn;
   mapbox.PolylineAnnotation? _remainingMain;
   mapbox.PointAnnotation? _driverMarker;
+
+  /// Resolves a tapped toll annotation back to its model for the shared
+  /// marker information sheet.
+  final Map<int, TripTollMarker> _tollByAnnotationId = {};
 
   /// Segment the split currently sits on. -1 forces a rebuild of the mains.
   int _splitSegIdx = -1;
@@ -337,8 +342,9 @@ class _DrivingModePageState extends State<DrivingModePage>
     if (session.routeAlternative.tollMarkers.isNotEmpty) {
       final tollPng = await rasterizeMarkerSvg(AppIcons.tollMarker, height: 72);
       if (!mounted) return;
+      _tollByAnnotationId.clear();
       for (final toll in session.routeAlternative.tollMarkers) {
-        await _markers!.create(mapbox.PointAnnotationOptions(
+        final created = await _markers!.create(mapbox.PointAnnotationOptions(
           geometry: mapbox.Point(
             coordinates: mapbox.Position(toll.coordinate.lng, toll.coordinate.lat),
           ),
@@ -347,7 +353,19 @@ class _DrivingModePageState extends State<DrivingModePage>
           iconAnchor: mapbox.IconAnchor.BOTTOM,
         ));
         if (!mounted) return;
+        _tollByAnnotationId[created.id.hashCode] = toll;
       }
+      // Informational only: no "To go there" while a trip is under way.
+      _markers!.tapEvents(
+        onTap: (annotation) {
+          final toll = _tollByAnnotationId[annotation.id.hashCode];
+          if (toll == null || !mounted) return;
+          showMarkerInfoSheet(
+            context,
+            info: MarkerInfo.fromTollMarker(toll),
+          );
+        },
+      );
     }
 
     // The vehicle puck goes on last so it draws above the route and the pins.

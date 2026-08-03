@@ -211,6 +211,15 @@
       "unknown": "Noma'lum"
     }
   },
+  "markerSheet": {
+    "fuelStationName": "Shoxobcha nomi",
+    "tollName": "To'lov punkti",
+    "tollPoint": "To'lov punkti {}",
+    "location": "Manzil",
+    "price": "Narx",
+    "mile": "Masofa",
+    "toGoThere": "U yerga borish"
+  },
   "tripMap": {
     "fuelNeedsLocation": "Joylashuvingiz aniqlanmoqda. Bir lahzadan so'ng urinib ko'ring.",
     "title": "Manzillar",

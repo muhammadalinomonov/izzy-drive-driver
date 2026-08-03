@@ -211,6 +211,15 @@
       "unknown": "Неизвестно"
     }
   },
+  "markerSheet": {
+    "fuelStationName": "Название АЗС",
+    "tollName": "Пункт оплаты",
+    "tollPoint": "Пункт оплаты {}",
+    "location": "Адрес",
+    "price": "Цена",
+    "mile": "Расстояние",
+    "toGoThere": "Поехать туда"
+  },
   "tripMap": {
     "fuelNeedsLocation": "Определяем ваше местоположение. Попробуйте через момент.",
     "title": "Локации",

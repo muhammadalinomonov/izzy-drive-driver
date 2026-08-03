@@ -61,6 +61,7 @@ class TripMapBloc extends Bloc<TripMapEvent, TripMapState> {
     on<TripMapGasStationModeToggled>(_onGasStationModeToggled);
     on<TripMapFuelStationsRequested>(_onFuelStationsRequested);
     on<TripMapFuelStationSelected>(_onFuelStationSelected);
+    on<TripMapMarkerHighlighted>(_onMarkerHighlighted);
   }
 
   // ── Nearby Fuel Stations ──────────────────────────────────────────────────
@@ -130,6 +131,21 @@ class TripMapBloc extends Bloc<TripMapEvent, TripMapState> {
       fuelStations: response.data ?? const [],
       fuelError: '',
     ));
+  }
+
+  /// Highlight-only: the sheet is open but nothing has been chosen yet.
+  void _onMarkerHighlighted(
+    TripMapMarkerHighlighted event,
+    Emitter<TripMapState> emit,
+  ) {
+    // Never clear a highlight that belongs to an already-selected destination.
+    if (event.stationId.isEmpty && state.destination != null) {
+      final selected = state.fuelStations
+          .where((s) => s.id == state.selectedStationId)
+          .isNotEmpty;
+      if (selected) return;
+    }
+    emit(state.copyWith(selectedStationId: event.stationId));
   }
 
   /// Picking a station fills both fields at once: origin stays the driver's

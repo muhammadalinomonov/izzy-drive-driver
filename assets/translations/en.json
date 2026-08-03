@@ -211,6 +211,15 @@
       "unknown": "Unknown"
     }
   },
+  "markerSheet": {
+    "fuelStationName": "Fuel Station Name",
+    "tollName": "Toll Point",
+    "tollPoint": "Toll point {}",
+    "location": "Location",
+    "price": "Price",
+    "mile": "Mile",
+    "toGoThere": "To go there"
+  },
   "tripMap": {
     "fuelNeedsLocation": "Waiting for your location. Try again in a moment.",
     "title": "Locations",

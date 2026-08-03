@@ -16,6 +16,7 @@ import 'package:taxi_app/core/session/premium_session.dart';
 import 'package:taxi_app/features/trips/presentation/pages/route_overview_page.dart';
 import 'package:taxi_app/features/trips/presentation/utils/marker_icon.dart';
 import 'package:taxi_app/features/trips/presentation/widgets/location_fields_card.dart';
+import 'package:taxi_app/features/trips/presentation/widgets/marker_info_sheet.dart';
 import 'package:taxi_app/features/trips/presentation/widgets/place_list_tile.dart';
 import 'package:taxi_app/routes/pages.dart';
 
@@ -266,8 +267,22 @@ class _TripMapPageState extends State<TripMapPage> {
     );
   }
 
-  void _onStationTapped(FuelStationModel station) {
-    context.read<TripMapBloc>().add(TripMapFuelStationSelected(station));
+  /// Tapping a station highlights it and opens the shared marker sheet. The
+  /// destination is only set if the driver confirms with "To go there", so a
+  /// tap to read the price doesn't hijack the route they were planning.
+  Future<void> _onStationTapped(FuelStationModel station) async {
+    final bloc = context.read<TripMapBloc>();
+    bloc.add(TripMapMarkerHighlighted(station.id));
+
+    final goThere = await showMarkerInfoSheet(
+      context,
+      info: MarkerInfo.fromFuelStation(station),
+      showActionButton: true,
+      // Dismissing without acting drops the highlight again.
+      onDismissed: () => bloc.add(const TripMapMarkerHighlighted('')),
+    );
+    if (goThere != true || !mounted) return;
+    bloc.add(TripMapFuelStationSelected(station));
   }
 
   /// Frames origin and the chosen station together, so the driver sees the

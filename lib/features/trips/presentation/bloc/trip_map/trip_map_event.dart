@@ -86,3 +86,14 @@ class TripMapFuelStationSelected extends TripMapEvent {
   @override
   List<Object?> get props => [station.id];
 }
+
+/// A marker was tapped but not yet acted on - highlights it while its
+/// information sheet is open. An empty id clears the highlight.
+class TripMapMarkerHighlighted extends TripMapEvent {
+  final String stationId;
+
+  const TripMapMarkerHighlighted(this.stationId);
+
+  @override
+  List<Object?> get props => [stationId];
+}
