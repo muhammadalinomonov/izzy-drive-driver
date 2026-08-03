@@ -32,6 +32,7 @@ import 'package:taxi_app/features/trips/presentation/bloc/route_overview/route_o
 import 'package:taxi_app/features/trips/presentation/bloc/trip_map/trip_map_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/trips_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/pages/driving_mode_page.dart';
+import 'package:taxi_app/features/trips/presentation/pages/support_message_page.dart';
 import 'package:taxi_app/features/trips/presentation/pages/route_overview_page.dart';
 import 'package:taxi_app/features/trips/presentation/pages/trip_map_page.dart';
 import 'package:taxi_app/features/notifications/presentation/pages/notification_detail_page.dart';
@@ -195,6 +196,11 @@ class Routes {
             child: RouteOverviewPage(args: args),
           );
         },
+      ),
+      GoRoute(
+        // UI only for now - no bloc, because nothing is fetched or sent yet.
+        path: Pages.supportMessage,
+        builder: (context, state) => const SupportMessagePage(),
       ),
       GoRoute(
         path: Pages.drivingMode,

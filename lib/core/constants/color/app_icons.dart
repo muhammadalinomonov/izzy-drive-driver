@@ -24,6 +24,8 @@ class AppIcons {
   static const String master = 'assets/icons/mastericon.png';
   static const String back = 'assets/icons/back.svg';
   static const String location = 'assets/icons/location.svg';
+  /// Premium Support Message affordance (trip map button, docs/ui/10.png).
+  static const String chat = 'assets/icons/ic_chat.svg';
   static const String microphone = 'assets/icons/mic.svg';
   static const String paperclip = 'assets/icons/paperclip.svg';
   static const String bell = 'assets/icons/bell.svg';

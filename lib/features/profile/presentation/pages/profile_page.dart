@@ -12,10 +12,13 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:taxi_app/core/components/app_snack_bar.dart';
 import 'package:taxi_app/core/constants/color/app_color.dart';
 import 'package:taxi_app/core/constants/color/app_icons.dart';
-import 'package:taxi_app/core/constants/color/app_images.dart';
+import 'package:taxi_app/core/session/premium_session.dart';
 import 'package:taxi_app/features/auth/presentation/bloc/bloc/auth_bloc.dart';
 import 'package:taxi_app/features/common/presentation/widgets/common_image.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:taxi_app/features/profile/presentation/bloc/driver_profile/driver_profile_bloc.dart';
 import 'package:taxi_app/features/profile/presentation/bloc/profile_bloc.dart';
+import 'package:taxi_app/features/trips/data/model/vehicle_model.dart';
 import 'package:taxi_app/features/profile/presentation/pages/outputs_screen.dart';
 import 'package:taxi_app/features/profile/presentation/widgets/choose_language_bottom_sheet.dart';
 import 'package:taxi_app/routes/pages.dart';
@@ -52,6 +55,15 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _loadProfile() {
     context.read<ProfileBloc>().add(LoadProfile());
+    context.read<DriverProfileBloc>().add(const DriverProfileLoaded());
+  }
+
+  /// Pull-to-refresh reloads both backends. The legacy izzydrive profile still
+  /// owns the avatar; the Quadrix profile owns name, contact and vehicles.
+  Future<void> _refresh() async {
+    context.read<ProfileBloc>().add(LoadProfile());
+    context.read<DriverProfileBloc>().add(const DriverProfileRefreshed());
+    await Future.delayed(const Duration(milliseconds: 350));
   }
 
   Future<void> _onAvatarTap() async {
@@ -107,237 +119,103 @@ class _ProfilePageState extends State<ProfilePage> {
             );
           }
         },
-        child: BlocBuilder<ProfileBloc, ProfileState>(
-          builder: (context, state) {
-            if (state.status == ProfileStatus.loading) {
-              return Center(
-                child: CupertinoActivityIndicator(
-                  color: AppColor.kPrimaryColor,
-                ),
-              );
-            } else if (state.status == ProfileStatus.error) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(state.message ?? 'Something went wrong'),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _loadProfile,
-                      child: const Text('Try Again'),
+        child: RefreshIndicator.adaptive(
+          onRefresh: _refresh,
+          child: BlocBuilder<DriverProfileBloc, DriverProfileState>(
+            builder: (context, driver) {
+              return BlocBuilder<ProfileBloc, ProfileState>(
+                builder: (context, state) {
+                  final profile = driver.profile;
+                  final legacy = state.profile;
+
+                  // Only show the skeleton on a genuinely cold screen. Once
+                  // either backend has answered there is something worth
+                  // rendering, and a refresh must never collapse it.
+                  final isCold = profile == null &&
+                      legacy == null &&
+                      driver.status != DriverProfileStatus.failure &&
+                      state.status != ProfileStatus.error;
+                  if (isCold) return const _ProfileSkeleton();
+
+                  // Both backends failed with nothing cached - the only real
+                  // error state.
+                  if (profile == null &&
+                      legacy == null &&
+                      (driver.status == DriverProfileStatus.failure ||
+                          state.status == ProfileStatus.error)) {
+                    return _ProfileErrorView(
+                      message: driver.errorMessage.isNotEmpty
+                          ? driver.errorMessage
+                          : (state.message ?? 'Something went wrong'),
+                      errorCode: driver.errorCode,
+                      onRetry: _loadProfile,
+                    );
+                  }
+
+                  // Name and contact prefer the Quadrix profile and fall back
+                  // to the legacy account, so the header stays populated while
+                  // the new endpoints are still rolling out.
+                  final name = profile?.displayName.isNotEmpty == true
+                      ? profile!.displayName
+                      : (legacy?.fullName ?? '');
+                  final contact = profile?.phone.isNotEmpty == true
+                      ? profile!.phone
+                      : (legacy?.email ?? '');
+
+                  return ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.only(
+                      top: MediaQuery.paddingOf(context).top + 16,
+                      bottom: MediaQuery.paddingOf(context).bottom + 24,
                     ),
-                  ],
-                ),
-              );
-            } else if (state.status == ProfileStatus.loaded) {
-              final profile = state.profile;
-              final fullName = profile?.fullName ?? '';
-              final email = profile?.email ?? '';
-              // Ism va familiyaning bosh harflaridan (1–2 ta) yasalgan
-              // default avatar matni. "Eshonov Fakhriyor" → "EF".
-              final initial = avatarInitials(fullName);
-              final mark = profile?.truckMark ?? '';
-              final model = profile?.truckmodel ?? '';
-              final vehicle = '$mark $model'.trim();
-              final topPadding = MediaQuery.paddingOf(context).top;
-              final headerHeight = 257.0 + topPadding;
-
-              return SingleChildScrollView(
-                // physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.paddingOf(context).bottom + 24,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Header bo'limi - oq fonli, dekorativ blur doiralar bilan.
-                    // Vehicle card uning pastki qismiga yopishib turadi.
-                    SizedBox(
-                      height: headerHeight + 34,
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Positioned(
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            height: headerHeight,
-                            child: const _ProfileHeaderBg(),
-                          ),
-                          Positioned(
-                            top: 45 + topPadding,
-                            left: 0,
-                            right: 0,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                _AvatarWidget(
-                                  photoUrl: profile?.photo ?? '',
-                                  initial: initial,
-                                  name: fullName,
-                                  isUploading:
-                                      state.uploadAvatarStatus ==
-                                      FormzSubmissionStatus.inProgress,
-                                  onTap: _onAvatarTap,
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  fullName.isEmpty ? 'No user name' : fullName,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black,
-                                    height: 1.3,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  email.isEmpty ? 'no email' : email,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: AppColor.grey,
-                                    letterSpacing: -0.3,
-                                    height: 1.3,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Vehicle card - header pastki qismiga yopishtirilgan
-                          Positioned(
-                            left: 12,
-                            right: 12,
-                            bottom: 0,
-                            child: _VehicleCard(
-                              title: vehicle.isEmpty
-                                  ? 'No Vehicle model'
-                                  : vehicle,
-                              amount: r'$0',
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => const OutputsScreen(),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: _ProfileMenu(),
-                    ),
-                  ],
-                ),
-              );
-            }
-            return const SizedBox();
-          },
-        ),
-      ),
-    );
-  }
-}
-
-/// Header foni - Figma'da oq fonga ikkita yumshoq blur doira (chap-binafsha,
-/// o'ng-cyan) qo'shilgan. Profile gradient PNG ham xuddi shu effektni beradi,
-/// shu sababli mavjud asset'ni ishlatamiz; agar dizayn pixel-precise kerak
-/// bo'lsa, dekorativ doiralar manually qo'shilishi mumkin.
-class _ProfileHeaderBg extends StatelessWidget {
-  const _ProfileHeaderBg();
-
-  @override
-  Widget build(BuildContext context) {
-    return Image.asset(
-      AppImages.profileGradient,
-      fit: BoxFit.cover,
-      alignment: Alignment.topCenter,
-    );
-  }
-}
-
-class _VehicleCard extends StatelessWidget {
-  const _VehicleCard({
-    required this.title,
-    required this.amount,
-    required this.onTap,
-  });
-
-  final String title;
-  final String amount;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 69,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.10),
-            blurRadius: 12,
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                          height: 1.3,
-                          letterSpacing: -0.3,
-                        ),
+                      _ProfileHeaderCard(
+                        name: name,
+                        contact: contact,
+                        driverNumber: profile?.driverNumber ?? '',
+                        licenseLabel: profile?.licenseLabel ?? '',
+                        photoUrl: legacy?.photo ?? '',
+                        initials: avatarInitials(name),
+                        isPremium: driver.isPremium,
+                        isUploading: state.uploadAvatarStatus ==
+                            FormzSubmissionStatus.inProgress,
+                        onAvatarTap: _onAvatarTap,
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        amount,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Colors.black,
-                          height: 1.3,
-                          letterSpacing: -0.3,
-                        ),
+                      const SizedBox(height: 14),
+                      _BalanceCard(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const OutputsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 14),
+                      _VehiclesSection(
+                        vehicles: driver.vehicles,
+                        failed: driver.vehiclesFailed,
+                        loading: driver.status == DriverProfileStatus.loading,
+                        onRetry: _loadProfile,
+                      ),
+                      const SizedBox(height: 14),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        child: _ProfileMenu(),
                       ),
                     ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Image.asset(
-                  'assets/images/truck.png',
-                  width: 80,
-                  height: 52,
-                  fit: BoxFit.contain,
-                ),
-              ],
-            ),
+                  );
+                },
+              );
+            },
           ),
         ),
       ),
     );
   }
 }
+
+
 
 class _ProfileMenu extends StatelessWidget {
   const _ProfileMenu();
@@ -383,6 +261,9 @@ class _ProfileMenu extends StatelessWidget {
     context.read<AuthBloc>().add(
       LogoutEvent(
         onSuccess: () {
+          // Drop the entitlement so the next driver to sign in on this device
+          // doesn't inherit premium features from the cached flag.
+          PremiumSession.clear();
           if (!context.mounted) return;
           context.go(Pages.signIn);
         },
@@ -404,6 +285,7 @@ class _ProfileMenu extends StatelessWidget {
     context.read<AuthBloc>().add(
       DeleteAccountEvent(
         onSuccess: () {
+          PremiumSession.clear();
           if (!context.mounted) return;
           AppSnackBar.showSuccess(context, 'Account deleted');
           context.go(Pages.signIn);
@@ -915,6 +797,504 @@ class _SourceTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Redesigned header: avatar, name, contact, and the Premium badge.
+///
+/// One card instead of the old decorative header stack, so the screen reads as
+/// a consistent stack of cards from top to bottom.
+class _ProfileHeaderCard extends StatelessWidget {
+  const _ProfileHeaderCard({
+    required this.name,
+    required this.contact,
+    required this.driverNumber,
+    required this.licenseLabel,
+    required this.photoUrl,
+    required this.initials,
+    required this.isPremium,
+    required this.isUploading,
+    required this.onAvatarTap,
+  });
+
+  final String name;
+  final String contact;
+  final String driverNumber;
+  final String licenseLabel;
+  final String photoUrl;
+  final String initials;
+  final bool isPremium;
+  final bool isUploading;
+  final VoidCallback onAvatarTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 18),
+      decoration: BoxDecoration(
+        color: AppColor.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          _AvatarWidget(
+            photoUrl: photoUrl,
+            initial: initials,
+            name: name,
+            isUploading: isUploading,
+            onTap: onAvatarTap,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            name.isEmpty ? 'No user name' : name,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: Colors.black,
+              height: 1.3,
+            ),
+          ),
+          if (contact.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              contact,
+              style: TextStyle(
+                fontSize: 13,
+                color: AppColor.grey,
+                letterSpacing: -0.3,
+                height: 1.3,
+              ),
+            ),
+          ],
+          // The badge fades and scales in, so it does not simply pop into
+          // existence when the profile request resolves a moment after paint.
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            child: isPremium
+                ? const Padding(
+                    padding: EdgeInsets.only(top: 10),
+                    child: _PremiumBadge(),
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
+          if (driverNumber.isNotEmpty || licenseLabel.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Divider(height: 1, color: AppColor.grey2),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                if (driverNumber.isNotEmpty)
+                  Expanded(
+                    child: _HeaderFact(
+                      label: 'Driver ID',
+                      value: driverNumber,
+                    ),
+                  ),
+                if (licenseLabel.isNotEmpty)
+                  Expanded(
+                    child: _HeaderFact(
+                      label: 'License',
+                      value: licenseLabel,
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _HeaderFact extends StatelessWidget {
+  const _HeaderFact({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 11, color: AppColor.grey),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Colors.black,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Premium indicator, shown only when `is_paid_user` is true.
+class _PremiumBadge extends StatelessWidget {
+  const _PremiumBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFE6AE06), Color(0xFFF5D06B)],
+        ),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.workspace_premium_rounded, size: 15, color: Colors.white),
+          SizedBox(width: 5),
+          Text(
+            'Premium',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Kept from the previous design so the Outputs screen stays reachable - the
+/// old vehicle card was the only route to it.
+class _BalanceCard extends StatelessWidget {
+  const _BalanceCard({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Material(
+        color: AppColor.white,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: AppColor.kPrimary2Color,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.account_balance_wallet_rounded,
+                    size: 20,
+                    color: AppColor.kPrimaryColor,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Balance',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+                Text(
+                  r'$0',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColor.black,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(Icons.chevron_right_rounded, color: AppColor.grey),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Vehicles assigned to the driver, from `GET mobile/vehicles`.
+///
+/// Carries its own empty and error states: no assigned truck is a normal
+/// response per docs §3.4, and a failed vehicles call must not take down a
+/// profile that loaded fine.
+class _VehiclesSection extends StatelessWidget {
+  const _VehiclesSection({
+    required this.vehicles,
+    required this.failed,
+    required this.loading,
+    required this.onRetry,
+  });
+
+  final List<VehicleModel> vehicles;
+  final bool failed;
+  final bool loading;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+            child: Text(
+              'Vehicles',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColor.black,
+              ),
+            ),
+          ),
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: AppColor.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: _body(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _body(BuildContext context) {
+    if (vehicles.isEmpty && failed) {
+      return Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Text(
+              'Could not load vehicles',
+              style: TextStyle(fontSize: 13, color: AppColor.grey),
+            ),
+            const SizedBox(height: 10),
+            TextButton(onPressed: onRetry, child: const Text('Retry')),
+          ],
+        ),
+      );
+    }
+    if (vehicles.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(20),
+        child: Center(
+          child: Text(
+            loading ? 'Loading vehicles...' : 'No vehicles assigned',
+            style: TextStyle(fontSize: 13, color: AppColor.grey),
+          ),
+        ),
+      );
+    }
+    return Column(
+      children: [
+        for (var i = 0; i < vehicles.length; i++) ...[
+          if (i > 0)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Divider(height: 1, color: AppColor.grey2),
+            ),
+          _VehicleRow(vehicle: vehicles[i]),
+        ],
+      ],
+    );
+  }
+}
+
+class _VehicleRow extends StatelessWidget {
+  const _VehicleRow({required this.vehicle});
+
+  final VehicleModel vehicle;
+
+  @override
+  Widget build(BuildContext context) {
+    final spec = [
+      if (vehicle.year > 0) '${vehicle.year}',
+      vehicle.make,
+      vehicle.model,
+    ].where((p) => p.isNotEmpty).join(' ');
+
+    final plate = [
+      vehicle.licensePlate,
+      if (vehicle.licenseState.isNotEmpty) vehicle.licenseState,
+    ].where((p) => p.isNotEmpty).join(' · ');
+
+    return Padding(
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppColor.lightBlue,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.local_shipping_rounded,
+              size: 22,
+              color: AppColor.kPrimaryColor,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  vehicle.label.isEmpty ? 'Vehicle' : vehicle.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
+                  ),
+                ),
+                if (spec.isNotEmpty || plate.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    [spec, plate].where((p) => p.isNotEmpty).join('  •  '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12, color: AppColor.grey),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (vehicle.status.isNotEmpty) _StatusChip(active: vehicle.isActive),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({required this.active});
+
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = active ? const Color(0xFF00A911) : AppColor.grey;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        active ? 'Active' : 'Inactive',
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+/// Shimmer placeholder for the cold-start load.
+class _ProfileSkeleton extends StatelessWidget {
+  const _ProfileSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    Widget box(double height) => Container(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          height: height,
+          decoration: BoxDecoration(
+            color: const Color(0xFFE3E8EB),
+            borderRadius: BorderRadius.circular(16),
+          ),
+        );
+
+    return Shimmer.fromColors(
+      baseColor: const Color(0xFFE3E8EB),
+      highlightColor: const Color(0xFFF7F9FB),
+      period: const Duration(milliseconds: 1400),
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + 16),
+        children: [box(210), box(70), box(120), box(240)],
+      ),
+    );
+  }
+}
+
+class _ProfileErrorView extends StatelessWidget {
+  const _ProfileErrorView({
+    required this.message,
+    required this.errorCode,
+    required this.onRetry,
+  });
+
+  final String message;
+  final String errorCode;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    // A missing toll account is a setup problem, not a transient failure -
+    // retrying it forever would be pointless, so it gets its own copy.
+    final isNotConnected = errorCode == 'TOLL_SESSION_MISSING';
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 120),
+      children: [
+        Icon(
+          isNotConnected ? Icons.link_off_rounded : Icons.error_outline_rounded,
+          size: 40,
+          color: AppColor.grey,
+        ),
+        const SizedBox(height: 12),
+        Text(
+          isNotConnected
+              ? 'trips.notConnected'.tr()
+              : (message.isEmpty ? 'Something went wrong' : message),
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 13, color: AppColor.grey),
+        ),
+        const SizedBox(height: 16),
+        Center(
+          child: FilledButton(
+            onPressed: onRetry,
+            child: const Text('Try again'),
+          ),
+        ),
+      ],
     );
   }
 }

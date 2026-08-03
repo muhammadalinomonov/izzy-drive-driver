@@ -13,6 +13,9 @@ import 'package:taxi_app/core/utils/notifications.dart';
 import 'package:taxi_app/features/common/presentation/cubits/connectivity/connectivity_cubit.dart';
 import 'package:taxi_app/features/common/presentation/widgets/no_internet_bottom_sheet.dart';
 import 'package:taxi_app/features/order_proccess/presentation/bloc/orders_bloc.dart';
+import 'package:taxi_app/features/profile/data/repository/driver_profile_repository_impl.dart';
+import 'package:taxi_app/features/profile/data/source/driver_profile_data_source.dart';
+import 'package:taxi_app/features/profile/presentation/bloc/driver_profile/driver_profile_bloc.dart';
 import 'package:taxi_app/features/profile/presentation/bloc/profile_bloc.dart';
 import 'package:taxi_app/core/services/remote_config_service.dart';
 import 'package:taxi_app/routes/app_router.dart';
@@ -82,6 +85,17 @@ class _TaxiAppState extends State<TaxiApp> {
         BlocProvider<ConnectivityCubit>(create: (_) => getIt<ConnectivityCubit>()),
         BlocProvider(create: (_) => getIt<OrdersBloc>()),
         BlocProvider(create: (_) => getIt<ProfileBloc>()),
+        // Constructed by hand rather than registered in GetIt, per CLAUDE.md.
+        // It sits here rather than in a GoRoute builder because ProfilePage is
+        // rendered inside main_screen's IndexedStack as well as on /profile,
+        // so a per-route provider would miss the tab.
+        BlocProvider(
+          create: (_) => DriverProfileBloc(
+            repo: DriverProfileRepositoryImpl(
+              dataSource: DriverProfileDataSource(),
+            ),
+          )..add(const DriverProfileLoaded()),
+        ),
       ],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,

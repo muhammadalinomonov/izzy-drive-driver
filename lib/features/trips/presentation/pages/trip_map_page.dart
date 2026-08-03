@@ -9,6 +9,9 @@ import 'package:taxi_app/core/components/app_snack_bar.dart';
 import 'package:taxi_app/core/constants/color/app_color.dart';
 import 'package:taxi_app/features/trips/data/model/place_model.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/trip_map/trip_map_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:taxi_app/core/constants/color/app_icons.dart';
+import 'package:taxi_app/core/session/premium_session.dart';
 import 'package:taxi_app/features/trips/presentation/pages/route_overview_page.dart';
 import 'package:taxi_app/features/trips/presentation/utils/marker_icon.dart';
 import 'package:taxi_app/features/trips/presentation/widgets/location_fields_card.dart';
@@ -34,7 +37,13 @@ class _TripMapPageState extends State<TripMapPage> {
   static const double _expanded = 0.92;
 
   /// Both zoom buttons plus the gap between them.
+  /// Height of the right-hand control column, used to stop it sliding off the
+  /// top as the sheet expands. Premium adds the Support button plus its gap,
+  /// so the ceiling has to account for both layouts.
   static const double _zoomStackHeight = 44 + 12 + 44;
+  static const double _supportButtonHeight = 12 + 44;
+
+  void _openSupportMessage() => context.push(Pages.supportMessage);
 
   final _sheetController = DraggableScrollableController();
 
@@ -304,7 +313,11 @@ class _TripMapPageState extends State<TripMapPage> {
                   // the status bar.
                   final ceiling = math.max(
                     16.0,
-                    size.height - topInset - 16 - _zoomStackHeight,
+                    size.height -
+                        topInset -
+                        16 -
+                        _zoomStackHeight -
+                        (PremiumSession.isPremium ? _supportButtonHeight : 0),
                   );
                   return Positioned(
                     right: 16,
@@ -317,6 +330,23 @@ class _TripMapPageState extends State<TripMapPage> {
                     _CircleButton(icon: Icons.add, onTap: () => _zoomBy(1)),
                     const SizedBox(height: 12),
                     _CircleButton(icon: Icons.remove, onTap: () => _zoomBy(-1)),
+                    // Premium-only. Driven by the global entitlement rather
+                    // than a bloc, so it appears the moment the profile
+                    // resolves without this screen knowing about profiles.
+                    ValueListenableBuilder<bool>(
+                      valueListenable: PremiumSession.listenable,
+                      builder: (context, isPremium, _) {
+                        if (!isPremium) return const SizedBox.shrink();
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: _CircleButton(
+                            asset: AppIcons.chat,
+                            filled: true,
+                            onTap: _openSupportMessage,
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -618,15 +648,28 @@ class _ContinueBar extends StatelessWidget {
 }
 
 class _CircleButton extends StatelessWidget {
-  const _CircleButton({required this.icon, required this.onTap});
+  const _CircleButton({
+    this.icon,
+    this.asset,
+    required this.onTap,
+    this.filled = false,
+  }) : assert(icon != null || asset != null, 'needs an icon or an asset');
 
-  final IconData icon;
+  final IconData? icon;
+
+  /// SVG asset path, mutually exclusive with [icon].
+  final String? asset;
   final VoidCallback onTap;
+
+  /// Inverts the button to a solid primary fill, used for the Support action
+  /// so it reads as an offer rather than another map control.
+  final bool filled;
 
   @override
   Widget build(BuildContext context) {
+    final tint = filled ? Colors.white : AppColor.black;
     return Material(
-      color: AppColor.white,
+      color: filled ? AppColor.kPrimaryColor : AppColor.white,
       shape: const CircleBorder(),
       elevation: 3,
       child: InkWell(
@@ -635,7 +678,16 @@ class _CircleButton extends StatelessWidget {
         child: SizedBox(
           width: 44,
           height: 44,
-          child: Icon(icon, size: 20, color: AppColor.black),
+          child: Center(
+            child: asset != null
+                ? SvgPicture.asset(
+                    asset!,
+                    width: 20,
+                    height: 20,
+                    colorFilter: ColorFilter.mode(tint, BlendMode.srcIn),
+                  )
+                : Icon(icon, size: 20, color: tint),
+          ),
         ),
       ),
     );

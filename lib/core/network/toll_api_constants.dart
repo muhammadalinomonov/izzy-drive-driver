@@ -27,6 +27,8 @@ class TollApiConstants {
 
   // Driver / app bootstrap
   static const String bootstrap = 'mobile/bootstrap';
+  /// Driver profile: `GET` reads it, `PATCH` updates the editable fields
+  /// (docs §3.2/§3.3). Note PATCH, not POST.
   static const String profile = 'mobile/profile';
   static const String vehicles = 'mobile/vehicles';
   static const String places = 'mobile/places';
