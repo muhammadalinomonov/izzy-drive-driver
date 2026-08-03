@@ -212,6 +212,7 @@
     }
   },
   "tripMap": {
+    "fuelNeedsLocation": "Joylashuvingiz aniqlanmoqda. Bir lahzadan so'ng urinib ko'ring.",
     "title": "Manzillar",
     "searchBarHint": "Qayerga borasiz?",
     "yourLocation": "Sizning joylashuvingiz",

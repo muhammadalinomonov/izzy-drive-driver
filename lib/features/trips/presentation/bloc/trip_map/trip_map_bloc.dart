@@ -5,10 +5,14 @@ import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:taxi_app/core/location_service.dart';
+import 'package:taxi_app/features/trips/data/model/fuel_station_model.dart';
 import 'package:taxi_app/features/trips/data/model/place_model.dart';
 import 'package:taxi_app/features/trips/data/model/trip_model.dart';
+import 'package:taxi_app/features/trips/data/repo/fuel_stations_repo_impl.dart';
+import 'package:taxi_app/features/trips/data/source/fuel_stations_data_source.dart';
 import 'package:taxi_app/features/trips/data/source/recent_places_store.dart';
 import 'package:taxi_app/features/trips/data/source/trips_data_source.dart';
+import 'package:taxi_app/features/trips/domain/repo/fuel_stations_repo.dart';
 import 'package:taxi_app/features/trips/domain/repo/trips_repo.dart';
 
 part 'trip_map_event.dart';
@@ -18,6 +22,13 @@ part 'trip_map_state.dart';
 class TripMapBloc extends Bloc<TripMapEvent, TripMapState> {
   final TripsRepo repo;
   final LocationService locationService;
+
+  /// Nearby fuel stations. Currently backed by a placeholder implementation -
+  /// see [FuelStationsRepo] - so only that class changes when the API lands.
+  final FuelStationsRepo fuelStationsRepo;
+
+  /// Search radius for Gas Station mode: 20 miles, per the task brief.
+  static const double fuelRadiusMeters = 20 * 1609.344;
 
   /// Task brief asks for ~300-500ms; 400 sits in the middle and keeps the
   /// suggestion list from flickering on fast typists.
@@ -29,8 +40,17 @@ class TripMapBloc extends Bloc<TripMapEvent, TripMapState> {
   /// early response can't overwrite the suggestions for a later query.
   CancelToken? _inFlight;
 
-  TripMapBloc({required this.repo, required this.locationService})
-      : super(const TripMapState()) {
+  /// [fuelStationsRepo] is optional and defaults to the placeholder
+  /// implementation. That keeps injectable's generated registration valid
+  /// without a codegen run, and leaves the seam open: pass the real repository
+  /// here (or register it) once the nearby-stations endpoint exists.
+  TripMapBloc({
+    required this.repo,
+    required this.locationService,
+    FuelStationsRepo? fuelStationsRepo,
+  })  : fuelStationsRepo = fuelStationsRepo ??
+            FuelStationsRepoImpl(dataSource: FuelStationsDataSource()),
+        super(const TripMapState()) {
     on<TripMapStarted>(_onStarted);
     on<TripMapFieldFocused>(_onFieldFocused);
     on<TripMapQueryChanged>(_onQueryChanged);
@@ -38,6 +58,100 @@ class TripMapBloc extends Bloc<TripMapEvent, TripMapState> {
     on<TripMapPlaceSelected>(_onPlaceSelected);
     on<TripMapSearchDismissed>(_onSearchDismissed);
     on<TripMapContinuePressed>(_onContinuePressed);
+    on<TripMapGasStationModeToggled>(_onGasStationModeToggled);
+    on<TripMapFuelStationsRequested>(_onFuelStationsRequested);
+    on<TripMapFuelStationSelected>(_onFuelStationSelected);
+  }
+
+  // ── Nearby Fuel Stations ──────────────────────────────────────────────────
+
+  Future<void> _onGasStationModeToggled(
+    TripMapGasStationModeToggled event,
+    Emitter<TripMapState> emit,
+  ) async {
+    if (state.fuelMode) {
+      // Leaving the mode clears the markers but deliberately keeps whatever
+      // origin/destination the driver ended up with - they may have picked a
+      // station and want to keep planning that trip.
+      emit(state.copyWith(
+        fuelMode: false,
+        fuelStatus: TripMapFuelStatus.idle,
+        fuelStations: const [],
+        selectedStationId: '',
+        fuelError: '',
+      ));
+      return;
+    }
+
+    emit(state.copyWith(fuelMode: true));
+    await _loadFuelStations(emit);
+  }
+
+  Future<void> _onFuelStationsRequested(
+    TripMapFuelStationsRequested event,
+    Emitter<TripMapState> emit,
+  ) async {
+    if (!state.fuelMode) return;
+    await _loadFuelStations(emit);
+  }
+
+  Future<void> _loadFuelStations(Emitter<TripMapState> emit) async {
+    // Stations are searched around the driver, so an origin is required. It is
+    // resolved on page open; if that failed there is nothing to search around.
+    final origin = state.origin?.coordinate;
+    if (origin == null) {
+      emit(state.copyWith(
+        fuelStatus: TripMapFuelStatus.failure,
+        fuelError: 'tripMap.fuelNeedsLocation',
+      ));
+      return;
+    }
+
+    emit(state.copyWith(
+      fuelStatus: TripMapFuelStatus.loading,
+      fuelError: '',
+    ));
+
+    final response = await fuelStationsRepo.getNearbyFuelStations(
+      currentLocation: origin,
+      radiusMeters: fuelRadiusMeters,
+    );
+
+    if (response.errorText.isNotEmpty) {
+      emit(state.copyWith(
+        fuelStatus: TripMapFuelStatus.failure,
+        fuelError: response.errorText,
+      ));
+      return;
+    }
+
+    emit(state.copyWith(
+      fuelStatus: TripMapFuelStatus.success,
+      fuelStations: response.data ?? const [],
+      fuelError: '',
+    ));
+  }
+
+  /// Picking a station fills both fields at once: origin stays the driver's
+  /// current location and the station becomes the destination, so Continue is
+  /// immediately available and the normal routing flow takes over unchanged.
+  void _onFuelStationSelected(
+    TripMapFuelStationSelected event,
+    Emitter<TripMapState> emit,
+  ) {
+    final destination = event.station.toPlace();
+    emit(state.copyWith(
+      destination: destination,
+      selectedStationId: event.station.id,
+      // Drives the page's controller/camera sync, same as a searched pick.
+      lastSelected: destination,
+      lastSelectedField: TripMapField.destination,
+      selectionTick: state.selectionTick + 1,
+      activeField: TripMapField.none,
+      searchStatus: TripMapSearchStatus.idle,
+      query: '',
+      suggestions: const [],
+    ));
   }
 
   @override

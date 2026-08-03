@@ -10,6 +10,11 @@ enum TripMapSearchStatus { idle, loading, success, empty, failure }
 /// State of the `POST /toll-routes` call fired by Continue.
 enum TripMapContinueStatus { idle, loading, failure }
 
+/// Lifecycle of the nearby-stations request. `empty` is folded into `success`
+/// with an empty list - see [TripMapState.fuelIsEmpty] - so the UI has one
+/// place to branch on.
+enum TripMapFuelStatus { idle, loading, success, failure }
+
 class TripMapState extends Equatable {
   final TripMapField activeField;
   final TripMapFieldStatus originStatus;
@@ -43,6 +48,20 @@ class TripMapState extends Equatable {
   final TripModel? createdRoute;
   final int continueTick;
 
+  // ── Nearby Fuel Stations ────────────────────────────────────────────────
+
+  /// True while "Nearby Fuel Stations" mode is on: the map shows station
+  /// markers and tapping one fills both location fields.
+  final bool fuelMode;
+
+  final TripMapFuelStatus fuelStatus;
+  final List<FuelStationModel> fuelStations;
+
+  /// Station the driver picked, so its marker can be highlighted.
+  final String selectedStationId;
+
+  final String fuelError;
+
   const TripMapState({
     this.activeField = TripMapField.none,
     this.originStatus = TripMapFieldStatus.initial,
@@ -60,6 +79,11 @@ class TripMapState extends Equatable {
     this.continueError = '',
     this.createdRoute,
     this.continueTick = 0,
+    this.fuelMode = false,
+    this.fuelStatus = TripMapFuelStatus.idle,
+    this.fuelStations = const [],
+    this.selectedStationId = '',
+    this.fuelError = '',
   });
 
   /// Suggestions replace the history list only while a search is live.
@@ -68,6 +92,12 @@ class TripMapState extends Equatable {
       searchStatus != TripMapSearchStatus.idle;
 
   bool get canContinue => origin != null && destination != null;
+
+  /// Fuel mode is on but the search came back with nothing in range.
+  bool get fuelIsEmpty =>
+      fuelMode &&
+      fuelStatus == TripMapFuelStatus.success &&
+      fuelStations.isEmpty;
 
   static const _sentinel = Object();
 
@@ -88,6 +118,11 @@ class TripMapState extends Equatable {
     String? continueError,
     Object? createdRoute = _sentinel,
     int? continueTick,
+    bool? fuelMode,
+    TripMapFuelStatus? fuelStatus,
+    List<FuelStationModel>? fuelStations,
+    String? selectedStationId,
+    String? fuelError,
   }) {
     return TripMapState(
       activeField: activeField ?? this.activeField,
@@ -112,6 +147,11 @@ class TripMapState extends Equatable {
           ? this.createdRoute
           : createdRoute as TripModel?,
       continueTick: continueTick ?? this.continueTick,
+      fuelMode: fuelMode ?? this.fuelMode,
+      fuelStatus: fuelStatus ?? this.fuelStatus,
+      fuelStations: fuelStations ?? this.fuelStations,
+      selectedStationId: selectedStationId ?? this.selectedStationId,
+      fuelError: fuelError ?? this.fuelError,
     );
   }
 
@@ -133,5 +173,10 @@ class TripMapState extends Equatable {
         continueError,
         createdRoute,
         continueTick,
+        fuelMode,
+        fuelStatus,
+        fuelStations.length,
+        selectedStationId,
+        fuelError,
       ];
 }

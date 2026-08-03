@@ -52,6 +52,9 @@ class AppIcons {
 
   // Route overview / driving mode (docs/ui/8.png, 9.png)
   static const String tollMarker = 'assets/icons/toll_marker.svg';
+  // Nearby Fuel Stations: the sheet's toggle and the map pin.
+  static const String gasStation = 'assets/icons/ic_gas_station.svg';
+  static const String gasStationMarker = 'assets/icons/gas_station_marker.svg';
   // The three stat icons ship pre-tinted at 34x32 with their own rounded
   // background baked in, so they are drawn as-authored, not colour-filtered.
   static const String routeFuel = 'assets/icons/ic_fuel.svg';

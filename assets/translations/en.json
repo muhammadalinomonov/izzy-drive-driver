@@ -212,6 +212,7 @@
     }
   },
   "tripMap": {
+    "fuelNeedsLocation": "Waiting for your location. Try again in a moment.",
     "title": "Locations",
     "searchBarHint": "Where to?",
     "yourLocation": "Your Location",

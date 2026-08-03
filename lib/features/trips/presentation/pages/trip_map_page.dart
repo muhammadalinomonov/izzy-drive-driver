@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 import 'package:taxi_app/core/components/app_snack_bar.dart';
 import 'package:taxi_app/core/constants/color/app_color.dart';
+import 'package:taxi_app/features/trips/data/model/fuel_station_model.dart';
 import 'package:taxi_app/features/trips/data/model/place_model.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/trip_map/trip_map_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -45,6 +46,11 @@ class _TripMapPageState extends State<TripMapPage> {
 
   void _openSupportMessage() => context.push(Pages.supportMessage);
 
+  void _onGasStation() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    context.read<TripMapBloc>().add(const TripMapGasStationModeToggled());
+  }
+
   final _sheetController = DraggableScrollableController();
 
   /// Mirrors the sheet's current extent so the zoom buttons can ride just
@@ -60,6 +66,18 @@ class _TripMapPageState extends State<TripMapPage> {
   mapbox.PointAnnotationManager? _annotations;
   mapbox.PointAnnotation? _originMarker;
   mapbox.PointAnnotation? _destinationMarker;
+
+  /// Fuel-station markers live in their own manager so the whole set can be
+  /// dropped when the mode is switched off without touching origin/destination.
+  mapbox.PointAnnotationManager? _stationAnnotations;
+
+  /// Maps a station marker back to its station, so a tap can be resolved.
+  final Map<int, FuelStationModel> _stationByAnnotationId = {};
+
+  /// Station list the markers were last drawn for, so identical rebuilds are
+  /// skipped rather than redrawing every marker on each state emission.
+  List<FuelStationModel> _renderedStations = const [];
+  String _renderedSelectedStationId = '';
 
   /// Tashkent fallback until the GPS fix lands.
   static final mapbox.Position _fallback = mapbox.Position(69.2401, 41.2995);
@@ -185,6 +203,100 @@ class _TripMapPageState extends State<TripMapPage> {
     );
   }
 
+  /// Draws (or clears) the fuel-station markers.
+  ///
+  /// Skipped entirely when neither the station list nor the selection has
+  /// changed - this runs from a BlocListener that also fires for unrelated
+  /// state like search suggestions.
+  Future<void> _syncStationMarkers(TripMapState state) async {
+    final map = _map;
+    if (map == null) return;
+
+    final stations = state.fuelMode ? state.fuelStations : const <FuelStationModel>[];
+    final sameList = identical(_renderedStations, stations) ||
+        (_renderedStations.length == stations.length &&
+            (stations.isEmpty ||
+                _renderedStations.first.id == stations.first.id));
+    if (sameList && _renderedSelectedStationId == state.selectedStationId) {
+      return;
+    }
+    _renderedStations = stations;
+    _renderedSelectedStationId = state.selectedStationId;
+
+    _stationAnnotations ??= await map.annotations.createPointAnnotationManager();
+    final manager = _stationAnnotations!;
+    if (!mounted) return;
+
+    await manager.deleteAll();
+    _stationByAnnotationId.clear();
+    if (!mounted || stations.isEmpty) return;
+
+    final png = await rasterizeMarkerSvg(AppIcons.gasStationMarker, height: 88);
+    if (!mounted) return;
+
+    for (final station in stations) {
+      final isSelected = station.id == state.selectedStationId;
+      final created = await manager.create(
+        mapbox.PointAnnotationOptions(
+          geometry: mapbox.Point(
+            coordinates: mapbox.Position(
+              station.coordinate.lng,
+              station.coordinate.lat,
+            ),
+          ),
+          image: png,
+          // The selected station is scaled up rather than recoloured: the
+          // marker art is a fixed multi-colour asset, so size is the only
+          // honest highlight available without a second bitmap.
+          iconSize: isSelected ? 1.5 : 1.0,
+          iconAnchor: mapbox.IconAnchor.BOTTOM,
+        ),
+      );
+      if (!mounted) return;
+      _stationByAnnotationId[created.id.hashCode] = station;
+    }
+
+    // Registered once the markers exist; the tap is resolved back to its
+    // station via [_stationByAnnotationId].
+    manager.tapEvents(
+      onTap: (annotation) {
+        final station = _stationByAnnotationId[annotation.id.hashCode];
+        if (station != null) _onStationTapped(station);
+      },
+    );
+  }
+
+  void _onStationTapped(FuelStationModel station) {
+    context.read<TripMapBloc>().add(TripMapFuelStationSelected(station));
+  }
+
+  /// Frames origin and the chosen station together, so the driver sees the
+  /// whole trip the moment they pick one.
+  Future<void> _fitToStation(PlaceModel origin, PlaceModel destination) async {
+    final map = _map;
+    if (map == null) return;
+    final camera = await map.cameraForCoordinatesPadding(
+      [
+        mapbox.Point(
+          coordinates:
+              mapbox.Position(origin.coordinate.lng, origin.coordinate.lat),
+        ),
+        mapbox.Point(
+          coordinates: mapbox.Position(
+            destination.coordinate.lng,
+            destination.coordinate.lat,
+          ),
+        ),
+      ],
+      mapbox.CameraOptions(),
+      mapbox.MbxEdgeInsets(top: 90, left: 60, bottom: 340, right: 60),
+      null,
+      null,
+    );
+    if (!mounted) return;
+    await map.flyTo(camera, mapbox.MapAnimationOptions(duration: 700));
+  }
+
   Future<void> _zoomBy(double delta) async {
     final map = _map;
     if (map == null) return;
@@ -250,14 +362,37 @@ class _TripMapPageState extends State<TripMapPage> {
             p.destination != c.destination ||
             p.activeField != c.activeField ||
             p.continueTick != c.continueTick ||
-            p.continueStatus != c.continueStatus,
+            p.continueStatus != c.continueStatus ||
+            p.fuelMode != c.fuelMode ||
+            p.fuelStatus != c.fuelStatus ||
+            p.fuelStations.length != c.fuelStations.length ||
+            p.selectedStationId != c.selectedStationId,
         listener: (context, state) {
           _onStateChanged(context, state);
+          _syncStationMarkers(state);
+
           final place = state.lastSelected;
           if (place != null &&
               state.lastSelectedField != TripMapField.none &&
               state.selectionTick > 0) {
-            _syncMarker(state.lastSelectedField, place);
+            // A station pick frames both ends at once; an ordinary search pick
+            // flies to the single place it selected.
+            final origin = state.origin;
+            if (state.selectedStationId.isNotEmpty && origin != null) {
+              _syncMarker(state.lastSelectedField, place);
+              _fitToStation(origin, place);
+            } else {
+              _syncMarker(state.lastSelectedField, place);
+            }
+          }
+          if (state.fuelStatus == TripMapFuelStatus.failure &&
+              state.fuelError.isNotEmpty) {
+            AppSnackBar.showError(
+              context,
+              state.fuelError == 'tripMap.fuelNeedsLocation'
+                  ? 'tripMap.fuelNeedsLocation'.tr()
+                  : state.fuelError,
+            );
           }
           if (state.continueStatus == TripMapContinueStatus.failure &&
               state.continueError.isNotEmpty) {
@@ -364,6 +499,7 @@ class _TripMapPageState extends State<TripMapPage> {
                 onFieldTapped: _onFieldTapped,
                 onSelectPlace: _selectPlace,
                 onContinue: _onContinue,
+                onGasStation: _onGasStation,
                 onShowMap: _showWholeMap,
               ),
             ],
@@ -389,6 +525,7 @@ class _Sheet extends StatelessWidget {
     required this.onFieldTapped,
     required this.onSelectPlace,
     required this.onContinue,
+    required this.onGasStation,
     required this.onShowMap,
   });
 
@@ -405,6 +542,7 @@ class _Sheet extends StatelessWidget {
   final ValueChanged<TripMapField> onFieldTapped;
   final ValueChanged<PlaceModel> onSelectPlace;
   final VoidCallback onContinue;
+  final VoidCallback onGasStation;
   final VoidCallback onShowMap;
 
   @override
@@ -488,6 +626,8 @@ class _Sheet extends StatelessWidget {
                     state.continueStatus != TripMapContinueStatus.loading,
                 loading: state.continueStatus == TripMapContinueStatus.loading,
                 onPressed: onContinue,
+                fuelMode: state.fuelMode,
+                onGasStation: onGasStation,
               ),
             ],
           ),
@@ -596,6 +736,8 @@ class _Message extends StatelessWidget {
 
 class _ContinueBar extends StatelessWidget {
   const _ContinueBar({
+    required this.fuelMode,
+    required this.onGasStation,
     required this.enabled,
     required this.loading,
     required this.onPressed,
@@ -605,41 +747,93 @@ class _ContinueBar extends StatelessWidget {
   final bool loading;
   final VoidCallback onPressed;
 
+  /// Whether Nearby Fuel Stations mode is active.
+  final bool fuelMode;
+  final VoidCallback onGasStation;
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-        child: SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: FilledButton(
-            onPressed: enabled ? onPressed : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColor.kPrimaryColor,
-              disabledBackgroundColor: AppColor.grey2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(25),
-              ),
-            ),
-            child: loading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.4,
-                      valueColor: AlwaysStoppedAnimation(Colors.white),
-                    ),
-                  )
-                : Text(
-                    'tripMap.continue'.tr(),
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+        child: Row(
+          children: [
+            // Gas Station toggle, per docs/ui/3-1.png: a circular icon button
+            // sharing the bar with Continue.
+            _GasStationButton(active: fuelMode, onTap: onGasStation),
+            const SizedBox(width: 12),
+            Expanded(
+              child: SizedBox(
+                height: 50,
+                child: FilledButton(
+                  onPressed: enabled ? onPressed : null,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColor.kPrimaryColor,
+                    disabledBackgroundColor: AppColor.grey2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
                     ),
                   ),
+                  child: loading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.4,
+                            valueColor: AlwaysStoppedAnimation(Colors.white),
+                          ),
+                        )
+                      : Text(
+                          'tripMap.continue'.tr(),
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Circular Gas Station toggle. Fills with the primary colour while Nearby
+/// Fuel Stations mode is on, so the map's station markers have an obvious
+/// on-screen source and an obvious way back out.
+class _GasStationButton extends StatelessWidget {
+  const _GasStationButton({required this.active, required this.onTap});
+
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: active ? AppColor.kPrimaryColor : AppColor.white,
+      shape: CircleBorder(
+        side: BorderSide(color: active ? Colors.transparent : AppColor.grey2),
+      ),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: SizedBox(
+          width: 50,
+          height: 50,
+          child: Center(
+            child: SvgPicture.asset(
+              AppIcons.gasStation,
+              width: 22,
+              height: 22,
+              colorFilter: ColorFilter.mode(
+                active ? Colors.white : AppColor.black,
+                BlendMode.srcIn,
+              ),
+            ),
           ),
         ),
       ),

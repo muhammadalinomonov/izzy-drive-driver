@@ -63,3 +63,26 @@ class TripMapSearchDismissed extends TripMapEvent {
 class TripMapContinuePressed extends TripMapEvent {
   const TripMapContinuePressed();
 }
+
+/// The Gas Station button was tapped. Toggles "Nearby Fuel Stations" mode:
+/// entering it loads stations around the driver, leaving it clears them.
+class TripMapGasStationModeToggled extends TripMapEvent {
+  const TripMapGasStationModeToggled();
+}
+
+/// Retry for a failed nearby-stations load, without leaving the mode.
+class TripMapFuelStationsRequested extends TripMapEvent {
+  const TripMapFuelStationsRequested();
+}
+
+/// A station marker (or list row) was tapped. The bloc sets the driver's
+/// current location as origin and the station as destination, so Continue
+/// becomes available without any manual search.
+class TripMapFuelStationSelected extends TripMapEvent {
+  final FuelStationModel station;
+
+  const TripMapFuelStationSelected(this.station);
+
+  @override
+  List<Object?> get props => [station.id];
+}
