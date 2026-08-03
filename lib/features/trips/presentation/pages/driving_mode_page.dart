@@ -16,6 +16,8 @@ import 'package:taxi_app/features/trips/presentation/controllers/driving_camera.
 import 'package:taxi_app/features/trips/presentation/controllers/driving_session.dart';
 import 'package:taxi_app/features/trips/presentation/controllers/marker_animator.dart';
 import 'package:taxi_app/features/trips/presentation/utils/marker_icon.dart';
+import 'package:taxi_app/features/trips/presentation/widgets/speedometer.dart';
+import 'package:taxi_app/features/trips/presentation/widgets/trip_info_bar.dart';
 
 /// The session created in Route Overview plus the human-readable destination
 /// label (the session itself only carries raw lat/lng, per
@@ -864,29 +866,45 @@ class _DrivingModePageState extends State<DrivingModePage>
                 bottom: 0,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
+                    // Speedometer and map controls share this row so they sit
+                    // on one line above the bar: speed bottom-left where it is
+                    // glanceable, controls bottom-right under the thumb.
                     Padding(
-                      padding: const EdgeInsets.only(right: 16, bottom: 12),
-                      child: _MapControls(
-                        onZoomIn: () => _zoomBy(1),
-                        onZoomOut: () => _zoomBy(-1),
-                        onRecenter: _onRecenter,
-                        // Emphasised while the camera is detached, so the way
-                        // back to follow-mode is obvious after a manual pan.
-                        recenterHighlighted: !_cameraFollowing,
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Speedometer(speedMps: _telemetry?.speedMps),
+                          const Spacer(),
+                          _MapControls(
+                            onZoomIn: () => _zoomBy(1),
+                            onZoomOut: () => _zoomBy(-1),
+                            onRecenter: _onRecenter,
+                            // Emphasised while the camera is detached, so the
+                            // way back to follow-mode is obvious after a pan.
+                            recenterHighlighted: !_cameraFollowing,
+                          ),
+                        ],
                       ),
                     ),
-                    _BottomBar(
-                      // Resuming from the Trips card has no place name to
-                      // carry over, so fall back to a neutral label.
-                      destinationLabel:
-                          widget.args.destinationLabel.trim().isEmpty
-                              ? 'drivingMode.destination'.tr()
-                              : widget.args.destinationLabel,
-                      progress: session.progress,
-                      remainingMeters: _remainingMeters(session),
-                      speedMps: _telemetry?.speedMps,
+                    SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                        child: TripInfoBar(
+                          // Resuming from the Trips card has no place name to
+                          // carry over, so fall back to a neutral label.
+                          destinationLabel:
+                              widget.args.destinationLabel.trim().isEmpty
+                                  ? 'drivingMode.destination'.tr()
+                                  : widget.args.destinationLabel,
+                          remainingMeters: _remainingMeters(session),
+                          remainingSeconds:
+                              session.progress.remainingDurationSeconds,
+                          percent: session.progress.percent,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -1105,103 +1123,6 @@ class _ManeuverBanner extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-}
-
-class _BottomBar extends StatelessWidget {
-  const _BottomBar({
-    required this.destinationLabel,
-    required this.progress,
-    required this.remainingMeters,
-    required this.speedMps,
-  });
-
-  final String destinationLabel;
-  final NavigationProgress progress;
-  final int remainingMeters;
-
-  /// Null until the first fix arrives.
-  final double? speedMps;
-
-  @override
-  Widget build(BuildContext context) {
-    final speed = speedMps;
-    // No Align here: the parent column is already bottom-anchored, and an
-    // Align inside it would stretch the bar to fill the screen.
-    return SafeArea(
-      top: false,
-      child: Container(
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColor.white,
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withAlpha(28), blurRadius: 16),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Cancel used to sit here; it now lives as an icon button in the
-              // top-right, so the label gets the full width.
-              Text(
-                destinationLabel,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppColor.black,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    formatMiles(remainingMeters),
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColor.black,
-                    ),
-                  ),
-                  if (speed != null)
-                    Text(
-                      '${(speed * 2.23694).round()} mph',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColor.black,
-                      ),
-                    ),
-                  Text(
-                    formatDuration(progress.remainingDurationSeconds),
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColor.black,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(3),
-                child: LinearProgressIndicator(
-                  value: (progress.percent / 100).clamp(0, 1),
-                  minHeight: 5,
-                  backgroundColor: AppColor.grey2,
-                  valueColor: AlwaysStoppedAnimation(AppColor.kPrimaryColor),
-                ),
-              ),
-          ],
-        ),
       ),
     );
   }

@@ -45,6 +45,9 @@ dependencies:
   meta: ^1.16.0
   json_annotation: ^4.9.0
   get_it: ^8.0.3
+  # Runtime half of the DI setup. `injectable_generator` sat in dev_deps for a
+  # long time with nothing annotated because this package was never added.
+  injectable: ^2.5.0
   web_socket_channel: ^3.0.3
   equatable: ^2.0.7
   intl: ^0.20.2
@@ -107,10 +110,16 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
   build_runner: ^2.4.15
-  flutter_gen_runner: ^5.10.0
-  retrofit_generator: ^9.1.9
   json_serializable: ^6.9.4
   injectable_generator: ^2.7.0
+  # Removed:
+  #   retrofit_generator - the `retrofit` runtime package was never a
+  #     dependency and nothing is annotated with @RestApi, but the generator
+  #     failed to compile against the resolved retrofit version and so broke
+  #     `build_runner` for EVERY builder, json_serializable included.
+  #   flutter_gen_runner - regenerated lib/gen/assets.gen.dart, which is dead
+  #     code here (no `Assets.` reference anywhere). Re-add with a `flutter_gen:`
+  #     config section if asset codegen is wanted.
 
 
 # For information on the generic Dart part of this file, see the
