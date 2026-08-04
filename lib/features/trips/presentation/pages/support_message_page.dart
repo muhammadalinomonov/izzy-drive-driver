@@ -157,14 +157,13 @@ class _OutgoingRequestBubble extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                _StationFact(icon: Icons.location_on_outlined, text: address),
+                // Same three design icons the marker sheet uses, so a station
+                // reads identically wherever it appears.
+                _StationFact(icon: AppIcons.tripOrigin, text: address),
                 const SizedBox(height: 8),
-                _StationFact(icon: Icons.attach_money_rounded, text: price),
+                _StationFact(icon: AppIcons.price, text: price),
                 const SizedBox(height: 8),
-                _StationFact(
-                  icon: Icons.directions_car_outlined,
-                  text: distance,
-                ),
+                _StationFact(icon: AppIcons.routeMile, text: distance),
               ],
             ),
           ),
@@ -185,7 +184,8 @@ class _OutgoingRequestBubble extends StatelessWidget {
 class _StationFact extends StatelessWidget {
   const _StationFact({required this.icon, required this.text});
 
-  final IconData icon;
+  /// SVG asset path.
+  final String icon;
   final String text;
 
   @override
@@ -193,7 +193,15 @@ class _StationFact extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 17, color: AppColor.kPrimaryColor),
+        SvgPicture.asset(
+          icon,
+          width: 17,
+          height: 17,
+          colorFilter: ColorFilter.mode(
+            AppColor.kPrimaryColor,
+            BlendMode.srcIn,
+          ),
+        ),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
@@ -366,7 +374,7 @@ class _Composer extends StatelessWidget {
               ),
               IconButton(
                 icon: SvgPicture.asset(
-                  AppIcons.microphone,
+                  AppIcons.micFilled,
                   width: 20,
                   height: 20,
                   colorFilter: ColorFilter.mode(

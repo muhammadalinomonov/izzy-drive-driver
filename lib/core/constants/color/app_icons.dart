@@ -27,6 +27,10 @@ class AppIcons {
   /// Premium Support Message affordance (trip map button, docs/ui/10.png).
   static const String chat = 'assets/icons/ic_chat.svg';
   static const String microphone = 'assets/icons/mic.svg';
+  /// The Support composer's mic, shipped with the docs/ui/11.png design.
+  /// Distinct art from [microphone]; kept separate so the older asset stays
+  /// available to anything that wants it.
+  static const String micFilled = 'assets/icons/ic_mic.svg';
   static const String paperclip = 'assets/icons/paperclip.svg';
   static const String bell = 'assets/icons/bell.svg';
   static const String search = 'assets/icons/search.svg';
