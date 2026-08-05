@@ -283,6 +283,372 @@ Implement proper loading, success, empty, offline, and error states for all API 
 
 6. Task
 
+## Task: Integrate New Profile APIs and Redesign the Profile Screen
+
+Implement the following new profile-related APIs while keeping the existing API implementation intact for now. The old APIs should continue working since they will be removed in a future update.
+
+### APIs to Implement
+
+* `GET /api/v1/mobile/profile`
+* `PATCH /api/v1/mobile/profile`
+* `GET /api/v1/mobile/vehicles`
+
+Refer to `docs/mobile-api.md` for the complete request and response specifications.
+
+### Profile Screen
+
+Update the existing Profile screen to use the new APIs while preserving compatibility with the current implementation.
+
+* Load the user's profile using `GET /api/v1/mobile/profile`.
+* Allow editing and updating the profile using `PATCH /api/v1/mobile/profile`.
+* Load the user's vehicles using `GET /api/v1/mobile/vehicles` and display them in the existing Vehicles section.
+
+### Premium User Support
+
+The profile response contains a boolean field:
+
+`is_paid_user`
+
+This field is very important.
+
+When `is_paid_user == true`:
+
+* Store this value globally (using the project's existing global state management).
+* Make it accessible throughout the application.
+* The application should recognize the user as a **Premium** user.
+* This global premium state will be used later to enable premium-only features, so design the implementation to be reusable and maintainable.
+
+When `is_paid_user == false`, the user should be treated as a regular user.
+
+### Profile UI Redesign
+
+Redesign the existing Profile screen with a more modern and polished appearance while keeping all existing functionality.
+
+The redesign should include:
+
+* A cleaner profile header with avatar, name, and contact information.
+* A visually appealing Premium badge or indicator when `is_paid_user` is `true`.
+* Better spacing, typography, and card layouts.
+* Improved Vehicles section.
+* Modern list items and action buttons.
+* Smooth animations where appropriate.
+* Consistent styling with the rest of the application.
+
+Do not remove any existing functionality unless it is being replaced by the new APIs.
+
+Implement proper loading, empty, pull-to-refresh, and error states for all profile and vehicle requests.
+
+Reuse the existing networking layer, repositories, models, and state management wherever possible. Keep the implementation modular, maintainable, and consistent with the existing project architecture. All request and response models should follow the specifications in `docs/mobile-api.md`.
 
 
+----------------------------------------------------------------------------------------------------
 
+7. Task
+
+## Task: Add Premium Support Message Feature
+
+Add a **Support Message** button to `trip_map_page.dart` matching the design shown in `docs/ui/10.png`.
+
+This feature should only be available for **Premium** users. Use the globally stored `is_paid_user` value from the profile API to determine whether the button should be visible.
+
+### Visibility
+
+* If `is_paid_user == true`, display the Support Message button.
+* If `is_paid_user == false`, do not display the button.
+
+### Navigation
+
+When the user taps the Support Message button, navigate to a new page:
+
+`support_message_page.dart`
+
+### Support Message Page
+
+Implement the UI exactly as shown in `docs/ui/11.png`.
+
+The page should match the provided design as closely as possible, At this stage, **implement only the UI**. Do **not** implement any business logic, networking, API integration, or message sending functionality yet.
+
+Use placeholder callbacks for all actions so the page is ready for backend integration later.
+
+Keep the implementation modular, reusable, and consistent with the existing project architecture and design system.
+
+----------------------------------------------------------------------------------------------------
+
+8. Task
+
+## Task: Implement Nearby Fuel Stations UI (API Placeholder)
+
+Implement the new **Nearby Fuel Stations** feature on `trip_map_page.dart`. The backend API is not yet available, so implement the complete UI, state management, navigation flow, and business logic with placeholder data and a clear repository/API placeholder for future integration.
+
+Before implementation, review the entire Trip module (Trip Map, Route Overview, Driving Mode, and related components) and refactor where necessary to keep the structure clean, modular, and maintainable.
+
+### UI Updates
+
+Update the modal bottom sheet to match the new design shown in `docs/ui/3-1.png`.
+
+Replace the existing layout with the new design while preserving the existing location search functionality.
+
+Add a new **Gas Station** button using the icon:
+
+`docs/icons/ic_gas_station.svg`
+
+The button should be integrated into the new bottom sheet layout exactly as shown in the design.
+
+### Gas Station Mode
+
+When the user taps the **Gas Station** button:
+
+* Enter "Nearby Fuel Stations" mode.
+* Request nearby fuel stations through a repository method (placeholder implementation for now).
+* Display nearby fuel stations within approximately a **20-mile radius** of the user's current location.
+* Since the backend is not ready, use mock/placeholder data that can easily be replaced with the future API.
+* Keep the repository interface and models ready for the future API implementation.
+
+### Map Behavior
+
+When Gas Station mode is enabled:
+
+* Display gas station markers on the MapBox map.
+* Use the existing gas station marker design.
+* Allow the user to tap any gas station marker.
+
+When a gas station is selected:
+
+* Automatically set **Current Location** as the origin.
+* Automatically set the selected gas station as the destination.
+* Populate both location fields in the bottom sheet.
+* Move the MapBox camera to show both locations.
+* Highlight the selected gas station marker.
+* Enable the **Continue** button immediately.
+
+The user should not need to manually search for a destination after selecting a gas station.
+
+### Continue Flow
+
+After selecting a gas station and pressing **Continue**, the flow should behave exactly like the normal route planning flow:
+
+* Calculate the route.
+* Navigate to the existing Route Overview page.
+* Continue into Driving Mode if the user presses Start.
+
+No duplicate route logic should be created.
+
+### Architecture
+
+Although the API is not available yet, prepare the project for future integration by implementing:
+
+* Repository interface
+* Data source placeholder
+* Models
+* State management
+* Events/actions
+* Loading states
+* Empty states
+* Error states
+
+The repository should expose a method similar to:
+
+`getNearbyFuelStations(currentLocation, radius)`
+
+For now, return mock data from the placeholder implementation.
+
+When the backend becomes available, only the repository implementation should need to change without affecting the UI or business logic.
+
+### Code Quality
+
+Review and improve the overall Trip module structure where appropriate:
+
+* Remove duplicated logic.
+* Extract reusable widgets.
+* Keep Trip Map, Route Overview, Driving Mode, and related components consistent.
+* Ensure all navigation flows share common business logic.
+* Follow the existing project architecture and coding standards.
+
+The implementation should be production-ready, with the only missing piece being the actual backend API integration.
+
+----------------------------------------------------------------------------------------------------
+
+9. Task
+
+## Task: Implement Marker Information Bottom Sheet
+
+Implement a reusable **Marker Information Bottom Sheet** for all map screens in the Trips module. Whenever the user taps a **fuel station** or **toll station** marker on the map, display a modal bottom sheet showing detailed information about the selected marker.
+
+The bottom sheet UI should match the design shown in `docs/ui/5-1.png`.
+
+### Supported Screens
+
+This bottom sheet should be reused across all map-based screens in the Trips module, including:
+
+* `trip_map_page.dart`
+* Route Overview page
+* Driving Mode page
+* Any other Trips-related page displaying fuel or toll markers
+
+Do not duplicate the implementation. Create a reusable widget/component that can be shared across all map screens.
+
+### Marker Selection
+
+When the user taps a marker:
+
+* Highlight the selected marker.
+* Open the information bottom sheet.
+* Populate it with the selected marker's data.
+* Close the sheet when the user taps outside it or dismisses it.
+
+### Bottom Sheet UI
+
+The bottom sheet should display all available information for the selected fuel station or toll station, matching the design in `docs/ui/5-1.png`.
+
+Use the following icons from the `icons` folder:
+
+* `icons/ic_location.svg` — Location/address
+* `icons/ic_mile.svg` — Distance from the user's current location
+* `icons/ic_price.svg` — Fuel price, toll fee, or other pricing information
+
+Display any additional information available for the selected marker, such as:
+
+* Name
+* Address
+* Distance
+* Fuel price or toll cost
+* Additional details returned by the model
+
+### "To Go There" Button
+
+The bottom sheet behavior differs depending on the screen:
+
+#### On `trip_map_page.dart`
+
+Display a **"To Go There"** button at the bottom of the sheet.
+
+When pressed:
+
+* Automatically set the user's current location as the origin.
+* Set the selected marker's location as the destination.
+* Populate the location fields.
+* Enable the **Continue** button.
+* Close the bottom sheet.
+
+This should work for both fuel station and toll station markers.
+
+#### On All Other Map Screens
+
+Display the same information bottom sheet **without** the **"To Go There"** button.
+
+These screens are informational only and should not allow changing the current route.
+
+### Architecture
+
+Create the bottom sheet as a reusable component with configurable behavior, for example:
+
+* `showActionButton: true` for `trip_map_page.dart`
+* `showActionButton: false` for Route Overview and Driving Mode
+
+Avoid creating separate implementations for each page.
+
+### Implementation Notes
+
+* Reuse the existing marker models.
+* Animate the bottom sheet presentation smoothly.
+* Ensure proper spacing, typography, icons, and styling matching `docs/ui/5-1.png`.
+* Keep the implementation modular, reusable, and consistent with the existing project architecture.
+* Design the component so it can easily support additional marker types in the future if needed.
+
+----------------------------------------------------------------------------------------------------
+
+10. Task
+
+## Task: Implement Premium Route Support Features
+
+Implement additional premium-only functionality on the **Route Overview** and **Driving Mode** screens. Use the globally stored `is_paid_user` value to determine whether these features should be available.
+
+### Route Overview (`route_overview_page.dart`)
+
+When `is_paid_user == true`, update the bottom action area to match the design shown in `docs/ui/8-1.png`.
+
+Instead of displaying only the **Start** button, show two buttons:
+
+* **Drive Yourself**
+* **Send Request**
+
+#### Drive Yourself
+
+The **Drive Yourself** button should behave exactly like the current **Start** button. It should start the existing Driving Mode without any changes to the current navigation flow.
+
+#### Send Request
+
+When the user taps **Send Request**, navigate to a new page:
+
+`route_support_page.dart`
+
+Implement the UI exactly as shown in:
+
+* `docs/ui/8-2.png`
+
+This page is UI-only for now. Do **not** implement any API integration yet. Instead, create repository and API placeholders that can easily be connected later.
+
+### Route Support Page
+
+When opening the page, pass all information required for creating a support request, including:
+
+* Selected `routeId`
+* Origin
+* Destination
+* Route distance
+* Estimated travel time
+* Toll information
+* Selected route details
+* Any other route information needed by the UI
+
+The page should display the route information exactly as shown in `docs/ui/8-2-1.png`.
+
+Implement a chat-style interface where:
+
+* User messages appear exactly like the design in `docs/ui/8-2-1.png`.
+* Support replies appear exactly like the design in `docs/ui/8-2-2.png`.
+
+At this stage:
+
+* Use mock conversation data.
+* Create placeholder models and repository methods for future API integration.
+* Keep the chat UI fully functional using local mock data.
+
+### Premium Support Button
+
+Just like `trip_map_page.dart`, add the floating **Support Message** button for Premium users to the following pages:
+
+* `route_overview_page.dart`
+* `driving_mode_page.dart`
+
+The button should only be visible when:
+
+`is_paid_user == true`
+
+When tapped, navigate to the existing:
+
+`support_message_page.dart`
+
+Do not implement any new business logic for this page yet. The backend APIs will be added later.
+
+### Architecture
+
+Prepare the Route Support feature for future backend integration by creating:
+
+* Repository interface
+* Data source placeholders
+* Models
+* State management
+* Mock data provider
+
+No real network requests should be implemented yet.
+
+### Code Quality
+
+* Reuse existing components wherever possible.
+* Avoid duplicating button or floating action button implementations.
+* Create reusable widgets for premium-only actions.
+* Keep the implementation modular, maintainable, and consistent with the existing project architecture.
+* Match the layouts, spacing, typography, colors, animations, and overall behavior shown in `docs/ui/8-1.png`, `docs/ui/8-2.png`, `docs/ui/8-2-1.png`, and `docs/ui/8-2-2.png` as closely as possible.
+
+----------------------------------------------------------------------------------------------------

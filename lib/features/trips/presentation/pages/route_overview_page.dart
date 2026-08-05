@@ -9,10 +9,14 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 import 'package:taxi_app/core/components/app_snack_bar.dart';
 import 'package:taxi_app/core/constants/color/app_color.dart';
 import 'package:taxi_app/core/constants/color/app_icons.dart';
+import 'package:taxi_app/core/session/premium_session.dart';
 import 'package:taxi_app/core/utils/polyline_codec.dart';
 import 'package:taxi_app/features/trips/data/model/place_model.dart';
+import 'package:taxi_app/features/trips/data/model/route_support_model.dart';
 import 'package:taxi_app/features/trips/data/model/trip_model.dart';
+import 'package:taxi_app/features/trips/presentation/widgets/dashed_leader.dart';
 import 'package:taxi_app/features/trips/presentation/widgets/marker_info_sheet.dart';
+import 'package:taxi_app/features/trips/presentation/widgets/premium_support_button.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/route_overview/route_overview_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/pages/driving_mode_page.dart';
 import 'package:taxi_app/features/trips/presentation/utils/marker_icon.dart';
@@ -42,6 +46,22 @@ class RouteOverviewArgs {
         destination = null;
 }
 
+/// `Recommended` / `Alternative 2` for [alternativeId] - the label the chips
+/// show, reused verbatim in the support request so the driver and the agent
+/// are talking about the same thing.
+String _alternativeLabel(TripModel trip, String alternativeId) {
+  var index = 0;
+  for (final alt in trip.alternatives) {
+    final isRecommended = alt.id == trip.recommendedAlternativeId;
+    if (!isRecommended) index++;
+    if (alt.id != alternativeId) continue;
+    return isRecommended
+        ? 'routeOverview.recommended'.tr()
+        : 'routeOverview.alternative'.tr(namedArgs: {'index': '$index'});
+  }
+  return 'routeOverview.recommended'.tr();
+}
+
 /// Route overview (docs/ui/8.png): a full-screen map showing every priced
 /// alternative, with the selected one emphasized and its toll markers
 /// pinned, plus a draggable sheet to switch alternatives and start
@@ -60,8 +80,12 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
   static const double _half = 0.48;
   static const double _expanded = 0.85;
 
-  /// Both zoom buttons plus the gap between them.
+  /// Height of the right-hand control column, used to stop it sliding off the
+  /// top as the sheet expands: both zoom buttons plus the gap between them.
+  /// Premium adds the Support button plus its gap, so the ceiling has to
+  /// account for both layouts.
   static const double _zoomStackHeight = 44 + 12 + 44;
+  static const double _supportButtonSpacing = 12;
 
   final _sheetController = DraggableScrollableController();
 
@@ -311,6 +335,27 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
     context.read<RouteOverviewBloc>().add(const RouteOverviewStartPressed());
   }
 
+  /// Premium: hand the selected route to a support agent instead of driving it
+  /// (docs/ui/8-1.png). Everything the request needs is already in state, so
+  /// the support page opens with the route in hand and nothing to re-fetch.
+  void _onSendRequest() {
+    final state = context.read<RouteOverviewBloc>().state;
+    final alternative = state.selectedAlternative;
+    if (alternative == null || state.origin == null || state.destination == null) {
+      return;
+    }
+    context.push(
+      Pages.routeSupport,
+      extra: RouteSupportRequest.fromRoute(
+        trip: state.trip,
+        alternative: alternative,
+        alternativeLabel: _alternativeLabel(state.trip, alternative.id),
+        origin: state.origin!,
+        destination: state.destination!,
+      ),
+    );
+  }
+
   void _onRetry() {
     context.read<RouteOverviewBloc>().add(
           RouteOverviewStarted(
@@ -385,7 +430,15 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
                   // below the status bar.
                   final ceiling = math.max(
                     16.0,
-                    size.height - topInset - 16 - _zoomStackHeight,
+                    size.height -
+                        topInset -
+                        16 -
+                        _zoomStackHeight -
+                        (PremiumSession.isPremium
+                            ? PremiumSupportButton.heightWith(
+                                _supportButtonSpacing,
+                              )
+                            : 0),
                   );
                   return Positioned(
                     right: 16,
@@ -398,6 +451,11 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
                     _CircleButton(icon: Icons.add, onTap: () => _zoomBy(1)),
                     const SizedBox(height: 12),
                     _CircleButton(icon: Icons.remove, onTap: () => _zoomBy(-1)),
+                    // Premium-only; renders nothing (and takes no space) for
+                    // everyone else.
+                    const PremiumSupportButton(
+                      spacingAbove: _supportButtonSpacing,
+                    ),
                   ],
                 ),
               ),
@@ -410,6 +468,7 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
                 onAlternativeSelected: _onAlternativeSelected,
                 onStopSelected: _focusStop,
                 onStart: _onStart,
+                onSendRequest: _onSendRequest,
                 onRetry: _onRetry,
               ),
             ],
@@ -430,6 +489,7 @@ class _RouteSheet extends StatelessWidget {
     required this.onAlternativeSelected,
     required this.onStopSelected,
     required this.onStart,
+    required this.onSendRequest,
     required this.onRetry,
   });
 
@@ -441,6 +501,7 @@ class _RouteSheet extends StatelessWidget {
   final ValueChanged<String> onAlternativeSelected;
   final ValueChanged<TripCoordinate> onStopSelected;
   final VoidCallback onStart;
+  final VoidCallback onSendRequest;
   final VoidCallback onRetry;
 
   /// Translates a drag on the pinned header into a sheet resize. Deltas are
@@ -587,6 +648,7 @@ class _RouteSheet extends StatelessWidget {
                   alternative: state.selectedAlternative!,
                   loading: state.startStatus == RouteOverviewStartStatus.loading,
                   onStart: onStart,
+                  onSendRequest: onSendRequest,
                 ),
             ],
           ),
@@ -609,17 +671,11 @@ class _AlternativeTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var alternativeIndex = 0;
     final chips = <Widget>[];
     for (final alt in trip.alternatives) {
-      final isRecommended = alt.id == trip.recommendedAlternativeId;
-      if (!isRecommended) alternativeIndex++;
-      final label = isRecommended
-          ? 'routeOverview.recommended'.tr()
-          : 'routeOverview.alternative'.tr(namedArgs: {'index': '$alternativeIndex'});
       if (chips.isNotEmpty) chips.add(const SizedBox(width: 10));
       chips.add(_AlternativeChip(
-        label: label,
+        label: _alternativeLabel(trip, alt.id),
         distanceMiles: alt.distanceMiles,
         total: alt.total,
         selected: alt.id == selectedId,
@@ -903,7 +959,7 @@ class _StopRow extends StatelessWidget {
                   const Expanded(
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: _DashedLeader(),
+                      child: DashedLeader(),
                     ),
                   ),
                   if (trailing != null)
@@ -1031,39 +1087,6 @@ class _ConnectorPainter extends CustomPainter {
       old.above != above || old.below != below || old.gap != gap;
 }
 
-/// The dashed rule that fills the space between a stop's badge and its price.
-class _DashedLeader extends StatelessWidget {
-  const _DashedLeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(height: 1, child: CustomPaint(painter: _LeaderPainter()));
-  }
-}
-
-class _LeaderPainter extends CustomPainter {
-  static const double _dash = 4;
-  static const double _space = 4;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppColor.grey2
-      ..strokeWidth = 1;
-    final y = size.height / 2;
-    for (var x = 0.0; x < size.width; x += _dash + _space) {
-      canvas.drawLine(
-        Offset(x, y),
-        Offset((x + _dash).clamp(0, size.width), y),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_LeaderPainter oldDelegate) => false;
-}
-
 /// The fuel / toll / mile stats and the start button (docs/ui/over_view_bottom.svg).
 /// Pinned below the scrollable part of the sheet, with the upward shadow the
 /// design uses to separate it from the content that scrolls under it.
@@ -1072,11 +1095,13 @@ class _PinnedFooter extends StatelessWidget {
     required this.alternative,
     required this.loading,
     required this.onStart,
+    required this.onSendRequest,
   });
 
   final TripAlternative alternative;
   final bool loading;
   final VoidCallback onStart;
+  final VoidCallback onSendRequest;
 
   @override
   Widget build(BuildContext context) {
@@ -1122,40 +1147,116 @@ class _PinnedFooter extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                height: 44,
-                child: FilledButton(
-                  onPressed: loading ? null : onStart,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColor.kPrimaryColor,
-                    disabledBackgroundColor: AppColor.kPrimaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(22),
-                    ),
-                  ),
-                  child: loading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.2,
-                            valueColor: AlwaysStoppedAnimation(Colors.white),
-                          ),
-                        )
-                      : Text(
-                          'routeOverview.start'.tr(),
-                          style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
+              // Premium splits the action area in two (docs/ui/8-1.png):
+              // drive it yourself, or hand the route to support. Everyone else
+              // keeps the single Start button.
+              ValueListenableBuilder<bool>(
+                valueListenable: PremiumSession.listenable,
+                builder: (context, isPremium, _) {
+                  if (!isPremium) {
+                    return _ActionButton(
+                      label: 'routeOverview.start'.tr(),
+                      loading: loading,
+                      onTap: onStart,
+                    );
+                  }
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: _ActionButton(
+                          label: 'routeOverview.driveYourself'.tr(),
+                          loading: loading,
+                          onTap: onStart,
+                          filled: false,
+                          // Two labels sharing the row need the smaller type
+                          // the design uses; localized labels are longer still.
+                          fontSize: 15,
                         ),
-                ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _ActionButton(
+                          label: 'routeOverview.sendRequest'.tr(),
+                          // Starting a session must not be interruptible by a
+                          // second navigation, so this greys out with it.
+                          disabled: loading,
+                          onTap: onSendRequest,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// A pill in the footer's action area. [filled] is the primary blue treatment;
+/// the secondary one is the light slab "Drive Yourself" uses.
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({
+    required this.label,
+    required this.onTap,
+    this.loading = false,
+    this.disabled = false,
+    this.filled = true,
+    this.fontSize = 17,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+  final double fontSize;
+
+  /// Shows a spinner in place of the label and blocks the tap.
+  final bool loading;
+
+  /// Blocks the tap without claiming to be working.
+  final bool disabled;
+
+  final bool filled;
+
+  @override
+  Widget build(BuildContext context) {
+    final foreground = filled ? Colors.white : AppColor.black;
+    final background = filled ? AppColor.kPrimaryColor : AppColor.lightBlue;
+    return SizedBox(
+      height: 44,
+      width: double.infinity,
+      child: FilledButton(
+        onPressed: (loading || disabled) ? null : onTap,
+        style: FilledButton.styleFrom(
+          backgroundColor: background,
+          // The disabled state here means "busy", not "unavailable" - keeping
+          // the fill stops the footer flickering grey while a session starts.
+          disabledBackgroundColor: background,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+          ),
+        ),
+        child: loading
+            ? SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.2,
+                  valueColor: AlwaysStoppedAnimation(foreground),
+                ),
+              )
+            : Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.w600,
+                  color: foreground,
+                ),
+              ),
       ),
     );
   }

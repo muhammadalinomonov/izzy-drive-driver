@@ -75,17 +75,38 @@ lib/
 
 - **Result type is `NetworkResponse<T>`** (`core/network/network_response.dart`) — `{ String errorText, T? data }`. Repos return `Future<NetworkResponse<T>>`. Empty `errorText` = success. **Do NOT introduce `Either<L, R>` / `dartz` / sealed `Failure` types** — this repo doesn't use them, and mixing in one feature creates inconsistency.
 
-- **DI is per-route, not globally registered.** `setupLocator()` (`core/service_locater.dart`) only registers shared services (`DioSettings`, `LocationService`). Data sources, repositories, and BLoCs are constructed by hand in `GoRoute.builder` callbacks:
+- **DI is GetIt + `injectable` code generation.** Nothing is registered by hand.
+  Annotate the class and re-run the generator:
+  ```dart
+  @lazySingleton class AuthDataSource { … }                  // data sources
+  @LazySingleton(as: AuthRepo) class AuthRepoImpl … { … }     // repos, bound to the abstraction
+  @injectable class AuthBloc extends Bloc<…> { … }            // blocs/cubits — new instance each resolve
+  ```
   ```dart
   GoRoute(
     path: Pages.signIn,
     builder: (context, state) => BlocProvider(
-      create: (_) => AuthBloc(authRepo: AuthRepoImpl(authDataSource: AuthDataSource())),
+      create: (_) => getIt<AuthBloc>(),
       child: SignInPage(),
     ),
   ),
   ```
-  When adding a new repo, **don't** register it in GetIt unless the user explicitly asks. Add it as a constructor argument and instantiate it in the route builder.
+  - Graph root is `core/di/injection.dart` (`getIt`, `configureDependencies()`);
+    generated output is `core/di/injection.config.dart` — **never edit it**.
+  - Run `dart run build_runner build --delete-conflicting-outputs` after adding
+    or changing any annotation. Forgetting this is the usual cause of a
+    "type not registered" crash at runtime.
+  - Types we don't own, or that need async setup, go in `core/di/register_module.dart`.
+    `StorageRepository` and `ConnectivityService` are `@preResolve`d, so
+    `configureDependencies()` must be awaited before `runApp`.
+  - `serviceLocator` (in `core/service_locater.dart`) is a back-compat alias for
+    `getIt`. Prefer `getIt` in new code.
+  - **Blocs are `@injectable` (factory), never singletons** — a closed bloc
+    cannot be reused, and a singleton bloc leaks state across routes.
+  - **Runtime constructor arguments** use `@factoryParam` (max two), resolved as
+    `getIt<NavigationBloc>(param1: session)`. A bloc needing more than two —
+    `RouteOverviewBloc` takes trip + origin + destination — stays hand-built in
+    its route builder, with only its *dependencies* pulled from `getIt`.
 
 - **Domain is thin.** Each feature has only `domain/repo/<feature>_repo.dart` (abstract class). **No entities, no use cases.** Models in `data/model/` double as DTOs and as the type carried through the bloc/UI layer. Don't introduce a `domain/entities/` folder unless the user asks.
 
@@ -153,8 +174,8 @@ When porting features, FCM, auth providers, or anything from `/Users/javoxir/Stu
 |---|---|
 | `Either<Failure, T>` return + `result.isRight` branching | `NetworkResponse<T>` return + `response.errorText.isEmpty` branching |
 | `try/catch ServerException → ServerFailure → Either.left` | `try/catch → return NetworkResponse(errorText: e.message)` |
-| `serviceLocator.registerLazySingleton<XRepository>(() => XRepositoryImpl(...))` | Construct manually in `GoRoute.builder` |
-| `BlocProvider(create:(_) => XBloc())` at root MultiBlocProvider | `BlocProvider(create:(_) => XBloc(repo: XRepoImpl(XDataSource())))` per route |
+| `serviceLocator.registerLazySingleton<XRepository>(() => XRepositoryImpl(...))` | Annotate `@LazySingleton(as: XRepository)` and re-run build_runner |
+| `BlocProvider(create:(_) => XBloc())` at root MultiBlocProvider | `BlocProvider(create:(_) => getIt<XBloc>())` per route |
 | `authStreamController.add(authenticated)` + `AuthenticationBloc` listens | Save token via `StorageRepository.putString('token', ...)` then call `event.onSuccess()` callback (page does `context.go(Pages.main)`) |
 | `MyApp.navigatorKey.currentState!.pushAndRemoveUntil(...)` | `context.go(Pages.X)` (or `context.goNamed` if named routes are added later) |
 | `MyApp.navigatorKey.currentContext.read<XBloc>()` | `context.read<XBloc>()` from page; or expose bloc via `BlocProvider` ancestor |
@@ -171,7 +192,8 @@ When porting features, FCM, auth providers, or anything from `/Users/javoxir/Stu
 
 ## Notes
 
-- `injectable_generator` is in dev_deps but unused — don't run it; nothing is annotated with `@injectable`.
+- `injectable_generator` IS in use — see the DI section above. The `injectable` runtime package was missing for a long time, which is why nothing was annotated.
+- `retrofit_generator` and `flutter_gen_runner` were removed from dev_deps: retrofit was never a runtime dependency and its generator failed to compile, breaking `build_runner` for every builder.
 - `formz` is in deps but only sparsely used — match local form-state pattern, don't introduce formz everywhere.
 - `flutter_local_notifications` is **not** a dep here. If porting FCM from mechanic-app, the foreground-notification suppression doesn't need that package — just don't show anything on `onMessage` (socket already covers it).
 - Two apps share one backend — see `/Users/javoxir/StudioProjects/mechanic-app/CLAUDE.md` for the backend contract details.

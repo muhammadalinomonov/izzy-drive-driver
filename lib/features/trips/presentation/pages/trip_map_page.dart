@@ -18,6 +18,7 @@ import 'package:taxi_app/features/trips/presentation/utils/marker_icon.dart';
 import 'package:taxi_app/features/trips/presentation/widgets/location_fields_card.dart';
 import 'package:taxi_app/features/trips/presentation/widgets/marker_info_sheet.dart';
 import 'package:taxi_app/features/trips/presentation/widgets/place_list_tile.dart';
+import 'package:taxi_app/features/trips/presentation/widgets/premium_support_button.dart';
 import 'package:taxi_app/routes/pages.dart';
 
 /// Trip planning entry point (docs/ui/2.png + 3.png): a full-screen Mapbox map
@@ -43,9 +44,7 @@ class _TripMapPageState extends State<TripMapPage> {
   /// top as the sheet expands. Premium adds the Support button plus its gap,
   /// so the ceiling has to account for both layouts.
   static const double _zoomStackHeight = 44 + 12 + 44;
-  static const double _supportButtonHeight = 12 + 44;
-
-  void _openSupportMessage() => context.push(Pages.supportMessage);
+  static const double _supportButtonSpacing = 12;
 
   void _onGasStation() {
     FocusManager.instance.primaryFocus?.unfocus();
@@ -467,7 +466,11 @@ class _TripMapPageState extends State<TripMapPage> {
                         topInset -
                         16 -
                         _zoomStackHeight -
-                        (PremiumSession.isPremium ? _supportButtonHeight : 0),
+                        (PremiumSession.isPremium
+                            ? PremiumSupportButton.heightWith(
+                                _supportButtonSpacing,
+                              )
+                            : 0),
                   );
                   return Positioned(
                     right: 16,
@@ -480,22 +483,11 @@ class _TripMapPageState extends State<TripMapPage> {
                     _CircleButton(icon: Icons.add, onTap: () => _zoomBy(1)),
                     const SizedBox(height: 12),
                     _CircleButton(icon: Icons.remove, onTap: () => _zoomBy(-1)),
-                    // Premium-only. Driven by the global entitlement rather
-                    // than a bloc, so it appears the moment the profile
-                    // resolves without this screen knowing about profiles.
-                    ValueListenableBuilder<bool>(
-                      valueListenable: PremiumSession.listenable,
-                      builder: (context, isPremium, _) {
-                        if (!isPremium) return const SizedBox.shrink();
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: _CircleButton(
-                            asset: AppIcons.chat,
-                            filled: true,
-                            onTap: _openSupportMessage,
-                          ),
-                        );
-                      },
+                    // Premium-only; renders nothing (and takes no space) for
+                    // everyone else. Shared with the route overview and
+                    // driving mode screens.
+                    const PremiumSupportButton(
+                      spacingAbove: _supportButtonSpacing,
                     ),
                   ],
                 ),
@@ -856,29 +848,19 @@ class _GasStationButton extends StatelessWidget {
   }
 }
 
+/// A plain white map control - back, zoom in, zoom out. The Support button is
+/// its own widget (see [PremiumSupportButton]) because it carries the premium
+/// gate and the filled treatment with it.
 class _CircleButton extends StatelessWidget {
-  const _CircleButton({
-    this.icon,
-    this.asset,
-    required this.onTap,
-    this.filled = false,
-  }) : assert(icon != null || asset != null, 'needs an icon or an asset');
+  const _CircleButton({required this.icon, required this.onTap});
 
-  final IconData? icon;
-
-  /// SVG asset path, mutually exclusive with [icon].
-  final String? asset;
+  final IconData icon;
   final VoidCallback onTap;
-
-  /// Inverts the button to a solid primary fill, used for the Support action
-  /// so it reads as an offer rather than another map control.
-  final bool filled;
 
   @override
   Widget build(BuildContext context) {
-    final tint = filled ? Colors.white : AppColor.black;
     return Material(
-      color: filled ? AppColor.kPrimaryColor : AppColor.white,
+      color: AppColor.white,
       shape: const CircleBorder(),
       elevation: 3,
       child: InkWell(
@@ -887,16 +869,7 @@ class _CircleButton extends StatelessWidget {
         child: SizedBox(
           width: 44,
           height: 44,
-          child: Center(
-            child: asset != null
-                ? SvgPicture.asset(
-                    asset!,
-                    width: 20,
-                    height: 20,
-                    colorFilter: ColorFilter.mode(tint, BlendMode.srcIn),
-                  )
-                : Icon(icon, size: 20, color: tint),
-          ),
+          child: Center(child: Icon(icon, size: 20, color: AppColor.black)),
         ),
       ),
     );

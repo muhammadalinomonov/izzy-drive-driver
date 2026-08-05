@@ -17,6 +17,7 @@ import 'package:taxi_app/features/trips/presentation/controllers/driving_session
 import 'package:taxi_app/features/trips/presentation/controllers/marker_animator.dart';
 import 'package:taxi_app/features/trips/presentation/utils/marker_icon.dart';
 import 'package:taxi_app/features/trips/presentation/widgets/marker_info_sheet.dart';
+import 'package:taxi_app/features/trips/presentation/widgets/premium_support_button.dart';
 import 'package:taxi_app/features/trips/presentation/widgets/speedometer.dart';
 import 'package:taxi_app/features/trips/presentation/widgets/trip_info_bar.dart';
 
@@ -951,11 +952,13 @@ class _DrivingModePageState extends State<DrivingModePage>
   }
 }
 
-/// Bottom-right control stack: zoom in, zoom out, then recenter.
+/// Bottom-right control stack: the Premium support button, zoom in, zoom out,
+/// then recenter.
 ///
 /// Recenter sits lowest as the closest button to the driver's thumb - it is
 /// the one pressed under way, after a glance-and-pan pulls the camera off the
-/// vehicle.
+/// vehicle. Support sits highest for the same reason inverted: it leaves the
+/// screen, so it should be the hardest of the four to hit by accident.
 class _MapControls extends StatelessWidget {
   const _MapControls({
     required this.onZoomIn,
@@ -974,6 +977,9 @@ class _MapControls extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // Premium-only; renders nothing (and takes no space) for everyone
+        // else, so the stack keeps its usual three controls.
+        const PremiumSupportButton(spacingBelow: 12),
         // The two zoom buttons read as one control, so they are joined into a
         // single rounded slab with a hairline divider rather than floating
         // apart like the recenter button.

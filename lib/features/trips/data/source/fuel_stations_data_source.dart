@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:injectable/injectable.dart';
 import 'package:taxi_app/core/network/network_response.dart';
 import 'package:taxi_app/core/utils/geo_math.dart';
 import 'package:taxi_app/core/utils/polyline_codec.dart';
@@ -31,6 +32,7 @@ import 'package:taxi_app/features/trips/data/model/trip_model.dart';
 /// ```
 ///
 /// Nothing in the bloc or the UI should need to change.
+@lazySingleton
 class FuelStationsDataSource {
   /// Simulated latency, so loading states are actually exercised in
   /// development rather than resolving in the same frame.

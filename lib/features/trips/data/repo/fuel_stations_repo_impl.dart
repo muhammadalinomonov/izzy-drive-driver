@@ -1,9 +1,11 @@
+import 'package:injectable/injectable.dart';
 import 'package:taxi_app/core/network/network_response.dart';
 import 'package:taxi_app/features/trips/data/model/fuel_station_model.dart';
 import 'package:taxi_app/features/trips/data/model/trip_model.dart';
 import 'package:taxi_app/features/trips/data/source/fuel_stations_data_source.dart';
 import 'package:taxi_app/features/trips/domain/repo/fuel_stations_repo.dart';
 
+@LazySingleton(as: FuelStationsRepo)
 class FuelStationsRepoImpl extends FuelStationsRepo {
   final FuelStationsDataSource dataSource;
 

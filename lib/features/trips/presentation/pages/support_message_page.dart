@@ -1,7 +1,9 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:taxi_app/core/constants/color/app_color.dart';
 import 'package:taxi_app/core/constants/color/app_icons.dart';
+import 'package:taxi_app/features/trips/presentation/widgets/support_chat.dart';
 
 /// Support conversation, per `docs/ui/11.png`.
 ///
@@ -9,6 +11,11 @@ import 'package:taxi_app/core/constants/color/app_icons.dart';
 /// static sample content - no networking, no sending, no state management yet.
 /// The shapes below (message model, composer callbacks) are deliberately the
 /// ones a real backend would fill, so wiring it up later is additive.
+///
+/// The bubbles, Drive pill and composer are shared with the route review
+/// thread (`route_support_page.dart`) - see `widgets/support_chat.dart`. Only
+/// the card inside the driver's bubble is specific to this page, because this
+/// conversation is about a fuel station rather than a route.
 class SupportMessagePage extends StatefulWidget {
   const SupportMessagePage({super.key});
 
@@ -49,7 +56,7 @@ class _SupportMessagePageState extends State<SupportMessagePage> {
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(
-          'Support',
+          'routeSupport.title'.tr(),
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w600,
@@ -74,24 +81,24 @@ class _SupportMessagePageState extends State<SupportMessagePage> {
                   time: '23:00',
                 ),
                 const SizedBox(height: 12),
-                const _AgentBubble(
+                const SupportAgentBubble(
                   sender: 'Nick Rose',
                   body: "Hello! We have received your request. We'll review it "
                       'and get back to you as soon as possible. Please wait.',
                 ),
                 const SizedBox(height: 12),
-                _AgentBubble(
+                SupportAgentBubble(
                   sender: 'Nick Rose',
                   highlight: 'Your request has been approved!',
                   body: 'You can now refuel at this fuel station. Your fuel '
                       'card has been activated and will remain active until '
                       '8:42 PM.',
-                  action: _DriveButton(onTap: _onDrive),
+                  action: SupportDriveButton(onTap: _onDrive),
                 ),
               ],
             ),
           ),
-          _Composer(
+          SupportComposer(
             controller: _controller,
             onAttach: _onAttach,
             onVoice: _onVoice,
@@ -124,12 +131,8 @@ class _OutgoingRequestBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8F1FE),
-        borderRadius: BorderRadius.circular(14),
-      ),
+    return SupportBubble(
+      outgoing: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -168,13 +171,7 @@ class _OutgoingRequestBubble extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              time,
-              style: TextStyle(fontSize: 12, color: AppColor.grey),
-            ),
-          ),
+          SupportTimestamp(text: time),
         ],
       ),
     );
@@ -210,184 +207,6 @@ class _StationFact extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-/// A support agent's reply. [highlight] renders the emphasised blue lead-in
-/// used for the approval message; [action] hangs an optional button beneath.
-class _AgentBubble extends StatelessWidget {
-  const _AgentBubble({
-    required this.sender,
-    required this.body,
-    this.highlight,
-    this.action,
-  });
-
-  final String sender;
-  final String body;
-  final String? highlight;
-  final Widget? action;
-
-  @override
-  Widget build(BuildContext context) {
-    final lead = highlight;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F4F7),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            sender,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColor.black,
-            ),
-          ),
-          const SizedBox(height: 8),
-          if (lead != null)
-            Text(
-              lead,
-              style: TextStyle(
-                fontSize: 14,
-                height: 1.4,
-                fontWeight: FontWeight.w600,
-                color: AppColor.kPrimaryColor,
-              ),
-            ),
-          Text(
-            body,
-            style: TextStyle(fontSize: 14, height: 1.4, color: AppColor.black),
-          ),
-          if (action != null) ...[
-            const SizedBox(height: 12),
-            action!,
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-/// White pill that starts navigation to the approved station.
-class _DriveButton extends StatelessWidget {
-  const _DriveButton({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: Material(
-        color: AppColor.white,
-        borderRadius: BorderRadius.circular(24),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(24),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 13),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Drive',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppColor.black,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Icon(
-                  Icons.navigation_rounded,
-                  size: 18,
-                  color: AppColor.kPrimaryColor,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Bottom composer: attachment, text field, microphone.
-class _Composer extends StatelessWidget {
-  const _Composer({
-    required this.controller,
-    required this.onAttach,
-    required this.onVoice,
-    required this.onSend,
-  });
-
-  final TextEditingController controller;
-  final VoidCallback onAttach;
-  final VoidCallback onVoice;
-  final VoidCallback onSend;
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF1F4F7),
-            borderRadius: BorderRadius.circular(28),
-          ),
-          child: Row(
-            children: [
-              IconButton(
-                icon: SvgPicture.asset(
-                  AppIcons.paperclip,
-                  width: 20,
-                  height: 20,
-                  colorFilter: ColorFilter.mode(AppColor.grey, BlendMode.srcIn),
-                ),
-                onPressed: onAttach,
-              ),
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  minLines: 1,
-                  maxLines: 4,
-                  textInputAction: TextInputAction.send,
-                  onSubmitted: (_) => onSend(),
-                  style: TextStyle(fontSize: 14, color: AppColor.black),
-                  decoration: InputDecoration(
-                    isDense: true,
-                    border: InputBorder.none,
-                    hintText: 'Matn yoki ovozli habar',
-                    hintStyle: TextStyle(fontSize: 14, color: AppColor.grey),
-                  ),
-                ),
-              ),
-              IconButton(
-                icon: SvgPicture.asset(
-                  AppIcons.micFilled,
-                  width: 20,
-                  height: 20,
-                  colorFilter: ColorFilter.mode(
-                    AppColor.kPrimaryColor,
-                    BlendMode.srcIn,
-                  ),
-                ),
-                onPressed: onVoice,
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

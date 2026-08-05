@@ -243,7 +243,9 @@
     "toll": "Toll",
     "mile": "Mile",
     "fuelStation": "Fuel Station",
-    "inMiles": "in {miles} mi"
+    "inMiles": "in {miles} mi",
+    "driveYourself": "Drive Yourself",
+    "sendRequest": "Send request"
   },
   "drivingMode": {
     "cancel": "Cancel Navigation",
@@ -264,5 +266,11 @@
     "summaryDuration": "Duration",
     "summaryToll": "Tolls",
     "done": "Done"
+  },
+  "routeSupport": {
+    "title": "Support",
+    "drive": "Drive",
+    "composerHint": "Text or voice message",
+    "empty": "No messages yet. Write to support below."
   }
 }

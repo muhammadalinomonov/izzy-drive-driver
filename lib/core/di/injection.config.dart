@@ -107,10 +107,22 @@ import 'package:taxi_app/features/profile/presentation/bloc/profile_bloc.dart'
     as _i886;
 import 'package:taxi_app/features/trips/data/model/navigation_session_model.dart'
     as _i554;
+import 'package:taxi_app/features/trips/data/repo/fuel_stations_repo_impl.dart'
+    as _i1070;
+import 'package:taxi_app/features/trips/data/repo/route_support_repo_impl.dart'
+    as _i679;
 import 'package:taxi_app/features/trips/data/repo/trips_repo_impl.dart'
     as _i121;
+import 'package:taxi_app/features/trips/data/source/fuel_stations_data_source.dart'
+    as _i515;
+import 'package:taxi_app/features/trips/data/source/route_support_data_source.dart'
+    as _i599;
 import 'package:taxi_app/features/trips/data/source/trips_data_source.dart'
     as _i627;
+import 'package:taxi_app/features/trips/domain/repo/fuel_stations_repo.dart'
+    as _i736;
+import 'package:taxi_app/features/trips/domain/repo/route_support_repo.dart'
+    as _i129;
 import 'package:taxi_app/features/trips/domain/repo/trips_repo.dart' as _i106;
 import 'package:taxi_app/features/trips/presentation/bloc/navigation/navigation_bloc.dart'
     as _i317;
@@ -182,6 +194,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i433.NotificationsDataSource>(
       () => _i433.NotificationsDataSource(),
     );
+    gh.lazySingleton<_i515.FuelStationsDataSource>(
+      () => _i515.FuelStationsDataSource(),
+    );
+    gh.lazySingleton<_i599.RouteSupportDataSource>(
+      () => _i599.RouteSupportDataSource(),
+    );
     gh.lazySingleton<_i27.OrderRepository>(
       () => _i27.OrderRepositoryImpl(
         orderProccessSource: gh<_i716.OrderProccessSource>(),
@@ -222,6 +240,11 @@ extension GetItInjectableX on _i174.GetIt {
         dataSource: gh<_i127.OrderCreateDataSource>(),
       ),
     );
+    gh.lazySingleton<_i736.FuelStationsRepo>(
+      () => _i1070.FuelStationsRepoImpl(
+        dataSource: gh<_i515.FuelStationsDataSource>(),
+      ),
+    );
     gh.factory<_i671.ProposalBloc>(
       () => _i671.ProposalBloc(gh<_i982.HomeRepository>()),
     );
@@ -254,6 +277,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i171.HomeBloc>(
       () => _i171.HomeBloc(gh<_i982.HomeRepository>()),
     );
+    gh.lazySingleton<_i129.RouteSupportRepo>(
+      () => _i679.RouteSupportRepoImpl(
+        dataSource: gh<_i599.RouteSupportDataSource>(),
+      ),
+    );
     gh.lazySingleton<_i102.AuthRepo>(
       () => _i200.AuthRepoImpl(authDataSource: gh<_i922.AuthDataSource>()),
     );
@@ -268,6 +296,13 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i79.OrdersBloc>(
       () => _i79.OrdersBloc(orderRepository: gh<_i27.OrderRepository>()),
+    );
+    gh.factory<_i50.TripMapBloc>(
+      () => _i50.TripMapBloc(
+        repo: gh<_i106.TripsRepo>(),
+        locationService: gh<_i120.LocationService>(),
+        fuelStationsRepo: gh<_i736.FuelStationsRepo>(),
+      ),
     );
     gh.factory<_i886.ProfileBloc>(
       () => _i886.ProfileBloc(gh<_i810.ProfileRepository>()),
@@ -287,12 +322,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i809.MasterBloc(
         gh<_i502.MasterRepository>(),
         gh<_i120.LocationService>(),
-      ),
-    );
-    gh.factory<_i50.TripMapBloc>(
-      () => _i50.TripMapBloc(
-        repo: gh<_i106.TripsRepo>(),
-        locationService: gh<_i120.LocationService>(),
       ),
     );
     gh.factory<_i204.InivitesBloc>(

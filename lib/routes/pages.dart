@@ -25,6 +25,7 @@ class Pages {
   static const String routeOverview = '/routeOverview';
   static const String drivingMode = '/drivingMode';
   static const String supportMessage = '/supportMessage';
+  static const String routeSupport = '/routeSupport';
   static const String notifications = '/notifications';
   static const String notificationDetail = '/notificationDetail';
 }

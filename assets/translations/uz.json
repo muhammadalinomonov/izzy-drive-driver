@@ -243,7 +243,9 @@
     "toll": "Toll",
     "mile": "Mil",
     "fuelStation": "Yoqilgʻi shoxobchasi",
-    "inMiles": "{miles} mil keyin"
+    "inMiles": "{miles} mil keyin",
+    "driveYourself": "O'zim haydayman",
+    "sendRequest": "So'rov yuborish"
   },
   "drivingMode": {
     "cancel": "Navigatsiyani bekor qilish",
@@ -264,5 +266,11 @@
     "summaryDuration": "Davomiyligi",
     "summaryToll": "Pullik yo'llar",
     "done": "Tayyor"
+  },
+  "routeSupport": {
+    "title": "Qo'llab-quvvatlash",
+    "drive": "Haydash",
+    "composerHint": "Matn yoki ovozli habar",
+    "empty": "Hozircha xabarlar yo'q. Quyida qo'llab-quvvatlash xizmatiga yozing."
   }
 }

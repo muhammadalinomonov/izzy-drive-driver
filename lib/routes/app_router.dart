@@ -2,6 +2,8 @@ import 'package:chucker_flutter/chucker_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:taxi_app/core/di/injection.dart';
+import 'package:taxi_app/features/trips/data/model/route_support_model.dart';
+import 'package:taxi_app/features/trips/domain/repo/route_support_repo.dart';
 import 'package:taxi_app/features/trips/domain/repo/trips_repo.dart';
 import 'package:taxi_app/features/notifications/domain/repo/notifications_repo.dart';
 import 'package:taxi_app/core/location_service.dart';
@@ -29,11 +31,13 @@ import 'package:taxi_app/features/master/presentation/bloc/master_bloc.dart';
 import 'package:taxi_app/features/notifications/presentation/bloc/notifications_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/navigation/navigation_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/route_overview/route_overview_bloc.dart';
+import 'package:taxi_app/features/trips/presentation/bloc/route_support/route_support_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/trip_map/trip_map_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/trips_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/pages/driving_mode_page.dart';
 import 'package:taxi_app/features/trips/presentation/pages/support_message_page.dart';
 import 'package:taxi_app/features/trips/presentation/pages/route_overview_page.dart';
+import 'package:taxi_app/features/trips/presentation/pages/route_support_page.dart';
 import 'package:taxi_app/features/trips/presentation/pages/trip_map_page.dart';
 import 'package:taxi_app/features/notifications/presentation/pages/notification_detail_page.dart';
 import 'package:taxi_app/features/notifications/presentation/pages/notifications_page.dart';
@@ -201,6 +205,21 @@ class Routes {
         // UI only for now - no bloc, because nothing is fetched or sent yet.
         path: Pages.supportMessage,
         builder: (context, state) => const SupportMessagePage(),
+      ),
+      GoRoute(
+        path: Pages.routeSupport,
+        builder: (context, state) {
+          final request = state.extra as RouteSupportRequest;
+          return BlocProvider(
+            // Hand-built: the whole request is a runtime argument, more than
+            // @factoryParam carries - same shape as RouteOverviewBloc above.
+            create: (_) => RouteSupportBloc(
+              request: request,
+              repo: getIt<RouteSupportRepo>(),
+            ),
+            child: RouteSupportPage(request: request),
+          );
+        },
       ),
       GoRoute(
         path: Pages.drivingMode,

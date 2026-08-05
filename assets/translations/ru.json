@@ -243,7 +243,9 @@
     "toll": "Пошлина",
     "mile": "Мили",
     "fuelStation": "АЗС",
-    "inMiles": "через {miles} миль"
+    "inMiles": "через {miles} миль",
+    "driveYourself": "Поехать самому",
+    "sendRequest": "Отправить запрос"
   },
   "drivingMode": {
     "cancel": "Отменить навигацию",
@@ -264,5 +266,11 @@
     "summaryDuration": "Длительность",
     "summaryToll": "Платные дороги",
     "done": "Готово"
+  },
+  "routeSupport": {
+    "title": "Поддержка",
+    "drive": "Поехать",
+    "composerHint": "Текстовое или голосовое сообщение",
+    "empty": "Сообщений пока нет. Напишите в поддержку ниже."
   }
 }
