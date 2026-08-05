@@ -152,7 +152,7 @@ class _RouteSupportPageState extends State<RouteSupportPage> {
           controller: _scrollController,
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
           itemCount: state.messages.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          separatorBuilder: (_, __) => const SizedBox(height: 8),
           itemBuilder: (context, index) {
             return _MessageBubble(
               message: state.messages[index],
@@ -191,39 +191,52 @@ class _MessageBubble extends StatelessWidget {
     final timestamp = message.sentAtLabel;
     return SupportBubble(
       outgoing: true,
+      wide: card != null,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        // A text-only bubble hugs its text, so the timestamp is pinned to the
+        // trailing edge - an Align there would stretch the bubble to full
+        // width. A bubble carrying a card is already full width, so its
+        // content reads better left-aligned and the timestamp uses the Align.
+        crossAxisAlignment:
+            card == null ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           if (message.body.isNotEmpty)
             Text(
               message.body,
               style: TextStyle(
                 fontSize: 14,
-                height: 1.4,
+                height: 1.35,
                 color: AppColor.black,
               ),
             ),
           // "Selected Route: Recommended" - which alternative the driver is
           // asking about, emphasised under the question.
           if (message.highlight.isNotEmpty) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Text(
               message.highlight,
               style: TextStyle(
                 fontSize: 14,
-                height: 1.4,
+                height: 1.35,
                 fontWeight: FontWeight.w600,
                 color: AppColor.black,
               ),
             ),
           ],
           if (card != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             RouteSupportCard(card: card),
           ],
           if (timestamp.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            SupportTimestamp(text: timestamp),
+            const SizedBox(height: 4),
+            if (card == null)
+              SupportTimestamp(text: timestamp)
+            else
+              Align(
+                alignment: Alignment.centerRight,
+                child: SupportTimestamp(text: timestamp),
+              ),
           ],
         ],
       ),

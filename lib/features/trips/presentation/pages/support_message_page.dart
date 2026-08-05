@@ -80,13 +80,13 @@ class _SupportMessagePageState extends State<SupportMessagePage> {
                   distance: '24 mi',
                   time: '23:00',
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 const SupportAgentBubble(
                   sender: 'Nick Rose',
                   body: "Hello! We have received your request. We'll review it "
                       'and get back to you as soon as possible. Please wait.',
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 SupportAgentBubble(
                   sender: 'Nick Rose',
                   highlight: 'Your request has been approved!',
@@ -133,14 +133,17 @@ class _OutgoingRequestBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     return SupportBubble(
       outgoing: true,
+      // Carries a station card, so it takes the wider treatment.
+      wide: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             message,
-            style: TextStyle(fontSize: 14, height: 1.4, color: AppColor.black),
+            style: TextStyle(fontSize: 14, height: 1.35, color: AppColor.black),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(12),
@@ -170,8 +173,11 @@ class _OutgoingRequestBubble extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 6),
-          SupportTimestamp(text: time),
+          const SizedBox(height: 4),
+          Align(
+            alignment: Alignment.centerRight,
+            child: SupportTimestamp(text: time),
+          ),
         ],
       ),
     );

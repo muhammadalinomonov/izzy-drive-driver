@@ -19,28 +19,59 @@ const Color kSupportOutgoingColor = Color(0xFFE8F1FE);
 /// Incoming (agent) bubble tint.
 const Color kSupportIncomingColor = Color(0xFFF1F4F7);
 
-/// A chat bubble. Full width in both directions, as in the designs - the
-/// author is carried by the tint and by the sender name, not by alignment.
+/// A chat bubble.
+///
+/// Sided like a real messenger: the driver's own messages sit against the
+/// right edge, support's against the left, and each squares off the bottom
+/// corner on its own side so the thread reads as two voices at a glance.
+/// Bubbles hug their content up to [maxWidthFactor] of the screen rather than
+/// spanning it, which is what makes a one-line reply look like a one-line
+/// reply.
 class SupportBubble extends StatelessWidget {
   const SupportBubble({
     super.key,
     required this.outgoing,
     required this.child,
+    this.wide = false,
   });
 
   final bool outgoing;
   final Widget child;
 
+  /// Set for bubbles carrying a route or station card - those need most of the
+  /// screen to stay legible, where plain text should stay narrow.
+  final bool wide;
+
+  static const double _radius = 16;
+
+  /// Share of the screen a bubble may take, leaving the far edge visibly free
+  /// so the sided layout stays obvious even on a long message.
+  double get maxWidthFactor => wide ? 0.9 : 0.76;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: outgoing ? kSupportOutgoingColor : kSupportIncomingColor,
-        borderRadius: BorderRadius.circular(14),
+    return Align(
+      alignment: outgoing ? Alignment.centerRight : Alignment.centerLeft,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width * maxWidthFactor,
+        ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+          decoration: BoxDecoration(
+            color: outgoing ? kSupportOutgoingColor : kSupportIncomingColor,
+            borderRadius: BorderRadius.only(
+              topLeft: const Radius.circular(_radius),
+              topRight: const Radius.circular(_radius),
+              bottomLeft:
+                  outgoing ? const Radius.circular(_radius) : Radius.zero,
+              bottomRight:
+                  outgoing ? Radius.zero : const Radius.circular(_radius),
+            ),
+          ),
+          child: child,
+        ),
       ),
-      child: child,
     );
   }
 }
@@ -75,24 +106,26 @@ class SupportAgentBubble extends StatelessWidget {
     final lead = highlight;
     return SupportBubble(
       outgoing: false,
+      wide: attachment != null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             sender,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: AppColor.black,
+              color: AppColor.kPrimaryColor,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           if (lead != null)
             Text(
               lead,
               style: TextStyle(
                 fontSize: 14,
-                height: 1.4,
+                height: 1.35,
                 fontWeight: FontWeight.w600,
                 color: AppColor.kPrimaryColor,
               ),
@@ -102,16 +135,16 @@ class SupportAgentBubble extends StatelessWidget {
               body,
               style: TextStyle(
                 fontSize: 14,
-                height: 1.4,
+                height: 1.35,
                 color: AppColor.black,
               ),
             ),
           if (attachment != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             attachment!,
           ],
           if (action != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             action!,
           ],
         ],
@@ -120,7 +153,11 @@ class SupportAgentBubble extends StatelessWidget {
   }
 }
 
-/// The timestamp under an outgoing message.
+/// The timestamp inside a message bubble.
+///
+/// Plain text on purpose: the bubble's own column pins it to the trailing edge
+/// (`CrossAxisAlignment.end`), so it can't stretch a short message to the full
+/// bubble width the way a self-aligning widget would.
 class SupportTimestamp extends StatelessWidget {
   const SupportTimestamp({super.key, required this.text});
 
@@ -128,12 +165,9 @@ class SupportTimestamp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Text(
-        text,
-        style: TextStyle(fontSize: 12, color: AppColor.grey),
-      ),
+    return Text(
+      text,
+      style: TextStyle(fontSize: 11, color: AppColor.grey),
     );
   }
 }
@@ -156,14 +190,14 @@ class SupportDriveButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 13),
+            padding: const EdgeInsets.symmetric(vertical: 11),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   'routeSupport.drive'.tr(),
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: AppColor.black,
                   ),
@@ -171,7 +205,7 @@ class SupportDriveButton extends StatelessWidget {
                 const SizedBox(width: 8),
                 Icon(
                   Icons.navigation_rounded,
-                  size: 18,
+                  size: 17,
                   color: AppColor.kPrimaryColor,
                 ),
               ],
