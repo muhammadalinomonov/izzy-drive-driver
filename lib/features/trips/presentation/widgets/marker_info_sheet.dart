@@ -12,6 +12,12 @@ import 'package:taxi_app/features/trips/data/model/trip_model.dart';
 /// itself does not change.
 enum MarkerKind { fuelStation, toll }
 
+/// Title and row-value text colour, traced from `docs/ui/5-2.svg`'s text
+/// paths (`fill="#01060F"`) - a hair off pure black, not [AppColor.black].
+/// Struck-through prices and button labels use their own colours already and
+/// are unaffected.
+const Color _kTextDark = Color(0xFF01060F);
+
 /// Screen-agnostic description of a tapped map marker.
 ///
 /// Both fuel stations and toll gantries collapse into this one shape so a
@@ -173,7 +179,9 @@ class MarkerInfoSheet extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColor.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        // Radius 18: exact, back-computed from the sheet's own rounded-rect
+        // corner curve in docs/ui/5-2.svg (kappa * r = 9.941 => r = 18).
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
       ),
       child: SafeArea(
         top: false,
@@ -181,7 +189,7 @@ class MarkerInfoSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 36,
+              width: 42,
               height: 4,
               margin: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
@@ -190,7 +198,7 @@ class MarkerInfoSheet extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+              padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
               child: _Header(info: info),
             ),
             const SizedBox(height: 6),
@@ -202,7 +210,13 @@ class MarkerInfoSheet extends StatelessWidget {
               ),
             if (info.price != null)
               _InfoRow(
-                icon: AppIcons.price,
+                // Traced from docs/ui/5-2.svg: the row labelled "Price" is
+                // drawn with the pin+dashes glyph (ic_mile_outline.svg's own
+                // artwork), not a wallet/currency icon - the source design
+                // pairs the two icons opposite to what their filenames
+                // suggest, and this reproduces it exactly rather than what
+                // seems intuitive.
+                icon: AppIcons.markerMile,
                 label: info.priceNote == null
                     ? 'markerSheet.price'.tr()
                     : '${'markerSheet.price'.tr()} · ${info.priceNote}',
@@ -211,7 +225,9 @@ class MarkerInfoSheet extends StatelessWidget {
               ),
             if (info.distance != null)
               _InfoRow(
-                icon: AppIcons.markerMile,
+                // Same swap as above: the "Mile" row uses the $-in-circle
+                // glyph (ic_price.svg's artwork) in the source design.
+                icon: AppIcons.price,
                 label: 'markerSheet.mile'.tr(),
                 value: info.distance!,
                 showDivider: false,
@@ -219,7 +235,7 @@ class MarkerInfoSheet extends StatelessWidget {
             if (showActionButton) ...[
               const SizedBox(height: 18),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                 child: _premiumFuel
                     ? _PremiumActions(
                         onRequestRefueling: () => Navigator.of(context)
@@ -253,12 +269,14 @@ class _PrimaryAction extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 52,
+      // 44/22: exact match to docs/ui/5-2.svg's button rects (height 44,
+      // rx 22 - a full pill, not an approximation of one).
+      height: 44,
       child: FilledButton(
         style: FilledButton.styleFrom(
           backgroundColor: AppColor.kPrimaryColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(26),
+            borderRadius: BorderRadius.circular(22),
           ),
         ),
         onPressed: onPressed,
@@ -299,18 +317,18 @@ class _PremiumActions extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        // Flexible rather than fixed-width: "Request Refueling" is the longest
-        // label in the sheet and translations run longer still.
+        // flex 4:3 matches docs/ui/5-2.svg's button widths (198:141 ~= 1.404)
+        // closer than an even 3:2 split would.
         Expanded(
-          flex: 3,
+          flex: 4,
           child: SizedBox(
-            height: 52,
+            height: 44,
             child: FilledButton(
               style: FilledButton.styleFrom(
                 backgroundColor: AppColor.kPrimaryColor,
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(26),
+                  borderRadius: BorderRadius.circular(22),
                 ),
               ),
               onPressed: onRequestRefueling,
@@ -329,9 +347,9 @@ class _PremiumActions extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Expanded(
-          flex: 2,
+          flex: 3,
           child: SizedBox(
-            height: 52,
+            height: 44,
             child: FilledButton(
               style: FilledButton.styleFrom(
                 // The design's pale grey pill; same token the sheet already
@@ -339,7 +357,7 @@ class _PremiumActions extends StatelessWidget {
                 backgroundColor: AppColor.lightBlue,
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(26),
+                  borderRadius: BorderRadius.circular(22),
                 ),
               ),
               onPressed: onDrive,
@@ -387,9 +405,11 @@ class _Header extends StatelessWidget {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(12),
+          // 74x60: docs/ui/5-2.svg's header image is a non-square rectangle,
+          // not the 64x64 square this used to be.
           child: SizedBox(
-            width: 64,
-            height: 64,
+            width: 74,
+            height: 60,
             child: image != null && image.isNotEmpty
                 ? Image.network(
                     image,
@@ -414,10 +434,10 @@ class _Header extends StatelessWidget {
                 info.title,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
-                  color: AppColor.black,
+                  color: _kTextDark,
                 ),
               ),
             ],
@@ -476,27 +496,21 @@ class _InfoRow extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
+              // No border/background chip: docs/ui/5-2.svg draws each row
+              // icon bare. The SizedBox just reserves a consistent slot for
+              // alignment across rows: the icons' own artwork already ships
+              // with the design's exact #93989B stroke, so no colorFilter
+              // tint is applied either - tinting it would only risk drifting
+              // from that colour again.
+              SizedBox(
                 width: 34,
                 height: 34,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColor.grey2),
-                ),
                 child: Center(
-                  child: SvgPicture.asset(
-                    icon,
-                    width: 17,
-                    height: 17,
-                    colorFilter: ColorFilter.mode(
-                      AppColor.grey,
-                      BlendMode.srcIn,
-                    ),
-                  ),
+                  child: SvgPicture.asset(icon, width: 20, height: 20),
                 ),
               ),
               const SizedBox(width: 12),
@@ -517,10 +531,10 @@ class _InfoRow extends StatelessWidget {
                             value,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: AppColor.black,
+                              color: _kTextDark,
                             ),
                           ),
                         ),
@@ -546,8 +560,10 @@ class _InfoRow extends StatelessWidget {
         ),
         if (showDivider)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Divider(height: 1, color: AppColor.grey2),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            // docs/ui/5-2.svg's row dividers are #EFF3F6, a shade lighter
+            // than AppColor.grey2 (#E3E8EB) which was used here before.
+            child: Divider(height: 1, color: AppColor.lightBlue),
           ),
       ],
     );

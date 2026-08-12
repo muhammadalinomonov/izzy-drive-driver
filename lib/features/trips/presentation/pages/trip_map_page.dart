@@ -96,8 +96,13 @@ class _TripMapPageState extends State<TripMapPage>
   /// centre - so it is held here and replayed once the map exists.
   TripCoordinate? _pendingCameraTarget;
 
-  /// Tashkent fallback until the GPS fix lands.
-  static final mapbox.Position _fallback = mapbox.Position(69.2401, 41.2995);
+  /// US fallback until the GPS fix lands - this backend only covers US toll
+  /// roads and EFS fuel stations, so a driver waiting on a fix should still
+  /// see American coordinates rather than an unrelated part of the world.
+  /// Nashville, TN: central to the interstate network the toll/fuel APIs
+  /// actually cover, and the exact spot docs/mobile-api.md's fuel-station
+  /// sample uses.
+  static final mapbox.Position _fallback = mapbox.Position(-86.7816, 36.1627);
 
   // ── Live driver puck ───────────────────────────────────────────────────
   //
@@ -113,7 +118,7 @@ class _TripMapPageState extends State<TripMapPage>
   StreamSubscription<Position>? _driverPositionSub;
 
   /// False until the first real fix arrives, so the puck never flashes at the
-  /// Tashkent fallback the animator is seeded with.
+  /// Nashville fallback the animator is seeded with.
   bool _driverPositionKnown = false;
 
   /// One driver-puck frame in flight at a time, mirroring Driving Mode's
@@ -279,7 +284,7 @@ class _TripMapPageState extends State<TripMapPage>
   /// One raw GPS fix for the driver puck.
   ///
   /// The first fix snaps the puck straight there with no animation - the
-  /// animator is seeded with the Tashkent fallback, and animating from it
+  /// animator is seeded with the Nashville fallback, and animating from it
   /// would sweep the puck across the globe. Every fix after that eases in,
   /// matching the feel of Driving Mode's puck.
   void _onDriverFix(Position fix) {
@@ -408,6 +413,10 @@ class _TripMapPageState extends State<TripMapPage>
     if (sameList && _renderedSelectedStationId == state.selectedStationId) {
       return;
     }
+    // A fresh result set gets framed to fit; a pure selection change (this
+    // same list, just a different highlighted marker) must not re-fly the
+    // camera every time the driver taps a pin.
+    final isNewStationList = !sameList;
     _renderedStations = stations;
     _renderedSelectedStationId = state.selectedStationId;
 
@@ -455,6 +464,68 @@ class _TripMapPageState extends State<TripMapPage>
         if (station != null) _onStationTapped(station);
       },
     );
+
+    if (isNewStationList) {
+      await _fitToStations(stations, originFallback: state.origin?.coordinate);
+    }
+  }
+
+  /// The driver's own position to frame alongside a fuel search: the live
+  /// puck once a real fix has arrived, since that is where the driver
+  /// actually is right now, not wherever the search happened to be centred
+  /// from. Falls back to the resolved origin field for the brief window
+  /// before the first fix lands.
+  TripCoordinate? _liveDriverCoordinate() {
+    if (!_driverPositionKnown) return null;
+    final position = _driverAnimator?.snapshot.value.position;
+    if (position == null) return null;
+    return TripCoordinate(lat: position.latitude, lng: position.longitude);
+  }
+
+  /// Frames every nearby fuel station together with the driver's own
+  /// position, so turning Gas Station mode on shows the whole result set
+  /// relative to where the driver actually is - not just the stations on
+  /// their own, which would say nothing about how far any of them are.
+  Future<void> _fitToStations(
+    List<FuelStationModel> stations, {
+    TripCoordinate? originFallback,
+  }) async {
+    final map = _map;
+    if (map == null || stations.isEmpty) return;
+
+    final driver = _liveDriverCoordinate() ?? originFallback;
+    final points = <mapbox.Point>[
+      if (driver != null)
+        mapbox.Point(coordinates: mapbox.Position(driver.lng, driver.lat)),
+      for (final station in stations)
+        mapbox.Point(
+          coordinates:
+              mapbox.Position(station.coordinate.lng, station.coordinate.lat),
+        ),
+    ];
+
+    if (points.length == 1) {
+      // A bounding box needs at least two distinct points; a single one is
+      // just a normal fly-to.
+      await map.flyTo(
+        mapbox.CameraOptions(center: points.first, zoom: 14.0),
+        mapbox.MapAnimationOptions(duration: 700),
+      );
+      return;
+    }
+
+    final camera = await map.cameraForCoordinatesPadding(
+      points,
+      mapbox.CameraOptions(),
+      // Same insets [_fitToStation] uses: clear of the top back button and
+      // the bottom sheet, which covers roughly the lower half of the screen
+      // at rest.
+      mapbox.MbxEdgeInsets(top: 90, left: 60, bottom: 340, right: 60),
+      null,
+      null,
+    );
+    if (!mounted) return;
+    await map.flyTo(camera, mapbox.MapAnimationOptions(duration: 700));
   }
 
   /// Tapping a station highlights it and opens the shared marker sheet, in its
