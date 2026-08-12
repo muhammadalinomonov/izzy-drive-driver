@@ -84,6 +84,12 @@ class _TripMapPageState extends State<TripMapPage> {
   /// camera exactly once.
   int _handledRecenterTick = 0;
 
+  /// A camera target that arrived before Mapbox finished initialising. On a
+  /// cold start the GPS fix can beat [_onMapCreated], and a fly issued against
+  /// a null map is simply lost - leaving the driver staring at the fallback
+  /// centre - so it is held here and replayed once the map exists.
+  TripCoordinate? _pendingCameraTarget;
+
   /// Tashkent fallback until the GPS fix lands.
   static final mapbox.Position _fallback = mapbox.Position(69.2401, 41.2995);
 
@@ -162,6 +168,12 @@ class _TripMapPageState extends State<TripMapPage> {
     );
     map.scaleBar.updateSettings(mapbox.ScaleBarSettings(enabled: false));
     map.compass.updateSettings(mapbox.CompassSettings(enabled: false));
+
+    final pending = _pendingCameraTarget;
+    if (pending != null) {
+      _pendingCameraTarget = null;
+      _flyToCurrentLocation(pending);
+    }
   }
 
   Future<void> _syncMarker(TripMapField field, PlaceModel place) async {
@@ -343,7 +355,10 @@ class _TripMapPageState extends State<TripMapPage> {
   /// with their position, not a reset to the default.
   Future<void> _flyToCurrentLocation(TripCoordinate target) async {
     final map = _map;
-    if (map == null) return;
+    if (map == null) {
+      _pendingCameraTarget = target;
+      return;
+    }
     final camera = await map.getCameraState();
     if (!mounted) return;
     await map.flyTo(
@@ -428,7 +443,8 @@ class _TripMapPageState extends State<TripMapPage> {
             p.fuelStations.length != c.fuelStations.length ||
             p.selectedStationId != c.selectedStationId ||
             p.recenterTick != c.recenterTick ||
-            p.recenterStatus != c.recenterStatus,
+            p.recenterStatus != c.recenterStatus ||
+            p.originStatus != c.originStatus,
         listener: (context, state) {
           _onStateChanged(context, state);
           _syncStationMarkers(state);
@@ -471,7 +487,11 @@ class _TripMapPageState extends State<TripMapPage> {
             _handledRecenterTick = state.recenterTick;
             _flyToCurrentLocation(recenterTarget);
           }
-          if (state.recenterStatus == TripMapRecenterStatus.failure) {
+          // Both the my-location press and the opening fix report a missing
+          // location the same way: the fields stay editable either way, so the
+          // driver needs telling why the map did not move.
+          if (state.recenterStatus == TripMapRecenterStatus.failure ||
+              state.originStatus == TripMapFieldStatus.failure) {
             AppSnackBar.showWarning(
               context,
               'tripMap.locationUnavailable'.tr(),
@@ -512,12 +532,20 @@ class _TripMapPageState extends State<TripMapPage> {
               SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    child: _CircleButton(
-                      icon: Icons.arrow_back,
-                      onTap: () => context.pop(),
-                    ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _CircleButton(
+                        icon: Icons.arrow_back,
+                        onTap: () => context.pop(),
+                      ),
+                      // Sits beside the back button rather than centred over
+                      // the map: the sheet already owns the lower half and a
+                      // centred banner would land on the fallback centre the
+                      // driver is waiting to be moved away from.
+                      if (state.originStatus == TripMapFieldStatus.loading)
+                        const Expanded(child: _LocatingBanner()),
+                    ],
                   ),
                 ),
               ),
@@ -947,6 +975,56 @@ class _GasStationButton extends StatelessWidget {
                     height: 22,
                     colorFilter: ColorFilter.mode(foreground, BlendMode.srcIn),
                   ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// "Finding your location…" pill, shown over the map until the opening GPS fix
+/// lands and the camera moves off the fallback centre.
+class _LocatingBanner extends StatelessWidget {
+  const _LocatingBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 12),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Material(
+          color: AppColor.white,
+          elevation: 3,
+          borderRadius: BorderRadius.circular(22),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.2,
+                    valueColor: AlwaysStoppedAnimation(AppColor.kPrimaryColor),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    'tripMap.locating'.tr(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColor.black,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

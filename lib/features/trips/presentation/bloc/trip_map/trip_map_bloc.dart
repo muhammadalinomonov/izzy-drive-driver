@@ -195,6 +195,10 @@ class TripMapBloc extends Bloc<TripMapEvent, TripMapState> {
     emit(state.copyWith(
       originStatus: TripMapFieldStatus.success,
       origin: place,
+      // The map opens on a fallback centre, so the first fix doubles as the
+      // opening camera move - same path the my-location button uses.
+      recenterTarget: place.coordinate,
+      recenterTick: state.recenterTick + 1,
     ));
   }
 

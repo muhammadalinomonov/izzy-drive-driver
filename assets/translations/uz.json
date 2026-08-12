@@ -238,7 +238,8 @@
     "noResults": "Bu manzil bo'yicha hech narsa topilmadi.",
     "noRecents": "So'nggi manzillaringiz shu yerda ko'rinadi.",
     "fuelNoStations": "20 mil radiusda yoqilg'i shoxobchasi topilmadi.",
-    "locationUnavailable": "Joylashuvingizni aniqlay olmadik. Birozdan so'ng qayta urinib ko'ring."
+    "locationUnavailable": "Joylashuvingizni aniqlay olmadik. Birozdan so'ng qayta urinib ko'ring.",
+    "locating": "Joylashuvingiz aniqlanmoqda…"
   },
   "routeOverview": {
     "recommended": "Tavsiya etilgan",

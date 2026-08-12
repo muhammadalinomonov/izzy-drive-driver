@@ -238,7 +238,8 @@
     "noResults": "Nothing found for this address.",
     "noRecents": "Your recent locations will appear here.",
     "fuelNoStations": "No fuel stations within 20 miles.",
-    "locationUnavailable": "Can't get your location right now. Try again in a moment."
+    "locationUnavailable": "Can't get your location right now. Try again in a moment.",
+    "locating": "Finding your location…"
   },
   "routeOverview": {
     "recommended": "Recommended",
