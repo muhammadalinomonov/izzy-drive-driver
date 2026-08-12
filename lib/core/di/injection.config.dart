@@ -297,13 +297,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i79.OrdersBloc>(
       () => _i79.OrdersBloc(orderRepository: gh<_i27.OrderRepository>()),
     );
-    gh.factory<_i50.TripMapBloc>(
-      () => _i50.TripMapBloc(
-        repo: gh<_i106.TripsRepo>(),
-        locationService: gh<_i120.LocationService>(),
-        fuelStationsRepo: gh<_i736.FuelStationsRepo>(),
-      ),
-    );
     gh.factory<_i886.ProfileBloc>(
       () => _i886.ProfileBloc(gh<_i810.ProfileRepository>()),
     );
@@ -322,6 +315,13 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i809.MasterBloc(
         gh<_i502.MasterRepository>(),
         gh<_i120.LocationService>(),
+      ),
+    );
+    gh.factory<_i50.TripMapBloc>(
+      () => _i50.TripMapBloc(
+        repo: gh<_i106.TripsRepo>(),
+        locationService: gh<_i120.LocationService>(),
+        fuelStationsRepo: gh<_i736.FuelStationsRepo>(),
       ),
     );
     gh.factory<_i204.InivitesBloc>(

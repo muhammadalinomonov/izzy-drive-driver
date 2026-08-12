@@ -15,6 +15,11 @@ enum TripMapContinueStatus { idle, loading, failure }
 /// place to branch on.
 enum TripMapFuelStatus { idle, loading, success, failure }
 
+/// Lifecycle of a "my location" press. `failure` means no GPS fix was
+/// available, which the page reports the same way a failed station search
+/// does - the driver's fix is the missing ingredient in both.
+enum TripMapRecenterStatus { idle, loading, failure }
+
 class TripMapState extends Equatable {
   final TripMapField activeField;
   final TripMapFieldStatus originStatus;
@@ -62,6 +67,19 @@ class TripMapState extends Equatable {
 
   final String fuelError;
 
+  // ── My location ─────────────────────────────────────────────────────────
+
+  final TripMapRecenterStatus recenterStatus;
+
+  /// Where the camera should fly on the latest recenter. Held separately from
+  /// [origin] so recentring the view never rewrites a destination the driver
+  /// typed by hand.
+  final TripCoordinate? recenterTarget;
+
+  /// Bumped per press, so recentring twice from the same spot still moves the
+  /// camera back after the driver has panned away.
+  final int recenterTick;
+
   const TripMapState({
     this.activeField = TripMapField.none,
     this.originStatus = TripMapFieldStatus.initial,
@@ -84,6 +102,9 @@ class TripMapState extends Equatable {
     this.fuelStations = const [],
     this.selectedStationId = '',
     this.fuelError = '',
+    this.recenterStatus = TripMapRecenterStatus.idle,
+    this.recenterTarget,
+    this.recenterTick = 0,
   });
 
   /// Suggestions replace the history list only while a search is live.
@@ -123,6 +144,9 @@ class TripMapState extends Equatable {
     List<FuelStationModel>? fuelStations,
     String? selectedStationId,
     String? fuelError,
+    TripMapRecenterStatus? recenterStatus,
+    Object? recenterTarget = _sentinel,
+    int? recenterTick,
   }) {
     return TripMapState(
       activeField: activeField ?? this.activeField,
@@ -152,6 +176,11 @@ class TripMapState extends Equatable {
       fuelStations: fuelStations ?? this.fuelStations,
       selectedStationId: selectedStationId ?? this.selectedStationId,
       fuelError: fuelError ?? this.fuelError,
+      recenterStatus: recenterStatus ?? this.recenterStatus,
+      recenterTarget: identical(recenterTarget, _sentinel)
+          ? this.recenterTarget
+          : recenterTarget as TripCoordinate?,
+      recenterTick: recenterTick ?? this.recenterTick,
     );
   }
 
@@ -178,5 +207,7 @@ class TripMapState extends Equatable {
         fuelStations.length,
         selectedStationId,
         fuelError,
+        recenterStatus,
+        recenterTick,
       ];
 }

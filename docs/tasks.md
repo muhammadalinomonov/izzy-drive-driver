@@ -1,4 +1,4 @@
-1. Task
+# 1. Task
 Implement a top `TabBar` with two tabs:
 
 * **Trips**
@@ -43,7 +43,7 @@ WARNING: the api is new, create new constants for this api at the base or code
 
 -----------------------------------------------------------------------------------------------------
 
-2. Task
+# 2. Task
 
 Add a search bar to the Trips section on the Home page. The search bar should be read-only and act 
 as an entry point to the trip planning flow. When the user taps the search bar, navigate to the Trip 
@@ -114,7 +114,7 @@ WARNING: We will continue after searching drawing route and other features NOTE
 
 ----------------------------------------------------------------------------------------------------
 
-3. Task
+# 3. Task
 
 After the user has selected both the **Current Location** and **Destination**, enable the **Continue** button at the bottom of the screen. The button should remain disabled until both locations have been selected.
 
@@ -204,7 +204,7 @@ Handle loading, empty, and error states appropriately, and keep the implementati
 
 ----------------------------------------------------------------------------------------------------
 
-5. Task
+# 5. Task
 
 ## Task 5: Resume Active Navigation Session and Driving Mode Enhancements
 
@@ -281,7 +281,7 @@ Implement proper loading, success, empty, offline, and error states for all API 
 
 ----------------------------------------------------------------------------------------------------
 
-6. Task
+# 6. Task
 
 ## Task: Integrate New Profile APIs and Redesign the Profile Screen
 
@@ -343,7 +343,7 @@ Reuse the existing networking layer, repositories, models, and state management 
 
 ----------------------------------------------------------------------------------------------------
 
-7. Task
+# 7. Task
 
 ## Task: Add Premium Support Message Feature
 
@@ -374,7 +374,7 @@ Keep the implementation modular, reusable, and consistent with the existing proj
 
 ----------------------------------------------------------------------------------------------------
 
-8. Task
+# 8. Task
 
 ## Task: Implement Nearby Fuel Stations UI (API Placeholder)
 
@@ -468,7 +468,7 @@ The implementation should be production-ready, with the only missing piece being
 
 ----------------------------------------------------------------------------------------------------
 
-9. Task
+# 9. Task
 
 ## Task: Implement Marker Information Bottom Sheet
 
@@ -557,7 +557,7 @@ Avoid creating separate implementations for each page.
 
 ----------------------------------------------------------------------------------------------------
 
-10. Task
+# 10. Task
 
 ## Task: Implement Premium Route Support Features
 
@@ -652,3 +652,99 @@ No real network requests should be implemented yet.
 * Match the layouts, spacing, typography, colors, animations, and overall behavior shown in `docs/ui/8-1.png`, `docs/ui/8-2.png`, `docs/ui/8-2-1.png`, and `docs/ui/8-2-2.png` as closely as possible.
 
 ----------------------------------------------------------------------------------------------------
+
+# Task 11: Implement Nearby Fuel Stations and Premium Fuel Information
+
+Implement the Nearby Fuel Stations feature in the **Trips** module, specifically on `trip_map_page.dart`.
+
+Refer to the API documentation in `docs/mobile-api.md` for the endpoint and request/response models.
+
+## Fuel Button
+
+On the modal bottom sheet in `trip_map_page.dart`, there is a **Fuel** button.
+
+When the user taps this button:
+
+* Load nearby fuel stations using the API described in `docs/mobile-api.md`.
+* Display all nearby fuel stations on the MapBox map.
+* Use the marker asset `fuel_station_marker.svg`.
+* Move `docs/icons/fuel_station_marker.svg` into the project's `assets` folder and update all references accordingly.
+* Review all existing map markers and icons, ensuring they are stored in the correct assets directory and remove obsolete copies from the `docs/icons` folder.
+
+## Fuel Station Markers
+
+Each nearby fuel station should appear as a clickable marker on the map.
+
+When the user taps a fuel station marker:
+
+* Highlight the selected marker.
+* Open the Fuel Information Bottom Sheet.
+* Populate it with the selected fuel station's information.
+
+Reuse the existing marker selection logic wherever possible.
+
+## Fuel Information Bottom Sheet
+
+The bottom sheet should be reusable and behave similarly to the existing Toll Information bottom sheet used on `route_overview_page.dart`.
+
+The UI depends on the user's subscription status.
+
+### Premium Users
+
+If `is_paid_user == true`, display the premium version of the bottom sheet exactly as shown in:
+
+`docs/ui/5-2.svg`
+
+### Regular Users
+
+If `is_paid_user == false`, display the standard version exactly as shown in:
+
+`docs/ui/5-1.svg`
+
+The implementation should automatically switch between these two layouts based on the globally stored premium state.
+
+## Route Planning
+
+When the user presses the action button in the Fuel Information Bottom Sheet:
+
+* Use the user's current location as the route origin.
+* Use the selected fuel station as the destination.
+* Generate the route using the existing route calculation flow.
+* Navigate to the existing `route_overview_page.dart`.
+
+Do not create a separate route calculation flow.
+
+## Route Overview
+
+The existing `route_overview_page.dart` should display the generated route exactly as it does for all other routes.
+
+No duplicate implementation should be introduced.
+
+## Driving Mode
+
+On `route_overview_page.dart`, identify the primary navigation button (`Drive Yourself` or `Start`, depending on the user's subscription).
+
+When the user presses this button:
+
+* Navigate to the existing `driving_mode_page.dart`.
+* Start navigation using the currently selected route.
+
+Do not modify the existing Driving Mode flow beyond ensuring this navigation works correctly.
+
+## Architecture
+
+* Reuse the existing Trip module architecture.
+* Share business logic between normal route planning and fuel station routing.
+* Reuse repositories, models, state management, and map components.
+* Avoid duplicated code.
+* Create reusable components where appropriate.
+
+## UI
+
+Match the provided designs exactly:
+
+* `docs/ui/5-1.svg`
+* `docs/ui/5-2.svg`
+
+Maintain consistent spacing, typography, animations, icons, colors, and interaction behavior with the rest of the application.
+

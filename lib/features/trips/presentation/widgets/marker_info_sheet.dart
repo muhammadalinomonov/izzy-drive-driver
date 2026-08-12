@@ -33,6 +33,10 @@ class MarkerInfo {
   /// discounted. Null when there is nothing to compare against.
   final String? priceStruckThrough;
 
+  /// Qualifier appended to the price row's label, e.g. "Tax excluded". Fuel
+  /// prices are meaningless without it.
+  final String? priceNote;
+
   final String? distance;
   final TripCoordinate coordinate;
 
@@ -48,29 +52,35 @@ class MarkerInfo {
     this.address,
     this.price,
     this.priceStruckThrough,
+    this.priceNote,
     this.distance,
     this.imageUrl,
   });
 
   factory MarkerInfo.fromFuelStation(FuelStationModel station) {
-    // A range renders as the low price with the high one struck through,
-    // matching the design's "$54.54 $54.54" pair.
-    final hasRange = station.priceMinMinor != null &&
-        station.priceMaxMinor != null &&
-        station.priceMinMinor != station.priceMaxMinor;
+    final primary = station.primaryPrice;
+    // Both tax variants published: the design's "$54.54 $54.54" pair, with the
+    // contracted (tax-excluded) rate leading and the other struck through.
+    final secondary = station.secondaryPrice;
     return MarkerInfo(
       kind: MarkerKind.fuelStation,
       typeLabel: 'markerSheet.fuelStationName'.tr(),
-      title: station.name.isEmpty ? station.brand : station.name,
+      title: station.title,
       address: station.address.isEmpty ? null : station.address,
-      price: station.priceLabel.isEmpty
+      // Per docs §7.2 a station with no published price still belongs on the
+      // map, labelled rather than hidden.
+      price: primary?.formatted ?? 'markerSheet.priceUnavailable'.tr(),
+      priceStruckThrough: secondary?.formatted,
+      // The price is contracted, not the pump price, and the tax variant has
+      // to be stated explicitly - the backend neither adds nor removes tax.
+      priceNote: primary == null
           ? null
-          : (hasRange
-              ? _money(station.priceMinMinor!, station.currency)
-              : station.priceLabel),
-      priceStruckThrough:
-          hasRange ? _money(station.priceMaxMinor!, station.currency) : null,
-      distance: formatMiles(station.distanceMeters),
+          : (primary.taxIncluded
+              ? 'markerSheet.taxIncluded'.tr()
+              : 'markerSheet.taxExcluded'.tr()),
+      distance: station.distanceMeters == null
+          ? null
+          : formatMiles(station.distanceMeters!),
       coordinate: station.coordinate,
     );
   }
@@ -91,14 +101,16 @@ class MarkerInfo {
     );
   }
 
-  static String _money(int minor, String currency) {
-    final value = (minor / 100).toStringAsFixed(2);
-    return switch (currency.toUpperCase()) {
-      'USD' => '\$$value',
-      'EUR' => '€$value',
-      final other => '$value $other',
-    };
-  }
+}
+
+/// What the driver chose in the sheet's action area.
+enum MarkerSheetAction {
+  /// Route to this marker and drive it yourself - the regular users' single
+  /// "To go there" button and the premium layout's "Drive".
+  drive,
+
+  /// Premium only: hand the stop to support instead of driving straight there.
+  requestRefueling,
 }
 
 /// Opens the marker information sheet.
@@ -108,14 +120,19 @@ class MarkerInfo {
 /// the destination, and `false` on Route Overview and Driving Mode, which are
 /// informational and must not alter a route in progress.
 ///
-/// Returns `true` when the driver pressed "To go there".
-Future<bool?> showMarkerInfoSheet(
+/// [premium] selects the two-button premium layout (`docs/ui/5-2.svg`) over the
+/// standard single-button one (`docs/ui/5-1.png`). It only applies to fuel
+/// stations, and only alongside [showActionButton].
+///
+/// Returns the action the driver picked, or null if they dismissed the sheet.
+Future<MarkerSheetAction?> showMarkerInfoSheet(
   BuildContext context, {
   required MarkerInfo info,
   bool showActionButton = false,
+  bool premium = false,
   VoidCallback? onDismissed,
 }) {
-  return showModalBottomSheet<bool>(
+  return showModalBottomSheet<MarkerSheetAction>(
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
@@ -124,20 +141,32 @@ Future<bool?> showMarkerInfoSheet(
     builder: (_) => MarkerInfoSheet(
       info: info,
       showActionButton: showActionButton,
+      premium: premium,
     ),
   ).whenComplete(() => onDismissed?.call());
 }
 
-/// Marker detail sheet, built to `docs/ui/5-1.png`.
+/// Marker detail sheet, built to `docs/ui/5-1.png` (standard) and
+/// `docs/ui/5-2.svg` (premium).
 class MarkerInfoSheet extends StatelessWidget {
   const MarkerInfoSheet({
     super.key,
     required this.info,
     this.showActionButton = false,
+    this.premium = false,
   });
 
   final MarkerInfo info;
   final bool showActionButton;
+
+  /// Premium entitlement. Drives the two-button action row for fuel stations;
+  /// ignored for toll markers, which have no premium variant.
+  final bool premium;
+
+  /// Refuelling is a fuel-station action, so the premium layout is only used
+  /// where it means something.
+  bool get _premiumFuel =>
+      premium && showActionButton && info.kind == MarkerKind.fuelStation;
 
   @override
   Widget build(BuildContext context) {
@@ -174,13 +203,15 @@ class MarkerInfoSheet extends StatelessWidget {
             if (info.price != null)
               _InfoRow(
                 icon: AppIcons.price,
-                label: 'markerSheet.price'.tr(),
+                label: info.priceNote == null
+                    ? 'markerSheet.price'.tr()
+                    : '${'markerSheet.price'.tr()} · ${info.priceNote}',
                 value: info.price!,
                 struckThrough: info.priceStruckThrough,
               ),
             if (info.distance != null)
               _InfoRow(
-                icon: AppIcons.routeMile,
+                icon: AppIcons.markerMile,
                 label: 'markerSheet.mile'.tr(),
                 value: info.distance!,
                 showDivider: false,
@@ -189,44 +220,156 @@ class MarkerInfoSheet extends StatelessWidget {
               const SizedBox(height: 18),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColor.kPrimaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(26),
+                child: _premiumFuel
+                    ? _PremiumActions(
+                        onRequestRefueling: () => Navigator.of(context)
+                            .pop(MarkerSheetAction.requestRefueling),
+                        onDrive: () =>
+                            Navigator.of(context).pop(MarkerSheetAction.drive),
+                      )
+                    : _PrimaryAction(
+                        label: 'markerSheet.toGoThere'.tr(),
+                        onPressed: () =>
+                            Navigator.of(context).pop(MarkerSheetAction.drive),
                       ),
-                    ),
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'markerSheet.toGoThere'.tr(),
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(
-                          Icons.navigation_rounded,
-                          size: 18,
-                          color: Colors.white,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               ),
             ] else
               const SizedBox(height: 16),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Standard single action, full width: "To go there" (`docs/ui/5-1.png`).
+class _PrimaryAction extends StatelessWidget {
+  const _PrimaryAction({required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: FilledButton(
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColor.kPrimaryColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(26),
+          ),
+        ),
+        onPressed: onPressed,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.navigation_rounded, size: 18, color: Colors.white),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Premium action pair (`docs/ui/5-2.svg`): a filled "Request Refueling"
+/// alongside a tonal "Drive". Refuelling leads because it is the premium
+/// feature; Drive keeps the arrow so it stays recognisable as the same action
+/// standard users get.
+class _PremiumActions extends StatelessWidget {
+  const _PremiumActions({
+    required this.onRequestRefueling,
+    required this.onDrive,
+  });
+
+  final VoidCallback onRequestRefueling;
+  final VoidCallback onDrive;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        // Flexible rather than fixed-width: "Request Refueling" is the longest
+        // label in the sheet and translations run longer still.
+        Expanded(
+          flex: 3,
+          child: SizedBox(
+            height: 52,
+            child: FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColor.kPrimaryColor,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(26),
+                ),
+              ),
+              onPressed: onRequestRefueling,
+              child: Text(
+                'markerSheet.requestRefueling'.tr(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 2,
+          child: SizedBox(
+            height: 52,
+            child: FilledButton(
+              style: FilledButton.styleFrom(
+                // The design's pale grey pill; same token the sheet already
+                // uses for the image fallback tile.
+                backgroundColor: AppColor.lightBlue,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(26),
+                ),
+              ),
+              onPressed: onDrive,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Text(
+                      'markerSheet.drive'.tr(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColor.black,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.navigation_rounded,
+                    size: 18,
+                    color: AppColor.kPrimaryColor,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

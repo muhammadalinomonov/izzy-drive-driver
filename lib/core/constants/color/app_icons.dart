@@ -58,7 +58,7 @@ class AppIcons {
   static const String tollMarker = 'assets/icons/toll_marker.svg';
   // Nearby Fuel Stations: the sheet's toggle and the map pin.
   static const String gasStation = 'assets/icons/ic_gas_station.svg';
-  static const String gasStationMarker = 'assets/icons/gas_station_marker.svg';
+  static const String gasStationMarker = 'assets/icons/fuel_station_marker.svg';
   /// Price row in the marker information sheet.
   static const String price = 'assets/icons/ic_price.svg';
   // The three stat icons ship pre-tinted at 34x32 with their own rounded
@@ -67,6 +67,13 @@ class AppIcons {
   static const String routeToll = 'assets/icons/ic_toll.svg';
   static const String routeMile = 'assets/icons/ic_mile.svg';
   static const String routeLocation = 'assets/icons/ic_location.svg';
+
+  /// Distance row in the marker information sheet. A separate asset from
+  /// [routeMile] despite the shared name in the design files: that one is the
+  /// pre-tinted 34x32 stat tile, this is the plain grey 24x24 stroke the sheet
+  /// rows need (docs/ui/5-1.png, 5-2.svg) so it can be colour-filtered inside
+  /// the row's outlined circle.
+  static const String markerMile = 'assets/icons/ic_mile_outline.svg';
 
   // Waypoint-timeline bullets: a coloured dot on a matching halo, drawn
   // as-authored (red for toll gantries, blue for fuel stations).

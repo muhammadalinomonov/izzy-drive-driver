@@ -185,6 +185,7 @@ class _TripsPageState extends State<TripsPage> {
         },
     );
   }
+
 }
 
 /// Places the Continue Route card above a non-list state.

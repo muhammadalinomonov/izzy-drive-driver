@@ -46,6 +46,14 @@ class TollApiConstants {
   static String tollRouteDetail(String routeRequestId) =>
       'mobile/toll-routes/$routeRequestId';
 
+  /// `GET mobile/fuel-stations` (docs §7.1) — the managed EFS fuel-station
+  /// catalogue. Read-only, active-only, and queried by bounding box rather
+  /// than by centre+radius: there is no `lat`/`lng`/`radius` form, so a
+  /// nearby search sends `north`/`south`/`east`/`west` together.
+  ///
+  /// Rate limit is 60 req/min, which is why bounds requests are debounced.
+  static const String fuelStations = 'mobile/fuel-stations';
+
   // Navigation sessions
   static const String navigationSessions = 'mobile/navigation-sessions';
   static const String navigationSessionsCurrent =

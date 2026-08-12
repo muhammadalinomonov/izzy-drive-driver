@@ -218,7 +218,12 @@
     "location": "Location",
     "price": "Price",
     "mile": "Mile",
-    "toGoThere": "To go there"
+    "toGoThere": "To go there",
+    "priceUnavailable": "Not available",
+    "taxIncluded": "Tax included",
+    "taxExcluded": "Tax excluded",
+    "requestRefueling": "Request Refueling",
+    "drive": "Drive"
   },
   "tripMap": {
     "fuelNeedsLocation": "Waiting for your location. Try again in a moment.",
@@ -231,7 +236,9 @@
     "map": "Map",
     "continue": "Continue",
     "noResults": "Nothing found for this address.",
-    "noRecents": "Your recent locations will appear here."
+    "noRecents": "Your recent locations will appear here.",
+    "fuelNoStations": "No fuel stations within 20 miles.",
+    "locationUnavailable": "Can't get your location right now. Try again in a moment."
   },
   "routeOverview": {
     "recommended": "Recommended",

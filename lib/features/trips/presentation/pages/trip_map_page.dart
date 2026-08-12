@@ -9,6 +9,7 @@ import 'package:taxi_app/core/components/app_snack_bar.dart';
 import 'package:taxi_app/core/constants/color/app_color.dart';
 import 'package:taxi_app/features/trips/data/model/fuel_station_model.dart';
 import 'package:taxi_app/features/trips/data/model/place_model.dart';
+import 'package:taxi_app/features/trips/data/model/trip_model.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/trip_map/trip_map_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:taxi_app/core/constants/color/app_icons.dart';
@@ -39,11 +40,11 @@ class _TripMapPageState extends State<TripMapPage> {
   static const double _half = 0.55;
   static const double _expanded = 0.92;
 
-  /// Both zoom buttons plus the gap between them.
-  /// Height of the right-hand control column, used to stop it sliding off the
-  /// top as the sheet expands. Premium adds the Support button plus its gap,
-  /// so the ceiling has to account for both layouts.
-  static const double _zoomStackHeight = 44 + 12 + 44;
+  /// Height of the right-hand control column - the two zoom buttons and the
+  /// my-location button, plus the gaps between them. Used to stop the column
+  /// sliding off the top as the sheet expands. Premium adds the Support button
+  /// plus its gap, so the ceiling has to account for both layouts.
+  static const double _zoomStackHeight = 44 + 12 + 44 + 12 + 44;
   static const double _supportButtonSpacing = 12;
 
   void _onGasStation() {
@@ -78,6 +79,10 @@ class _TripMapPageState extends State<TripMapPage> {
   /// skipped rather than redrawing every marker on each state emission.
   List<FuelStationModel> _renderedStations = const [];
   String _renderedSelectedStationId = '';
+
+  /// Recenter tick the camera has already flown for, so one press moves the
+  /// camera exactly once.
+  int _handledRecenterTick = 0;
 
   /// Tashkent fallback until the GPS fix lands.
   static final mapbox.Position _fallback = mapbox.Position(69.2401, 41.2995);
@@ -231,7 +236,10 @@ class _TripMapPageState extends State<TripMapPage> {
     _stationByAnnotationId.clear();
     if (!mounted || stations.isEmpty) return;
 
-    final png = await rasterizeMarkerSvg(AppIcons.gasStationMarker, height: 88);
+    // Rasterized at the size it is drawn at rather than at 88 and scaled up
+    // with iconSize: upscaling a bitmap softens the pump art and the price
+    // pin's edges, and this marker has to stay readable against busy roads.
+    final png = await rasterizeMarkerSvg(AppIcons.gasStationMarker, height: 140);
     if (!mounted) return;
 
     for (final station in stations) {
@@ -248,7 +256,7 @@ class _TripMapPageState extends State<TripMapPage> {
           // The selected station is scaled up rather than recoloured: the
           // marker art is a fixed multi-colour asset, so size is the only
           // honest highlight available without a second bitmap.
-          iconSize: isSelected ? 1.5 : 1.0,
+          iconSize: isSelected ? 1.25 : 1.0,
           iconAnchor: mapbox.IconAnchor.BOTTOM,
         ),
       );
@@ -266,22 +274,36 @@ class _TripMapPageState extends State<TripMapPage> {
     );
   }
 
-  /// Tapping a station highlights it and opens the shared marker sheet. The
-  /// destination is only set if the driver confirms with "To go there", so a
-  /// tap to read the price doesn't hijack the route they were planning.
+  /// Tapping a station highlights it and opens the shared marker sheet, in its
+  /// premium or standard layout. The destination is only set if the driver
+  /// acts on the sheet, so a tap to read the price doesn't hijack the route
+  /// they were planning.
   Future<void> _onStationTapped(FuelStationModel station) async {
     final bloc = context.read<TripMapBloc>();
     bloc.add(TripMapMarkerHighlighted(station.id));
 
-    final goThere = await showMarkerInfoSheet(
+    final action = await showMarkerInfoSheet(
       context,
       info: MarkerInfo.fromFuelStation(station),
       showActionButton: true,
+      premium: PremiumSession.isPremium,
       // Dismissing without acting drops the highlight again.
       onDismissed: () => bloc.add(const TripMapMarkerHighlighted('')),
     );
-    if (goThere != true || !mounted) return;
-    bloc.add(TripMapFuelStationSelected(station));
+    if (action == null || !mounted) return;
+
+    switch (action) {
+      // Fills both fields and prices the trip in one step; the route-overview
+      // push is handled by the same continueTick listener Continue uses.
+      case MarkerSheetAction.drive:
+        bloc.add(TripMapFuelStationSelected(station, startRouting: true));
+      // Premium-only. The refuelling-request API is not part of this task, so
+      // this lands on the existing premium support screen (as the route
+      // support flow does) with the station kept as the pending destination.
+      case MarkerSheetAction.requestRefueling:
+        bloc.add(TripMapFuelStationSelected(station));
+        context.push(Pages.supportMessage);
+    }
   }
 
   /// Frames origin and the chosen station together, so the driver sees the
@@ -309,6 +331,30 @@ class _TripMapPageState extends State<TripMapPage> {
     );
     if (!mounted) return;
     await map.flyTo(camera, mapbox.MapAnimationOptions(duration: 700));
+  }
+
+  void _onRecenter() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    context.read<TripMapBloc>().add(const TripMapRecenterRequested());
+  }
+
+  /// Flies to the driver's fresh fix. A zoom already tighter than 14 is kept -
+  /// someone who zoomed in to read street names wants their zoom back along
+  /// with their position, not a reset to the default.
+  Future<void> _flyToCurrentLocation(TripCoordinate target) async {
+    final map = _map;
+    if (map == null) return;
+    final camera = await map.getCameraState();
+    if (!mounted) return;
+    await map.flyTo(
+      mapbox.CameraOptions(
+        center: mapbox.Point(
+          coordinates: mapbox.Position(target.lng, target.lat),
+        ),
+        zoom: camera.zoom < 14 ? 15.0 : camera.zoom,
+      ),
+      mapbox.MapAnimationOptions(duration: 700),
+    );
   }
 
   Future<void> _zoomBy(double delta) async {
@@ -380,7 +426,9 @@ class _TripMapPageState extends State<TripMapPage> {
             p.fuelMode != c.fuelMode ||
             p.fuelStatus != c.fuelStatus ||
             p.fuelStations.length != c.fuelStations.length ||
-            p.selectedStationId != c.selectedStationId,
+            p.selectedStationId != c.selectedStationId ||
+            p.recenterTick != c.recenterTick ||
+            p.recenterStatus != c.recenterStatus,
         listener: (context, state) {
           _onStateChanged(context, state);
           _syncStationMarkers(state);
@@ -406,6 +454,27 @@ class _TripMapPageState extends State<TripMapPage> {
               state.fuelError == 'tripMap.fuelNeedsLocation'
                   ? 'tripMap.fuelNeedsLocation'.tr()
                   : state.fuelError,
+            );
+          }
+          // An empty catalogue answer is a valid result, not an error - but
+          // silently drawing no markers reads as a broken button, so it gets
+          // said out loud.
+          if (state.fuelIsEmpty) {
+            AppSnackBar.showWarning(context, 'tripMap.fuelNoStations'.tr());
+          }
+          // Tick-guarded: this listener also fires for selections and fuel
+          // state, and an unguarded fly would drag the camera back to the
+          // driver every time one of those changed.
+          final recenterTarget = state.recenterTarget;
+          if (recenterTarget != null &&
+              state.recenterTick != _handledRecenterTick) {
+            _handledRecenterTick = state.recenterTick;
+            _flyToCurrentLocation(recenterTarget);
+          }
+          if (state.recenterStatus == TripMapRecenterStatus.failure) {
+            AppSnackBar.showWarning(
+              context,
+              'tripMap.locationUnavailable'.tr(),
             );
           }
           if (state.continueStatus == TripMapContinueStatus.failure &&
@@ -483,6 +552,16 @@ class _TripMapPageState extends State<TripMapPage> {
                     _CircleButton(icon: Icons.add, onTap: () => _zoomBy(1)),
                     const SizedBox(height: 12),
                     _CircleButton(icon: Icons.remove, onTap: () => _zoomBy(-1)),
+                    const SizedBox(height: 12),
+                    // "My location": takes a fresh fix and flies to it. Sits
+                    // with the zoom controls because it is a camera action,
+                    // not a change to the trip being planned.
+                    _CircleButton(
+                      svgAsset: AppIcons.gpsRecenter,
+                      loading:
+                          state.recenterStatus == TripMapRecenterStatus.loading,
+                      onTap: _onRecenter,
+                    ),
                     // Premium-only; renders nothing (and takes no space) for
                     // everyone else. Shared with the route overview and
                     // driving mode screens.
@@ -634,6 +713,7 @@ class _Sheet extends StatelessWidget {
                 loading: state.continueStatus == TripMapContinueStatus.loading,
                 onPressed: onContinue,
                 fuelMode: state.fuelMode,
+                fuelLoading: state.fuelStatus == TripMapFuelStatus.loading,
                 onGasStation: onGasStation,
               ),
             ],
@@ -744,6 +824,7 @@ class _Message extends StatelessWidget {
 class _ContinueBar extends StatelessWidget {
   const _ContinueBar({
     required this.fuelMode,
+    required this.fuelLoading,
     required this.onGasStation,
     required this.enabled,
     required this.loading,
@@ -756,6 +837,9 @@ class _ContinueBar extends StatelessWidget {
 
   /// Whether Nearby Fuel Stations mode is active.
   final bool fuelMode;
+
+  /// Whether the nearby-stations request is still in flight.
+  final bool fuelLoading;
   final VoidCallback onGasStation;
 
   @override
@@ -768,7 +852,11 @@ class _ContinueBar extends StatelessWidget {
           children: [
             // Gas Station toggle, per docs/ui/3-1.png: a circular icon button
             // sharing the bar with Continue.
-            _GasStationButton(active: fuelMode, onTap: onGasStation),
+            _GasStationButton(
+              active: fuelMode,
+              loading: fuelLoading,
+              onTap: onGasStation,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: SizedBox(
@@ -813,13 +901,23 @@ class _ContinueBar extends StatelessWidget {
 /// Fuel Stations mode is on, so the map's station markers have an obvious
 /// on-screen source and an obvious way back out.
 class _GasStationButton extends StatelessWidget {
-  const _GasStationButton({required this.active, required this.onTap});
+  const _GasStationButton({
+    required this.active,
+    required this.loading,
+    required this.onTap,
+  });
 
   final bool active;
+
+  /// The catalogue request is in flight. Shown in place of the icon: fetching
+  /// the stations is a network round trip, and without this the button looks
+  /// inert until markers appear.
+  final bool loading;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final foreground = active ? Colors.white : AppColor.black;
     return Material(
       color: active ? AppColor.kPrimaryColor : AppColor.white,
       shape: CircleBorder(
@@ -827,20 +925,28 @@ class _GasStationButton extends StatelessWidget {
       ),
       child: InkWell(
         customBorder: const CircleBorder(),
-        onTap: onTap,
+        // Ignored while loading so a second tap can't cancel the mode out from
+        // under the request that is still arriving.
+        onTap: loading ? null : onTap,
         child: SizedBox(
           width: 50,
           height: 50,
           child: Center(
-            child: SvgPicture.asset(
-              AppIcons.gasStation,
-              width: 22,
-              height: 22,
-              colorFilter: ColorFilter.mode(
-                active ? Colors.white : AppColor.black,
-                BlendMode.srcIn,
-              ),
-            ),
+            child: loading
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.4,
+                      valueColor: AlwaysStoppedAnimation(foreground),
+                    ),
+                  )
+                : SvgPicture.asset(
+                    AppIcons.gasStation,
+                    width: 22,
+                    height: 22,
+                    colorFilter: ColorFilter.mode(foreground, BlendMode.srcIn),
+                  ),
           ),
         ),
       ),
@@ -848,28 +954,63 @@ class _GasStationButton extends StatelessWidget {
   }
 }
 
-/// A plain white map control - back, zoom in, zoom out. The Support button is
-/// its own widget (see [PremiumSupportButton]) because it carries the premium
-/// gate and the filled treatment with it.
+/// A plain white map control - back, zoom in, zoom out, my location. The
+/// Support button is its own widget (see [PremiumSupportButton]) because it
+/// carries the premium gate and the filled treatment with it.
+///
+/// Takes either a Material [icon] or an [svgAsset]; the my-location control
+/// ships as an SVG, the rest are Material glyphs.
 class _CircleButton extends StatelessWidget {
-  const _CircleButton({required this.icon, required this.onTap});
+  const _CircleButton({
+    this.icon,
+    this.svgAsset,
+    required this.onTap,
+    this.loading = false,
+  }) : assert(icon != null || svgAsset != null, 'needs an icon or an asset');
 
-  final IconData icon;
+  final IconData? icon;
+  final String? svgAsset;
   final VoidCallback onTap;
+
+  /// Shows a spinner instead of the glyph and ignores taps. Used while a GPS
+  /// fix is being acquired, which can take a second or two indoors.
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
+    final asset = svgAsset;
     return Material(
       color: AppColor.white,
       shape: const CircleBorder(),
       elevation: 3,
       child: InkWell(
         customBorder: const CircleBorder(),
-        onTap: onTap,
+        onTap: loading ? null : onTap,
         child: SizedBox(
           width: 44,
           height: 44,
-          child: Center(child: Icon(icon, size: 20, color: AppColor.black)),
+          child: Center(
+            child: loading
+                ? SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.2,
+                      valueColor: AlwaysStoppedAnimation(AppColor.black),
+                    ),
+                  )
+                : asset != null
+                    ? SvgPicture.asset(
+                        asset,
+                        width: 20,
+                        height: 20,
+                        colorFilter: ColorFilter.mode(
+                          AppColor.black,
+                          BlendMode.srcIn,
+                        ),
+                      )
+                    : Icon(icon, size: 20, color: AppColor.black),
+          ),
         ),
       ),
     );

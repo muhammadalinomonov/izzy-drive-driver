@@ -1,121 +1,163 @@
 import 'dart:math' as math;
 
+import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
+import 'package:taxi_app/core/extensions/status_code_extension.dart';
 import 'package:taxi_app/core/network/network_response.dart';
+import 'package:taxi_app/core/network/toll_api_constants.dart';
+import 'package:taxi_app/core/network/toll_dio.dart';
+import 'package:taxi_app/core/network/toll_session.dart';
+import 'package:taxi_app/core/service_locater.dart';
 import 'package:taxi_app/core/utils/geo_math.dart';
+import 'package:taxi_app/core/utils/json_safe.dart';
 import 'package:taxi_app/core/utils/polyline_codec.dart';
 import 'package:taxi_app/features/trips/data/model/fuel_station_model.dart';
 import 'package:taxi_app/features/trips/data/model/trip_model.dart';
 
-/// PLACEHOLDER nearby-fuel-stations source.
+/// `GET mobile/fuel-stations` — the EFS fuel-station catalogue (docs §7.1).
 ///
-/// The backend endpoint does not exist yet. This generates plausible stations
-/// around the driver so the whole feature - UI, selection, routing, states -
-/// can be built and exercised now.
+/// Two shape mismatches between what the screen wants ("stations near me") and
+/// what the endpoint offers are resolved here rather than in the bloc:
 ///
-/// ## Replacing this with the real API
-///
-/// Everything above this class is already API-shaped: [FuelStationModel]
-/// parses the JSON the endpoint is expected to return, and the repository
-/// returns `NetworkResponse` exactly like every other source here. When the
-/// endpoint lands, swap the body of [getNearbyFuelStations] for a real call:
-///
-/// ```dart
-/// final response = await client.get(
-///   TollApiConstants.fuelStations,
-///   queryParameters: {
-///     'lat': currentLocation.lat,
-///     'lng': currentLocation.lng,
-///     'radius_meters': radiusMeters,
-///   },
-/// );
-/// ```
-///
-/// Nothing in the bloc or the UI should need to change.
+/// 1. **No centre+radius query.** The catalogue filters by bounding box only,
+///    so the requested radius is converted into a lat/lng box and the corners
+///    are sent together - the filter is ignored unless all four are present.
+/// 2. **No distance field.** A box query returns no distance, so each station
+///    is measured against the driver's position locally and the corner-cut
+///    results outside the radius are dropped, leaving a true circular search.
 @lazySingleton
 class FuelStationsDataSource {
-  /// Simulated latency, so loading states are actually exercised in
-  /// development rather than resolving in the same frame.
-  static const Duration _fakeLatency = Duration(milliseconds: 600);
+  FuelStationsDataSource();
 
-  /// Deterministic per-location seed: panning back to the same place shows
-  /// the same stations instead of reshuffling on every request.
-  int _seedFor(TripCoordinate origin) {
-    return ((origin.lat * 1000).round() * 31 + (origin.lng * 1000).round())
-        .abs();
-  }
+  final client = serviceLocator.get<TollDioSettings>().dio;
+
+  /// Catalogue maximum (docs §7.1). Asked for in full: the box is small, the
+  /// results are drawn as map markers, and paging through a 20-item default
+  /// would spend several of the 60 req/min budget per pan.
+  static const int _perPage = 100;
 
   Future<NetworkResponse<List<FuelStationModel>>> getNearbyFuelStations({
     required TripCoordinate currentLocation,
     required double radiusMeters,
   }) async {
-    await Future.delayed(_fakeLatency);
-
+    if (!TollSession.hasToken) {
+      return NetworkResponse<List<FuelStationModel>>(
+        errorText: 'Toll account is not connected.',
+        errorCode: 'TOLL_SESSION_MISSING',
+      );
+    }
     try {
-      final random = math.Random(_seedFor(currentLocation));
-      final origin = LatLng(currentLocation.lat, currentLocation.lng);
-      final count = 6 + random.nextInt(4); // 6-9 stations
-
-      final stations = <FuelStationModel>[];
-      for (var i = 0; i < count; i++) {
-        // Spread them across the full bearing range, biased outward via sqrt
-        // so they don't clump at the centre the way a uniform radius does.
-        final bearing = random.nextDouble() * 360;
-        final distance = radiusMeters * math.sqrt(random.nextDouble());
-        final point = forwardTarget(origin, bearing, distance);
-
-        final brand = _brands[random.nextInt(_brands.length)];
-        final priceMin = 45000 + random.nextInt(1500) * 10;
-        final priceMax = priceMin + random.nextInt(800) * 10;
-
-        stations.add(
-          FuelStationModel(
-            id: 'placeholder-fuel-$i-${_seedFor(currentLocation)}',
-            name: '$brand ${_suffixes[random.nextInt(_suffixes.length)]}',
-            brand: brand,
-            address: '${100 + random.nextInt(8900)} '
-                '${_streets[random.nextInt(_streets.length)]}',
-            coordinate: TripCoordinate(
-              lat: point.latitude,
-              lng: point.longitude,
-            ),
-            distanceMeters: distance.round(),
-            priceMinMinor: priceMin,
-            priceMaxMinor: priceMax,
-            currency: 'USD',
-          ),
+      final bounds = _boundsAround(currentLocation, radiusMeters);
+      final response = await client.get(
+        TollApiConstants.fuelStations,
+        queryParameters: {
+          'north': bounds.north,
+          'south': bounds.south,
+          'east': bounds.east,
+          'west': bounds.west,
+          'per_page': _perPage,
+        },
+      );
+      if (response.isSuccess) {
+        final data = toMap(toMap(response.data)['data']);
+        final stations = toList(
+          data['items'],
+          (e) => FuelStationModel.fromJson(toMap(e)),
+        );
+        return NetworkResponse<List<FuelStationModel>>(
+          data: _withinRadius(stations, currentLocation, radiusMeters),
         );
       }
-
-      // Nearest first, which is the order the list and the map both want.
-      stations.sort((a, b) => a.distanceMeters.compareTo(b.distanceMeters));
-      return NetworkResponse<List<FuelStationModel>>(data: stations);
+      return NetworkResponse<List<FuelStationModel>>(
+        errorText: _errorMessage(response.data),
+        errorCode: _errorCode(response.data),
+      );
+    } on DioException catch (e) {
+      return NetworkResponse<List<FuelStationModel>>(
+        errorText: _errorMessage(e.response?.data, 'Network error'),
+        errorCode: _errorCode(e.response?.data),
+      );
     } catch (e) {
       return NetworkResponse<List<FuelStationModel>>(errorText: e.toString());
     }
   }
 
-  static const List<String> _brands = [
-    'Alixon Fuel',
-    'Pilot',
-    'Love\'s',
-    'TA Travel',
-    'Shell',
-    'Chevron',
-  ];
+  /// Measures every station against the driver, drops the ones the bounding
+  /// box's corners let in beyond [radiusMeters], and sorts nearest first -
+  /// the order both the markers and any list want.
+  List<FuelStationModel> _withinRadius(
+    List<FuelStationModel> stations,
+    TripCoordinate origin,
+    double radiusMeters,
+  ) {
+    final from = LatLng(origin.lat, origin.lng);
+    final measured = <FuelStationModel>[];
+    for (final station in stations) {
+      final metres = haversine(
+        from,
+        LatLng(station.coordinate.lat, station.coordinate.lng),
+      );
+      if (metres > radiusMeters) continue;
+      measured.add(station.withDistance(metres.round()));
+    }
+    measured.sort((a, b) => (a.distanceMeters ?? 0).compareTo(b.distanceMeters ?? 0));
+    return measured;
+  }
 
-  static const List<String> _suffixes = [
-    'Travel Center',
-    'Truck Stop',
-    'Station',
-    'Fuel Plaza',
-  ];
+  /// The smallest lat/lng box containing every point within [radiusMeters] of
+  /// [centre].
+  ///
+  /// Latitude is a fixed 111.32 km per degree; longitude shrinks with the
+  /// cosine of the latitude, so the two spans are computed separately. Values
+  /// are clamped to the endpoint's own `-90..90` / `-180..180` limits, since
+  /// anything outside them answers 422 VALIDATION_FAILED.
+  _Bounds _boundsAround(TripCoordinate centre, double radiusMeters) {
+    const metresPerDegLat = 111320.0;
+    final latSpan = radiusMeters / metresPerDegLat;
+    final cosLat = math.cos(centre.lat * math.pi / 180).abs();
+    // Near the poles cosLat collapses toward zero; floor it so the division
+    // cannot blow the longitude span up past the whole globe.
+    final lngSpan = radiusMeters / (metresPerDegLat * math.max(cosLat, 0.01));
 
-  static const List<String> _streets = [
-    'Kuhn Rd, West Memphis, AR',
-    'Interstate Dr, Memphis, TN',
-    'Airways Blvd, Memphis, TN',
-    'Getwell Rd, Southaven, MS',
-    'Lamar Ave, Memphis, TN',
-  ];
+    return _Bounds(
+      north: (centre.lat + latSpan).clamp(-90.0, 90.0),
+      south: (centre.lat - latSpan).clamp(-90.0, 90.0),
+      east: (centre.lng + lngSpan).clamp(-180.0, 180.0),
+      west: (centre.lng - lngSpan).clamp(-180.0, 180.0),
+    );
+  }
+
+  /// Same nested-`error` envelope the rest of the toll API uses.
+  static String _errorMessage(dynamic body, [String fallback = 'Server error']) {
+    if (body is Map) {
+      final error = body['error'];
+      if (error is Map) {
+        final message = error['message'];
+        if (message is String && message.isNotEmpty) return message;
+      }
+    }
+    return dioErrorMessage(body, fallback);
+  }
+
+  static String? _errorCode(dynamic body) {
+    if (body is! Map) return null;
+    final error = body['error'];
+    if (error is! Map) return null;
+    final code = error['code'];
+    return code is String && code.isNotEmpty ? code : null;
+  }
+}
+
+class _Bounds {
+  final double north;
+  final double south;
+  final double east;
+  final double west;
+
+  const _Bounds({
+    required this.north,
+    required this.south,
+    required this.east,
+    required this.west,
+  });
 }

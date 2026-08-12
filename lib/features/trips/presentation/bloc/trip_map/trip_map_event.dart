@@ -78,13 +78,24 @@ class TripMapFuelStationsRequested extends TripMapEvent {
 /// A station marker (or list row) was tapped. The bloc sets the driver's
 /// current location as origin and the station as destination, so Continue
 /// becomes available without any manual search.
+///
+/// [startRouting] additionally prices the trip right away, which is what the
+/// information sheet's action button does - the driver has already stated where
+/// they want to go, so making them press Continue as well is a dead step.
 class TripMapFuelStationSelected extends TripMapEvent {
   final FuelStationModel station;
+  final bool startRouting;
 
-  const TripMapFuelStationSelected(this.station);
+  const TripMapFuelStationSelected(this.station, {this.startRouting = false});
 
   @override
-  List<Object?> get props => [station.id];
+  List<Object?> get props => [station.id, startRouting];
+}
+
+/// The "my location" control was pressed: take a fresh GPS fix and move the
+/// camera to it.
+class TripMapRecenterRequested extends TripMapEvent {
+  const TripMapRecenterRequested();
 }
 
 /// A marker was tapped but not yet acted on - highlights it while its

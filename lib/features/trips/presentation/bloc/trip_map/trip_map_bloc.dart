@@ -8,8 +8,6 @@ import 'package:taxi_app/core/location_service.dart';
 import 'package:taxi_app/features/trips/data/model/fuel_station_model.dart';
 import 'package:taxi_app/features/trips/data/model/place_model.dart';
 import 'package:taxi_app/features/trips/data/model/trip_model.dart';
-import 'package:taxi_app/features/trips/data/repo/fuel_stations_repo_impl.dart';
-import 'package:taxi_app/features/trips/data/source/fuel_stations_data_source.dart';
 import 'package:taxi_app/features/trips/data/source/recent_places_store.dart';
 import 'package:taxi_app/features/trips/data/source/trips_data_source.dart';
 import 'package:taxi_app/features/trips/domain/repo/fuel_stations_repo.dart';
@@ -23,8 +21,7 @@ class TripMapBloc extends Bloc<TripMapEvent, TripMapState> {
   final TripsRepo repo;
   final LocationService locationService;
 
-  /// Nearby fuel stations. Currently backed by a placeholder implementation -
-  /// see [FuelStationsRepo] - so only that class changes when the API lands.
+  /// Nearby fuel stations (`GET mobile/fuel-stations`, docs §7.1).
   final FuelStationsRepo fuelStationsRepo;
 
   /// Search radius for Gas Station mode: 20 miles, per the task brief.
@@ -40,17 +37,11 @@ class TripMapBloc extends Bloc<TripMapEvent, TripMapState> {
   /// early response can't overwrite the suggestions for a later query.
   CancelToken? _inFlight;
 
-  /// [fuelStationsRepo] is optional and defaults to the placeholder
-  /// implementation. That keeps injectable's generated registration valid
-  /// without a codegen run, and leaves the seam open: pass the real repository
-  /// here (or register it) once the nearby-stations endpoint exists.
   TripMapBloc({
     required this.repo,
     required this.locationService,
-    FuelStationsRepo? fuelStationsRepo,
-  })  : fuelStationsRepo = fuelStationsRepo ??
-            FuelStationsRepoImpl(dataSource: FuelStationsDataSource()),
-        super(const TripMapState()) {
+    required this.fuelStationsRepo,
+  }) : super(const TripMapState()) {
     on<TripMapStarted>(_onStarted);
     on<TripMapFieldFocused>(_onFieldFocused);
     on<TripMapQueryChanged>(_onQueryChanged);
@@ -62,6 +53,7 @@ class TripMapBloc extends Bloc<TripMapEvent, TripMapState> {
     on<TripMapFuelStationsRequested>(_onFuelStationsRequested);
     on<TripMapFuelStationSelected>(_onFuelStationSelected);
     on<TripMapMarkerHighlighted>(_onMarkerHighlighted);
+    on<TripMapRecenterRequested>(_onRecenterRequested);
   }
 
   // ── Nearby Fuel Stations ──────────────────────────────────────────────────
@@ -168,6 +160,11 @@ class TripMapBloc extends Bloc<TripMapEvent, TripMapState> {
       query: '',
       suggestions: const [],
     ));
+
+    // Same path Continue takes - queued as an event rather than called
+    // directly, so there is exactly one implementation of "price this trip"
+    // and it runs against the state just emitted above.
+    if (event.startRouting) add(const TripMapContinuePressed());
   }
 
   @override
@@ -186,14 +183,26 @@ class TripMapBloc extends Bloc<TripMapEvent, TripMapState> {
       originStatus: TripMapFieldStatus.loading,
     ));
 
-    final position = await locationService.getCurrentLocation();
-    if (position == null) {
+    final place = await _resolveCurrentPlace();
+    if (place == null) {
       // No GPS fix (denied or unavailable): leave the field empty and
       // editable rather than blocking the flow - the driver can type an
       // origin by hand.
       emit(state.copyWith(originStatus: TripMapFieldStatus.failure));
       return;
     }
+
+    emit(state.copyWith(
+      originStatus: TripMapFieldStatus.success,
+      origin: place,
+    ));
+  }
+
+  /// The driver's current position as a [PlaceModel], or null when there is no
+  /// fix to be had. Shared by page open and the recenter control.
+  Future<PlaceModel?> _resolveCurrentPlace() async {
+    final position = await locationService.getCurrentLocation();
+    if (position == null) return null;
 
     // Reverse-geocode for a human label; the coordinates are authoritative
     // either way, so a failed lookup degrades to a lat/lng label.
@@ -206,13 +215,41 @@ class TripMapBloc extends Bloc<TripMapEvent, TripMapState> {
             '${position.longitude.toStringAsFixed(5)}'
         : address;
 
+    return PlaceModel.fromCoordinate(
+      label: label,
+      lat: position.latitude,
+      lng: position.longitude,
+    );
+  }
+
+  /// "Where am I": takes a fresh fix and hands the page a camera target.
+  ///
+  /// Deliberately does not touch a manually-entered origin - recentring the
+  /// map is a view action, not a change to the trip being planned. It does
+  /// refresh an origin the app filled in itself (an unset one, or an earlier
+  /// GPS fix that is now stale), since that field is meant to track the driver.
+  Future<void> _onRecenterRequested(
+    TripMapRecenterRequested event,
+    Emitter<TripMapState> emit,
+  ) async {
+    if (state.recenterStatus == TripMapRecenterStatus.loading) return;
+    emit(state.copyWith(recenterStatus: TripMapRecenterStatus.loading));
+
+    final place = await _resolveCurrentPlace();
+    if (place == null) {
+      emit(state.copyWith(recenterStatus: TripMapRecenterStatus.failure));
+      return;
+    }
+
+    final origin = state.origin;
+    final ownsOrigin = origin == null || origin.category == 'gps';
     emit(state.copyWith(
-      originStatus: TripMapFieldStatus.success,
-      origin: PlaceModel.fromCoordinate(
-        label: label,
-        lat: position.latitude,
-        lng: position.longitude,
-      ),
+      recenterStatus: TripMapRecenterStatus.idle,
+      recenterTarget: place.coordinate,
+      recenterTick: state.recenterTick + 1,
+      origin: ownsOrigin ? place : origin,
+      originStatus:
+          ownsOrigin ? TripMapFieldStatus.success : state.originStatus,
     ));
   }
 

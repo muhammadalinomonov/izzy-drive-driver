@@ -218,7 +218,12 @@
     "location": "Manzil",
     "price": "Narx",
     "mile": "Masofa",
-    "toGoThere": "U yerga borish"
+    "toGoThere": "U yerga borish",
+    "priceUnavailable": "Mavjud emas",
+    "taxIncluded": "Soliq bilan",
+    "taxExcluded": "Soliqsiz",
+    "requestRefueling": "Yoqilg'i so'rash",
+    "drive": "Haydash"
   },
   "tripMap": {
     "fuelNeedsLocation": "Joylashuvingiz aniqlanmoqda. Bir lahzadan so'ng urinib ko'ring.",
@@ -231,7 +236,9 @@
     "map": "Xarita",
     "continue": "Davom ettirish",
     "noResults": "Bu manzil bo'yicha hech narsa topilmadi.",
-    "noRecents": "So'nggi manzillaringiz shu yerda ko'rinadi."
+    "noRecents": "So'nggi manzillaringiz shu yerda ko'rinadi.",
+    "fuelNoStations": "20 mil radiusda yoqilg'i shoxobchasi topilmadi.",
+    "locationUnavailable": "Joylashuvingizni aniqlay olmadik. Birozdan so'ng qayta urinib ko'ring."
   },
   "routeOverview": {
     "recommended": "Tavsiya etilgan",
