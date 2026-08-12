@@ -1078,15 +1078,12 @@ class _CircleButton extends StatelessWidget {
                     ),
                   )
                 : asset != null
-                    ? SvgPicture.asset(
-                        asset,
-                        width: 20,
-                        height: 20,
-                        colorFilter: ColorFilter.mode(
-                          AppColor.black,
-                          BlendMode.srcIn,
-                        ),
-                      )
+                    // Drawn as-authored, matching driving_mode_page's
+                    // _CircleButton: ic_gps_recenter.svg ships pre-coloured
+                    // (a blue compass arrow), so forcing it black here would
+                    // make the same control look like a different icon
+                    // depending on which page it's on.
+                    ? SvgPicture.asset(asset, width: 20, height: 20)
                     : Icon(icon, size: 20, color: AppColor.black),
           ),
         ),
