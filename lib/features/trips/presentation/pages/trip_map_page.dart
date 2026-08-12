@@ -1,12 +1,16 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 import 'package:taxi_app/core/components/app_snack_bar.dart';
 import 'package:taxi_app/core/constants/color/app_color.dart';
+import 'package:taxi_app/core/utils/geo_math.dart';
+import 'package:taxi_app/core/utils/polyline_codec.dart';
 import 'package:taxi_app/features/trips/data/model/fuel_station_model.dart';
 import 'package:taxi_app/features/trips/data/model/place_model.dart';
 import 'package:taxi_app/features/trips/data/model/trip_model.dart';
@@ -14,6 +18,7 @@ import 'package:taxi_app/features/trips/presentation/bloc/trip_map/trip_map_bloc
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:taxi_app/core/constants/color/app_icons.dart';
 import 'package:taxi_app/core/session/premium_session.dart';
+import 'package:taxi_app/features/trips/presentation/controllers/marker_animator.dart';
 import 'package:taxi_app/features/trips/presentation/pages/route_overview_page.dart';
 import 'package:taxi_app/features/trips/presentation/utils/marker_icon.dart';
 import 'package:taxi_app/features/trips/presentation/widgets/location_fields_card.dart';
@@ -35,7 +40,8 @@ class TripMapPage extends StatefulWidget {
   State<TripMapPage> createState() => _TripMapPageState();
 }
 
-class _TripMapPageState extends State<TripMapPage> {
+class _TripMapPageState extends State<TripMapPage>
+    with TickerProviderStateMixin {
   static const double _collapsed = 0.28;
   static const double _half = 0.55;
   static const double _expanded = 0.92;
@@ -93,6 +99,29 @@ class _TripMapPageState extends State<TripMapPage> {
   /// Tashkent fallback until the GPS fix lands.
   static final mapbox.Position _fallback = mapbox.Position(69.2401, 41.2995);
 
+  // ── Live driver puck ───────────────────────────────────────────────────
+  //
+  // Separate from the origin/destination pins on purpose: those mark places
+  // the driver picked (by search, history or GPS-at-open), while this marks
+  // the driver's own position and keeps moving for as long as the page is
+  // open. Icon and layer setup mirror driving_mode_page.dart's vehicle puck
+  // so the two read as the same marker rather than two different ones.
+
+  mapbox.PointAnnotationManager? _driverMarkers;
+  mapbox.PointAnnotation? _driverMarker;
+  MarkerAnimator? _driverAnimator;
+  StreamSubscription<Position>? _driverPositionSub;
+
+  /// False until the first real fix arrives, so the puck never flashes at the
+  /// Tashkent fallback the animator is seeded with.
+  bool _driverPositionKnown = false;
+
+  /// One driver-puck frame in flight at a time, mirroring Driving Mode's
+  /// [_frameBusy] guard - a platform-channel write per fix is cheap, a queue
+  /// of them backing up under a fast fix stream is not.
+  bool _driverFrameBusy = false;
+  double _driverBearing = 0;
+
   @override
   void initState() {
     super.initState();
@@ -100,6 +129,27 @@ class _TripMapPageState extends State<TripMapPage> {
     _destinationFocus.addListener(_onFocusChanged);
     _sheetController.addListener(_onSheetMoved);
     context.read<TripMapBloc>().add(const TripMapStarted());
+
+    final animator = MarkerAnimator(
+      vsync: this,
+      initial: LatLng(_fallback.lat.toDouble(), _fallback.lng.toDouble()),
+    );
+    animator.snapshot.addListener(_onDriverTick);
+    _driverAnimator = animator;
+    _startTrackingDriver();
+  }
+
+  /// Live GPS for the puck - independent of the bloc's one-shot origin
+  /// resolve, and running for as long as this page is mounted.
+  void _startTrackingDriver() {
+    final locationService = context.read<TripMapBloc>().locationService;
+    _driverPositionSub = locationService.watchPositionForeground().listen(
+      _onDriverFix,
+      onError: (Object _) {
+        // A dropped fix or a brief permission blip - the next fix recovers,
+        // same tolerance DrivingSession applies to its own stream.
+      },
+    );
   }
 
   /// The controller is a ChangeNotifier over the sheet's live size, so this
@@ -121,6 +171,9 @@ class _TripMapPageState extends State<TripMapPage> {
     _sheetController.removeListener(_onSheetMoved);
     _sheetController.dispose();
     _sheetExtent.dispose();
+    _driverPositionSub?.cancel();
+    _driverAnimator?.snapshot.removeListener(_onDriverTick);
+    _driverAnimator?.dispose();
     super.dispose();
   }
 
@@ -174,6 +227,9 @@ class _TripMapPageState extends State<TripMapPage> {
       _pendingCameraTarget = null;
       _flyToCurrentLocation(pending);
     }
+    // A GPS fix can also beat map creation; draw whatever the puck already
+    // knows instead of waiting on the next one to arrive.
+    _onDriverTick();
   }
 
   Future<void> _syncMarker(TripMapField field, PlaceModel place) async {
@@ -218,6 +274,121 @@ class _TripMapPageState extends State<TripMapPage> {
       mapbox.CameraOptions(center: point, zoom: 14.0),
       mapbox.MapAnimationOptions(duration: 700),
     );
+  }
+
+  /// One raw GPS fix for the driver puck.
+  ///
+  /// The first fix snaps the puck straight there with no animation - the
+  /// animator is seeded with the Tashkent fallback, and animating from it
+  /// would sweep the puck across the globe. Every fix after that eases in,
+  /// matching the feel of Driving Mode's puck.
+  void _onDriverFix(Position fix) {
+    final animator = _driverAnimator;
+    if (animator == null) return;
+    final to = LatLng(fix.latitude, fix.longitude);
+
+    if (!_driverPositionKnown) {
+      _driverPositionKnown = true;
+      animator.snapTo(to);
+      return;
+    }
+
+    final from = animator.snapshot.value.position;
+    final distance = haversine(from, to);
+
+    // Same heuristic Driving Mode's puck uses: trust the compass while
+    // moving with a confident fix, fall back to the direction of travel once
+    // there is enough distance to derive one, and otherwise hold the last
+    // heading so GPS jitter at a standstill doesn't spin the puck in place.
+    final headingValid = fix.heading.isFinite &&
+        fix.heading >= 0 &&
+        (fix.headingAccuracy.isNaN ||
+            (fix.headingAccuracy >= 0 && fix.headingAccuracy < 30));
+    final speed = fix.speed.isNaN ? 0.0 : fix.speed;
+    final bearing = (speed > 1.5 && headingValid)
+        ? fix.heading
+        : (distance > 1.5 ? bearingBetween(from, to) : _driverBearing);
+    _driverBearing = bearing;
+
+    animator.animateTo(newPos: to, bearingDeg: bearing);
+  }
+
+  /// 60 fps side of the puck: fires on every animator tick. Kept synchronous
+  /// and delegating to [_pumpDriverFrame], same split Driving Mode uses
+  /// between its `_onMarkerTick` and `_pumpFrame`, so a `ValueNotifier`
+  /// listener (which must return `void`) can still drive async Mapbox calls.
+  void _onDriverTick() {
+    if (!_driverPositionKnown || _driverFrameBusy) return;
+    final snapshot = _driverAnimator?.snapshot.value;
+    if (snapshot == null) return;
+    _pumpDriverFrame(snapshot);
+  }
+
+  Future<void> _pumpDriverFrame(MarkerSnapshot snapshot) async {
+    _driverFrameBusy = true;
+    try {
+      await _updateDriverMarker(snapshot);
+    } catch (_) {
+      // The manager or the map can be torn down mid-frame on navigation away.
+    } finally {
+      _driverFrameBusy = false;
+    }
+  }
+
+  Future<void> _updateDriverMarker(MarkerSnapshot snapshot) async {
+    final map = _map;
+    if (map == null) return;
+
+    var markers = _driverMarkers;
+    if (markers == null) {
+      markers = await map.annotations.createPointAnnotationManager();
+      if (!mounted) return;
+      // The Mapbox equivalent of Google Maps' `flat: true` - lays the icon on
+      // the map plane instead of standing it up toward the camera, and never
+      // lets it hide behind another pin. Same settings driving_mode_page.dart
+      // applies to its vehicle layer.
+      await markers.setIconPitchAlignment(mapbox.IconPitchAlignment.MAP);
+      if (!mounted) return;
+      await markers.setIconRotationAlignment(mapbox.IconRotationAlignment.MAP);
+      if (!mounted) return;
+      await markers.setIconAllowOverlap(true);
+      if (!mounted) return;
+      await markers.setIconIgnorePlacement(true);
+      if (!mounted) return;
+      _driverMarkers = markers;
+    }
+
+    final point = mapbox.Point(
+      coordinates: mapbox.Position(
+        snapshot.position.longitude,
+        snapshot.position.latitude,
+      ),
+    );
+
+    final marker = _driverMarker;
+    if (marker == null) {
+      final png = await buildDriverPuck();
+      if (!mounted) return;
+      _driverMarker = await markers.create(
+        mapbox.PointAnnotationOptions(
+          geometry: point,
+          image: png,
+          // Same 1.85 scale-up Driving Mode uses: the puck bitmap is mostly
+          // shadow padding, so 1:1 would draw the disc undersized next to the
+          // origin/destination pins.
+          iconSize: 1.85,
+          iconRotate: snapshot.bearingDeg,
+          // Centre-anchored and rotating in place, unlike the destination and
+          // fuel pins, which sit on their tip.
+          iconAnchor: mapbox.IconAnchor.CENTER,
+        ),
+      );
+      return;
+    }
+
+    marker.geometry = point;
+    marker.iconRotate = snapshot.bearingDeg;
+    await markers.update(marker);
   }
 
   /// Draws (or clears) the fuel-station markers.

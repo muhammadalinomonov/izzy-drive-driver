@@ -78,6 +78,25 @@ class LocationService {
     return Geolocator.getPositionStream(locationSettings: settings);
   }
 
+  /// Foreground GPS updates for screens that track the driver's live position
+  /// without navigating - e.g. the trip-planning map's "you are here" puck.
+  ///
+  /// Deliberately lighter than [watchPosition]: plain [LocationSettings], no
+  /// Android foreground-service notification and no iOS background indicator.
+  /// Those exist in [watchPosition] because Driving Mode must keep reporting
+  /// after the app is backgrounded; a screen that is just being looked at has
+  /// nothing worth keeping alive once it's left, and popping a persistent
+  /// "Navigation active" notification while the driver is merely browsing the
+  /// map would be a false signal.
+  Stream<Position> watchPositionForeground({int distanceFilterMeters = 5}) {
+    return Geolocator.getPositionStream(
+      locationSettings: LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: distanceFilterMeters,
+      ),
+    );
+  }
+
   Future<String?> getAddressFromLatLng(
     double latitude,
     double longitude,
