@@ -54,6 +54,28 @@ class TollApiConstants {
   /// Rate limit is 60 req/min, which is why bounds requests are debounced.
   static const String fuelStations = 'mobile/fuel-stations';
 
+  /// Normal support chat (docs §8.1/§8.2) — one conversation per driver,
+  /// shared by every "Support Message" entry point (trip planner, route
+  /// overview, driving mode). `GET` reads history (newest-first), `POST`
+  /// appends a message; the conversation itself is created implicitly by the
+  /// first `POST`, never explicitly.
+  static const String supportChat = 'mobile/support-chat';
+  static const String supportChatMessages = 'mobile/support-chat/messages';
+
+  /// `POST mobile/route-reviews` — creates the pullik route-review a "Send
+  /// Request" conversation is about. NOT in docs/mobile-api.md: that doc's
+  /// §8.3 only covers messaging an *existing* review; creation is documented
+  /// in `docs/mobile-fuel-api-websocket.md` §4.1. Pulled in here because
+  /// without it "Send Request" has nothing to attach a message to - the two
+  /// docs describe one feature.
+  static const String routeReviews = 'mobile/route-reviews';
+
+  /// `POST mobile/route-reviews/{id}/messages` (docs §8.3). Response is the
+  /// **full** route-review object, not a single message - callers should
+  /// replace their message list from it, not append.
+  static String routeReviewMessages(String routeReviewId) =>
+      'mobile/route-reviews/$routeReviewId/messages';
+
   // Navigation sessions
   static const String navigationSessions = 'mobile/navigation-sessions';
   static const String navigationSessionsCurrent =

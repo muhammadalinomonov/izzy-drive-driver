@@ -111,21 +111,29 @@ import 'package:taxi_app/features/trips/data/repo/fuel_stations_repo_impl.dart'
     as _i1070;
 import 'package:taxi_app/features/trips/data/repo/route_support_repo_impl.dart'
     as _i679;
+import 'package:taxi_app/features/trips/data/repo/support_chat_repo_impl.dart'
+    as _i488;
 import 'package:taxi_app/features/trips/data/repo/trips_repo_impl.dart'
     as _i121;
 import 'package:taxi_app/features/trips/data/source/fuel_stations_data_source.dart'
     as _i515;
 import 'package:taxi_app/features/trips/data/source/route_support_data_source.dart'
     as _i599;
+import 'package:taxi_app/features/trips/data/source/support_chat_data_source.dart'
+    as _i927;
 import 'package:taxi_app/features/trips/data/source/trips_data_source.dart'
     as _i627;
 import 'package:taxi_app/features/trips/domain/repo/fuel_stations_repo.dart'
     as _i736;
 import 'package:taxi_app/features/trips/domain/repo/route_support_repo.dart'
     as _i129;
+import 'package:taxi_app/features/trips/domain/repo/support_chat_repo.dart'
+    as _i589;
 import 'package:taxi_app/features/trips/domain/repo/trips_repo.dart' as _i106;
 import 'package:taxi_app/features/trips/presentation/bloc/navigation/navigation_bloc.dart'
     as _i317;
+import 'package:taxi_app/features/trips/presentation/bloc/support_chat/support_chat_bloc.dart'
+    as _i285;
 import 'package:taxi_app/features/trips/presentation/bloc/trip_map/trip_map_bloc.dart'
     as _i50;
 import 'package:taxi_app/features/trips/presentation/bloc/trips_bloc.dart'
@@ -200,6 +208,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i599.RouteSupportDataSource>(
       () => _i599.RouteSupportDataSource(),
     );
+    gh.lazySingleton<_i927.SupportChatDataSource>(
+      () => _i927.SupportChatDataSource(),
+    );
     gh.lazySingleton<_i27.OrderRepository>(
       () => _i27.OrderRepositoryImpl(
         orderProccessSource: gh<_i716.OrderProccessSource>(),
@@ -271,6 +282,11 @@ extension GetItInjectableX on _i174.GetIt {
         driverInfoSource: gh<_i141.DriverInfoSource>(),
       ),
     );
+    gh.lazySingleton<_i589.SupportChatRepo>(
+      () => _i488.SupportChatRepoImpl(
+        dataSource: gh<_i927.SupportChatDataSource>(),
+      ),
+    );
     gh.factory<_i131.PhoneVerifyBloc>(
       () => _i131.PhoneVerifyBloc(repo: gh<_i995.PhoneVerifyRepo>()),
     );
@@ -287,6 +303,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i869.TripsBloc>(
       () => _i869.TripsBloc(repo: gh<_i106.TripsRepo>()),
+    );
+    gh.factory<_i285.SupportChatBloc>(
+      () => _i285.SupportChatBloc(repo: gh<_i589.SupportChatRepo>()),
     );
     gh.factory<_i979.ConnectivityCubit>(
       () => _i979.ConnectivityCubit(gh<_i648.ConnectivityService>()),

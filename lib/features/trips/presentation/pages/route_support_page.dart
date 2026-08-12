@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:taxi_app/core/components/app_snack_bar.dart';
 import 'package:taxi_app/core/constants/color/app_color.dart';
 import 'package:taxi_app/features/trips/data/model/route_support_model.dart';
+import 'package:taxi_app/features/trips/data/model/support_chat_model.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/route_support/route_support_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/widgets/route_support_card.dart';
 import 'package:taxi_app/features/trips/presentation/widgets/support_chat.dart';
@@ -12,20 +13,18 @@ import 'package:taxi_app/features/trips/presentation/widgets/support_chat.dart';
 /// Route review thread (docs/ui/8-2.png), opened from **Send request** on the
 /// route overview screen by Premium drivers.
 ///
-/// The driver's opening message quotes the route they picked - endpoints, fuel,
-/// toll and distance - and support answers, sometimes with a different route
-/// to take instead.
-///
-/// **No backend yet.** The thread comes from `RouteSupportRepo`, which is
-/// currently served by a placeholder data source; the chat is fully live
-/// against that mock, so only the data source changes when the API lands. The
-/// Drive action on a suggested route is still a placeholder callback: there is
-/// no real alternative behind a mocked suggestion to start navigation for.
+/// The route card the driver asked about is shown once, pinned above the
+/// thread - it comes from [request], not from the API, since the real review
+/// object carries no per-message card (docs/mobile-api.md §8.3's `messages`
+/// are plain text). Below it, `POST /mobile/route-reviews` creates the review
+/// on open and `POST /mobile/route-reviews/{id}/messages` posts follow-ups;
+/// both are documented across docs/mobile-api.md §8.3 and
+/// docs/mobile-fuel-api-websocket.md §4.1 - see `RouteSupportBloc`.
 class RouteSupportPage extends StatefulWidget {
   const RouteSupportPage({super.key, required this.request});
 
-  /// The route the conversation is about. Also the body the future `POST`
-  /// will carry.
+  /// The route the conversation is about. Also the body the create call
+  /// carries.
   final RouteSupportRequest request;
 
   @override
@@ -35,6 +34,11 @@ class RouteSupportPage extends StatefulWidget {
 class _RouteSupportPageState extends State<RouteSupportPage> {
   final TextEditingController _composer = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+
+  /// Message count the composer was cleared at - see
+  /// `support_message_page.dart`'s identical guard for why this exists: a
+  /// failed send must not lose what the driver typed.
+  int _clearedAtMessageCount = 0;
 
   @override
   void initState() {
@@ -66,20 +70,33 @@ class _RouteSupportPageState extends State<RouteSupportPage> {
     final text = _composer.text.trim();
     if (text.isEmpty) return;
     context.read<RouteSupportBloc>().add(RouteSupportMessageSent(text));
-    _composer.clear();
   }
 
   void _onRetry() {
     context.read<RouteSupportBloc>().add(const RouteSupportStarted());
   }
 
-  // ── Placeholder actions, ready for backend integration ──────────────────
+  void _onStateChanged(BuildContext context, RouteSupportState state) {
+    if (state.messages.isNotEmpty) _scrollToEnd();
+    if (state.sendError.isNotEmpty) {
+      // The thread itself is still readable, so a failed send is a snack bar
+      // rather than a page-level error.
+      AppSnackBar.showError(context, state.sendError);
+      return;
+    }
+    if (!state.sending &&
+        state.messages.length > _clearedAtMessageCount &&
+        _composer.text.trim().isNotEmpty) {
+      _clearedAtMessageCount = state.messages.length;
+      _composer.clear();
+    }
+  }
+
+  // ── Placeholder actions - out of scope for this task ────────────────────
 
   void _onAttach() {}
 
   void _onVoice() {}
-
-  void _onDrive() {}
 
   @override
   Widget build(BuildContext context) {
@@ -105,26 +122,22 @@ class _RouteSupportPageState extends State<RouteSupportPage> {
       ),
       body: BlocConsumer<RouteSupportBloc, RouteSupportState>(
         listenWhen: (p, c) =>
-            p.messages.length != c.messages.length || p.sendError != c.sendError,
-        listener: (context, state) {
-          if (state.messages.isNotEmpty) _scrollToEnd();
-          // The thread itself is still readable, so a failed send is a snack
-          // bar rather than a page-level error.
-          if (state.sendError.isNotEmpty) {
-            AppSnackBar.showError(context, state.sendError);
-          }
-        },
+            p.messages.length != c.messages.length ||
+            p.sendError != c.sendError ||
+            p.sending != c.sending,
+        listener: _onStateChanged,
         builder: (context, state) {
           return Column(
             children: [
               Expanded(child: _buildThread(state)),
-              SupportComposer(
-                controller: _composer,
-                onAttach: _onAttach,
-                onVoice: _onVoice,
-                onSend: _onSend,
-                enabled: !state.sending,
-              ),
+              if (state.status == RouteSupportStatus.ready)
+                SupportComposer(
+                  controller: _composer,
+                  onAttach: _onAttach,
+                  onVoice: _onVoice,
+                  onSend: _onSend,
+                  enabled: !state.sending,
+                ),
             ],
           );
         },
@@ -145,98 +158,95 @@ class _RouteSupportPageState extends State<RouteSupportPage> {
           onRetry: _onRetry,
         );
       case RouteSupportStatus.ready:
-        if (state.isEmpty) {
-          return _ThreadMessage(text: 'routeSupport.empty'.tr());
-        }
         return ListView.separated(
           controller: _scrollController,
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          itemCount: state.messages.length,
+          // +1 for the pinned route card, which always leads the thread.
+          itemCount: state.messages.length + 1,
           separatorBuilder: (_, __) => const SizedBox(height: 8),
           itemBuilder: (context, index) {
-            return _MessageBubble(
-              message: state.messages[index],
-              onDrive: _onDrive,
-            );
+            if (index == 0) {
+              return _RequestCardBubble(request: widget.request);
+            }
+            return _MessageBubble(message: state.messages[index - 1]);
           },
         );
     }
   }
 }
 
-/// One message: the driver's request or a support reply, with whatever route
-/// card and action came attached.
-class _MessageBubble extends StatelessWidget {
-  const _MessageBubble({required this.message, required this.onDrive});
+/// The driver's opening context, pinned above the thread: the route they
+/// asked about, matching docs/ui/8-2-1.png. Not a server message - see the
+/// page-level doc comment.
+class _RequestCardBubble extends StatelessWidget {
+  const _RequestCardBubble({required this.request});
 
-  final RouteSupportMessage message;
-  final VoidCallback onDrive;
+  final RouteSupportRequest request;
 
   @override
   Widget build(BuildContext context) {
-    final card = message.card;
+    return SupportBubble(
+      outgoing: true,
+      wide: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'routeSupport.reviewRequestMessage'.tr(),
+            style: TextStyle(fontSize: 14, height: 1.35, color: AppColor.black),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            'routeSupport.selectedRoute'.tr(args: [request.alternativeLabel]),
+            style: TextStyle(
+              fontSize: 14,
+              height: 1.35,
+              fontWeight: FontWeight.w600,
+              color: AppColor.black,
+            ),
+          ),
+          const SizedBox(height: 10),
+          RouteSupportCard(card: request.card),
+        ],
+      ),
+    );
+  }
+}
 
+/// One follow-up message - the driver's or support's. Plain text only: the
+/// real conversation carries no per-message card or action (see the
+/// page-level doc comment).
+class _MessageBubble extends StatelessWidget {
+  const _MessageBubble({required this.message});
+
+  final SupportChatMessage message;
+
+  @override
+  Widget build(BuildContext context) {
     if (!message.isDriver) {
       return SupportAgentBubble(
-        sender: message.senderName,
-        body: message.body,
-        highlight: message.highlight.isEmpty ? null : message.highlight,
-        attachment: card == null ? null : RouteSupportCard(card: card),
-        action: message.showDriveAction
-            ? SupportDriveButton(onTap: onDrive)
-            : null,
+        sender: message.senderName.isEmpty
+            ? 'routeSupport.supportFallbackName'.tr()
+            : message.senderName,
+        body: message.message,
       );
     }
 
     final timestamp = message.sentAtLabel;
     return SupportBubble(
       outgoing: true,
-      wide: card != null,
       child: Column(
-        // A text-only bubble hugs its text, so the timestamp is pinned to the
-        // trailing edge - an Align there would stretch the bubble to full
-        // width. A bubble carrying a card is already full width, so its
-        // content reads better left-aligned and the timestamp uses the Align.
-        crossAxisAlignment:
-            card == null ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (message.body.isNotEmpty)
-            Text(
-              message.body,
-              style: TextStyle(
-                fontSize: 14,
-                height: 1.35,
-                color: AppColor.black,
-              ),
-            ),
-          // "Selected Route: Recommended" - which alternative the driver is
-          // asking about, emphasised under the question.
-          if (message.highlight.isNotEmpty) ...[
-            const SizedBox(height: 3),
-            Text(
-              message.highlight,
-              style: TextStyle(
-                fontSize: 14,
-                height: 1.35,
-                fontWeight: FontWeight.w600,
-                color: AppColor.black,
-              ),
-            ),
-          ],
-          if (card != null) ...[
-            const SizedBox(height: 10),
-            RouteSupportCard(card: card),
-          ],
+          Text(
+            message.message,
+            style: TextStyle(fontSize: 14, height: 1.35, color: AppColor.black),
+          ),
           if (timestamp.isNotEmpty) ...[
             const SizedBox(height: 4),
-            if (card == null)
-              SupportTimestamp(text: timestamp)
-            else
-              Align(
-                alignment: Alignment.centerRight,
-                child: SupportTimestamp(text: timestamp),
-              ),
+            SupportTimestamp(text: timestamp),
           ],
         ],
       ),
@@ -244,8 +254,7 @@ class _MessageBubble extends StatelessWidget {
   }
 }
 
-/// Centred message filling the thread area - the load error with its retry, or
-/// a conversation that has not started yet.
+/// Centred message filling the thread area - the load error with its retry.
 class _ThreadMessage extends StatelessWidget {
   const _ThreadMessage({required this.text, this.onRetry});
 

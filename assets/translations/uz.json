@@ -279,6 +279,10 @@
     "title": "Qo'llab-quvvatlash",
     "drive": "Haydash",
     "composerHint": "Matn yoki ovozli habar",
-    "empty": "Hozircha xabarlar yo'q. Quyida qo'llab-quvvatlash xizmatiga yozing."
+    "empty": "Hozircha xabarlar yo'q. Quyida qo'llab-quvvatlash xizmatiga yozing.",
+    "premiumOnly": "Yordam chati faqat Premium haydovchilar uchun mavjud.",
+    "supportFallbackName": "Qo'llab-quvvatlash",
+    "reviewRequestMessage": "Men shu yo'nalish bo'ylab yurmoqchiman. Iltimos, tekshirib chiqing.",
+    "selectedRoute": "Tanlangan yo'nalish: {}"
   }
 }

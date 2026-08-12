@@ -1,136 +1,113 @@
+import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
+import 'package:taxi_app/core/extensions/status_code_extension.dart';
 import 'package:taxi_app/core/network/network_response.dart';
+import 'package:taxi_app/core/network/toll_api_constants.dart';
+import 'package:taxi_app/core/network/toll_dio.dart';
+import 'package:taxi_app/core/network/toll_session.dart';
+import 'package:taxi_app/core/service_locater.dart';
+import 'package:taxi_app/core/utils/json_safe.dart';
 import 'package:taxi_app/features/trips/data/model/route_support_model.dart';
 
-/// PLACEHOLDER route-support source.
-///
-/// The backend endpoints for the Premium "Send request" flow do not exist yet,
-/// so this serves a scripted conversation built around the route the driver
-/// actually asked about. That is enough to exercise the whole feature - bloc,
-/// loading/empty/error states, the chat UI and its route cards - today.
-///
-/// ## Replacing this with the real API
-///
-/// Everything around this class is already API-shaped: [RouteSupportMessage]
-/// parses the JSON the endpoint is expected to return, [RouteSupportRequest]
-/// serialises the body it is expected to take, and the repository returns
-/// `NetworkResponse` like every other source here. When the endpoints land,
-/// swap these bodies for real calls:
-///
-/// ```dart
-/// final response = await client.post(
-///   TollApiConstants.routeSupportRequests,
-///   data: request.toJson(),
-/// );
-/// ```
-///
-/// Nothing in the bloc or the UI should need to change.
+/// Route-review support thread: creates the review
+/// (`docs/mobile-fuel-api-websocket.md` §4.1) and posts follow-ups to it
+/// (`docs/mobile-api.md` §8.3).
 @lazySingleton
 class RouteSupportDataSource {
-  /// Simulated latency, so loading states are actually exercised in
-  /// development rather than resolving in the same frame.
-  static const Duration _fakeLatency = Duration(milliseconds: 600);
-  static const Duration _fakeSendLatency = Duration(milliseconds: 350);
+  RouteSupportDataSource();
 
-  /// Name the mock agent answers under. The real payload carries this per
-  /// message.
-  static const String _agentName = 'Nick Rose';
+  final client = serviceLocator.get<TollDioSettings>().dio;
 
-  /// The thread for [request], oldest first.
-  Future<NetworkResponse<List<RouteSupportMessage>>> getConversation(
-    RouteSupportRequest request,
-  ) async {
-    await Future.delayed(_fakeLatency);
-
+  /// `POST mobile/route-reviews`. Requires bootstrap's
+  /// `services.route_review.available=true` server-side; a driver without it
+  /// gets `403 MOBILE_ROUTE_REVIEW_NOT_ENABLED`, surfaced like any other error.
+  Future<NetworkResponse<RouteReviewThread>> startReview(
+    RouteSupportRequest request, {
+    required String idempotencyKey,
+  }) async {
+    if (!TollSession.hasToken) {
+      return NetworkResponse<RouteReviewThread>(
+        errorText: 'Toll account is not connected.',
+        errorCode: 'TOLL_SESSION_MISSING',
+      );
+    }
     try {
-      final now = DateTime.now();
-      return NetworkResponse<List<RouteSupportMessage>>(
-        data: [
-          RouteSupportMessage(
-            id: 'mock-request-${request.routeId}',
-            author: RouteSupportAuthor.driver,
-            body: "I'd like to take this route. Could you please review it?",
-            highlight: 'Selected Route: ${request.alternativeLabel}',
-            sentAt: now.subtract(const Duration(minutes: 6)),
-            card: request.card,
-          ),
-          RouteSupportMessage(
-            id: 'mock-ack-${request.routeId}',
-            author: RouteSupportAuthor.agent,
-            senderName: _agentName,
-            body: "Hello! We have received your request. We'll review it and "
-                'get back to you as soon as possible. Please wait.',
-            sentAt: now.subtract(const Duration(minutes: 4)),
-          ),
-          RouteSupportMessage(
-            id: 'mock-suggestion-${request.routeId}',
-            author: RouteSupportAuthor.agent,
-            senderName: _agentName,
-            body: "We don't recommend this route. We suggest taking "
-                'Alternative 2 instead.',
-            sentAt: now.subtract(const Duration(minutes: 2)),
-            card: _suggestedRoute(request),
-            showDriveAction: true,
-          ),
-        ],
+      final response = await client.post(
+        TollApiConstants.routeReviews,
+        data: request.toCreateReviewJson(),
+        options: Options(headers: {'Idempotency-Key': idempotencyKey}),
+      );
+      if (response.isSuccess) {
+        return NetworkResponse<RouteReviewThread>(
+          data: RouteReviewThread.fromJson(toMap(toMap(response.data)['data'])),
+        );
+      }
+      return NetworkResponse<RouteReviewThread>(
+        errorText: _errorMessage(response.data),
+        errorCode: _errorCode(response.data),
+      );
+    } on DioException catch (e) {
+      return NetworkResponse<RouteReviewThread>(
+        errorText: _errorMessage(e.response?.data, 'Network error'),
+        errorCode: _errorCode(e.response?.data),
       );
     } catch (e) {
-      return NetworkResponse<List<RouteSupportMessage>>(errorText: e.toString());
+      return NetworkResponse<RouteReviewThread>(errorText: e.toString());
     }
   }
 
-  /// Posts a follow-up from the driver. Echoed straight back as the stored
-  /// message, which is what the real endpoint will return.
-  Future<NetworkResponse<RouteSupportMessage>> sendMessage({
-    required RouteSupportRequest request,
+  /// `POST mobile/route-reviews/{id}/messages` (docs §8.3). No idempotency
+  /// key exists for this one - a timed-out send is not safe to blindly retry.
+  Future<NetworkResponse<RouteReviewThread>> sendMessage({
+    required String routeReviewId,
     required String text,
   }) async {
-    await Future.delayed(_fakeSendLatency);
-
+    if (!TollSession.hasToken) {
+      return NetworkResponse<RouteReviewThread>(
+        errorText: 'Toll account is not connected.',
+        errorCode: 'TOLL_SESSION_MISSING',
+      );
+    }
     try {
-      return NetworkResponse<RouteSupportMessage>(
-        data: RouteSupportMessage(
-          id: 'mock-sent-${DateTime.now().microsecondsSinceEpoch}',
-          author: RouteSupportAuthor.driver,
-          body: text,
-          sentAt: DateTime.now(),
-        ),
+      final response = await client.post(
+        TollApiConstants.routeReviewMessages(routeReviewId),
+        data: {'message': text},
+      );
+      if (response.isSuccess) {
+        return NetworkResponse<RouteReviewThread>(
+          data: RouteReviewThread.fromJson(toMap(toMap(response.data)['data'])),
+        );
+      }
+      return NetworkResponse<RouteReviewThread>(
+        errorText: _errorMessage(response.data),
+        errorCode: _errorCode(response.data),
+      );
+    } on DioException catch (e) {
+      return NetworkResponse<RouteReviewThread>(
+        errorText: _errorMessage(e.response?.data, 'Network error'),
+        errorCode: _errorCode(e.response?.data),
       );
     } catch (e) {
-      return NetworkResponse<RouteSupportMessage>(errorText: e.toString());
+      return NetworkResponse<RouteReviewThread>(errorText: e.toString());
     }
   }
 
-  /// The route support "suggests" instead (docs/ui/8-2-2.png).
-  ///
-  /// Built from the driver's own endpoints and toll stops so the card reads as
-  /// a real answer to a real question. A fuel stop is appended because the
-  /// toll API never returns fuel stations as a list - see [RouteSupportStop] -
-  /// and the design's card shows one; canned stops fill in when the selected
-  /// alternative had no toll markers at all.
-  RouteSupportRouteCard _suggestedRoute(RouteSupportRequest request) {
-    final stops = <RouteSupportStop>[
-      ...request.stops.take(2),
-      const RouteSupportStop(
-        kind: RouteSupportStopKind.fuel,
-        title: 'Alixon Fuel, 3301 Kuhn Rd, West Memphis, AR',
-        priceText: r'$5-8',
-        priceNote: 'for gallon',
-      ),
-    ];
-    if (request.stops.isEmpty) {
-      stops.insertAll(0, const [
-        RouteSupportStop(
-          kind: RouteSupportStopKind.toll,
-          title: 'I-40 West Memphis Toll Plaza',
-          priceText: r'-$34.00',
-        ),
-      ]);
+  static String _errorMessage(dynamic body, [String fallback = 'Server error']) {
+    if (body is Map) {
+      final error = body['error'];
+      if (error is Map) {
+        final message = error['message'];
+        if (message is String && message.isNotEmpty) return message;
+      }
     }
-    return RouteSupportRouteCard(
-      originLabel: request.origin.fieldLabel,
-      destinationLabel: request.destination.fieldLabel,
-      stops: stops,
-    );
+    return dioErrorMessage(body, fallback);
+  }
+
+  static String? _errorCode(dynamic body) {
+    if (body is! Map) return null;
+    final error = body['error'];
+    if (error is! Map) return null;
+    final code = error['code'];
+    return code is String && code.isNotEmpty ? code : null;
   }
 }

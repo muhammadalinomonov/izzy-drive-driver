@@ -217,7 +217,12 @@ class SupportDriveButton extends StatelessWidget {
   }
 }
 
-/// Bottom composer: attachment, text field, microphone.
+/// Bottom composer: attachment, text field, then microphone or send.
+///
+/// The trailing action swaps depending on whether there is anything typed -
+/// voice input while the field is empty, an explicit Send button the moment
+/// there is text to send - the same convention as every mainstream messenger,
+/// so a driver never has to hunt for how to actually submit a message.
 class SupportComposer extends StatelessWidget {
   const SupportComposer({
     super.key,
@@ -277,19 +282,54 @@ class SupportComposer extends StatelessWidget {
                   ),
                 ),
               ),
-              IconButton(
-                icon: SvgPicture.asset(
-                  AppIcons.micFilled,
-                  width: 20,
-                  height: 20,
-                  colorFilter: ColorFilter.mode(
-                    AppColor.kPrimaryColor,
-                    BlendMode.srcIn,
-                  ),
-                ),
-                onPressed: enabled ? onVoice : null,
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: controller,
+                builder: (context, value, _) {
+                  if (value.text.trim().isEmpty) {
+                    return IconButton(
+                      icon: SvgPicture.asset(
+                        AppIcons.micFilled,
+                        width: 20,
+                        height: 20,
+                        colorFilter: ColorFilter.mode(
+                          AppColor.kPrimaryColor,
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                      onPressed: enabled ? onVoice : null,
+                    );
+                  }
+                  return _SendButton(enabled: enabled, onTap: onSend);
+                },
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Filled circular Send action, shown once there is text to submit.
+class _SendButton extends StatelessWidget {
+  const _SendButton({required this.enabled, required this.onTap});
+
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(4),
+      child: Material(
+        color: enabled ? AppColor.kPrimaryColor : AppColor.grey2,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: enabled ? onTap : null,
+          child: const Padding(
+            padding: EdgeInsets.all(8),
+            child: Icon(Icons.send_rounded, size: 18, color: Colors.white),
           ),
         ),
       ),

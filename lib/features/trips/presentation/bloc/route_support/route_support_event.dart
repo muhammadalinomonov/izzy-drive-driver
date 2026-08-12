@@ -7,7 +7,9 @@ abstract class RouteSupportEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-/// Loads the thread for the route the page was opened with. Also the retry.
+/// Creates the review for the route the page was opened with. Also the retry
+/// - a retry re-sends the same create call under the same idempotency key, so
+/// it resolves to the original review rather than duplicating it.
 class RouteSupportStarted extends RouteSupportEvent {
   const RouteSupportStarted();
 }

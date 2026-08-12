@@ -11,17 +11,18 @@ class RouteSupportRepoImpl extends RouteSupportRepo {
   RouteSupportRepoImpl({required this.dataSource});
 
   @override
-  Future<NetworkResponse<List<RouteSupportMessage>>> getConversation(
-    RouteSupportRequest request,
-  ) {
-    return dataSource.getConversation(request);
+  Future<NetworkResponse<RouteReviewThread>> startReview(
+    RouteSupportRequest request, {
+    required String idempotencyKey,
+  }) {
+    return dataSource.startReview(request, idempotencyKey: idempotencyKey);
   }
 
   @override
-  Future<NetworkResponse<RouteSupportMessage>> sendMessage({
-    required RouteSupportRequest request,
+  Future<NetworkResponse<RouteReviewThread>> sendMessage({
+    required String routeReviewId,
     required String text,
   }) {
-    return dataSource.sendMessage(request: request, text: text);
+    return dataSource.sendMessage(routeReviewId: routeReviewId, text: text);
   }
 }

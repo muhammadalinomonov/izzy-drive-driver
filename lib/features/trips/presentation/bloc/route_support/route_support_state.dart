@@ -4,7 +4,7 @@ enum RouteSupportStatus { initial, loading, ready, failure }
 
 class RouteSupportState extends Equatable {
   final RouteSupportStatus status;
-  final List<RouteSupportMessage> messages;
+  final List<SupportChatMessage> messages;
   final String errorMessage;
 
   /// A follow-up is in flight. Keeps the composer from posting twice.
@@ -29,7 +29,7 @@ class RouteSupportState extends Equatable {
 
   RouteSupportState copyWith({
     RouteSupportStatus? status,
-    List<RouteSupportMessage>? messages,
+    List<SupportChatMessage>? messages,
     String? errorMessage,
     bool? sending,
     String? sendError,

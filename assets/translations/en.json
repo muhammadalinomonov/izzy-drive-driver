@@ -279,6 +279,10 @@
     "title": "Support",
     "drive": "Drive",
     "composerHint": "Text or voice message",
-    "empty": "No messages yet. Write to support below."
+    "empty": "No messages yet. Write to support below.",
+    "premiumOnly": "Support chat is available for Premium drivers.",
+    "supportFallbackName": "Support",
+    "reviewRequestMessage": "I'd like to take this route. Could you please review it?",
+    "selectedRoute": "Selected Route: {}"
   }
 }

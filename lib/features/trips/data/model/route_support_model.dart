@@ -1,54 +1,31 @@
 import 'package:taxi_app/core/utils/json_safe.dart';
 import 'package:taxi_app/core/utils/unit_format.dart';
 import 'package:taxi_app/features/trips/data/model/place_model.dart';
+import 'package:taxi_app/features/trips/data/model/support_chat_model.dart';
 import 'package:taxi_app/features/trips/data/model/trip_model.dart';
 
 /// Models for the Premium "Send request" flow (docs/ui/8-2.png): the driver
-/// asks support to review a priced route, and support answers - sometimes with
-/// a different route to take instead.
+/// asks support to review a priced route, then follows up in the same thread.
 ///
-/// **No backend yet.** These shapes are what the endpoint is expected to speak,
-/// so `RouteSupportDataSource` can be swapped from mock data to real calls
-/// without touching the bloc or the UI. Every parser goes through `json_safe`,
-/// like the rest of the trips models, so a field the API renames degrades to a
-/// default instead of crashing the thread.
+/// Two backends meet here, both documented, neither fully covering the
+/// feature alone:
+/// - `POST mobile/route-reviews` creates the review. It is NOT in
+///   `docs/mobile-api.md` - only in `docs/mobile-fuel-api-websocket.md` §4.1 -
+///   because that doc owns the fuel-recommendation flow the review exists
+///   for. Without it there is nothing for "Send Request" to attach a message
+///   to, so it is used here anyway.
+/// - `POST mobile/route-reviews/{id}/messages` (docs/mobile-api.md §8.3) sends
+///   a follow-up and answers with the review's messages, in the same wire
+///   shape as the normal support chat - see [SupportChatMessage], reused
+///   as-is rather than duplicated.
 
-/// Who wrote a message. Drives the bubble tint, not its alignment - both sides
-/// are full width in the design.
-enum RouteSupportAuthor {
-  driver,
-  agent;
-
-  static RouteSupportAuthor parse(String raw) {
-    return raw.toLowerCase() == 'driver'
-        ? RouteSupportAuthor.driver
-        : RouteSupportAuthor.agent;
-  }
-
-  String get wire => name;
-}
-
-/// A priced stop on a route card. `toll` renders the red bullet + "Toll"
-/// badge, `fuel` the blue bullet + "Fuel Station" badge (docs/ui/8-2-2.png).
-enum RouteSupportStopKind {
-  toll,
-  fuel;
-
-  static RouteSupportStopKind parse(String raw) {
-    return raw.toLowerCase() == 'fuel'
-        ? RouteSupportStopKind.fuel
-        : RouteSupportStopKind.toll;
-  }
-
-  String get wire => name;
-}
-
-/// One row of a route card: what the stop is, how far along it sits, what it
-/// costs.
+/// A priced stop on the driver's opening route card (docs/ui/8-2-1.png).
 ///
-/// Price is carried as text rather than [TripMoney] because the design shows
-/// both an exact toll (`$-34`) and a fuel *range* with a unit
-/// (`$5-8 for gallon`) - a single minor-units amount can't express the latter.
+/// Client-built only - this never round-trips through the API, since the real
+/// review object carries no per-stop breakdown of its own (docs
+/// §4.2 shows `fuel_recommendations`, not a generic stop list). Price is text
+/// rather than [TripMoney] because a toll amount and a fuel range don't share
+/// one numeric shape.
 class RouteSupportStop {
   final RouteSupportStopKind kind;
   final String title;
@@ -71,25 +48,6 @@ class RouteSupportStop {
     this.priceNote = '',
   });
 
-  factory RouteSupportStop.fromJson(Map<String, dynamic> json) {
-    final miles = json['distance_miles'];
-    return RouteSupportStop(
-      kind: RouteSupportStopKind.parse(toStr(json['kind'])),
-      title: toStr(json['title']),
-      distanceMiles: miles == null ? null : toDouble(miles),
-      priceText: toStr(json['price_text']),
-      priceNote: toStr(json['price_note']),
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-        'kind': kind.wire,
-        'title': title,
-        'distance_miles': distanceMiles,
-        'price_text': priceText,
-        'price_note': priceNote,
-      };
-
   /// A toll gantry from a calculated route.
   factory RouteSupportStop.fromTollMarker(TripTollMarker marker) {
     return RouteSupportStop(
@@ -100,9 +58,12 @@ class RouteSupportStop {
   }
 }
 
-/// The three figures under a route card (docs/ui/8-2-1.png): fuel cost, toll
-/// cost, total distance. Pre-formatted for the same reason as
-/// [RouteSupportStop.priceText] - support may quote a range.
+/// `toll` renders the red bullet + "Toll" badge, `fuel` the blue bullet +
+/// "Fuel Station" badge (docs/ui/8-2-2.png) - see `RouteSupportCard`.
+enum RouteSupportStopKind { toll, fuel }
+
+/// The three figures under the driver's opening route card (docs/ui/8-2-1.png):
+/// fuel cost, toll cost, total distance. Client-built, like [RouteSupportStop].
 class RouteSupportSummary {
   final String fuel;
   final String toll;
@@ -113,20 +74,6 @@ class RouteSupportSummary {
     required this.toll,
     required this.distance,
   });
-
-  factory RouteSupportSummary.fromJson(Map<String, dynamic> json) {
-    return RouteSupportSummary(
-      fuel: toStr(json['fuel'], '-'),
-      toll: toStr(json['toll'], '-'),
-      distance: toStr(json['distance'], '-'),
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-        'fuel': fuel,
-        'toll': toll,
-        'distance': distance,
-      };
 
   /// From a priced alternative: the same numbers the route overview footer
   /// shows, so the driver recognises what they asked about.
@@ -139,12 +86,12 @@ class RouteSupportSummary {
   }
 }
 
-/// The white card inside a bubble: origin, the stops between, destination, and
-/// optionally the fuel/toll/mile figures.
+/// The white card shown above the thread: origin, stops, destination, and the
+/// fuel/toll/mile summary (docs/ui/8-2-1.png).
 ///
-/// One shape covers both cards in the design - the driver's request carries a
-/// [summary] and no stops, support's suggestion carries stops and no summary -
-/// so the renderer has a single code path.
+/// Always built from [RouteSupportRequest.card] - the request the page opened
+/// with - never from a server message, since real messages carry no card
+/// (docs/mobile-api.md §8.3's `messages` are plain text).
 class RouteSupportRouteCard {
   final String originLabel;
   final String destinationLabel;
@@ -157,91 +104,32 @@ class RouteSupportRouteCard {
     this.summary,
     this.stops = const [],
   });
+}
 
-  factory RouteSupportRouteCard.fromJson(Map<String, dynamic> json) {
-    final summary = json['summary'];
-    return RouteSupportRouteCard(
-      originLabel: toStr(json['origin_label']),
-      destinationLabel: toStr(json['destination_label']),
-      summary: summary == null
-          ? null
-          : RouteSupportSummary.fromJson(toMap(summary)),
-      stops: toList(
-        json['stops'],
-        (e) => RouteSupportStop.fromJson(toMap(e)),
+/// The review's id and its messages, oldest-first - the slice of the full
+/// route-review object (docs/mobile-fuel-api-websocket.md §4.2) this feature
+/// actually needs. Returned by both creating a review and posting to one,
+/// since both endpoints answer with the same object.
+class RouteReviewThread {
+  final String id;
+  final List<SupportChatMessage> messages;
+
+  const RouteReviewThread({required this.id, required this.messages});
+
+  factory RouteReviewThread.fromJson(Map<String, dynamic> json) {
+    return RouteReviewThread(
+      id: toStr(json['id']),
+      messages: toList(
+        json['messages'],
+        (e) => SupportChatMessage.fromJson(toMap(e)),
       ),
     );
   }
-
-  Map<String, dynamic> toJson() => {
-        'origin_label': originLabel,
-        'destination_label': destinationLabel,
-        'summary': summary?.toJson(),
-        'stops': stops.map((s) => s.toJson()).toList(),
-      };
 }
 
-/// One message in a route support thread.
-class RouteSupportMessage {
-  final String id;
-  final RouteSupportAuthor author;
-
-  /// Display name of the agent. Empty for driver messages.
-  final String senderName;
-
-  final String body;
-
-  /// Emphasised blue lead-in above [body] - approvals and recommendations.
-  final String highlight;
-
-  final DateTime? sentAt;
-
-  /// Route card attached to the message, if any.
-  final RouteSupportRouteCard? card;
-
-  /// Whether the message offers a Drive action for its [card].
-  final bool showDriveAction;
-
-  const RouteSupportMessage({
-    required this.id,
-    required this.author,
-    this.senderName = '',
-    this.body = '',
-    this.highlight = '',
-    this.sentAt,
-    this.card,
-    this.showDriveAction = false,
-  });
-
-  bool get isDriver => author == RouteSupportAuthor.driver;
-
-  factory RouteSupportMessage.fromJson(Map<String, dynamic> json) {
-    final card = json['route_card'];
-    return RouteSupportMessage(
-      id: toStr(json['id']),
-      author: RouteSupportAuthor.parse(toStr(json['author'])),
-      senderName: toStr(json['sender_name']),
-      body: toStr(json['body']),
-      highlight: toStr(json['highlight']),
-      sentAt: DateTime.tryParse(toStr(json['sent_at'])),
-      card: card == null ? null : RouteSupportRouteCard.fromJson(toMap(card)),
-      showDriveAction: toBool(json['show_drive_action']),
-    );
-  }
-
-  /// `23:00`, as shown under the driver's message. Empty when the server sent
-  /// no timestamp.
-  String get sentAtLabel {
-    final at = sentAt;
-    if (at == null) return '';
-    final local = at.toLocal();
-    return '${local.hour.toString().padLeft(2, '0')}:'
-        '${local.minute.toString().padLeft(2, '0')}';
-  }
-}
-
-/// Everything needed to open a support request for a route - the payload the
-/// future `POST` will carry, and the context the page renders from.
+/// Everything needed to open a support request for a route: the payload
+/// `POST mobile/route-reviews` carries, and the context the opening card
+/// renders from.
 class RouteSupportRequest {
   /// `RouteRequest` id from `POST /mobile/toll-routes`.
   final String routeId;
@@ -302,10 +190,11 @@ class RouteSupportRequest {
 
   double get distanceMiles => metersToMiles(distanceMeters);
 
-  /// The card shown with the driver's opening message.
+  /// The card shown above the thread.
   RouteSupportRouteCard get card => RouteSupportRouteCard(
         originLabel: origin.fieldLabel,
         destinationLabel: destination.fieldLabel,
+        stops: stops,
         summary: RouteSupportSummary(
           fuel: fuel == null ? '-' : '-${fuel!.formatted}',
           toll: toll == null ? '-' : '-${toll!.formatted}',
@@ -313,24 +202,13 @@ class RouteSupportRequest {
         ),
       );
 
-  /// Request body for the endpoint that will back this flow.
-  Map<String, dynamic> toJson() => {
+  /// Body for `POST mobile/route-reviews` (docs/mobile-fuel-api-websocket.md
+  /// §4.1). [message] is the optional opening note; "Send Request" itself
+  /// sends none today - the composer only appears once the review exists.
+  Map<String, dynamic> toCreateReviewJson({String? message}) => {
         'route_request_id': routeId,
         'route_alternative_id': alternativeId,
-        'origin': {
-          'label': origin.fieldLabel,
-          'lat': origin.coordinate.lat,
-          'lng': origin.coordinate.lng,
-        },
-        'destination': {
-          'label': destination.fieldLabel,
-          'lat': destination.coordinate.lat,
-          'lng': destination.coordinate.lng,
-        },
-        'distance_meters': distanceMeters,
-        'duration_seconds': durationSeconds,
-        'toll_amount_minor': toll?.amountMinor,
-        'fuel_amount_minor': fuel?.amountMinor,
-        'currency': toll?.currency ?? fuel?.currency,
+        if (message != null && message.trim().isNotEmpty)
+          'message': message.trim(),
       };
 }

@@ -748,3 +748,177 @@ Match the provided designs exactly:
 
 Maintain consistent spacing, typography, animations, icons, colors, and interaction behavior with the rest of the application.
 
+----------------------------------------------------------------------------------------------------
+
+# Task 12: Implement Support Message APIs and Message Actions
+
+Implement the complete support messaging functionality using the APIs described in `docs/mobile-api.md`.
+
+There are two different support message flows in the application:
+
+1. **Normal Support Messages**
+2. **Route Review / Route Support Messages**
+
+## 1. Normal Support Messages
+
+Normal support messages can be opened from:
+
+* `trip_map_page.dart`
+* `route_overview_page.dart`
+* `driving_mode_page.dart`
+
+These pages use the existing `support_message_page.dart`.
+
+Connect the existing Support Message UI to the support message APIs defined in `docs/mobile-api.md`.
+
+Implement:
+
+* Loading existing conversation/messages.
+* Sending a new message.
+* Displaying the user's sent messages.
+* Displaying support responses.
+* Loading states.
+* Sending states.
+* Empty conversation state.
+* Error handling.
+* Refresh/reload behavior where appropriate.
+
+The conversation should be persisted through the API so that reopening `support_message_page.dart` loads the existing conversation instead of creating a new local conversation.
+
+Only Premium users should have access to the normal support messaging functionality, using the globally stored `is_paid_user` value.
+
+## 2. Route Review Messages
+
+Route review messages are a separate support conversation created from:
+
+`route_review_page.dart`
+
+When the user presses the **Send Request** button, create/send a route support request using the corresponding APIs defined in `docs/mobile-api.md`.
+
+The request should include the route information associated with the review, including the data already passed to the Route Review page, such as:
+
+* Route ID
+* Origin
+* Destination
+* Selected route
+* Distance
+* Duration
+* Toll information
+* Other route details required by the API
+
+Follow the exact request/response structure defined in `docs/mobile-api.md`.
+
+After successfully sending the request, display the conversation/message state using the existing Route Review support UI.
+
+## Message Types
+
+Keep the two message flows logically separated:
+
+### Normal Support Conversation
+
+Used from:
+
+* `trip_map_page.dart`
+* `route_overview_page.dart`
+* `driving_mode_page.dart`
+
+This is a general support conversation and should use the existing `support_message_page.dart`.
+
+### Route Review Conversation
+
+Used from:
+
+* `route_review_page.dart`
+
+This conversation is associated with a specific route and should use the route-specific support/review UI.
+
+Do not mix normal support messages with route review messages.
+
+## API Integration
+
+Use only the endpoints and request/response structures documented in:
+
+`docs/mobile-api.md`
+
+Before implementing the API layer, review the documentation and identify all endpoints related to:
+
+* Creating/sending support messages
+* Loading support conversations
+* Loading messages
+* Sending replies
+* Route review/support requests
+* Any message status or conversation actions
+
+Create the required:
+
+* API methods
+* DTO/models
+* Repository methods
+* Data sources
+* State management
+* Error handling
+
+Reuse the existing networking architecture of the project instead of creating a separate HTTP implementation.
+
+## Message UI
+
+Keep the existing UI designs already implemented for:
+
+* `support_message_page.dart`
+* `route_review_page.dart`
+
+Do not redesign these pages.
+
+Connect the existing UI to the real APIs and replace mock/placeholder message data with API data.
+
+Messages should clearly distinguish between:
+
+* User messages
+* Support messages
+
+Preserve the visual behavior shown in the existing designs.
+
+## Sending Messages
+
+When the user sends a message:
+
+1. Validate the message.
+2. Show the sending/loading state.
+3. Call the appropriate API.
+4. Add/display the returned message from the server.
+5. Clear the input field after successful submission.
+6. Scroll the conversation to the newest message.
+7. Handle API errors without losing the user's typed message.
+
+Prevent duplicate submissions while a message is being sent.
+
+## Route Review "Send Request"
+
+When **Send Request** is pressed on `route_review_page.dart`:
+
+1. Validate the required route information.
+2. Create the route support/review request using the documented API.
+3. Show a loading state while the request is being submitted.
+4. Handle success and error responses.
+5. Display the resulting message/request in the route review conversation.
+6. Preserve the associated route information throughout the conversation.
+
+## Architecture
+
+Keep the implementation modular and avoid duplicating support-message logic.
+
+Create shared components/services where appropriate, but keep **Normal Support** and **Route Review Support** as separate business flows.
+
+Reuse:
+
+* Existing API client
+* Repository architecture
+* Models
+* State management
+* Authentication
+* Existing support-message widgets
+* Existing route models
+
+Do not modify unrelated Trip, Route Overview, or Driving Mode functionality.
+
+All API behavior must follow the specifications in `docs/mobile-api.md`.

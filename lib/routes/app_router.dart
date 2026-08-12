@@ -32,6 +32,7 @@ import 'package:taxi_app/features/notifications/presentation/bloc/notifications_
 import 'package:taxi_app/features/trips/presentation/bloc/navigation/navigation_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/route_overview/route_overview_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/route_support/route_support_bloc.dart';
+import 'package:taxi_app/features/trips/presentation/bloc/support_chat/support_chat_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/trip_map/trip_map_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/trips_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/pages/driving_mode_page.dart';
@@ -202,9 +203,11 @@ class Routes {
         },
       ),
       GoRoute(
-        // UI only for now - no bloc, because nothing is fetched or sent yet.
         path: Pages.supportMessage,
-        builder: (context, state) => const SupportMessagePage(),
+        builder: (context, state) => BlocProvider(
+          create: (_) => getIt<SupportChatBloc>(),
+          child: const SupportMessagePage(),
+        ),
       ),
       GoRoute(
         path: Pages.routeSupport,

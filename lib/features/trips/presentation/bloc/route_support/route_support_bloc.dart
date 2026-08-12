@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:taxi_app/features/trips/data/model/route_support_model.dart';
+import 'package:taxi_app/features/trips/data/model/support_chat_model.dart';
 import 'package:taxi_app/features/trips/domain/repo/route_support_repo.dart';
 
 part 'route_support_event.dart';
@@ -18,6 +19,18 @@ class RouteSupportBloc extends Bloc<RouteSupportEvent, RouteSupportState> {
   /// The route the conversation is about. Fixed for the life of the page.
   final RouteSupportRequest request;
 
+  /// Generated once per bloc instance - i.e. once per page visit - and reused
+  /// across every create attempt for that visit, including a manual retry.
+  /// The API dedupes `POST /mobile/route-reviews` by this key, so a retry
+  /// after a timeout resolves to the original review instead of creating a
+  /// second one; a fresh page visit later gets its own bloc and its own key,
+  /// which is correctly a new attempt.
+  final String _createIdempotencyKey =
+      'mobile-route-review-${DateTime.now().millisecondsSinceEpoch}';
+
+  /// Set once [_onStarted] succeeds. Every follow-up message posts to this.
+  String? _routeReviewId;
+
   RouteSupportBloc({required this.repo, required this.request})
       : super(const RouteSupportState()) {
     on<RouteSupportStarted>(_onStarted);
@@ -33,7 +46,10 @@ class RouteSupportBloc extends Bloc<RouteSupportEvent, RouteSupportState> {
       errorMessage: '',
     ));
 
-    final response = await repo.getConversation(request);
+    final response = await repo.startReview(
+      request,
+      idempotencyKey: _createIdempotencyKey,
+    );
     if (response.errorText.isNotEmpty || response.data == null) {
       emit(state.copyWith(
         status: RouteSupportStatus.failure,
@@ -42,9 +58,11 @@ class RouteSupportBloc extends Bloc<RouteSupportEvent, RouteSupportState> {
       return;
     }
 
+    _routeReviewId = response.data!.id;
     emit(state.copyWith(
       status: RouteSupportStatus.ready,
-      messages: response.data,
+      // Oldest-first already, per docs/mobile-api.md §8.3/§4.2.
+      messages: response.data!.messages,
     ));
   }
 
@@ -53,11 +71,15 @@ class RouteSupportBloc extends Bloc<RouteSupportEvent, RouteSupportState> {
     Emitter<RouteSupportState> emit,
   ) async {
     final text = event.text.trim();
-    if (text.isEmpty || state.sending) return;
+    final routeReviewId = _routeReviewId;
+    if (text.isEmpty || state.sending || routeReviewId == null) return;
 
     emit(state.copyWith(sending: true, sendError: ''));
 
-    final response = await repo.sendMessage(request: request, text: text);
+    final response = await repo.sendMessage(
+      routeReviewId: routeReviewId,
+      text: text,
+    );
     if (response.errorText.isNotEmpty || response.data == null) {
       emit(state.copyWith(sending: false, sendError: response.errorText));
       return;
@@ -65,11 +87,9 @@ class RouteSupportBloc extends Bloc<RouteSupportEvent, RouteSupportState> {
 
     emit(state.copyWith(
       sending: false,
-      // The thread only ever grows here, so appending is enough - no refetch,
-      // which would also throw away anything typed since.
-      messages: [...state.messages, response.data!],
-      // A first message on an empty thread is what turns the empty state into
-      // a conversation.
+      // Full replace, not append: the response is the whole review's
+      // messages, not just the one that was just posted (docs §8.3).
+      messages: response.data!.messages,
       status: RouteSupportStatus.ready,
     ));
   }

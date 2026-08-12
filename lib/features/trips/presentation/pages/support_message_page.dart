@@ -1,21 +1,21 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:taxi_app/core/components/app_snack_bar.dart';
 import 'package:taxi_app/core/constants/color/app_color.dart';
-import 'package:taxi_app/core/constants/color/app_icons.dart';
+import 'package:taxi_app/features/trips/data/model/support_chat_model.dart';
+import 'package:taxi_app/features/trips/presentation/bloc/support_chat/support_chat_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/widgets/support_chat.dart';
 
-/// Support conversation, per `docs/ui/11.png`.
+/// Normal support conversation (docs/ui/11.png), opened from the floating
+/// Support button on `trip_map_page.dart`, `route_overview_page.dart` and
+/// `driving_mode_page.dart` - all three share this one page and one backend
+/// conversation (docs/mobile-api.md §8.1/§8.2).
 ///
-/// **UI only.** Every action is a placeholder callback and the thread is
-/// static sample content - no networking, no sending, no state management yet.
-/// The shapes below (message model, composer callbacks) are deliberately the
-/// ones a real backend would fill, so wiring it up later is additive.
-///
-/// The bubbles, Drive pill and composer are shared with the route review
-/// thread (`route_support_page.dart`) - see `widgets/support_chat.dart`. Only
-/// the card inside the driver's bubble is specific to this page, because this
-/// conversation is about a fuel station rather than a route.
+/// Deliberately separate from the route-review thread (`route_support_page.dart`):
+/// this conversation carries no route/fuel-station context of its own - the
+/// real API is plain text only - so, unlike the route-review page, there is
+/// no per-message card to render, only driver/support bubbles.
 class SupportMessagePage extends StatefulWidget {
   const SupportMessagePage({super.key});
 
@@ -24,23 +24,72 @@ class SupportMessagePage extends StatefulWidget {
 }
 
 class _SupportMessagePageState extends State<SupportMessagePage> {
-  final TextEditingController _controller = TextEditingController();
+  final TextEditingController _composer = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+
+  /// Message count the composer was cleared at, so the "clear on success"
+  /// listener (see [_onStateChanged]) fires exactly once per successful send
+  /// instead of on every unrelated rebuild.
+  int _clearedAtMessageCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<SupportChatBloc>().add(const SupportChatStarted());
+  }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _composer.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
-  // ── Placeholder actions, ready for backend integration ──────────────────
+  void _scrollToEnd() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    });
+  }
 
-  void _onSend() {}
+  void _onSend() {
+    final text = _composer.text.trim();
+    if (text.isEmpty) return;
+    // The field is only cleared once the send actually succeeds (see
+    // _onStateChanged) - clearing it here would lose the driver's message on
+    // a failed request, which the task explicitly calls out to avoid.
+    context.read<SupportChatBloc>().add(SupportChatMessageSent(text));
+  }
+
+  void _onRetry() {
+    context.read<SupportChatBloc>().add(const SupportChatStarted());
+  }
+
+  void _onStateChanged(BuildContext context, SupportChatState state) {
+    if (state.messages.isNotEmpty) _scrollToEnd();
+    if (state.sendError.isNotEmpty) {
+      AppSnackBar.showError(context, state.sendError);
+      return;
+    }
+    // A successful send grew the thread while nothing is in flight and no
+    // error is pending - the one moment the composer should empty itself.
+    if (!state.sending &&
+        state.messages.length > _clearedAtMessageCount &&
+        _composer.text.trim().isNotEmpty) {
+      _clearedAtMessageCount = state.messages.length;
+      _composer.clear();
+    }
+  }
+
+  // ── Placeholder actions - out of scope for this task ────────────────────
 
   void _onAttach() {}
 
   void _onVoice() {}
-
-  void _onDrive() {}
 
   @override
   Widget build(BuildContext context) {
@@ -64,155 +113,131 @@ class _SupportMessagePageState extends State<SupportMessagePage> {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              children: [
-                _OutgoingRequestBubble(
-                  message:
-                      'I would like to refuel at this fuel station. Please '
-                      'review my request and activate my fuel card.',
-                  stationName: 'Alixon Fuel',
-                  address: '3301 Kuhn Rd, West Memphis, AR 72301',
-                  price: r'$54.54-$60.6 for gallon',
-                  distance: '24 mi',
-                  time: '23:00',
+      body: BlocConsumer<SupportChatBloc, SupportChatState>(
+        listenWhen: (p, c) =>
+            p.messages.length != c.messages.length ||
+            p.sendError != c.sendError ||
+            p.sending != c.sending,
+        listener: _onStateChanged,
+        builder: (context, state) {
+          return Column(
+            children: [
+              Expanded(child: _buildThread(state)),
+              if (state.status != SupportChatStatus.restricted)
+                SupportComposer(
+                  controller: _composer,
+                  onAttach: _onAttach,
+                  onVoice: _onVoice,
+                  onSend: _onSend,
+                  enabled: !state.sending,
                 ),
-                const SizedBox(height: 8),
-                const SupportAgentBubble(
-                  sender: 'Nick Rose',
-                  body: "Hello! We have received your request. We'll review it "
-                      'and get back to you as soon as possible. Please wait.',
-                ),
-                const SizedBox(height: 8),
-                SupportAgentBubble(
-                  sender: 'Nick Rose',
-                  highlight: 'Your request has been approved!',
-                  body: 'You can now refuel at this fuel station. Your fuel '
-                      'card has been activated and will remain active until '
-                      '8:42 PM.',
-                  action: SupportDriveButton(onTap: _onDrive),
-                ),
-              ],
-            ),
-          ),
-          SupportComposer(
-            controller: _controller,
-            onAttach: _onAttach,
-            onVoice: _onVoice,
-            onSend: _onSend,
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
+
+  Widget _buildThread(SupportChatState state) {
+    switch (state.status) {
+      case SupportChatStatus.initial:
+      case SupportChatStatus.loading:
+        return const Center(child: CircularProgressIndicator.adaptive());
+      case SupportChatStatus.restricted:
+        return _ThreadMessage(text: 'routeSupport.premiumOnly'.tr());
+      case SupportChatStatus.failure:
+        return _ThreadMessage(
+          text: state.errorMessage.isEmpty
+              ? 'common.somethingWentWrong'.tr()
+              : state.errorMessage,
+          onRetry: _onRetry,
+        );
+      case SupportChatStatus.ready:
+        if (state.isEmpty) {
+          return _ThreadMessage(text: 'routeSupport.empty'.tr());
+        }
+        return ListView.separated(
+          controller: _scrollController,
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          itemCount: state.messages.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          itemBuilder: (context, index) =>
+              _MessageBubble(message: state.messages[index]),
+        );
+    }
+  }
 }
 
-/// The driver's request: a blue bubble carrying the message plus a white card
-/// describing the fuel station it refers to.
-class _OutgoingRequestBubble extends StatelessWidget {
-  const _OutgoingRequestBubble({
-    required this.message,
-    required this.stationName,
-    required this.address,
-    required this.price,
-    required this.distance,
-    required this.time,
-  });
+/// One message: a plain driver bubble or a support reply. Neither carries a
+/// card - the real conversation is text-only (docs/mobile-api.md §8.1).
+class _MessageBubble extends StatelessWidget {
+  const _MessageBubble({required this.message});
 
-  final String message;
-  final String stationName;
-  final String address;
-  final String price;
-  final String distance;
-  final String time;
+  final SupportChatMessage message;
 
   @override
   Widget build(BuildContext context) {
+    if (!message.isDriver) {
+      return SupportAgentBubble(
+        sender: message.senderName.isEmpty
+            ? 'routeSupport.supportFallbackName'.tr()
+            : message.senderName,
+        body: message.message,
+      );
+    }
+
+    final timestamp = message.sentAtLabel;
     return SupportBubble(
       outgoing: true,
-      // Carries a station card, so it takes the wider treatment.
-      wide: true,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            message,
+            message.message,
             style: TextStyle(fontSize: 14, height: 1.35, color: AppColor.black),
           ),
-          const SizedBox(height: 10),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColor.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  stationName,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppColor.black,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                // Same three design icons the marker sheet uses, so a station
-                // reads identically wherever it appears.
-                _StationFact(icon: AppIcons.tripOrigin, text: address),
-                const SizedBox(height: 8),
-                _StationFact(icon: AppIcons.price, text: price),
-                const SizedBox(height: 8),
-                _StationFact(icon: AppIcons.routeMile, text: distance),
-              ],
-            ),
-          ),
-          const SizedBox(height: 4),
-          Align(
-            alignment: Alignment.centerRight,
-            child: SupportTimestamp(text: time),
-          ),
+          if (timestamp.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            SupportTimestamp(text: timestamp),
+          ],
         ],
       ),
     );
   }
 }
 
-class _StationFact extends StatelessWidget {
-  const _StationFact({required this.icon, required this.text});
+/// Centred message filling the thread area - the load error with its retry,
+/// the restricted-entitlement notice, or an empty conversation.
+class _ThreadMessage extends StatelessWidget {
+  const _ThreadMessage({required this.text, this.onRetry});
 
-  /// SVG asset path.
-  final String icon;
   final String text;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SvgPicture.asset(
-          icon,
-          width: 17,
-          height: 17,
-          colorFilter: ColorFilter.mode(
-            AppColor.kPrimaryColor,
-            BlendMode.srcIn,
-          ),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              text,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: AppColor.grey),
+            ),
+            if (onRetry != null) ...[
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: onRetry,
+                child: Text('common.retry'.tr()),
+              ),
+            ],
+          ],
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(fontSize: 13, height: 1.35, color: AppColor.black),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
