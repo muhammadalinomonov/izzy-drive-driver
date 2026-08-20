@@ -14,13 +14,15 @@ import 'package:taxi_app/features/auth/data/model/auth_model.dart';
 import 'package:taxi_app/features/auth/domain/repo/auth_repo.dart';
 
 part 'auth_event.dart';
+
 part 'auth_state.dart';
 
 @injectable
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepo authRepo;
 
-  AuthBloc({required this.authRepo}) : super(const AuthState()) {
+  AuthBloc({@Named('auth2') required this.authRepo})
+    : super(const AuthState()) {
     on<LoginEvent>(_onLogin);
     on<GoogleSignInEvent>(_onGoogleSignIn);
     on<AppleSignInEvent>(_onAppleSignIn);
@@ -40,49 +42,62 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     // qancha retain qolgan bo'lishidan qat'i nazar socketni butunlay yopadi.
     serviceLocator<WebSocketService>().forceDisconnect();
     event.onSuccess();
-    emit(state.copyWith(
-      logoutStatus: AuthStatus.success,
-      errorMessage: response.errorText.isEmpty ? null : response.errorText,
-    ));
+    emit(
+      state.copyWith(
+        logoutStatus: AuthStatus.success,
+        errorMessage: response.errorText.isEmpty ? null : response.errorText,
+      ),
+    );
   }
 
   Future<void> _onDeleteAccount(
     DeleteAccountEvent event,
     Emitter<AuthState> emit,
   ) async {
-    emit(state.copyWith(
-      deleteAccountStatus: AuthStatus.loading,
-      errorMessage: '',
-    ));
+    emit(
+      state.copyWith(deleteAccountStatus: AuthStatus.loading, errorMessage: ''),
+    );
     final response = await authRepo.deleteAccount();
     if (response.errorText.isEmpty) {
-      // forceDisconnect — refcount-aware disconnect emas: logout paytida
-    // qancha retain qolgan bo'lishidan qat'i nazar socketni butunlay yopadi.
-    serviceLocator<WebSocketService>().forceDisconnect();
+      // Deleting the izzydrive account leaves no reason to keep a toll
+      // session on this device.
+      serviceLocator<WebSocketService>().forceDisconnect();
       event.onSuccess();
       emit(state.copyWith(deleteAccountStatus: AuthStatus.success));
     } else {
       event.onError();
-      emit(state.copyWith(
-        deleteAccountStatus: AuthStatus.failure,
-        errorMessage: response.errorText,
-      ));
+      emit(
+        state.copyWith(
+          deleteAccountStatus: AuthStatus.failure,
+          errorMessage: response.errorText,
+        ),
+      );
     }
   }
 
+  /// Signs in to both backends from one credential pair.
+  ///
+  /// izzydrive decides the outcome - it owns the app's session - and the
+  /// Quadrix toll login is attempted afterwards, best-effort. The order
+  /// matters: a toll failure must not cost the driver a working izzydrive
+  /// session, and the toll call is pointless if the credentials were wrong
+  /// anyway.
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
     emit(state.copyWith(loginStatus: AuthStatus.loading, errorMessage: ''));
     final response = await authRepo.logIn(event.authModel);
-    if (response.errorText.isEmpty) {
-      event.onSuccess();
-      emit(state.copyWith(loginStatus: AuthStatus.success));
-    } else {
+    if (response.errorText.isNotEmpty) {
       event.onError();
-      emit(state.copyWith(
-        loginStatus: AuthStatus.failure,
-        errorMessage: response.errorText,
-      ));
+      emit(
+        state.copyWith(
+          loginStatus: AuthStatus.failure,
+          errorMessage: response.errorText,
+        ),
+      );
+      return;
     }
+
+    event.onSuccess();
+    emit(state.copyWith(loginStatus: AuthStatus.success));
   }
 
   Future<void> _onGoogleSignIn(
@@ -108,10 +123,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       account = await google.signIn();
     } catch (e) {
       event.onError();
-      emit(state.copyWith(
-        googleStatus: AuthStatus.failure,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(
+          googleStatus: AuthStatus.failure,
+          errorMessage: e.toString(),
+        ),
+      );
       return;
     }
 
@@ -124,10 +141,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final idToken = auth.idToken;
     if (idToken == null || idToken.isEmpty) {
       event.onError();
-      emit(state.copyWith(
-        googleStatus: AuthStatus.failure,
-        errorMessage: LocaleKeys.auth_errors_googleTokenEmpty.tr(),
-      ));
+      emit(
+        state.copyWith(
+          googleStatus: AuthStatus.failure,
+          errorMessage: LocaleKeys.auth_errors_googleTokenEmpty.tr(),
+        ),
+      );
       return;
     }
 
@@ -140,10 +159,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(state.copyWith(googleStatus: AuthStatus.success));
     } else {
       event.onError();
-      emit(state.copyWith(
-        googleStatus: AuthStatus.failure,
-        errorMessage: response.errorText,
-      ));
+      emit(
+        state.copyWith(
+          googleStatus: AuthStatus.failure,
+          errorMessage: response.errorText,
+        ),
+      );
     }
   }
 
@@ -167,17 +188,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         return;
       }
       event.onError();
-      emit(state.copyWith(
-        appleStatus: AuthStatus.failure,
-        errorMessage: e.message,
-      ));
+      emit(
+        state.copyWith(
+          appleStatus: AuthStatus.failure,
+          errorMessage: e.message,
+        ),
+      );
       return;
     } catch (e) {
       event.onError();
-      emit(state.copyWith(
-        appleStatus: AuthStatus.failure,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(
+          appleStatus: AuthStatus.failure,
+          errorMessage: e.toString(),
+        ),
+      );
       return;
     }
 
@@ -185,10 +210,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final authorizationCode = credential.authorizationCode;
     if (identityToken == null || identityToken.isEmpty) {
       event.onError();
-      emit(state.copyWith(
-        appleStatus: AuthStatus.failure,
-        errorMessage: LocaleKeys.auth_errors_appleTokenEmpty.tr(),
-      ));
+      emit(
+        state.copyWith(
+          appleStatus: AuthStatus.failure,
+          errorMessage: LocaleKeys.auth_errors_appleTokenEmpty.tr(),
+        ),
+      );
       return;
     }
 
@@ -205,10 +232,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(state.copyWith(appleStatus: AuthStatus.success));
     } else {
       event.onError();
-      emit(state.copyWith(
-        appleStatus: AuthStatus.failure,
-        errorMessage: response.errorText,
-      ));
+      emit(
+        state.copyWith(
+          appleStatus: AuthStatus.failure,
+          errorMessage: response.errorText,
+        ),
+      );
     }
   }
 
@@ -216,30 +245,36 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     RequestOtpEvent event,
     Emitter<AuthState> emit,
   ) async {
-    emit(state.copyWith(
-      requestOtpStatus: AuthStatus.loading,
-      verifyOtpStatus: AuthStatus.initial,
-      email: event.email,
-      fullName: event.fullName,
-      password: event.password,
-      errorMessage: '',
-      errorCode: null,
-    ));
+    emit(
+      state.copyWith(
+        requestOtpStatus: AuthStatus.loading,
+        verifyOtpStatus: AuthStatus.initial,
+        email: event.email,
+        fullName: event.fullName,
+        password: event.password,
+        errorMessage: '',
+        errorCode: null,
+      ),
+    );
 
     final response = await authRepo.requestOtp(event.email);
     if (response.errorText.isEmpty && response.data != null) {
-      emit(state.copyWith(
-        requestOtpStatus: AuthStatus.success,
-        expiresIn: response.data!.expiresIn,
-        resendAfter: response.data!.resendAfter,
-      ));
+      emit(
+        state.copyWith(
+          requestOtpStatus: AuthStatus.success,
+          expiresIn: response.data!.expiresIn,
+          resendAfter: response.data!.resendAfter,
+        ),
+      );
       event.onSuccess();
     } else {
       event.onError();
-      emit(state.copyWith(
-        requestOtpStatus: AuthStatus.failure,
-        errorMessage: response.errorText,
-      ));
+      emit(
+        state.copyWith(
+          requestOtpStatus: AuthStatus.failure,
+          errorMessage: response.errorText,
+        ),
+      );
     }
   }
 
@@ -248,24 +283,30 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     if (state.email.isEmpty) return;
-    emit(state.copyWith(
-      requestOtpStatus: AuthStatus.loading,
-      errorMessage: '',
-      errorCode: null,
-    ));
+    emit(
+      state.copyWith(
+        requestOtpStatus: AuthStatus.loading,
+        errorMessage: '',
+        errorCode: null,
+      ),
+    );
     final response = await authRepo.requestOtp(state.email);
     if (response.errorText.isEmpty && response.data != null) {
-      emit(state.copyWith(
-        requestOtpStatus: AuthStatus.success,
-        expiresIn: response.data!.expiresIn,
-        resendAfter: response.data!.resendAfter,
-      ));
+      emit(
+        state.copyWith(
+          requestOtpStatus: AuthStatus.success,
+          expiresIn: response.data!.expiresIn,
+          resendAfter: response.data!.resendAfter,
+        ),
+      );
     } else {
       event.onError();
-      emit(state.copyWith(
-        requestOtpStatus: AuthStatus.failure,
-        errorMessage: response.errorText,
-      ));
+      emit(
+        state.copyWith(
+          requestOtpStatus: AuthStatus.failure,
+          errorMessage: response.errorText,
+        ),
+      );
     }
   }
 
@@ -273,11 +314,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     VerifyOtpEvent event,
     Emitter<AuthState> emit,
   ) async {
-    emit(state.copyWith(
-      verifyOtpStatus: AuthStatus.loading,
-      errorMessage: '',
-      errorCode: null,
-    ));
+    emit(
+      state.copyWith(
+        verifyOtpStatus: AuthStatus.loading,
+        errorMessage: '',
+        errorCode: null,
+      ),
+    );
 
     final verifyResponse = await authRepo.verifyOtp(
       email: state.email,
@@ -285,10 +328,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
     if (verifyResponse.errorText.isNotEmpty || verifyResponse.data == null) {
       event.onError();
-      emit(state.copyWith(
-        verifyOtpStatus: AuthStatus.failure,
-        errorMessage: verifyResponse.errorText,
-      ));
+      emit(
+        state.copyWith(
+          verifyOtpStatus: AuthStatus.failure,
+          errorMessage: verifyResponse.errorText,
+        ),
+      );
       return;
     }
 
@@ -303,10 +348,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(state.copyWith(verifyOtpStatus: AuthStatus.success));
     } else {
       event.onError();
-      emit(state.copyWith(
-        verifyOtpStatus: AuthStatus.failure,
-        errorMessage: completeResponse.errorText,
-      ));
+      emit(
+        state.copyWith(
+          verifyOtpStatus: AuthStatus.failure,
+          errorMessage: completeResponse.errorText,
+        ),
+      );
     }
   }
 
@@ -314,16 +361,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     ResetRegistrationEvent event,
     Emitter<AuthState> emit,
   ) {
-    emit(state.copyWith(
-      requestOtpStatus: AuthStatus.initial,
-      verifyOtpStatus: AuthStatus.initial,
-      email: '',
-      fullName: '',
-      password: '',
-      expiresIn: 0,
-      resendAfter: 0,
-      errorMessage: '',
-      errorCode: null,
-    ));
+    emit(
+      state.copyWith(
+        requestOtpStatus: AuthStatus.initial,
+        verifyOtpStatus: AuthStatus.initial,
+        email: '',
+        fullName: '',
+        password: '',
+        expiresIn: 0,
+        resendAfter: 0,
+        errorMessage: '',
+        errorCode: null,
+      ),
+    );
   }
 }

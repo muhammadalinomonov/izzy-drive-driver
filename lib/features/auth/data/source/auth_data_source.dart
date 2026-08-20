@@ -6,6 +6,7 @@ import 'package:taxi_app/core/localization/locale_keys.g.dart';
 import 'package:taxi_app/core/network/api_constants.dart';
 import 'package:taxi_app/core/network/dio_model.dart';
 import 'package:taxi_app/core/network/network_response.dart';
+import 'package:taxi_app/core/network/auth_session.dart';
 import 'package:taxi_app/core/network/token_service.dart';
 import 'package:taxi_app/core/service_locater.dart';
 import 'package:taxi_app/core/utils/json_safe.dart';
@@ -345,6 +346,9 @@ class AuthDataSource {
     if (access is String && access.isNotEmpty) StorageRepository.putString('token', access);
     if (refresh is String && refresh.isNotEmpty) StorageRepository.putString('refresh', refresh);
     if (id != null) StorageRepository.putString('responseID', id.toString());
+    // Mark who issued this session so the dio interceptor knows a `'refresh'`
+    // is available here (unlike an auth2 session, which never has one).
+    AuthSession.setSource(AuthSession.sourceAuth1);
     // Har bir yangi login - phone_verified cache'ni tozalaymiz. MainScreen
     // get-me orqali yangi user uchun haqiqiy holatni qaytadan aniqlaydi.
     // Token refresh (dio interceptor ichida) _persistTokens'ni chaqirmaydi,

@@ -30,6 +30,7 @@ abstract class TripsRepo {
     required String routeRequestId,
     required String routeAlternativeId,
     TripCoordinate? currentLocation,
+    String? routeReviewId,
   });
 
   Future<NetworkResponse<NavigationSessionModel?>> getCurrentNavigationSession();

@@ -57,7 +57,9 @@
       "registerCta": "Зарегистрироваться",
       "loginFailed": "Не удалось войти в систему",
       "googleFailed": "Не удалось войти через Google",
-      "appleFailed": "Не удалось войти через Apple"
+      "appleFailed": "Не удалось войти через Apple",
+      "tollConnectFailed": "Вход выполнен, но не удалось подключить платный аккаунт",
+      "tollPasswordChangeRequired": "Для платного аккаунта нужно сменить пароль"
     },
     "signUp": {
       "title": "Введите данные для регистрации!",
@@ -283,6 +285,17 @@
     "premiumOnly": "Чат поддержки доступен только для Premium водителей.",
     "supportFallbackName": "Поддержка",
     "reviewRequestMessage": "Я хотел бы поехать по этому маршруту. Пожалуйста, проверьте его.",
-    "selectedRoute": "Выбранный маршрут: {}"
+    "selectedRoute": "Выбранный маршрут: {}",
+    "forGallon": "за галлон",
+    "statusPending": "Ожидает проверки",
+    "statusApproved": "Маршрут одобрен",
+    "statusAlternativeSuggested": "Предложен другой маршрут",
+    "statusDeclined": "Маршрут не одобрен",
+    "statusCancelled": "Запрос закрыт",
+    "closedNotice": "Запрос закрыт, писать сюда больше нельзя.",
+    "fuelStopTitle": "Рекомендованная заправка",
+    "confirmFuel": "Подтвердить",
+    "fuelConfirmed": "Остановка подтверждена",
+    "contractedPrice": "Цена по карте"
   }
 }

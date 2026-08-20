@@ -143,6 +143,14 @@ class _StopRow extends StatelessWidget {
               Row(
                 children: [
                   _Badge(text: badge),
+                  if (stop.confirmed) ...[
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.check_circle,
+                      size: 15,
+                      color: AppColor.kPrimaryColor,
+                    ),
+                  ],
                   if (stop.distanceMiles != null) ...[
                     const SizedBox(width: 8),
                     Text(
@@ -249,6 +257,149 @@ class _SummaryBox extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// A dispatcher-recommended fuel stop with its accept action
+/// (docs/mobile-chat-route-fuel-drive.md §5).
+///
+/// Separate from the stop row inside [RouteSupportCard], which only *shows*
+/// the station: confirming is what puts it on the navigation route, so it
+/// needs its own affordance rather than being buried in the route summary.
+/// Shown only while the stop is still unconfirmed - once accepted, the row in
+/// the card carries the check and this disappears.
+class RouteFuelStopCard extends StatelessWidget {
+  const RouteFuelStopCard({
+    super.key,
+    required this.recommendation,
+    required this.onConfirm,
+    this.confirming = false,
+  });
+
+  final RouteReviewFuelRecommendation recommendation;
+  final VoidCallback onConfirm;
+
+  /// The confirm call is in flight - the button holds its place and shows a
+  /// spinner rather than the row collapsing.
+  final bool confirming;
+
+  @override
+  Widget build(BuildContext context) {
+    final price = recommendation.priceText;
+    final miles = recommendation.distanceMiles;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColor.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: SvgPicture.asset(
+                  AppIcons.fuelLeading,
+                  width: 16,
+                  height: 16,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      recommendation.stationName,
+                      style: TextStyle(
+                        fontSize: 14,
+                        height: 1.35,
+                        fontWeight: FontWeight.w600,
+                        color: AppColor.black,
+                      ),
+                    ),
+                    if (recommendation.address.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        recommendation.address,
+                        style: TextStyle(
+                          fontSize: 13,
+                          height: 1.35,
+                          color: AppColor.grey,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              _Badge(text: 'routeOverview.fuelStation'.tr()),
+              if (miles != null) ...[
+                const SizedBox(width: 8),
+                Text(
+                  'routeOverview.inMiles'.tr(
+                    namedArgs: {'miles': miles.toStringAsFixed(0)},
+                  ),
+                  style: TextStyle(fontSize: 13, color: AppColor.grey),
+                ),
+              ],
+              const Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  child: DashedLeader(),
+                ),
+              ),
+              if (price.isNotEmpty) ...[
+                Text(
+                  price,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColor.black,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'routeSupport.forGallon'.tr(),
+                  style: TextStyle(fontSize: 12, color: AppColor.grey),
+                ),
+              ],
+            ],
+          ),
+          if (recommendation.note.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              recommendation.note,
+              style: TextStyle(fontSize: 13, height: 1.35, color: AppColor.grey),
+            ),
+          ],
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: confirming ? null : onConfirm,
+              child: confirming
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+                    )
+                  : Text('routeSupport.confirmFuel'.tr()),
+            ),
+          ),
+        ],
       ),
     );
   }

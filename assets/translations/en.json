@@ -57,7 +57,9 @@
       "registerCta": "Sign up",
       "loginFailed": "Failed to sign in",
       "googleFailed": "Failed to sign in with Google",
-      "appleFailed": "Failed to sign in with Apple"
+      "appleFailed": "Failed to sign in with Apple",
+      "tollConnectFailed": "Signed in, but the tolling account could not be connected",
+      "tollPasswordChangeRequired": "Your tolling account requires a new password"
     },
     "signUp": {
       "title": "Enter your details to register!",
@@ -283,6 +285,17 @@
     "premiumOnly": "Support chat is available for Premium drivers.",
     "supportFallbackName": "Support",
     "reviewRequestMessage": "I'd like to take this route. Could you please review it?",
-    "selectedRoute": "Selected Route: {}"
+    "selectedRoute": "Selected Route: {}",
+    "forGallon": "for gallon",
+    "statusPending": "Waiting for review",
+    "statusApproved": "Route approved",
+    "statusAlternativeSuggested": "Another route suggested",
+    "statusDeclined": "Route not approved",
+    "statusCancelled": "Review closed",
+    "closedNotice": "This review is closed, so you can no longer write here.",
+    "fuelStopTitle": "Recommended fuel stop",
+    "confirmFuel": "Confirm stop",
+    "fuelConfirmed": "Stop confirmed",
+    "contractedPrice": "Card price"
   }
 }

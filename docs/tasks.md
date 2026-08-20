@@ -922,3 +922,15 @@ Reuse:
 Do not modify unrelated Trip, Route Overview, or Driving Mode functionality.
 
 All API behavior must follow the specifications in `docs/mobile-api.md`.
+
+----------------------------------------------------------------------------------------------------
+
+# 13. Task
+
+support pagelar bor ularga apilar qisman ulangan reute_reques page uchun apilarni boshqatdan 
+struktura qilib ozgartirish kerak shularni qanday o'zgartirsa boladi, va websocket qnday malumotlar
+almashinishi kerak shular uchun backend yasash uchun malumotlar qanday tarsda korinishini yozibber
+route_support_page.dart pageda barcha apilar ulanmagan websocket qanday maumotlar almashinishi kerak
+va reques route datalari qanday jonatilishi kerak va support bergan route datalari nimalardan tashkil
+topgan bolishi kerak shularni yozibber UI: ui/8-2.png, ui/8-2-2.png and ui/11-1.png ui da qanday malumotlar
+bolishi korsatilgan, support chat uchun backend strukturasini spec filga yozibber

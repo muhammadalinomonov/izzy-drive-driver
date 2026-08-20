@@ -11,7 +11,7 @@ class RouteSupportRepoImpl extends RouteSupportRepo {
   RouteSupportRepoImpl({required this.dataSource});
 
   @override
-  Future<NetworkResponse<RouteReviewThread>> startReview(
+  Future<NetworkResponse<RouteReviewDetail>> startReview(
     RouteSupportRequest request, {
     required String idempotencyKey,
   }) {
@@ -19,10 +19,26 @@ class RouteSupportRepoImpl extends RouteSupportRepo {
   }
 
   @override
-  Future<NetworkResponse<RouteReviewThread>> sendMessage({
+  Future<NetworkResponse<RouteReviewDetail>> fetchReview(String routeReviewId) {
+    return dataSource.fetchReview(routeReviewId);
+  }
+
+  @override
+  Future<NetworkResponse<RouteReviewDetail>> sendMessage({
     required String routeReviewId,
     required String text,
   }) {
     return dataSource.sendMessage(routeReviewId: routeReviewId, text: text);
+  }
+
+  @override
+  Future<NetworkResponse<RouteReviewDetail>> confirmFuelRecommendation({
+    required String routeReviewId,
+    required String recommendationId,
+  }) {
+    return dataSource.confirmFuelRecommendation(
+      routeReviewId: routeReviewId,
+      recommendationId: recommendationId,
+    );
   }
 }

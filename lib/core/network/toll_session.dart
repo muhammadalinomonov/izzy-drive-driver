@@ -118,6 +118,22 @@ class TollSession {
     await StorageRepository.deleteString(_orgKey);
   }
 
+  /// Stores both credentials from one `mobile/auth/login` response.
+  ///
+  /// Preferred over [saveToken] after a real sign-in: the login payload
+  /// already carries the memberships, so seeding the org id here skips the
+  /// `auth/me` round-trip [ensureOrganizationId] would otherwise make on the
+  /// very next request. An empty [organizationId] falls back to that lookup.
+  static Future<void> saveSession({
+    required String token,
+    String organizationId = '',
+  }) async {
+    await saveToken(token);
+    if (organizationId.isNotEmpty) {
+      await StorageRepository.putString(_orgKey, organizationId);
+    }
+  }
+
   static Future<void> clear() async {
     await StorageRepository.deleteString(_tokenKey);
     await StorageRepository.deleteString(_orgKey);

@@ -238,10 +238,16 @@ class TripsDataSource {
 
   /// `POST mobile/navigation-sessions` — starts (or, per the API doc,
   /// re-issues) guidance for a chosen route alternative.
+  ///
+  /// [routeReviewId] is sent when the route came out of a support review: the
+  /// backend then folds that review's confirmed fuel stop into the session as
+  /// a waypoint (docs/mobile-chat-route-fuel-drive.md §6). Omitting it drives
+  /// the bare route.
   Future<NetworkResponse<NavigationSessionModel>> createNavigationSession({
     required String routeRequestId,
     required String routeAlternativeId,
     TripCoordinate? currentLocation,
+    String? routeReviewId,
   }) async {
     if (!TollSession.hasToken) {
       return NetworkResponse<NavigationSessionModel>(
@@ -255,6 +261,8 @@ class TripsDataSource {
         data: {
           'route_request_id': routeRequestId,
           'route_alternative_id': routeAlternativeId,
+          if (routeReviewId != null && routeReviewId.isNotEmpty)
+            'route_review_id': routeReviewId,
           if (currentLocation != null)
             'current_location': {
               'lat': currentLocation.lat,

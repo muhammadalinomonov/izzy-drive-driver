@@ -56,11 +56,13 @@ class TripsRepoImpl extends TripsRepo {
     required String routeRequestId,
     required String routeAlternativeId,
     TripCoordinate? currentLocation,
+    String? routeReviewId,
   }) {
     return dataSource.createNavigationSession(
       routeRequestId: routeRequestId,
       routeAlternativeId: routeAlternativeId,
       currentLocation: currentLocation,
+      routeReviewId: routeReviewId,
     );
   }
 

@@ -1,26 +1,40 @@
 import 'package:taxi_app/core/network/network_response.dart';
 import 'package:taxi_app/features/trips/data/model/route_support_model.dart';
 
-/// Premium route support: the driver asks an agent to review a priced route
-/// and keeps a conversation about it (docs/ui/8-2.png).
+/// Premium route support: the driver asks a dispatcher to review a priced
+/// route, then follows the review's decisions, fuel stops and Drive
+/// availability (docs/ui/8-2.png, docs/mobile-chat-route-fuel-drive.md §4/§5).
+///
+/// Every method answers with the whole review - the contract's own reconcile
+/// rule is "replace UI state from the REST detail", so callers never merge.
 abstract class RouteSupportRepo {
-  /// Creates the route review [request] is about and returns its id plus
-  /// whatever messages it already has (normally none, right after creation).
+  /// Creates the route review [request] is about.
   ///
   /// [idempotencyKey] should stay the same across retries of the same
-  /// request - the API dedupes create calls by it (docs
-  /// /mobile-fuel-api-websocket.md §4.1) - and only change for a genuinely
-  /// new request.
-  Future<NetworkResponse<RouteReviewThread>> startReview(
+  /// request - the API dedupes create calls by it (§4.2) - and only change
+  /// for a genuinely new request.
+  Future<NetworkResponse<RouteReviewDetail>> startReview(
     RouteSupportRequest request, {
     required String idempotencyKey,
   });
 
-  /// Posts [text] to [routeReviewId] and returns the review's full, updated
-  /// message list - the endpoint answers with the whole review, not one
-  /// message (docs/mobile-api.md §8.3), so callers replace rather than append.
-  Future<NetworkResponse<RouteReviewThread>> sendMessage({
+  /// Re-reads [routeReviewId]. Called whenever the review may have changed:
+  /// on resume, and as the reconcile step behind every dispatcher action,
+  /// since decisions are never delivered as chat payloads.
+  Future<NetworkResponse<RouteReviewDetail>> fetchReview(String routeReviewId);
+
+  /// Posts [text] to [routeReviewId]. Answers with the review, its `messages`
+  /// including the new one.
+  Future<NetworkResponse<RouteReviewDetail>> sendMessage({
     required String routeReviewId,
     required String text,
+  });
+
+  /// Accepts a dispatcher-recommended fuel stop, which is what puts it on the
+  /// navigation route (§5). A driver can only accept a stop, never request
+  /// one - the backend has no endpoint for the latter.
+  Future<NetworkResponse<RouteReviewDetail>> confirmFuelRecommendation({
+    required String routeReviewId,
+    required String recommendationId,
   });
 }

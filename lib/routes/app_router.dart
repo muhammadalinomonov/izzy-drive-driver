@@ -219,6 +219,8 @@ class Routes {
             create: (_) => RouteSupportBloc(
               request: request,
               repo: getIt<RouteSupportRepo>(),
+              tripsRepo: getIt<TripsRepo>(),
+              locationService: getIt<LocationService>(),
             ),
             child: RouteSupportPage(request: request),
           );

@@ -57,6 +57,8 @@ abstract class  LocaleKeys {
   static const auth_signIn_loginFailed = 'auth.signIn.loginFailed';
   static const auth_signIn_googleFailed = 'auth.signIn.googleFailed';
   static const auth_signIn_appleFailed = 'auth.signIn.appleFailed';
+  static const auth_signIn_tollConnectFailed = 'auth.signIn.tollConnectFailed';
+  static const auth_signIn_tollPasswordChangeRequired = 'auth.signIn.tollPasswordChangeRequired';
   static const auth_signIn = 'auth.signIn';
   static const auth_signUp_title = 'auth.signUp.title';
   static const auth_signUp_emailHint = 'auth.signUp.emailHint';

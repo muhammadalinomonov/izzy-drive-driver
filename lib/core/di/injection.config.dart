@@ -19,6 +19,10 @@ import 'package:taxi_app/core/network/toll_dio.dart' as _i1047;
 import 'package:taxi_app/core/services/connectivity_service.dart' as _i648;
 import 'package:taxi_app/core/services/websocket_service.dart' as _i803;
 import 'package:taxi_app/features/auth/data/repo/auth_repo_impl.dart' as _i200;
+import 'package:taxi_app/features/auth/data/repo/auth_repo_impl_2.dart'
+    as _i259;
+import 'package:taxi_app/features/auth/data/source/auth2_data_source.dart'
+    as _i608;
 import 'package:taxi_app/features/auth/data/source/auth_data_source.dart'
     as _i922;
 import 'package:taxi_app/features/auth/domain/repo/auth_repo.dart' as _i102;
@@ -211,6 +215,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i927.SupportChatDataSource>(
       () => _i927.SupportChatDataSource(),
     );
+    gh.lazySingleton<_i608.Auth2DataSource>(() => _i608.Auth2DataSource());
     gh.lazySingleton<_i27.OrderRepository>(
       () => _i27.OrderRepositoryImpl(
         orderProccessSource: gh<_i716.OrderProccessSource>(),
@@ -256,6 +261,10 @@ extension GetItInjectableX on _i174.GetIt {
         dataSource: gh<_i515.FuelStationsDataSource>(),
       ),
     );
+    gh.lazySingleton<_i102.AuthRepo>(
+      () => _i259.AuthRepoImpl2(auth2DataSource: gh<_i608.Auth2DataSource>()),
+      instanceName: 'auth2',
+    );
     gh.factory<_i671.ProposalBloc>(
       () => _i671.ProposalBloc(gh<_i982.HomeRepository>()),
     );
@@ -273,6 +282,10 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i668.ActiveOrderRepositoryImpl(
         activeOrderSource: gh<_i612.ActiveOrderSource>(),
       ),
+    );
+    gh.lazySingleton<_i102.AuthRepo>(
+      () => _i200.AuthRepoImpl(authDataSource: gh<_i922.AuthDataSource>()),
+      instanceName: 'auth1',
     );
     gh.factory<_i729.MapBloc>(
       () => _i729.MapBloc(mapRepo: gh<_i425.MapRepo>()),
@@ -298,9 +311,6 @@ extension GetItInjectableX on _i174.GetIt {
         dataSource: gh<_i599.RouteSupportDataSource>(),
       ),
     );
-    gh.lazySingleton<_i102.AuthRepo>(
-      () => _i200.AuthRepoImpl(authDataSource: gh<_i922.AuthDataSource>()),
-    );
     gh.factory<_i869.TripsBloc>(
       () => _i869.TripsBloc(repo: gh<_i106.TripsRepo>()),
     );
@@ -309,9 +319,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i979.ConnectivityCubit>(
       () => _i979.ConnectivityCubit(gh<_i648.ConnectivityService>()),
-    );
-    gh.factory<_i1069.AuthBloc>(
-      () => _i1069.AuthBloc(authRepo: gh<_i102.AuthRepo>()),
     );
     gh.factory<_i79.OrdersBloc>(
       () => _i79.OrdersBloc(orderRepository: gh<_i27.OrderRepository>()),
@@ -330,6 +337,12 @@ extension GetItInjectableX on _i174.GetIt {
         locationService: gh<_i120.LocationService>(),
       ),
     );
+    gh.factoryParam<_i882.ForgotPasswordBloc, String?, dynamic>(
+      (seedResetToken, _) => _i882.ForgotPasswordBloc(
+        authRepo: gh<_i102.AuthRepo>(instanceName: 'auth1'),
+        seedResetToken: seedResetToken,
+      ),
+    );
     gh.factory<_i809.MasterBloc>(
       () => _i809.MasterBloc(
         gh<_i502.MasterRepository>(),
@@ -343,6 +356,10 @@ extension GetItInjectableX on _i174.GetIt {
         fuelStationsRepo: gh<_i736.FuelStationsRepo>(),
       ),
     );
+    gh.factory<_i1069.AuthBloc>(
+      () =>
+          _i1069.AuthBloc(authRepo: gh<_i102.AuthRepo>(instanceName: 'auth2')),
+    );
     gh.factory<_i204.InivitesBloc>(
       () => _i204.InivitesBloc(
         activeOrderRepository: gh<_i946.ActiveOrderRepository>(),
@@ -350,12 +367,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i822.TrackInfoBloc>(
       () => _i822.TrackInfoBloc(driverInfoRepo: gh<_i677.DriverInfoRepo>()),
-    );
-    gh.factoryParam<_i882.ForgotPasswordBloc, String?, dynamic>(
-      (seedResetToken, _) => _i882.ForgotPasswordBloc(
-        authRepo: gh<_i102.AuthRepo>(),
-        seedResetToken: seedResetToken,
-      ),
     );
     return this;
   }

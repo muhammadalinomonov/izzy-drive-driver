@@ -57,7 +57,9 @@
       "registerCta": "Ro'xatdan o'tish",
       "loginFailed": "Tizimga kirib bo'lmadi",
       "googleFailed": "Google orqali kirib bo'lmadi",
-      "appleFailed": "Apple orqali kirib bo'lmadi"
+      "appleFailed": "Apple orqali kirib bo'lmadi",
+      "tollConnectFailed": "Tizimga kirdingiz, lekin toll hisobini ulab bo‘lmadi",
+      "tollPasswordChangeRequired": "Toll hisobingiz uchun parolni almashtirish kerak"
     },
     "signUp": {
       "title": "Ro'yxatdan o'tish uchun ma'lumotlarni kiriting!",
@@ -283,6 +285,17 @@
     "premiumOnly": "Yordam chati faqat Premium haydovchilar uchun mavjud.",
     "supportFallbackName": "Qo'llab-quvvatlash",
     "reviewRequestMessage": "Men shu yo'nalish bo'ylab yurmoqchiman. Iltimos, tekshirib chiqing.",
-    "selectedRoute": "Tanlangan yo'nalish: {}"
+    "selectedRoute": "Tanlangan yo'nalish: {}",
+    "forGallon": "gallon uchun",
+    "statusPending": "Ko'rib chiqilmoqda",
+    "statusApproved": "Marshrut tasdiqlandi",
+    "statusAlternativeSuggested": "Boshqa marshrut taklif qilindi",
+    "statusDeclined": "Marshrut tasdiqlanmadi",
+    "statusCancelled": "So'rov yopildi",
+    "closedNotice": "So'rov yopilgan, bu yerga endi yozib bo'lmaydi.",
+    "fuelStopTitle": "Tavsiya etilgan yoqilg'i to'xtashi",
+    "confirmFuel": "Tasdiqlash",
+    "fuelConfirmed": "To'xtash tasdiqlandi",
+    "contractedPrice": "Karta narxi"
   }
 }

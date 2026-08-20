@@ -5,6 +5,10 @@ import 'package:taxi_app/features/auth/data/model/request_otp_model.dart';
 import 'package:taxi_app/features/auth/data/source/auth_data_source.dart';
 import 'package:taxi_app/features/auth/domain/repo/auth_repo.dart';
 
+/// Named `'auth1'` - the izzydrive session. Registered alongside
+/// [AuthRepoImpl2] (`'auth2'`) under the same [AuthRepo] type so `AuthBloc`
+/// can hold both and switch between them by name instead of by type.
+@Named('auth1')
 @LazySingleton(as: AuthRepo)
 class AuthRepoImpl extends AuthRepo {
   final AuthDataSource authDataSource;

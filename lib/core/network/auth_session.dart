@@ -9,6 +9,24 @@ class AuthSession {
   // Use as `refreshListenable:` on GoRouter.
   static final ValueNotifier<int> tick = ValueNotifier<int>(0);
 
+  // Which backend issued the token currently in `'token'`.
+  // Written by whichever data source persisted the session, read by the
+  // izzydrive dio interceptor so it can tell a genuinely expired izzydrive
+  // token from a toll token that api.izzydrive.com was never going to accept.
+  static const String _sourceKey = 'session_source';
+  static const String sourceAuth1 = 'auth1';
+  static const String sourceAuth2 = 'auth2';
+
+  static String get source => StorageRepository.getString(_sourceKey);
+
+  // True when the stored session came from the Quadrix toll backend, i.e.
+  // there is no `'refresh'` to spend and izzydrive will always reject it.
+  static bool get isTollSession => source == sourceAuth2;
+
+  static Future<void> setSource(String value) async {
+    await StorageRepository.putString(_sourceKey, value);
+  }
+
   static bool get isLoggedIn =>
       StorageRepository.getString('token').isNotEmpty;
 
@@ -20,6 +38,8 @@ class AuthSession {
   static Future<void> clear() async {
     await StorageRepository.deleteString('token');
     await StorageRepository.deleteString('refresh');
+    await StorageRepository.deleteString('responseID');
+    await StorageRepository.deleteString(_sourceKey);
     await StorageRepository.deleteBool('phone_verified');
     tick.value++;
   }

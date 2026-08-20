@@ -70,11 +70,36 @@ class TollApiConstants {
   /// docs describe one feature.
   static const String routeReviews = 'mobile/route-reviews';
 
+  /// `GET mobile/route-reviews/{id}` — the review's current state. The one
+  /// endpoint the whole screen reconciles against: dispatcher decisions,
+  /// suggested alternatives and fuel recommendations are never pushed as chat
+  /// payloads, they only ever appear here
+  /// (docs/mobile-chat-route-fuel-drive.md §2.2/§4.2). Another driver's review
+  /// answers 404 RESOURCE_NOT_FOUND.
+  static String routeReviewDetail(String routeReviewId) =>
+      'mobile/route-reviews/$routeReviewId';
+
   /// `POST mobile/route-reviews/{id}/messages` (docs §8.3). Response is the
   /// **full** route-review object, not a single message - callers should
   /// replace their message list from it, not append.
   static String routeReviewMessages(String routeReviewId) =>
       'mobile/route-reviews/$routeReviewId/messages';
+
+  /// `POST mobile/route-reviews/{id}/fuel-recommendations/{id}/confirm`
+  /// (docs/mobile-chat-route-fuel-drive.md §5) — the driver accepting a stop
+  /// the dispatcher put on the review. Body is an empty object; the response
+  /// is the full review with that recommendation's `confirmed` flipped.
+  ///
+  /// Confirming is what puts the station into the navigation route: the
+  /// backend adds it as a waypoint when the session is started with this
+  /// review's `route_review_id` (§6). There is no driver-initiated
+  /// counterpart - a driver cannot *request* a station, only accept one (§5).
+  static String routeReviewFuelConfirm(
+    String routeReviewId,
+    String recommendationId,
+  ) =>
+      'mobile/route-reviews/$routeReviewId/fuel-recommendations/'
+      '$recommendationId/confirm';
 
   // Navigation sessions
   static const String navigationSessions = 'mobile/navigation-sessions';

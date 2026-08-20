@@ -14,13 +14,15 @@ part 'forgot_password_state.dart';
 @injectable
 class ForgotPasswordBloc
     extends Bloc<ForgotPasswordEvent, ForgotPasswordState> {
+  /// `'auth1'` — password reset only exists on the izzydrive side; both
+  /// [AuthRepo] registrations are named now, so this must be qualified too.
   final AuthRepo authRepo;
 
   /// [seedResetToken] is supplied at call time, not resolved from the graph -
   /// it comes from the OTP screen the user just came through. Request via
   /// `getIt<ForgotPasswordBloc>(param1: token)`.
   ForgotPasswordBloc({
-    required this.authRepo,
+    @Named('auth1') required this.authRepo,
     @factoryParam String? seedResetToken,
   }) : super(ForgotPasswordState(resetToken: seedResetToken ?? '')) {
     on<RequestForgotOtpEvent>(_onRequestOtp);

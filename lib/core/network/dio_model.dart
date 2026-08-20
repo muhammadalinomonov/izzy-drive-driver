@@ -72,7 +72,13 @@ class DioSettings {
 
             final refreshToken = StorageRepository.getString('refresh');
             if (refreshToken.isEmpty) {
-              await AuthSession.clear();
+              // A toll-issued session has no izzydrive refresh token and never
+              // will - this 401 says "wrong backend", not "session expired".
+              // Clearing here would wipe a perfectly good toll login on the
+              // first izzydrive call and bounce the driver back to sign-in.
+              if (!AuthSession.isTollSession) {
+                await AuthSession.clear();
+              }
               return handler.reject(error);
             }
 
