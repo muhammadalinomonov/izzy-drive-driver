@@ -4,6 +4,7 @@ import 'package:taxi_app/core/extensions/status_code_extension.dart';
 import 'package:taxi_app/core/network/network_response.dart';
 import 'package:taxi_app/core/network/toll_api_constants.dart';
 import 'package:taxi_app/core/network/toll_dio.dart';
+import 'package:taxi_app/core/network/toll_envelope.dart';
 import 'package:taxi_app/core/network/toll_session.dart';
 import 'package:taxi_app/core/service_locater.dart';
 import 'package:taxi_app/core/utils/json_safe.dart';
@@ -78,6 +79,20 @@ class RouteSupportDataSource {
     );
   }
 
+  /// `POST .../cancel` — the driver withdrawing a still-`pending` request
+  /// (docs/mobile-chat-complete-api-websocket.md §9.4). Body is empty; the
+  /// response is the full review with `status: cancelled`.
+  Future<NetworkResponse<RouteReviewDetail>> cancelReview(
+    String routeReviewId,
+  ) {
+    return _review(
+      () => client.post(
+        TollApiConstants.routeReviewCancel(routeReviewId),
+        data: const <String, dynamic>{},
+      ),
+    );
+  }
+
   /// Shared envelope handling: every endpoint on this screen returns the full
   /// review under `data`, so they differ only in the request they issue.
   Future<NetworkResponse<RouteReviewDetail>> _review(
@@ -99,35 +114,16 @@ class RouteSupportDataSource {
         );
       }
       return NetworkResponse<RouteReviewDetail>(
-        errorText: _errorMessage(response.data),
-        errorCode: _errorCode(response.data),
+        errorText: tollErrorMessage(response.data),
+        errorCode: tollErrorCode(response.data),
       );
     } on DioException catch (e) {
       return NetworkResponse<RouteReviewDetail>(
-        errorText: _errorMessage(e.response?.data, 'Network error'),
-        errorCode: _errorCode(e.response?.data),
+        errorText: tollErrorMessage(e.response?.data, 'Network error'),
+        errorCode: tollErrorCode(e.response?.data),
       );
     } catch (e) {
       return NetworkResponse<RouteReviewDetail>(errorText: e.toString());
     }
-  }
-
-  static String _errorMessage(dynamic body, [String fallback = 'Server error']) {
-    if (body is Map) {
-      final error = body['error'];
-      if (error is Map) {
-        final message = error['message'];
-        if (message is String && message.isNotEmpty) return message;
-      }
-    }
-    return dioErrorMessage(body, fallback);
-  }
-
-  static String? _errorCode(dynamic body) {
-    if (body is! Map) return null;
-    final error = body['error'];
-    if (error is! Map) return null;
-    final code = error['code'];
-    return code is String && code.isNotEmpty ? code : null;
   }
 }

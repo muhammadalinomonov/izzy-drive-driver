@@ -1,6 +1,13 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:taxi_app/core/location_service.dart';
+import 'package:taxi_app/core/network/network_response.dart';
+import 'package:taxi_app/core/network/toll_session.dart';
+import 'package:taxi_app/core/service_locater.dart';
+import 'package:taxi_app/core/services/toll_reverb_service.dart';
+import 'package:taxi_app/core/utils/json_safe.dart';
 import 'package:taxi_app/features/trips/data/model/navigation_session_model.dart';
 import 'package:taxi_app/features/trips/data/model/route_support_model.dart';
 import 'package:taxi_app/features/trips/data/model/support_chat_model.dart';
@@ -25,9 +32,17 @@ part 'route_support_state.dart';
 /// wholesale rather than patching pieces of it.
 ///
 /// Hand-built in its route builder rather than resolved from GetIt: it takes
-/// the whole [RouteSupportRequest] as a runtime argument, which is more than
+/// the whole [RouteSupportPageArgs] as a runtime argument, which is more than
 /// `@factoryParam` carries comfortably - same reason `RouteOverviewBloc` is
 /// built there. Its dependencies still come from the container.
+///
+/// `RouteSupportPage`'s 15s poll timer stays as-is for now - see
+/// [TollReverbService]'s class doc for why it silently no-ops without a
+/// configured Reverb host. Once `_reverb` is subscribed, both frames it can
+/// receive for this review (`support.message.created` for its own id,
+/// `mobile.route-review.updated`) reduce to the exact same
+/// [RouteSupportRefreshed] the poll timer already fires - one refetch path,
+/// just triggered sooner when the socket is actually delivering.
 class RouteSupportBloc extends Bloc<RouteSupportEvent, RouteSupportState> {
   final RouteSupportRepo repo;
 
@@ -37,11 +52,20 @@ class RouteSupportBloc extends Bloc<RouteSupportEvent, RouteSupportState> {
 
   final LocationService locationService;
 
-  /// The route the conversation is about. Fixed for the life of the page, and
-  /// the only source of the endpoint address labels - the route API returns
-  /// coordinates and no address text at all
-  /// (docs/mobile-chat-route-fuel-drive.md §7).
-  final RouteSupportRequest request;
+  final TollReverbService _reverb = serviceLocator<TollReverbService>();
+  StreamSubscription<Map<String, dynamic>>? _reverbMessageSub;
+  StreamSubscription<Map<String, dynamic>>? _reverbReviewSub;
+  bool _reverbRetained = false;
+
+  /// `support.message.created` ids and `mobile.route-review.updated`
+  /// `event_id`s already turned into a `RouteSupportRefreshed`, so a
+  /// redelivered frame (reconnect) does not trigger a second refetch.
+  final Set<String> _seenSocketMessageIds = {};
+  final Set<String> _seenReviewEventIds = {};
+
+  /// How this page was opened - creating a new review, or opening one that
+  /// already exists. See [RouteSupportPageArgs].
+  final RouteSupportPageArgs args;
 
   /// Generated once per bloc instance - i.e. once per page visit - and reused
   /// across every create attempt for that visit, including a manual retry.
@@ -56,13 +80,14 @@ class RouteSupportBloc extends Bloc<RouteSupportEvent, RouteSupportState> {
     required this.repo,
     required this.tripsRepo,
     required this.locationService,
-    required this.request,
+    required this.args,
   }) : super(const RouteSupportState()) {
     on<RouteSupportStarted>(_onStarted);
     on<RouteSupportRefreshed>(_onRefreshed);
     on<RouteSupportMessageSent>(_onMessageSent);
     on<RouteSupportFuelConfirmed>(_onFuelConfirmed);
     on<RouteSupportDrivePressed>(_onDrivePressed);
+    on<RouteSupportCancelled>(_onCancelled);
   }
 
   Future<void> _onStarted(
@@ -74,10 +99,26 @@ class RouteSupportBloc extends Bloc<RouteSupportEvent, RouteSupportState> {
       errorMessage: '',
     ));
 
-    final response = await repo.startReview(
-      request,
-      idempotencyKey: _createIdempotencyKey,
-    );
+    final existingReviewId = args.reviewId;
+    final NetworkResponse<RouteReviewDetail> response;
+    if (existingReviewId != null) {
+      response = await repo.fetchReview(existingReviewId);
+    } else {
+      // Checked here rather than only at the button that opens this page:
+      // the doc is explicit that `is_paid_user` alone does not mean route
+      // review is available (docs/mobile-chat-complete-api-websocket.md
+      // §3.3), and this is the one place every create attempt - including a
+      // retry - actually goes through.
+      if (!await TollSession.ensureRouteReviewAvailable()) {
+        emit(state.copyWith(status: RouteSupportStatus.notAvailable));
+        return;
+      }
+      response = await repo.startReview(
+        args.request!,
+        idempotencyKey: _createIdempotencyKey,
+      );
+    }
+
     if (response.errorText.isNotEmpty || response.data == null) {
       emit(state.copyWith(
         status: RouteSupportStatus.failure,
@@ -90,6 +131,44 @@ class RouteSupportBloc extends Bloc<RouteSupportEvent, RouteSupportState> {
       status: RouteSupportStatus.ready,
       review: response.data,
     ));
+
+    _retainReverb();
+  }
+
+  void _retainReverb() {
+    if (_reverbRetained) return;
+    _reverbRetained = true;
+    _reverb.connect();
+    _reverbMessageSub ??= _reverb.supportMessageCreated.listen(_onReverbMessage);
+    _reverbReviewSub ??= _reverb.routeReviewUpdated.listen(_onReverbReviewUpdated);
+  }
+
+  /// A `support.message.created` frame - only relevant here when it belongs
+  /// to this bloc's own review (docs/support-chat-api.md §2.1). The frame
+  /// carries the message in full, but this screen replaces state wholesale
+  /// rather than patching it in (§4.2's rule), so it is treated exactly like
+  /// `mobile.route-review.updated`: a signal to re-fetch.
+  void _onReverbMessage(Map<String, dynamic> data) {
+    final reviewId = state.review?.id;
+    if (reviewId == null || reviewId.isEmpty) return;
+    final message = toMap(data['message']);
+    if (toStr(message['route_review_id']) != reviewId) return;
+    final messageId = toStr(message['id']);
+    if (messageId.isEmpty || !_seenSocketMessageIds.add(messageId)) return;
+    add(const RouteSupportRefreshed());
+  }
+
+  /// A `mobile.route-review.updated` frame (docs/support-chat-api.md §2.2).
+  /// Deliberately reads nothing out of the payload beyond the ids needed to
+  /// route and dedupe it - `mobile_result_endpoint` is not followed either,
+  /// [RouteSupportRefreshed] already re-reads the same review by id.
+  void _onReverbReviewUpdated(Map<String, dynamic> data) {
+    final reviewId = state.review?.id;
+    if (reviewId == null || reviewId.isEmpty) return;
+    if (toStr(data['route_review_id']) != reviewId) return;
+    final eventId = toStr(data['event_id']);
+    if (eventId.isEmpty || !_seenReviewEventIds.add(eventId)) return;
+    add(const RouteSupportRefreshed());
   }
 
   /// Silent re-read. Drops out while any mutation is in flight: those answer
@@ -198,11 +277,13 @@ class RouteSupportBloc extends Bloc<RouteSupportEvent, RouteSupportState> {
     final position = await locationService.getCurrentLocation();
 
     final response = await tripsRepo.createNavigationSession(
-      // The review carries the route request it belongs to; the request the
-      // page opened with is the same one, and stands in if the field is absent.
+      // The review carries the route request it belongs to; a create-mode
+      // request is the same one and stands in if the field is somehow
+      // absent. An open-existing review has no local fallback, but
+      // `routeRequestId` should always be populated by then anyway.
       routeRequestId: review.routeRequestId.isNotEmpty
           ? review.routeRequestId
-          : request.routeId,
+          : (args.request?.routeId ?? ''),
       routeAlternativeId: approved.id,
       routeReviewId: review.id,
       currentLocation: position == null
@@ -223,5 +304,37 @@ class RouteSupportBloc extends Bloc<RouteSupportEvent, RouteSupportState> {
       session: response.data,
       driveTick: state.driveTick + 1,
     ));
+  }
+
+  /// `POST .../cancel` (§9.4) - withdraws a still-`pending` request. Answers
+  /// with the full review (`status: cancelled`), so this replaces state the
+  /// same way every other mutation here does.
+  Future<void> _onCancelled(
+    RouteSupportCancelled event,
+    Emitter<RouteSupportState> emit,
+  ) async {
+    final reviewId = state.review?.id;
+    if (reviewId == null || state.cancelling || !state.canCancel) return;
+
+    emit(state.copyWith(cancelling: true, cancelError: ''));
+
+    final response = await repo.cancelReview(reviewId);
+    if (response.errorText.isNotEmpty || response.data == null) {
+      emit(state.copyWith(cancelling: false, cancelError: response.errorText));
+      return;
+    }
+
+    emit(state.copyWith(cancelling: false, review: response.data));
+  }
+
+  @override
+  Future<void> close() {
+    _reverbMessageSub?.cancel();
+    _reverbReviewSub?.cancel();
+    if (_reverbRetained) {
+      _reverb.disconnect();
+      _reverbRetained = false;
+    }
+    return super.close();
   }
 }

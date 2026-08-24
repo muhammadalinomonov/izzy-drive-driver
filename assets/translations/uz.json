@@ -296,6 +296,13 @@
     "fuelStopTitle": "Tavsiya etilgan yoqilg'i to'xtashi",
     "confirmFuel": "Tasdiqlash",
     "fuelConfirmed": "To'xtash tasdiqlandi",
-    "contractedPrice": "Karta narxi"
+    "contractedPrice": "Karta narxi",
+    "cancelRequest": "So'rovni bekor qilish",
+    "cancelTitle": "Bu so'rov bekor qilinsinmi?",
+    "cancelMessage": "Support endi bu marshrutni ko'rib chiqmaydi. Istalgan vaqtda yangi so'rov yuborishingiz mumkin.",
+    "cancelDismiss": "Qoldirish",
+    "cancelConfirm": "So'rovni bekor qilish",
+    "notAvailable": "Hozircha marshrutni tekshirish sizning hisobingiz uchun mavjud emas.",
+    "comingSoon": "Ilova fayllar va ovozli xabarlar hozircha qo'llab-quvvatlanmaydi."
   }
 }

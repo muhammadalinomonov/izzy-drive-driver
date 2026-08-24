@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:easy_localization/easy_localization.dart';
@@ -9,6 +10,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 import 'package:taxi_app/core/components/app_snack_bar.dart';
 import 'package:taxi_app/core/constants/color/app_color.dart';
 import 'package:taxi_app/core/constants/color/app_icons.dart';
+import 'package:taxi_app/core/network/toll_session.dart';
 import 'package:taxi_app/core/session/premium_session.dart';
 import 'package:taxi_app/core/utils/polyline_codec.dart';
 import 'package:taxi_app/features/trips/data/model/place_model.dart';
@@ -113,6 +115,11 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
   void initState() {
     super.initState();
     _sheetController.addListener(_onSheetMoved);
+    // Resolves `services.route_review.available` for the Send request button
+    // below (§3.3). Shares `ensureDriverId`'s bootstrap call, so on a warm
+    // session this costs nothing; the result lands on
+    // `TollSession.routeReviewListenable`, which the button listens to.
+    unawaited(TollSession.ensureRouteReviewAvailable());
     context.read<RouteOverviewBloc>().add(
           RouteOverviewStarted(
             originFallbackLabel: 'trips.origin'.tr(),
@@ -346,12 +353,14 @@ class _RouteOverviewPageState extends State<RouteOverviewPage> {
     }
     context.push(
       Pages.routeSupport,
-      extra: RouteSupportRequest.fromRoute(
-        trip: state.trip,
-        alternative: alternative,
-        alternativeLabel: _alternativeLabel(state.trip, alternative.id),
-        origin: state.origin!,
-        destination: state.destination!,
+      extra: RouteSupportPageArgs.create(
+        RouteSupportRequest.fromRoute(
+          trip: state.trip,
+          alternative: alternative,
+          alternativeLabel: _alternativeLabel(state.trip, alternative.id),
+          origin: state.origin!,
+          destination: state.destination!,
+        ),
       ),
     );
   }
@@ -1175,13 +1184,25 @@ class _PinnedFooter extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: _ActionButton(
-                          label: 'routeOverview.sendRequest'.tr(),
-                          // Starting a session must not be interruptible by a
-                          // second navigation, so this greys out with it.
-                          disabled: loading,
-                          onTap: onSendRequest,
-                          fontSize: 15,
+                        // Premium alone does not mean route review is
+                        // available: `services.route_review.available` folds
+                        // in plan/TollTally state that can be false for a
+                        // paying driver, and §16 says a driver without it
+                        // gets the paid-review UI disabled rather than a
+                        // `MOBILE_ROUTE_REVIEW_NOT_ENABLED` after tapping.
+                        child: ValueListenableBuilder<bool>(
+                          valueListenable: TollSession.routeReviewListenable,
+                          builder: (context, reviewAvailable, _) {
+                            return _ActionButton(
+                              label: 'routeOverview.sendRequest'.tr(),
+                              // Starting a session must not be interruptible
+                              // by a second navigation, so this greys out
+                              // with it.
+                              disabled: loading || !reviewAvailable,
+                              onTap: onSendRequest,
+                              fontSize: 15,
+                            );
+                          },
                         ),
                       ),
                     ],

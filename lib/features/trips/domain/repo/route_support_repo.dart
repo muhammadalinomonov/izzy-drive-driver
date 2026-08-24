@@ -37,4 +37,10 @@ abstract class RouteSupportRepo {
     required String routeReviewId,
     required String recommendationId,
   });
+
+  /// Withdraws a still-`pending` review
+  /// (docs/mobile-chat-complete-api-websocket.md §9.4).
+  Future<NetworkResponse<RouteReviewDetail>> cancelReview(
+    String routeReviewId,
+  );
 }

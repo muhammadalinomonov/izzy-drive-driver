@@ -32,11 +32,11 @@ import 'package:taxi_app/features/notifications/presentation/bloc/notifications_
 import 'package:taxi_app/features/trips/presentation/bloc/navigation/navigation_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/route_overview/route_overview_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/route_support/route_support_bloc.dart';
-import 'package:taxi_app/features/trips/presentation/bloc/support_chat/support_chat_bloc.dart';
+import 'package:taxi_app/features/trips/presentation/bloc/support_timeline/support_timeline_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/trip_map/trip_map_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/trips_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/pages/driving_mode_page.dart';
-import 'package:taxi_app/features/trips/presentation/pages/support_message_page.dart';
+import 'package:taxi_app/features/trips/presentation/pages/support_timeline_page.dart';
 import 'package:taxi_app/features/trips/presentation/pages/route_overview_page.dart';
 import 'package:taxi_app/features/trips/presentation/pages/route_support_page.dart';
 import 'package:taxi_app/features/trips/presentation/pages/trip_map_page.dart';
@@ -205,24 +205,25 @@ class Routes {
       GoRoute(
         path: Pages.supportMessage,
         builder: (context, state) => BlocProvider(
-          create: (_) => getIt<SupportChatBloc>(),
-          child: const SupportMessagePage(),
+          create: (_) => getIt<SupportTimelineBloc>(),
+          child: const SupportTimelinePage(),
         ),
       ),
       GoRoute(
         path: Pages.routeSupport,
         builder: (context, state) {
-          final request = state.extra as RouteSupportRequest;
+          final args = state.extra as RouteSupportPageArgs;
           return BlocProvider(
-            // Hand-built: the whole request is a runtime argument, more than
-            // @factoryParam carries - same shape as RouteOverviewBloc above.
+            // Hand-built: the whole args object is a runtime argument, more
+            // than @factoryParam carries - same shape as RouteOverviewBloc
+            // above.
             create: (_) => RouteSupportBloc(
-              request: request,
+              args: args,
               repo: getIt<RouteSupportRepo>(),
               tripsRepo: getIt<TripsRepo>(),
               locationService: getIt<LocationService>(),
             ),
-            child: RouteSupportPage(request: request),
+            child: RouteSupportPage(args: args),
           );
         },
       ),

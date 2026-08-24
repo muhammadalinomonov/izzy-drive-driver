@@ -17,6 +17,7 @@ import 'package:taxi_app/core/network/dio_model.dart' as _i848;
 import 'package:taxi_app/core/network/token_service.dart' as _i805;
 import 'package:taxi_app/core/network/toll_dio.dart' as _i1047;
 import 'package:taxi_app/core/services/connectivity_service.dart' as _i648;
+import 'package:taxi_app/core/services/toll_reverb_service.dart' as _i869;
 import 'package:taxi_app/core/services/websocket_service.dart' as _i803;
 import 'package:taxi_app/features/auth/data/repo/auth_repo_impl.dart' as _i200;
 import 'package:taxi_app/features/auth/data/repo/auth_repo_impl_2.dart'
@@ -136,8 +137,8 @@ import 'package:taxi_app/features/trips/domain/repo/support_chat_repo.dart'
 import 'package:taxi_app/features/trips/domain/repo/trips_repo.dart' as _i106;
 import 'package:taxi_app/features/trips/presentation/bloc/navigation/navigation_bloc.dart'
     as _i317;
-import 'package:taxi_app/features/trips/presentation/bloc/support_chat/support_chat_bloc.dart'
-    as _i285;
+import 'package:taxi_app/features/trips/presentation/bloc/support_timeline/support_timeline_bloc.dart'
+    as _i858;
 import 'package:taxi_app/features/trips/presentation/bloc/trip_map/trip_map_bloc.dart'
     as _i50;
 import 'package:taxi_app/features/trips/presentation/bloc/trips_bloc.dart'
@@ -216,6 +217,7 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i927.SupportChatDataSource(),
     );
     gh.lazySingleton<_i608.Auth2DataSource>(() => _i608.Auth2DataSource());
+    gh.lazySingleton<_i869.TollReverbService>(() => _i869.TollReverbService());
     gh.lazySingleton<_i27.OrderRepository>(
       () => _i27.OrderRepositoryImpl(
         orderProccessSource: gh<_i716.OrderProccessSource>(),
@@ -314,8 +316,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i869.TripsBloc>(
       () => _i869.TripsBloc(repo: gh<_i106.TripsRepo>()),
     );
-    gh.factory<_i285.SupportChatBloc>(
-      () => _i285.SupportChatBloc(repo: gh<_i589.SupportChatRepo>()),
+    gh.factory<_i858.SupportTimelineBloc>(
+      () => _i858.SupportTimelineBloc(repo: gh<_i589.SupportChatRepo>()),
     );
     gh.factory<_i979.ConnectivityCubit>(
       () => _i979.ConnectivityCubit(gh<_i648.ConnectivityService>()),

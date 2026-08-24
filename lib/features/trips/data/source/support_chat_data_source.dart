@@ -4,24 +4,69 @@ import 'package:taxi_app/core/extensions/status_code_extension.dart';
 import 'package:taxi_app/core/network/network_response.dart';
 import 'package:taxi_app/core/network/toll_api_constants.dart';
 import 'package:taxi_app/core/network/toll_dio.dart';
+import 'package:taxi_app/core/network/toll_envelope.dart';
 import 'package:taxi_app/core/network/toll_session.dart';
 import 'package:taxi_app/core/service_locater.dart';
 import 'package:taxi_app/core/utils/json_safe.dart';
 import 'package:taxi_app/features/trips/data/model/support_chat_model.dart';
+import 'package:taxi_app/features/trips/data/model/support_timeline_model.dart';
 
-/// Normal support chat (docs/mobile-api.md §8.1/§8.2) - the one conversation
-/// shared by every "Support Message" entry point in the app. Not yet live per
-/// that doc's own callout; this source is written against its exact
-/// specification so nothing here needs to change once the backend catches up.
+/// Normal support chat (docs/mobile-api.md §8.1/§8.2) plus the unified
+/// timeline view that supersedes it as the driver's main screen
+/// (docs/mobile-chat-complete-api-websocket.md §6) - both live on the same
+/// `mobile/support-chat` resource, so one data source owns both.
 @lazySingleton
 class SupportChatDataSource {
   SupportChatDataSource();
 
   final client = serviceLocator.get<TollDioSettings>().dio;
 
-  /// `GET mobile/support-chat` — newest-first (§8.1). `data.conversation` is
-  /// deliberately not parsed: nothing in this app's UI needs the conversation
-  /// envelope, only the messages inside it.
+  /// `GET mobile/support-chat?view=timeline` — the driver's single merged
+  /// feed: plain messages and route-review cards, newest-first, discriminated
+  /// by `type` (§6.1/§6.2). This is what the unified support screen loads;
+  /// [fetchHistory] stays for the legacy message-only shape, which the
+  /// backend keeps serving unchanged (§6.4).
+  Future<NetworkResponse<SupportTimelinePage>> fetchTimeline({
+    int page = 1,
+    int perPage = 50,
+  }) async {
+    if (!TollSession.hasToken) {
+      return NetworkResponse<SupportTimelinePage>(
+        errorText: 'Toll account is not connected.',
+        errorCode: 'TOLL_SESSION_MISSING',
+      );
+    }
+    try {
+      final response = await client.get(
+        TollApiConstants.supportChat,
+        queryParameters: {'view': 'timeline', 'page': page, 'per_page': perPage},
+      );
+      if (response.isSuccess) {
+        final body = toMap(response.data);
+        return NetworkResponse<SupportTimelinePage>(
+          data: SupportTimelinePage.fromJson(
+            toMap(body['data']),
+            toMap(body['pagination']),
+          ),
+        );
+      }
+      return NetworkResponse<SupportTimelinePage>(
+        errorText: tollErrorMessage(response.data),
+        errorCode: tollErrorCode(response.data),
+      );
+    } on DioException catch (e) {
+      return NetworkResponse<SupportTimelinePage>(
+        errorText: tollErrorMessage(e.response?.data, 'Network error'),
+        errorCode: tollErrorCode(e.response?.data),
+      );
+    } catch (e) {
+      return NetworkResponse<SupportTimelinePage>(errorText: e.toString());
+    }
+  }
+
+  /// `GET mobile/support-chat` — legacy message-only history, newest-first
+  /// (§6.4). `data.conversation` is deliberately not parsed: nothing in this
+  /// app's UI needs the conversation envelope, only the messages inside it.
   Future<NetworkResponse<SupportChatPage>> fetchHistory({
     int page = 1,
     int perPage = 50,
@@ -47,13 +92,13 @@ class SupportChatDataSource {
         );
       }
       return NetworkResponse<SupportChatPage>(
-        errorText: _errorMessage(response.data),
-        errorCode: _errorCode(response.data),
+        errorText: tollErrorMessage(response.data),
+        errorCode: tollErrorCode(response.data),
       );
     } on DioException catch (e) {
       return NetworkResponse<SupportChatPage>(
-        errorText: _errorMessage(e.response?.data, 'Network error'),
-        errorCode: _errorCode(e.response?.data),
+        errorText: tollErrorMessage(e.response?.data, 'Network error'),
+        errorCode: tollErrorCode(e.response?.data),
       );
     } catch (e) {
       return NetworkResponse<SupportChatPage>(errorText: e.toString());
@@ -83,36 +128,16 @@ class SupportChatDataSource {
         );
       }
       return NetworkResponse<SupportChatMessage>(
-        errorText: _errorMessage(response.data),
-        errorCode: _errorCode(response.data),
+        errorText: tollErrorMessage(response.data),
+        errorCode: tollErrorCode(response.data),
       );
     } on DioException catch (e) {
       return NetworkResponse<SupportChatMessage>(
-        errorText: _errorMessage(e.response?.data, 'Network error'),
-        errorCode: _errorCode(e.response?.data),
+        errorText: tollErrorMessage(e.response?.data, 'Network error'),
+        errorCode: tollErrorCode(e.response?.data),
       );
     } catch (e) {
       return NetworkResponse<SupportChatMessage>(errorText: e.toString());
     }
-  }
-
-  /// Same nested-`error` envelope every toll-API source parses.
-  static String _errorMessage(dynamic body, [String fallback = 'Server error']) {
-    if (body is Map) {
-      final error = body['error'];
-      if (error is Map) {
-        final message = error['message'];
-        if (message is String && message.isNotEmpty) return message;
-      }
-    }
-    return dioErrorMessage(body, fallback);
-  }
-
-  static String? _errorCode(dynamic body) {
-    if (body is! Map) return null;
-    final error = body['error'];
-    if (error is! Map) return null;
-    final code = error['code'];
-    return code is String && code.isNotEmpty ? code : null;
   }
 }

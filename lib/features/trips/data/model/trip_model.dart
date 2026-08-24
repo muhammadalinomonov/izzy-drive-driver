@@ -50,6 +50,13 @@ class TripCoordinate {
       lng: toDouble(json['lng']),
     );
   }
+
+  /// `"39.9526, -75.1652"` - the only label available when a screen has no
+  /// address text of its own to show. The toll API returns coordinates only,
+  /// never a street address (docs/mobile-chat-complete-api-websocket.md §6.3),
+  /// so this is the honest fallback rather than a guess dressed up as one.
+  String get shortLabel =>
+      '${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}';
 }
 
 class TripVehicle {

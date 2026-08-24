@@ -1,60 +1,52 @@
-import 'dart:async';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:taxi_app/core/components/app_snack_bar.dart';
 import 'package:taxi_app/core/constants/color/app_color.dart';
+import 'package:taxi_app/core/services/support_reconciler.dart';
 import 'package:taxi_app/features/trips/data/model/route_support_model.dart';
-import 'package:taxi_app/features/trips/data/model/support_chat_model.dart';
 import 'package:taxi_app/features/trips/presentation/bloc/route_support/route_support_bloc.dart';
 import 'package:taxi_app/features/trips/presentation/pages/driving_mode_page.dart';
 import 'package:taxi_app/features/trips/presentation/widgets/route_support_card.dart';
 import 'package:taxi_app/features/trips/presentation/widgets/support_chat.dart';
 import 'package:taxi_app/routes/pages.dart';
 
-/// Route review thread (docs/ui/8-2.png), opened from **Send request** on the
-/// route overview screen by Premium drivers.
+/// Route review thread (docs/ui/8-2.png), opened either from **Send request**
+/// on the route overview screen (creates a new review) or by tapping a review
+/// card in the unified support timeline (`support_timeline_page.dart`, opens
+/// an existing one) - see [RouteSupportPageArgs].
 ///
 /// The screen is a view onto one route-review object, not onto a chat. Per
-/// `docs/mobile-chat-route-fuel-drive.md`, a dispatcher's decision, an
+/// `docs/mobile-chat-complete-api-websocket.md`, a dispatcher's decision, an
 /// alternative they suggest, a fuel stop they attach and whether the route may
 /// be driven are all fields on that object read back over REST - none of them
 /// arrive as message content. So the pinned card, the fuel stops and the Drive
 /// button here all render from `state.review`, and the messages below are only
 /// the conversation around it.
 ///
-/// The review is re-read on a timer and whenever the app comes back to the
-/// foreground. That stands in for the Reverb `mobile.route-review.updated`
-/// event, which this app has no client for yet - the event is only ever a
-/// signal to re-fetch anyway (§2.2), so polling reaches the same state, just
-/// later. Wiring the socket up later replaces [_refreshInterval] and changes
-/// nothing else on this screen.
+/// The review is re-read on §14.4's reconcile triggers, owned by
+/// [SupportReconciler]: socket resubscribe, app resume, and a watchdog that
+/// only keeps ticking while the review is still pending - or, while the
+/// socket is down, a plain poll, since REST is then the only way a
+/// dispatcher's decision can reach a driver sitting on this screen.
 class RouteSupportPage extends StatefulWidget {
-  const RouteSupportPage({super.key, required this.request});
+  const RouteSupportPage({super.key, required this.args});
 
-  /// The route the conversation is about. Also the body the create call
-  /// carries, and the only source of the endpoint address labels - the route
+  /// How this page was opened - see [RouteSupportPageArgs]. Also the only
+  /// source of the endpoint address labels when creating a review: the route
   /// API returns coordinates and no address text (§7).
-  final RouteSupportRequest request;
+  final RouteSupportPageArgs args;
 
   @override
   State<RouteSupportPage> createState() => _RouteSupportPageState();
 }
 
-class _RouteSupportPageState extends State<RouteSupportPage>
-    with WidgetsBindingObserver {
-  /// Slow enough not to hammer an endpoint that mostly answers "nothing
-  /// changed", quick enough that a dispatcher's approval doesn't feel lost.
-  /// The driver is looking at this screen while they wait, so a resume
-  /// refresh alone would not be enough.
-  static const Duration _refreshInterval = Duration(seconds: 15);
-
+class _RouteSupportPageState extends State<RouteSupportPage> {
   final TextEditingController _composer = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  Timer? _refreshTimer;
+  late final SupportReconciler _reconciler;
 
   /// Message count the composer was cleared at - see
   /// `support_message_page.dart`'s identical guard for why this exists: a
@@ -64,26 +56,22 @@ class _RouteSupportPageState extends State<RouteSupportPage>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     context.read<RouteSupportBloc>().add(const RouteSupportStarted());
-    _refreshTimer = Timer.periodic(_refreshInterval, (_) => _refresh());
+    _reconciler = SupportReconciler(
+      onReconcile: _refresh,
+      // Once the review is settled - approved, declined, cancelled - nothing
+      // else is coming for it over REST either, so the watchdog stands down
+      // and the socket alone covers any late change.
+      isPending: () => !context.read<RouteSupportBloc>().state.isClosed,
+    )..start();
   }
 
   @override
   void dispose() {
-    _refreshTimer?.cancel();
-    WidgetsBinding.instance.removeObserver(this);
+    _reconciler.stop();
     _composer.dispose();
     _scrollController.dispose();
     super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Coming back from the background is exactly the case the contract calls
-    // out for a REST catch-up (§7) - anything that changed while away has to
-    // be re-read, since nothing was buffered for us.
-    if (state == AppLifecycleState.resumed) _refresh();
   }
 
   void _refresh() {
@@ -124,6 +112,51 @@ class _RouteSupportPageState extends State<RouteSupportPage>
     context.read<RouteSupportBloc>().add(const RouteSupportDrivePressed());
   }
 
+  /// Cancelling withdraws a still-`pending` request server-side and there is
+  /// no undo, so it is confirmed first - same reasoning as
+  /// `driving_mode_page.dart`'s identical dialog for ending a trip.
+  Future<void> _onCancel() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColor.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'routeSupport.cancelTitle'.tr(),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColor.black,
+          ),
+        ),
+        content: Text(
+          'routeSupport.cancelMessage'.tr(),
+          style: TextStyle(fontSize: 13, color: AppColor.black),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(
+              'routeSupport.cancelDismiss'.tr(),
+              style: TextStyle(color: AppColor.black, fontSize: 13),
+            ),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColor.red),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(
+              'routeSupport.cancelConfirm'.tr(),
+              style: const TextStyle(fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+    context.read<RouteSupportBloc>().add(const RouteSupportCancelled());
+  }
+
   void _onStateChanged(BuildContext context, RouteSupportState state) {
     if (state.messages.isNotEmpty) _scrollToEnd();
 
@@ -131,12 +164,16 @@ class _RouteSupportPageState extends State<RouteSupportPage>
     if (session != null && state.driveTick > 0) {
       // Same dead-end rule as the route overview: once guidance is running,
       // backing out of driving mode must not land on a review whose route is
-      // already under way.
+      // already under way. Falls back to the review's own coordinates when
+      // this page was opened on an existing review rather than created from
+      // a local request.
       context.pushReplacement(
         Pages.drivingMode,
         extra: DrivingModeArgs(
           session: session,
-          destinationLabel: widget.request.destination.fieldLabel,
+          destinationLabel: widget.args.request?.destination.fieldLabel ??
+              state.review?.destination?.shortLabel ??
+              '',
         ),
       );
       return;
@@ -148,6 +185,7 @@ class _RouteSupportPageState extends State<RouteSupportPage>
       state.sendError,
       state.confirmError,
       state.driveError,
+      state.cancelError,
     ]) {
       if (error.isNotEmpty) {
         AppSnackBar.showError(context, error);
@@ -163,11 +201,15 @@ class _RouteSupportPageState extends State<RouteSupportPage>
     }
   }
 
-  // ── Placeholder actions - out of scope for this task ────────────────────
-
-  void _onAttach() {}
-
-  void _onVoice() {}
+  /// The composer's paperclip and mic. The backend has no attachment, image
+  /// or voice support at all
+  /// (docs/mobile-chat-complete-api-websocket.md §15.2), which says mobile
+  /// must either hide these or say "coming soon" - the Figma keeps both icons
+  /// in the input, so they stay visible and say so when tapped rather than
+  /// silently doing nothing.
+  void _onUnsupportedAttachment() {
+    AppSnackBar.showWarning(context, 'routeSupport.comingSoon'.tr());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -198,7 +240,8 @@ class _RouteSupportPageState extends State<RouteSupportPage>
             p.confirmError != c.confirmError ||
             p.driveError != c.driveError ||
             p.driveTick != c.driveTick ||
-            p.sending != c.sending,
+            p.sending != c.sending ||
+            p.cancelError != c.cancelError,
         listener: _onStateChanged,
         builder: (context, state) {
           return Column(
@@ -210,8 +253,8 @@ class _RouteSupportPageState extends State<RouteSupportPage>
                 else
                   SupportComposer(
                     controller: _composer,
-                    onAttach: _onAttach,
-                    onVoice: _onVoice,
+                    onAttach: _onUnsupportedAttachment,
+                    onVoice: _onUnsupportedAttachment,
                     onSend: _onSend,
                     enabled: !state.sending,
                   ),
@@ -234,6 +277,10 @@ class _RouteSupportPageState extends State<RouteSupportPage>
               : state.errorMessage,
           onRetry: _onRetry,
         );
+      case RouteSupportStatus.notAvailable:
+        // No retry - the entitlement isn't a transient failure, it needs the
+        // driver's plan/TollTally state to change, not another request.
+        return _ThreadMessage(text: 'routeSupport.notAvailable'.tr());
       case RouteSupportStatus.ready:
         final items = _threadItems(state);
         return ListView.separated(
@@ -253,11 +300,12 @@ class _RouteSupportPageState extends State<RouteSupportPage>
     final review = state.review;
 
     return [
-      _RequestCardBubble(request: widget.request, review: review),
-      for (final message in state.messages) _MessageBubble(message: message),
+      _RequestCardBubble(request: widget.args.request, review: review),
+      for (final message in state.messages) SupportMessageBubble(message: message),
       if (review != null) ..._decisionItems(review),
       if (review != null) ..._fuelItems(review, state),
       if (review?.canStartDrive ?? false) SupportDriveButton(onTap: _onDrive),
+      if (state.canCancel) _CancelRequestRow(onTap: _onCancel, busy: state.cancelling),
     ];
   }
 
@@ -324,59 +372,81 @@ class _RouteSupportPageState extends State<RouteSupportPage>
 ///
 /// The card follows the review once it has been read: on `pending` that is
 /// still the route the driver asked about, but after a dispatcher suggests or
-/// approves a different one it becomes theirs (§4.3). Until the first read
-/// lands it falls back to the request the page was pushed with, so the driver
-/// never waits on a spinner to see what they just sent.
+/// approves a different one it becomes theirs (§4.3). [request] is only
+/// non-null in create mode (`RouteSupportPageArgs.create`) - a review opened
+/// from the timeline (`RouteSupportPageArgs.open`) has no local request to
+/// fall back to, so both the endpoint labels and the note fall back to
+/// whatever the review itself carries, never to invented text.
 class _RequestCardBubble extends StatelessWidget {
   const _RequestCardBubble({required this.request, required this.review});
 
-  final RouteSupportRequest request;
+  final RouteSupportRequest? request;
   final RouteReviewDetail? review;
 
   @override
   Widget build(BuildContext context) {
     final review = this.review;
+    final request = this.request;
+
+    // The route API never returns address text (§7); a locally-known label
+    // wins, a coordinate string is the honest fallback when there is none.
+    final originLabel =
+        request?.origin.fieldLabel ?? review?.origin?.shortLabel ?? '';
+    final destinationLabel = request?.destination.fieldLabel ??
+        review?.destination?.shortLabel ??
+        '';
+
     final card = review == null
-        ? request.card
+        ? request?.card
         : review.cardFor(
-            // Address labels are local state by necessity - see the page doc.
-            originLabel: request.origin.fieldLabel,
-            destinationLabel: request.destination.fieldLabel,
+            originLabel: originLabel,
+            destinationLabel: destinationLabel,
             perGallonNote: 'routeSupport.forGallon'.tr(),
           );
+    if (card == null) return const SizedBox.shrink();
 
-    // `request_note` is what the driver actually sent, if anything; the
-    // default copy stands in when the review was opened without one.
+    // `request_note` is what the driver actually sent, if anything. The
+    // generic fallback only applies in create mode - showing it on a review
+    // this driver never wrote anything on (e.g. `initiator: support`) would
+    // be a fabricated quote.
     final note = review?.requestNote.isNotEmpty ?? false
         ? review!.requestNote
-        : 'routeSupport.reviewRequestMessage'.tr();
+        : (request != null ? 'routeSupport.reviewRequestMessage'.tr() : '');
 
     return SupportBubble(
-      outgoing: true,
+      // A review support pushed unprompted reads as their message, not the
+      // driver's own - everything else here (driver-initiated, or not yet
+      // read back) stays on the driver's side.
+      outgoing: review?.initiator != 'support',
       wide: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            note,
-            style: TextStyle(fontSize: 14, height: 1.35, color: AppColor.black),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            'routeSupport.selectedRoute'.tr(args: [request.alternativeLabel]),
-            style: TextStyle(
-              fontSize: 14,
-              height: 1.35,
-              fontWeight: FontWeight.w600,
-              color: AppColor.black,
+          if (note.isNotEmpty) ...[
+            Text(
+              note,
+              style:
+                  TextStyle(fontSize: 14, height: 1.35, color: AppColor.black),
             ),
-          ),
-          const SizedBox(height: 10),
+            const SizedBox(height: 3),
+          ],
+          if (request != null) ...[
+            Text(
+              'routeSupport.selectedRoute'.tr(args: [request.alternativeLabel]),
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.35,
+                fontWeight: FontWeight.w600,
+                color: AppColor.black,
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
           RouteSupportCard(card: card),
           if (review != null) ...[
             const SizedBox(height: 8),
-            _StatusChip(status: review.status),
+            RouteReviewStatusChip(status: review.status),
           ],
         ],
       ),
@@ -384,67 +454,33 @@ class _RequestCardBubble extends StatelessWidget {
   }
 }
 
-/// Where the review stands, under the card it applies to.
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.status});
+/// The withdraw-request affordance, shown only while the review is still
+/// `pending` (`RouteSupportState.canCancel`) - once support has acted,
+/// cancelling would answer 409 MOBILE_ROUTE_REVIEW_CLOSED.
+class _CancelRequestRow extends StatelessWidget {
+  const _CancelRequestRow({required this.onTap, required this.busy});
 
-  final RouteReviewStatus status;
-
-  @override
-  Widget build(BuildContext context) {
-    final label = switch (status) {
-      RouteReviewStatus.pending => 'routeSupport.statusPending',
-      RouteReviewStatus.approved => 'routeSupport.statusApproved',
-      RouteReviewStatus.alternativeSuggested =>
-        'routeSupport.statusAlternativeSuggested',
-      RouteReviewStatus.declined => 'routeSupport.statusDeclined',
-      RouteReviewStatus.cancelled => 'routeSupport.statusCancelled',
-      // An unrecognised status says nothing rather than guessing wrong.
-      RouteReviewStatus.unknown => '',
-    };
-    if (label.isEmpty) return const SizedBox.shrink();
-
-    return Text(
-      label.tr(),
-      style: TextStyle(fontSize: 12, color: AppColor.grey),
-    );
-  }
-}
-
-/// One follow-up message - the driver's or support's. Plain text only: the
-/// contract carries no per-message card or action (see the page doc comment).
-class _MessageBubble extends StatelessWidget {
-  const _MessageBubble({required this.message});
-
-  final SupportChatMessage message;
+  final VoidCallback onTap;
+  final bool busy;
 
   @override
   Widget build(BuildContext context) {
-    if (!message.isDriver) {
-      return SupportAgentBubble(
-        sender: message.senderName.isEmpty
-            ? 'routeSupport.supportFallbackName'.tr()
-            : message.senderName,
-        body: message.message,
-      );
-    }
-
-    final timestamp = message.sentAtLabel;
-    return SupportBubble(
-      outgoing: true,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            message.message,
-            style: TextStyle(fontSize: 14, height: 1.35, color: AppColor.black),
-          ),
-          if (timestamp.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            SupportTimestamp(text: timestamp),
-          ],
-        ],
+    return Center(
+      child: TextButton(
+        onPressed: busy ? null : onTap,
+        child: busy
+            ? SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator.adaptive(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation(AppColor.red),
+                ),
+              )
+            : Text(
+                'routeSupport.cancelRequest'.tr(),
+                style: TextStyle(color: AppColor.red, fontSize: 13),
+              ),
       ),
     );
   }

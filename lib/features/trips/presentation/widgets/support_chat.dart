@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:taxi_app/core/constants/color/app_color.dart';
 import 'package:taxi_app/core/constants/color/app_icons.dart';
+import 'package:taxi_app/features/trips/data/model/support_chat_model.dart';
 
-/// Chrome shared by the two support conversations - the fuel-station thread
-/// (`support_message_page.dart`, docs/ui/11.png) and the route review thread
-/// (`route_support_page.dart`, docs/ui/8-2.png).
+/// Chrome shared by the support screens - the unified timeline
+/// (`support_timeline_page.dart`, docs/ui/11.png) and the per-review thread
+/// it opens into (`route_support_page.dart`, docs/ui/8-2.png).
 ///
 /// Both designs are the same chat: an outgoing bubble carrying a white detail
 /// card, agent replies with an optional emphasised lead-in, a white Drive pill
@@ -168,6 +169,49 @@ class SupportTimestamp extends StatelessWidget {
     return Text(
       text,
       style: TextStyle(fontSize: 11, color: AppColor.grey),
+    );
+  }
+}
+
+/// One plain message bubble - the driver's own on the right with a
+/// timestamp, support's reply on the left. Shared by every screen that
+/// renders a [SupportChatMessage] as a bare bubble (no card, no action):
+/// plain text is the whole contract for a message
+/// (docs/mobile-chat-complete-api-websocket.md §2 - a route or fuel card is
+/// never a message payload).
+class SupportMessageBubble extends StatelessWidget {
+  const SupportMessageBubble({super.key, required this.message});
+
+  final SupportChatMessage message;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!message.isDriver) {
+      return SupportAgentBubble(
+        sender: message.senderName.isEmpty
+            ? 'routeSupport.supportFallbackName'.tr()
+            : message.senderName,
+        body: message.message,
+      );
+    }
+
+    final timestamp = message.sentAtLabel;
+    return SupportBubble(
+      outgoing: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            message.message,
+            style: TextStyle(fontSize: 14, height: 1.35, color: AppColor.black),
+          ),
+          if (timestamp.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            SupportTimestamp(text: timestamp),
+          ],
+        ],
+      ),
     );
   }
 }

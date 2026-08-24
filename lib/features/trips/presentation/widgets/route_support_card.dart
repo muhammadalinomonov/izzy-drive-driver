@@ -6,6 +6,36 @@ import 'package:taxi_app/core/constants/color/app_icons.dart';
 import 'package:taxi_app/features/trips/data/model/route_support_model.dart';
 import 'package:taxi_app/features/trips/presentation/widgets/dashed_leader.dart';
 
+/// Where a review currently stands, shown under whichever card renders it -
+/// the per-review thread (`route_support_page.dart`) and the compact card in
+/// the unified timeline (`support_timeline_page.dart`) both use this same
+/// chip rather than each keeping their own copy of the status → copy switch.
+class RouteReviewStatusChip extends StatelessWidget {
+  const RouteReviewStatusChip({super.key, required this.status});
+
+  final RouteReviewStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = switch (status) {
+      RouteReviewStatus.pending => 'routeSupport.statusPending',
+      RouteReviewStatus.approved => 'routeSupport.statusApproved',
+      RouteReviewStatus.alternativeSuggested =>
+        'routeSupport.statusAlternativeSuggested',
+      RouteReviewStatus.declined => 'routeSupport.statusDeclined',
+      RouteReviewStatus.cancelled => 'routeSupport.statusCancelled',
+      // An unrecognised status says nothing rather than guessing wrong.
+      RouteReviewStatus.unknown => '',
+    };
+    if (label.isEmpty) return const SizedBox.shrink();
+
+    return Text(
+      label.tr(),
+      style: TextStyle(fontSize: 12, color: AppColor.grey),
+    );
+  }
+}
+
 /// The white route card that sits inside a support bubble.
 ///
 /// One widget covers both cards in the design: the driver's request, which

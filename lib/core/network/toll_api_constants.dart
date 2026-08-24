@@ -85,6 +85,13 @@ class TollApiConstants {
   static String routeReviewMessages(String routeReviewId) =>
       'mobile/route-reviews/$routeReviewId/messages';
 
+  /// `POST mobile/route-reviews/{id}/cancel`
+  /// (docs/mobile-chat-complete-api-websocket.md §9.4) — only a `pending`
+  /// review can be cancelled; the backend answers
+  /// 409 MOBILE_ROUTE_REVIEW_CLOSED for anything already decided.
+  static String routeReviewCancel(String routeReviewId) =>
+      'mobile/route-reviews/$routeReviewId/cancel';
+
   /// `POST mobile/route-reviews/{id}/fuel-recommendations/{id}/confirm`
   /// (docs/mobile-chat-route-fuel-drive.md §5) — the driver accepting a stop
   /// the dispatcher put on the review. Body is an empty object; the response
@@ -117,4 +124,9 @@ class TollApiConstants {
 
   static String navigationSessionCancel(String navigationSessionId) =>
       'mobile/navigation-sessions/$navigationSessionId/cancel';
+
+  /// Private-channel auth for the Reverb/Pusher WebSocket
+  /// (docs/support-chat-api.md §1). NOT under `mobile/` - same host, same
+  /// bearer token, but this path is the one the doc gives verbatim.
+  static const String broadcastingAuth = 'broadcasting/auth';
 }

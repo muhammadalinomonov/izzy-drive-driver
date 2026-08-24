@@ -432,24 +432,45 @@ class RouteReviewDetail {
     required String destinationLabel,
     required String perGallonNote,
   }) {
-    final alternative = activeAlternative;
-    return RouteSupportRouteCard(
+    return buildRouteSupportRouteCard(
+      alternative: activeAlternative,
+      fuelRecommendations: fuelRecommendations,
       originLabel: originLabel,
       destinationLabel: destinationLabel,
-      summary: alternative == null
-          ? null
-          : RouteSupportSummary.fromAlternative(alternative),
-      stops: [
-        ...?alternative?.tollMarkers.map(RouteSupportStop.fromTollMarker),
-        ...fuelRecommendations.map(
-          (r) => RouteSupportStop.fromFuelRecommendation(
-            r,
-            perGallonNote: perGallonNote,
-          ),
-        ),
-      ],
+      perGallonNote: perGallonNote,
     );
   }
+}
+
+/// Shared by [RouteReviewDetail.cardFor] and the unified timeline's
+/// [RouteReviewCard.cardFor] (`support_timeline_model.dart`) - same card,
+/// same stop list, the only thing that differs between the two call sites is
+/// which alternative already won the approved/proposed/requested selection
+/// (client-side in [RouteReviewDetail.activeAlternative], server-side as
+/// `display_alternative` on the timeline's compact card).
+RouteSupportRouteCard buildRouteSupportRouteCard({
+  required TripAlternative? alternative,
+  required List<RouteReviewFuelRecommendation> fuelRecommendations,
+  required String originLabel,
+  required String destinationLabel,
+  required String perGallonNote,
+}) {
+  return RouteSupportRouteCard(
+    originLabel: originLabel,
+    destinationLabel: destinationLabel,
+    summary: alternative == null
+        ? null
+        : RouteSupportSummary.fromAlternative(alternative),
+    stops: [
+      ...?alternative?.tollMarkers.map(RouteSupportStop.fromTollMarker),
+      ...fuelRecommendations.map(
+        (r) => RouteSupportStop.fromFuelRecommendation(
+          r,
+          perGallonNote: perGallonNote,
+        ),
+      ),
+    ],
+  );
 }
 
 /// Everything needed to open a support request for a route: the payload
@@ -537,4 +558,26 @@ class RouteSupportRequest {
         if (message != null && message.trim().isNotEmpty)
           'message': message.trim(),
       };
+}
+
+/// How `route_support_page.dart` was opened - exactly one of the two named
+/// constructors applies, so the bloc never has to guess which mode it is in:
+///
+/// - [RouteSupportPageArgs.create]: the driver just picked a route (route
+///   overview's "Send request") and the page's first job is `POST
+///   mobile/route-reviews`.
+/// - [RouteSupportPageArgs.open]: the driver tapped an existing review's card
+///   in the unified support timeline (`support_timeline_page.dart`) - the
+///   review already exists, so the page's first job is `GET .../{id}`
+///   instead. There is no local [RouteSupportRequest] in this case (the
+///   review may never have gone through this driver's own compose flow at
+///   all, e.g. `initiator: support`), so the request card falls back to
+///   coordinate labels - see `_RequestCardBubble` in the page.
+class RouteSupportPageArgs {
+  final RouteSupportRequest? request;
+  final String? reviewId;
+
+  const RouteSupportPageArgs.create(this.request) : reviewId = null;
+
+  const RouteSupportPageArgs.open(this.reviewId) : request = null;
 }

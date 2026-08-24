@@ -4,6 +4,7 @@ import 'package:taxi_app/core/extensions/status_code_extension.dart';
 import 'package:taxi_app/core/network/network_response.dart';
 import 'package:taxi_app/core/network/toll_api_constants.dart';
 import 'package:taxi_app/core/network/toll_dio.dart';
+import 'package:taxi_app/core/network/toll_envelope.dart';
 import 'package:taxi_app/core/network/toll_session.dart';
 import 'package:taxi_app/core/service_locater.dart';
 import 'package:taxi_app/core/utils/json_safe.dart';
@@ -48,13 +49,13 @@ class TripsDataSource {
         );
       }
       return NetworkResponse<TripPage>(
-        errorText: _errorMessage(response.data),
-        errorCode: _errorCode(response.data),
+        errorText: tollErrorMessage(response.data),
+        errorCode: tollErrorCode(response.data),
       );
     } on DioException catch (e) {
       return NetworkResponse<TripPage>(
-        errorText: _errorMessage(e.response?.data, 'Network error'),
-        errorCode: _errorCode(e.response?.data),
+        errorText: tollErrorMessage(e.response?.data, 'Network error'),
+        errorCode: tollErrorCode(e.response?.data),
       );
     } catch (e) {
       return NetworkResponse<TripPage>(errorText: e.toString());
@@ -81,13 +82,13 @@ class TripsDataSource {
         );
       }
       return NetworkResponse<TripModel>(
-        errorText: _errorMessage(response.data),
-        errorCode: _errorCode(response.data),
+        errorText: tollErrorMessage(response.data),
+        errorCode: tollErrorCode(response.data),
       );
     } on DioException catch (e) {
       return NetworkResponse<TripModel>(
-        errorText: _errorMessage(e.response?.data, 'Network error'),
-        errorCode: _errorCode(e.response?.data),
+        errorText: tollErrorMessage(e.response?.data, 'Network error'),
+        errorCode: tollErrorCode(e.response?.data),
       );
     } catch (e) {
       return NetworkResponse<TripModel>(errorText: e.toString());
@@ -135,8 +136,8 @@ class TripsDataSource {
         );
       }
       return NetworkResponse<List<PlaceModel>>(
-        errorText: _errorMessage(response.data),
-        errorCode: _errorCode(response.data),
+        errorText: tollErrorMessage(response.data),
+        errorCode: tollErrorCode(response.data),
       );
     } on DioException catch (e) {
       if (CancelToken.isCancel(e)) {
@@ -146,8 +147,8 @@ class TripsDataSource {
         );
       }
       return NetworkResponse<List<PlaceModel>>(
-        errorText: _errorMessage(e.response?.data, 'Network error'),
-        errorCode: _errorCode(e.response?.data),
+        errorText: tollErrorMessage(e.response?.data, 'Network error'),
+        errorCode: tollErrorCode(e.response?.data),
       );
     } catch (e) {
       return NetworkResponse<List<PlaceModel>>(errorText: e.toString());
@@ -197,13 +198,13 @@ class TripsDataSource {
         );
       }
       return NetworkResponse<TripModel>(
-        errorText: _errorMessage(response.data),
-        errorCode: _errorCode(response.data),
+        errorText: tollErrorMessage(response.data),
+        errorCode: tollErrorCode(response.data),
       );
     } on DioException catch (e) {
       return NetworkResponse<TripModel>(
-        errorText: _errorMessage(e.response?.data, 'Network error'),
-        errorCode: _errorCode(e.response?.data),
+        errorText: tollErrorMessage(e.response?.data, 'Network error'),
+        errorCode: tollErrorCode(e.response?.data),
       );
     } catch (e) {
       return NetworkResponse<TripModel>(errorText: e.toString());
@@ -278,27 +279,27 @@ class TripsDataSource {
         );
       }
       return NetworkResponse<NavigationSessionModel>(
-        errorText: _errorMessage(response.data),
-        errorCode: _errorCode(response.data),
+        errorText: tollErrorMessage(response.data),
+        errorCode: tollErrorCode(response.data),
       );
     } on DioException catch (e) {
       // A driver only ever has one active session (§5.1) - if one is already
       // running, the current one IS the answer to "start navigating", so
       // hand it back instead of surfacing a 409 as a failure.
       if (e.response?.statusCode == 409 &&
-          _errorCode(e.response?.data) == 'NAVIGATION_ALREADY_ACTIVE') {
+          tollErrorCode(e.response?.data) == 'NAVIGATION_ALREADY_ACTIVE') {
         final current = await getCurrentNavigationSession();
         if (current.data != null) {
           return NetworkResponse<NavigationSessionModel>(data: current.data);
         }
         return NetworkResponse<NavigationSessionModel>(
-          errorText: _errorMessage(e.response?.data, 'Network error'),
-          errorCode: _errorCode(e.response?.data),
+          errorText: tollErrorMessage(e.response?.data, 'Network error'),
+          errorCode: tollErrorCode(e.response?.data),
         );
       }
       return NetworkResponse<NavigationSessionModel>(
-        errorText: _errorMessage(e.response?.data, 'Network error'),
-        errorCode: _errorCode(e.response?.data),
+        errorText: tollErrorMessage(e.response?.data, 'Network error'),
+        errorCode: tollErrorCode(e.response?.data),
       );
     } catch (e) {
       return NetworkResponse<NavigationSessionModel>(errorText: e.toString());
@@ -324,13 +325,13 @@ class TripsDataSource {
         );
       }
       return NetworkResponse<NavigationSessionModel?>(
-        errorText: _errorMessage(response.data),
-        errorCode: _errorCode(response.data),
+        errorText: tollErrorMessage(response.data),
+        errorCode: tollErrorCode(response.data),
       );
     } on DioException catch (e) {
       return NetworkResponse<NavigationSessionModel?>(
-        errorText: _errorMessage(e.response?.data, 'Network error'),
-        errorCode: _errorCode(e.response?.data),
+        errorText: tollErrorMessage(e.response?.data, 'Network error'),
+        errorCode: tollErrorCode(e.response?.data),
       );
     } catch (e) {
       return NetworkResponse<NavigationSessionModel?>(errorText: e.toString());
@@ -425,13 +426,13 @@ class TripsDataSource {
         );
       }
       return NetworkResponse<List<VehicleModel>>(
-        errorText: _errorMessage(response.data),
-        errorCode: _errorCode(response.data),
+        errorText: tollErrorMessage(response.data),
+        errorCode: tollErrorCode(response.data),
       );
     } on DioException catch (e) {
       return NetworkResponse<List<VehicleModel>>(
-        errorText: _errorMessage(e.response?.data, 'Network error'),
-        errorCode: _errorCode(e.response?.data),
+        errorText: tollErrorMessage(e.response?.data, 'Network error'),
+        errorCode: tollErrorCode(e.response?.data),
       );
     } catch (e) {
       return NetworkResponse<List<VehicleModel>>(errorText: e.toString());
@@ -474,13 +475,13 @@ class TripsDataSource {
       );
       if (response.isSuccess) return NetworkResponse<bool>(data: true);
       return NetworkResponse<bool>(
-        errorText: _errorMessage(response.data),
-        errorCode: _errorCode(response.data),
+        errorText: tollErrorMessage(response.data),
+        errorCode: tollErrorCode(response.data),
       );
     } on DioException catch (e) {
       return NetworkResponse<bool>(
-        errorText: _errorMessage(e.response?.data, 'Network error'),
-        errorCode: _errorCode(e.response?.data),
+        errorText: tollErrorMessage(e.response?.data, 'Network error'),
+        errorCode: tollErrorCode(e.response?.data),
       );
     } catch (e) {
       return NetworkResponse<bool>(errorText: e.toString());
@@ -507,38 +508,16 @@ class TripsDataSource {
         );
       }
       return NetworkResponse<NavigationSessionModel>(
-        errorText: _errorMessage(response.data),
-        errorCode: _errorCode(response.data),
+        errorText: tollErrorMessage(response.data),
+        errorCode: tollErrorCode(response.data),
       );
     } on DioException catch (e) {
       return NetworkResponse<NavigationSessionModel>(
-        errorText: _errorMessage(e.response?.data, 'Network error'),
-        errorCode: _errorCode(e.response?.data),
+        errorText: tollErrorMessage(e.response?.data, 'Network error'),
+        errorCode: tollErrorCode(e.response?.data),
       );
     } catch (e) {
       return NetworkResponse<NavigationSessionModel>(errorText: e.toString());
     }
-  }
-
-  /// The toll API nests its message under `error`, unlike the izzydrive
-  /// backend's flat `{detail}` / `{message}` that [dioErrorMessage] handles:
-  ///   `{ "message": "...", "error": { "code": "...", "message": "..." } }`
-  static String _errorMessage(dynamic body, [String fallback = 'Server error']) {
-    if (body is Map) {
-      final error = body['error'];
-      if (error is Map) {
-        final message = error['message'];
-        if (message is String && message.isNotEmpty) return message;
-      }
-    }
-    return dioErrorMessage(body, fallback);
-  }
-
-  static String? _errorCode(dynamic body) {
-    if (body is! Map) return null;
-    final error = body['error'];
-    if (error is! Map) return null;
-    final code = error['code'];
-    return code is String && code.isNotEmpty ? code : null;
   }
 }

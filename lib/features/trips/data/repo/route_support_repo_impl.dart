@@ -41,4 +41,11 @@ class RouteSupportRepoImpl extends RouteSupportRepo {
       recommendationId: recommendationId,
     );
   }
+
+  @override
+  Future<NetworkResponse<RouteReviewDetail>> cancelReview(
+    String routeReviewId,
+  ) {
+    return dataSource.cancelReview(routeReviewId);
+  }
 }

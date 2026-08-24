@@ -9,6 +9,7 @@ import 'package:taxi_app/core/network/toll_dio.dart';
 import 'package:taxi_app/core/network/toll_session.dart';
 import 'package:taxi_app/core/service_locater.dart';
 import 'package:taxi_app/core/utils/geo_math.dart';
+import 'package:taxi_app/core/network/toll_envelope.dart';
 import 'package:taxi_app/core/utils/json_safe.dart';
 import 'package:taxi_app/core/utils/polyline_codec.dart';
 import 'package:taxi_app/features/trips/data/model/fuel_station_model.dart';
@@ -69,13 +70,13 @@ class FuelStationsDataSource {
         );
       }
       return NetworkResponse<List<FuelStationModel>>(
-        errorText: _errorMessage(response.data),
-        errorCode: _errorCode(response.data),
+        errorText: tollErrorMessage(response.data),
+        errorCode: tollErrorCode(response.data),
       );
     } on DioException catch (e) {
       return NetworkResponse<List<FuelStationModel>>(
-        errorText: _errorMessage(e.response?.data, 'Network error'),
-        errorCode: _errorCode(e.response?.data),
+        errorText: tollErrorMessage(e.response?.data, 'Network error'),
+        errorCode: tollErrorCode(e.response?.data),
       );
     } catch (e) {
       return NetworkResponse<List<FuelStationModel>>(errorText: e.toString());
@@ -125,26 +126,6 @@ class FuelStationsDataSource {
       east: (centre.lng + lngSpan).clamp(-180.0, 180.0),
       west: (centre.lng - lngSpan).clamp(-180.0, 180.0),
     );
-  }
-
-  /// Same nested-`error` envelope the rest of the toll API uses.
-  static String _errorMessage(dynamic body, [String fallback = 'Server error']) {
-    if (body is Map) {
-      final error = body['error'];
-      if (error is Map) {
-        final message = error['message'];
-        if (message is String && message.isNotEmpty) return message;
-      }
-    }
-    return dioErrorMessage(body, fallback);
-  }
-
-  static String? _errorCode(dynamic body) {
-    if (body is! Map) return null;
-    final error = body['error'];
-    if (error is! Map) return null;
-    final code = error['code'];
-    return code is String && code.isNotEmpty ? code : null;
   }
 }
 

@@ -296,6 +296,13 @@
     "fuelStopTitle": "Recommended fuel stop",
     "confirmFuel": "Confirm stop",
     "fuelConfirmed": "Stop confirmed",
-    "contractedPrice": "Card price"
+    "contractedPrice": "Card price",
+    "cancelRequest": "Cancel request",
+    "cancelTitle": "Cancel this request?",
+    "cancelMessage": "Support will no longer review this route. You can send a new request any time.",
+    "cancelDismiss": "Keep it",
+    "cancelConfirm": "Cancel request",
+    "notAvailable": "Route review isn't available for your account right now.",
+    "comingSoon": "Attachments and voice messages aren't supported yet."
   }
 }

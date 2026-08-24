@@ -51,3 +51,9 @@ class RouteSupportFuelConfirmed extends RouteSupportEvent {
 class RouteSupportDrivePressed extends RouteSupportEvent {
   const RouteSupportDrivePressed();
 }
+
+/// Driver withdrew a still-`pending` request
+/// (docs/mobile-chat-complete-api-websocket.md §9.4).
+class RouteSupportCancelled extends RouteSupportEvent {
+  const RouteSupportCancelled();
+}

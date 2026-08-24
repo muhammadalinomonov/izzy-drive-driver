@@ -1,6 +1,17 @@
 part of 'route_support_bloc.dart';
 
-enum RouteSupportStatus { initial, loading, ready, failure }
+enum RouteSupportStatus {
+  initial,
+  loading,
+  ready,
+  failure,
+
+  /// Reached the create path without route-review entitlement
+  /// (`TollSession.ensureRouteReviewAvailable`) - distinct from [failure]:
+  /// nothing was tried, so there is nothing to retry
+  /// (docs/mobile-chat-complete-api-websocket.md §3.3).
+  notAvailable,
+}
 
 /// Drive's own status, kept apart from [RouteSupportStatus]: a failed session
 /// start leaves a perfectly readable thread behind it.
@@ -41,6 +52,13 @@ class RouteSupportState extends Equatable {
   /// even if two presses produce the same session object.
   final int driveTick;
 
+  /// A cancel is in flight - same reasoning as [sending]: keeps a second tap
+  /// from firing a second `POST .../cancel`.
+  final bool cancelling;
+
+  /// Why the last cancel failed. Snack bar, same reasoning as [sendError].
+  final String cancelError;
+
   const RouteSupportState({
     this.status = RouteSupportStatus.initial,
     this.review,
@@ -53,6 +71,8 @@ class RouteSupportState extends Equatable {
     this.driveError = '',
     this.session,
     this.driveTick = 0,
+    this.cancelling = false,
+    this.cancelError = '',
   });
 
   List<SupportChatMessage> get messages => review?.messages ?? const [];
@@ -66,6 +86,10 @@ class RouteSupportState extends Equatable {
   /// write - posting would answer 409 MOBILE_ROUTE_REVIEW_CLOSED.
   bool get isClosed => review?.status.isClosed ?? false;
 
+  /// Only a `pending` review may be withdrawn (§9.4) - once support has acted,
+  /// cancelling would answer 409 MOBILE_ROUTE_REVIEW_CLOSED.
+  bool get canCancel => review?.status == RouteReviewStatus.pending;
+
   RouteSupportState copyWith({
     RouteSupportStatus? status,
     RouteReviewDetail? review,
@@ -78,6 +102,8 @@ class RouteSupportState extends Equatable {
     String? driveError,
     NavigationSessionModel? session,
     int? driveTick,
+    bool? cancelling,
+    String? cancelError,
   }) {
     return RouteSupportState(
       status: status ?? this.status,
@@ -92,6 +118,8 @@ class RouteSupportState extends Equatable {
       driveError: driveError ?? this.driveError,
       session: session ?? this.session,
       driveTick: driveTick ?? this.driveTick,
+      cancelling: cancelling ?? this.cancelling,
+      cancelError: cancelError ?? this.cancelError,
     );
   }
 
@@ -108,5 +136,7 @@ class RouteSupportState extends Equatable {
         driveError,
         session,
         driveTick,
+        cancelling,
+        cancelError,
       ];
 }
