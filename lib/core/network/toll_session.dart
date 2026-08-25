@@ -197,9 +197,14 @@ class TollSession {
       if (id.isNotEmpty) {
         await StorageRepository.putString(_driverIdKey, id);
       }
-      final services = toMap(data['services']);
-      final routeReviewAvailable =
-          toBool(toMap(services['route_review'])['available']);
+      // §3.3's `services.route_review.available`. A backend build that
+      // predates that section sends no `services` block at all - absence is
+      // "unknown", not "denied", so it must not latch the entitlement off and
+      // block every create. Only an explicit `false` disables the feature.
+      final routeReview = toMap(toMap(data['services'])['route_review']);
+      final routeReviewAvailable = routeReview.containsKey('available')
+          ? toBool(routeReview['available'])
+          : true;
       await StorageRepository.putBool(
         key: _routeReviewAvailableKey,
         value: routeReviewAvailable,

@@ -83,7 +83,9 @@ class SupportChatPage {
   ) {
     return SupportChatPage(
       items: toList(data['items'], (e) => SupportChatMessage.fromJson(toMap(e))),
-      page: toInt(pagination['page'], 1),
+      // `page` per mobile-api.md §8.1 and v2 §6.2; `current_page` is what the
+      // older support-chat-api.md §3.1 shows for this legacy endpoint alone.
+      page: toInt(pagination['page'] ?? pagination['current_page'], 1),
       perPage: toInt(pagination['per_page'], 50),
       total: toInt(pagination['total']),
       lastPage: toInt(pagination['last_page'], 1),

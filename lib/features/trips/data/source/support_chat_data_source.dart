@@ -123,8 +123,14 @@ class SupportChatDataSource {
       );
       if (response.isSuccess) {
         final data = toMap(toMap(response.data)['data']);
+        // Two docs disagree on this envelope: v2 §7 and mobile-api.md §8.2
+        // wrap the message as `data.message`, the older support-chat-api.md
+        // §3.2 makes `data` the message itself. The newer pair wins, but a
+        // backend on the older shape would otherwise hand back a blank
+        // bubble, so fall back rather than guess wrong.
+        final raw = data.containsKey('message') ? toMap(data['message']) : data;
         return NetworkResponse<SupportChatMessage>(
-          data: SupportChatMessage.fromJson(toMap(data['message'])),
+          data: SupportChatMessage.fromJson(raw),
         );
       }
       return NetworkResponse<SupportChatMessage>(
